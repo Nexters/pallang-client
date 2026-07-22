@@ -25,10 +25,12 @@
 ### Task 1: Prettier + tsconfig 엄격도 + 기본 scripts
 
 **Files:**
+
 - Create: `.prettierrc.json`, `.prettierignore`
 - Modify: `package.json` (scripts, devDeps), `tsconfig.json` (compilerOptions)
 
 **Interfaces:**
+
 - Produces: `pnpm format`, `pnpm format:check`, `pnpm typecheck` 스크립트. 이후 모든 태스크가 사용.
 
 - [ ] **Step 1: Prettier 설치**
@@ -110,9 +112,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 2: ESLint 타입 인지 강화 (strictTypeChecked)
 
 **Files:**
+
 - Modify: `eslint.config.mjs`, `package.json` (devDeps)
 
 **Interfaces:**
+
 - Consumes: Task 1의 prettier(`eslint-config-prettier`).
 - Produces: 타입 인지 린트가 켜진 `eslint.config.mjs` 베이스. Task 3이 이 위에 컨벤션 룰을 얹음.
 
@@ -187,9 +191,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 3: ESLint 컨벤션 룰 (배럴/default-export/네이밍/import 경계)
 
 **Files:**
+
 - Modify: `eslint.config.mjs`, `package.json` (devDeps)
 
 **Interfaces:**
+
 - Consumes: Task 2의 `eslint.config.mjs`.
 - Produces: 스파르타 컨벤션을 강제하는 완성된 ESLint 설정. Task 5 스켈레톤이 이 룰을 통과해야 함.
 
@@ -282,11 +288,13 @@ Expected: 통과. `app/page.tsx`·`app/layout.tsx`는 default export이지만 Ne
 - [ ] **Step 4: 룰 동작 스모크 테스트 (임시 위반 파일)**
 
 Run:
+
 ```bash
 printf "export default 1\n" > app/_smoke.ts
 pnpm lint app/_smoke.ts; echo "exit=$?"
 rm app/_smoke.ts
 ```
+
 Expected: default export 위반으로 lint 실패(exit 비-0) → 룰이 실제로 동작함을 확인. 확인 후 파일 삭제.
 
 - [ ] **Step 5: Commit**
@@ -303,10 +311,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 4: Husky + lint-staged + commitlint
 
 **Files:**
+
 - Create: `.husky/pre-commit`, `.husky/commit-msg`, `.husky/pre-push`, `commitlint.config.mjs`, `.lintstagedrc.json`
 - Modify: `package.json` (devDeps, `prepare` script, `packageManager`)
 
 **Interfaces:**
+
 - Consumes: Task 1~3의 `lint`/`typecheck`/`format`.
 - Produces: 커밋/푸시 시 컨벤션 자동 차단.
 
@@ -347,16 +357,19 @@ export default { extends: ['@commitlint/config-conventional'] }
 - [ ] **Step 6: 훅 파일 작성 (Husky v9 — 명령만 기술)**
 
 `.husky/pre-commit`:
+
 ```sh
 pnpm exec lint-staged
 ```
 
 `.husky/commit-msg`:
+
 ```sh
 pnpm exec commitlint --edit "$1"
 ```
 
 `.husky/pre-push`:
+
 ```sh
 pnpm typecheck
 ```
@@ -369,10 +382,12 @@ Expected: 에러 없음.
 - [ ] **Step 8: commitlint 동작 확인**
 
 Run:
+
 ```bash
 echo "bad message" | pnpm exec commitlint; echo "exit=$?"
 echo "feat: valid message" | pnpm exec commitlint; echo "exit=$?"
 ```
+
 Expected: 첫 번째는 실패(exit 비-0, "subject" 등 에러), 두 번째는 통과(exit 0).
 
 - [ ] **Step 9: Commit (훅이 실제로 걸리는지 겸사 확인)**
@@ -383,6 +398,7 @@ git commit -m "chore: add husky hooks with lint-staged and commitlint
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ```
+
 Expected: pre-commit(lint-staged)·commit-msg(commitlint) 통과 후 커밋 생성.
 
 ---
@@ -390,12 +406,14 @@ Expected: pre-commit(lint-staged)·commit-msg(commitlint) 통과 후 커밋 생�
 ### Task 5: 디렉토리 스켈레톤 + TanStack Query provider + 참조 예시
 
 **Files:**
+
 - Create (전역): `app/_global/_providers/QueryProvider/QueryProvider.tsx`, `app/_global/_data/example.model.ts`, `app/_global/_apis/example.api.ts`, `app/_global/_queries/example.queries.ts`
 - Create (공유 골격): `app/_shared/user/.gitkeep` (또는 README)
 - Create (피처 예시): `app/example/page.tsx`, `app/example/_components/ExampleCard/ExampleCard.tsx`, `app/example/_hooks/useExample.ts`, `app/example/_services/formatExample.service.ts`, `app/example/_data/example.store.ts`, `app/example/_actions/createExample.action.ts`, `app/example/_types/example.type.ts`
 - Modify: `app/layout.tsx` (QueryProvider 래핑), `package.json` (`@tanstack/react-query`)
 
 **Interfaces:**
+
 - Produces: `QueryProvider`(children: ReactNode), `Example` 타입(`{ id: string; label: string }`), `formatExample(label: string): string`, `createExample(label: string): Promise<{ label: string }>`, `useExample(initial: Example[]): { items: Example[] }`, `ExampleCard({ item: Example })`.
 
 - [ ] **Step 1: TanStack Query 설치**
@@ -406,6 +424,7 @@ Expected: dependencies에 추가.
 - [ ] **Step 2: 타입 정의**
 
 `app/example/_types/example.type.ts`:
+
 ```ts
 export type Example = {
   id: string
@@ -416,6 +435,7 @@ export type Example = {
 - [ ] **Step 3: 전역 모델**
 
 `app/_global/_data/example.model.ts`:
+
 ```ts
 // 참조용 예시 — 실제 도메인 모델로 교체하세요.
 export type ExampleDto = {
@@ -424,9 +444,10 @@ export type ExampleDto = {
 }
 ```
 
-- [ ] **Step 4: API 함수 (_global/_apis)**
+- [ ] **Step 4: API 함수 (\_global/\_apis)**
 
 `app/_global/_apis/example.api.ts`:
+
 ```ts
 // 참조용 예시 — fetch 호출만 담당. 실제 API로 교체하세요.
 import type { ExampleDto } from '../_data/example.model'
@@ -438,9 +459,10 @@ export async function fetchExamples(): Promise<ExampleDto[]> {
 }
 ```
 
-- [ ] **Step 5: 쿼리 정의 (_global/_queries)**
+- [ ] **Step 5: 쿼리 정의 (\_global/\_queries)**
 
 `app/_global/_queries/example.queries.ts`:
+
 ```ts
 // 참조용 예시 — queryKey + queryOptions만 정의.
 import { queryOptions } from '@tanstack/react-query'
@@ -456,9 +478,10 @@ export const exampleQueries = {
 }
 ```
 
-- [ ] **Step 6: QueryProvider (_global/_providers)**
+- [ ] **Step 6: QueryProvider (\_global/\_providers)**
 
 `app/_global/_providers/QueryProvider/QueryProvider.tsx`:
+
 ```tsx
 'use client'
 
@@ -475,14 +498,17 @@ export function QueryProvider({ children }: { children: ReactNode }) {
 - [ ] **Step 7: layout.tsx에 QueryProvider 래핑**
 
 `app/layout.tsx`의 `<body>` 내부 `{children}`을 감싼다. 공유 코드이므로 `@/` 절대경로로 import:
+
 ```tsx
 import { QueryProvider } from '@/app/_global/_providers/QueryProvider/QueryProvider'
 ```
+
 그리고 body 내부를 `<QueryProvider>{children}</QueryProvider>`로 감싼다. (기존 `<html>`/`<body>`/폰트 설정·metadata·default export는 유지 — layout은 Next 특수 파일이라 default export 허용.)
 
 - [ ] **Step 8: 피처 예시 파일들**
 
 `app/example/_services/formatExample.service.ts`:
+
 ```ts
 export function formatExample(label: string): string {
   return `example: ${label}`
@@ -490,6 +516,7 @@ export function formatExample(label: string): string {
 ```
 
 `app/example/_data/example.store.ts`:
+
 ```ts
 import type { Example } from '../_types/example.type'
 
@@ -497,6 +524,7 @@ export const exampleSeed: Example[] = [{ id: '1', label: 'hello' }]
 ```
 
 `app/example/_hooks/useExample.ts`:
+
 ```ts
 'use client'
 
@@ -510,6 +538,7 @@ export function useExample(initial: Example[]): { items: Example[] } {
 ```
 
 `app/example/_actions/createExample.action.ts`:
+
 ```ts
 'use server'
 
@@ -520,6 +549,7 @@ export async function createExample(label: string): Promise<{ label: string }> {
 ```
 
 `app/example/_components/ExampleCard/ExampleCard.tsx`:
+
 ```tsx
 import type { Example } from '../../_types/example.type'
 import { formatExample } from '../../_services/formatExample.service'
@@ -530,6 +560,7 @@ export function ExampleCard({ item }: { item: Example }) {
 ```
 
 `app/example/page.tsx`:
+
 ```tsx
 import { ExampleCard } from './_components/ExampleCard/ExampleCard'
 import { exampleSeed } from './_data/example.store'
@@ -553,6 +584,7 @@ export default function ExamplePage() {
 
 Run: `pnpm lint && pnpm typecheck && pnpm build`
 Expected: 모두 통과. 위반 시:
+
 - check-file 네이밍 위반 → 파일/폴더명 케이스 확인.
 - `import/no-default-export` 위반 → page/layout 외 파일에 default export가 없는지 확인.
 - strictTypeChecked 위반(예: `no-unsafe-*`, `require-await`) → 코드로 해결(룰 끄지 말 것).
@@ -571,10 +603,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 6: Vitest + 예시 테스트
 
 **Files:**
+
 - Create: `vitest.config.ts`, `vitest.setup.ts`, `app/example/_tests/example.spec.ts`
 - Modify: `package.json` (devDeps, `test`/`test:watch` scripts), `eslint.config.mjs` (설정 파일 default export 예외에 이미 `*.config.ts` 포함 — 확인만)
 
 **Interfaces:**
+
 - Consumes: Task 5의 `formatExample`.
 - Produces: `pnpm test` 검증 루프.
 
@@ -622,6 +656,7 @@ import '@testing-library/jest-dom/vitest'
 - [ ] **Step 5: 예시 테스트 작성 (실패 먼저 확인)**
 
 `app/example/_tests/example.spec.ts`:
+
 ```ts
 import { describe, expect, it } from 'vitest'
 import { formatExample } from '../_services/formatExample.service'
@@ -657,10 +692,12 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 7: Next 16 설정 — cacheComponents + devtools MCP
 
 **Files:**
+
 - Modify: `next.config.ts`
 - Create: `.mcp.json`
 
 **Interfaces:**
+
 - Produces: PPR/`use cache` 활성화, 코딩 에이전트용 MCP 연결.
 
 참고 문서(반드시 확인): `node_modules/next/dist/docs/01-app/03-api-reference/05-config/01-next-config-js/cacheComponents.md`, `node_modules/next/dist/docs/01-app/02-guides/mcp.md`.
@@ -714,9 +751,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 8: CI + 협업 메타
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`, `.github/pull_request_template.md`, `.editorconfig`, `.vscode/settings.json`, `.vscode/extensions.json`
 
 **Interfaces:**
+
 - Consumes: `pnpm lint/typecheck/test/build`, `packageManager` 필드(Task 4).
 
 - [ ] **Step 1: `.editorconfig`**
@@ -768,6 +807,7 @@ trim_trailing_whitespace = false
 ## 변경 사항
 
 ## 체크리스트
+
 - [ ] `pnpm lint` 통과
 - [ ] `pnpm typecheck` 통과
 - [ ] `pnpm test` 통과
@@ -820,9 +860,11 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ### Task 9: AGENTS.md 보강 (에이전트용 단일 소스)
 
 **Files:**
+
 - Modify: `AGENTS.md`
 
 **Interfaces:**
+
 - Consumes: 전체 세팅 결과(명령어·컨벤션·훅).
 
 - [ ] **Step 1: `AGENTS.md` 재작성**
