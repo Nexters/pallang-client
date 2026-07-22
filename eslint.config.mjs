@@ -45,6 +45,10 @@ const eslintConfig = defineConfig([
     plugins: { 'check-file': checkFile, import: importPlugin },
     rules: {
       'import/no-default-export': 'error',
+      // 스파르타 컨벤션: 객체 타입은 `type` 별칭 사용
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      // 컴포넌트 파일 PascalCase, 그 외 프라이빗 폴더의 ts는 camelCase.
+      // (접미사 `.service`/`.queries` 등은 ignoreMiddleExtensions로 base명만 검사)
       'check-file/filename-naming-convention': [
         'error',
         {
@@ -58,10 +62,6 @@ const eslintConfig = defineConfig([
           'app/**/_apis/**/*.ts': 'CAMEL_CASE',
         },
         { ignoreMiddleExtensions: true },
-      ],
-      'check-file/folder-naming-convention': [
-        'error',
-        { 'app/**/_components/*/': 'PASCAL_CASE' },
       ],
     },
   },
