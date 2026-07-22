@@ -4,7 +4,7 @@ import nextTs from 'eslint-config-next/typescript'
 import tseslint from 'typescript-eslint'
 import checkFile from 'eslint-plugin-check-file'
 import noBarrelFiles from 'eslint-plugin-no-barrel-files'
-import importPlugin from 'eslint-plugin-import'
+import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
 const eslintConfig = defineConfig([
@@ -39,12 +39,29 @@ const eslintConfig = defineConfig([
   // 배럴 파일 금지
   ...noBarrelFiles.configs.recommended,
 
-  // 컨벤션 룰
+  // 컨벤션 룰 + import 위생
   {
     files: ['**/*.{ts,tsx}'],
-    plugins: { 'check-file': checkFile, import: importPlugin },
+    plugins: {
+      'check-file': checkFile,
+      'simple-import-sort': simpleImportSort,
+    },
+    settings: {
+      'import/resolver': {
+        typescript: { alwaysTryTypes: true },
+      },
+    },
     rules: {
       'import/no-default-export': 'error',
+      // import 위생
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'import/no-duplicates': 'error',
+      'import/no-cycle': 'error',
+      'import/no-useless-path-segments': 'error',
+      // 타입 전용 import는 `import type`로 (기존 스타일 유지)
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
       // 스파르타 컨벤션: 객체 타입은 `type` 별칭 사용
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       // 컴포넌트 파일 PascalCase, 그 외 프라이빗 폴더의 ts는 camelCase.

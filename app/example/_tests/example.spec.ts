@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import { formatExample } from '../_services/formatExample.service'
 
 describe('formatExample', () => {
