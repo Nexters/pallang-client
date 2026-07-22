@@ -5,6 +5,7 @@ import tseslint from 'typescript-eslint'
 import checkFile from 'eslint-plugin-check-file'
 import noBarrelFiles from 'eslint-plugin-no-barrel-files'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
+import boundaries from 'eslint-plugin-boundaries'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
 const eslintConfig = defineConfig([
@@ -96,6 +97,57 @@ const eslintConfig = defineConfig([
               group: ['**/_apis/*', '@/app/_global/_apis/*'],
               message:
                 'API 함수는 직접 import하지 말고 @/app/_global/_queries의 queryOptions를 사용하세요.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // 아키텍처 경계: global / shared / feature 레이어 강제 (eslint-plugin-boundaries v7)
+  // 허용: feature→(global·shared·자기 자신), shared→(global·shared), global→global.
+  // 루트 app/layout·page 등은 미분류라 제약 없음(Next 특수 파일).
+  {
+    files: ['app/**/*.{ts,tsx}'],
+    plugins: { boundaries },
+    settings: {
+      'boundaries/elements': [
+        { type: 'global', pattern: 'app/_global' },
+        { type: 'shared', pattern: 'app/_shared/*', capture: ['domain'] },
+        { type: 'feature', pattern: 'app/*', capture: ['feature'] },
+      ],
+    },
+    rules: {
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'disallow',
+          policies: [
+            {
+              from: { element: { type: 'global' } },
+              allow: [{ to: { element: { type: 'global' } } }],
+            },
+            {
+              from: { element: { type: 'shared' } },
+              allow: [
+                { to: { element: { type: 'global' } } },
+                { to: { element: { type: 'shared' } } },
+              ],
+            },
+            {
+              from: { element: { type: 'feature' } },
+              allow: [
+                { to: { element: { type: 'global' } } },
+                { to: { element: { type: 'shared' } } },
+                {
+                  to: {
+                    element: {
+                      type: 'feature',
+                      captured: { feature: '{{ from.element.captured.feature }}' },
+                    },
+                  },
+                },
+              ],
             },
           ],
         },
