@@ -37,6 +37,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **배럴 파일(index.ts/tsx) 금지** — 생성·import 모두.
 - **import 경로** — 같은 라우트 내부는 상대경로, `_shared`/`_global`은 `@/` 절대경로.
 - **피처 코드에서 `_apis` 직접 import 금지** — `@/app/_global/_queries`의 queryOptions 사용.
+- **아키텍처 경계(레이어)** — `feature`끼리 서로 import 금지, `_global`/`_shared`는 `feature`를 역참조 금지. 허용: feature→(global·shared·자기 자신), shared→(global·shared), global→global.
+- **import 위생** — import 자동 정렬(simple-import-sort), 순환 참조 금지(no-cycle), 중복 import 금지. 타입 전용 import는 `import type`.
+- **`console.log` 금지** — `console.warn`/`console.error`만 허용.
+- **테스트 위생** — `describe.only`/`it.only`/`.skip`/주석처리 테스트 커밋 금지.
 - 컴포넌트 폴더 안에 `_hooks/`·`_services/` 중첩 금지.
 - 컴포넌트 **파일명** PascalCase는 lint 강제. 컴포넌트 **폴더명**도 PascalCase로 맞출 것(문서 규칙).
 
