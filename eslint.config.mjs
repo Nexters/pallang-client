@@ -6,6 +6,7 @@ import checkFile from 'eslint-plugin-check-file'
 import noBarrelFiles from 'eslint-plugin-no-barrel-files'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import boundaries from 'eslint-plugin-boundaries'
+import vitest from '@vitest/eslint-plugin'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
 const eslintConfig = defineConfig([
@@ -54,6 +55,9 @@ const eslintConfig = defineConfig([
     },
     rules: {
       'import/no-default-export': 'error',
+      // 안전장치: console.log 금지(warn/error만), effect 의존성 배열 강제
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+      'react-hooks/exhaustive-deps': 'error',
       // import 위생
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
@@ -153,6 +157,12 @@ const eslintConfig = defineConfig([
         },
       ],
     },
+  },
+
+  // 테스트 파일: Vitest 권장 룰(.only 커밋 차단 등)
+  {
+    files: ['**/*.spec.{ts,tsx}'],
+    ...vitest.configs.recommended,
   },
 
   // Next 특수 파일 / 설정 파일은 default export 허용
