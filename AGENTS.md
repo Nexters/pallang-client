@@ -3,6 +3,7 @@
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
 <!-- END:nextjs-agent-rules -->
 
 ## 명령어
@@ -10,53 +11,63 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `pnpm dev` — 개발 서버 (MCP 엔드포인트 `/_next/mcp` 포함)
 - `pnpm build` — 프로덕션 빌드 (cacheComponents/PPR 활성)
 - `pnpm lint` / `pnpm lint:fix` — ESLint (타입 인지 strict + 컨벤션)
-- `pnpm typecheck` — `tsc --noEmit`
+- `pnpm typecheck` — TypeScript 검사 (`tsc --noEmit`)
 - `pnpm test` / `pnpm test:watch` — Vitest
-- `pnpm format` — Prettier
+- `pnpm format` / `pnpm format:check` — Prettier 쓰기/검사
 
-**변경 후 반드시 `pnpm lint && pnpm typecheck && pnpm test` 로 검증할 것.**
+  **코드 변경 후 반드시 `pnpm lint && pnpm typecheck && pnpm test`로 검증할 것. 문서만 변경한 경우 검증 생략 가능.**
 
-## 디렉토리 규칙 (스파르타 App Router)
+## 디렉토리 규칙
 
-- `app/_global/` — 앱 전역. `_providers/ _components/ _hooks/ _queries/ _apis/ _data/ _styles/`. **서버 쿼리(`.queries.ts`)·API(`.api.ts`)는 무조건 여기.**
-- `app/_shared/<domain>/` — 2개 이상 지면 공용. `_components/ _hooks/ _data/`.
-- `app/<kebab-route>/` — 지면 전용. `_components/ _hooks/ _services/ _data/ _actions/ _types/ _tests/`.
-- 배치 판단: 2곳 이상 사용 → `_shared`, 앱 루트 필요 → `_global`, 모호하면 `_shared`부터 (co-location).
+- `app/_global/` — 앱 전역 코드. 하위 폴더: `_providers/ _components/ _hooks/ _queries/ _apis/ _data/ _styles/`.
+- `app/_shared/<domain>/` — 2개 이상 route에서 실제 재사용하는 도메인 공용 코드. 하위 폴더: `_components/ _hooks/ _data/`.
+- `app/<kebab-route>/` — 특정 route 전용 코드. 하위 폴더: `_components/ _hooks/ _services/ _data/ _actions/ _types/ _tests/`.
+- 기본 배치: route-local 우선. 실제 재사용 시 `_shared`, 앱 전역 인프라는 `_global`.
+- 공용 코드 배치: route 트리의 최소 공통 부모가 아니라 `app/_shared/<domain>/`로 이동.
+- 중첩 금지: 컴포넌트 폴더 내부에 `_hooks/`, `_services/` 같은 프라이빗 폴더를 만들지 않는다.
+- 서버 쿼리(`.queries.ts`)와 API 호출 함수(`.api.ts`)는 route-local이나 `_shared`에 두지 않고 `app/_global/_queries`, `app/_global/_apis`에 둔다.
 
 ## 네이밍 & 접미사
 
-- 컴포넌트 폴더/파일: `PascalCase` (`ExampleCard/ExampleCard.tsx`)
-- 훅·서비스·스토어·쿼리·API: `camelCase`
-- URL 경로: `kebab-case`
-- 접미사: `.service.ts` / `.store.ts`·`.model.ts`·`.constant.ts` / `.queries.ts` / `.api.ts` / `.action.ts` / `.type.ts` / `.spec.ts`
-- 객체 타입은 `type` 별칭 사용 (lint로 강제).
+- 컴포넌트 폴더/파일: `PascalCase`. 예: `ExampleCard/ExampleCard.tsx`.
+- 일반 TS 파일: `camelCase`. 훅·서비스·스토어·모델·상수·쿼리·API·액션·타입·테스트에 적용.
+- URL 경로 및 API route: `kebab-case`. 예: `my-course/`, `api/payment-info/`.
+- 역할 접미사: `.service.ts`, `.store.ts`, `.model.ts`, `.constant.ts`, `.queries.ts`, `.api.ts`, `.action.ts`, `.type.ts`, `.spec.ts`.
+- `_data/`는 store/model/constant를 파일 단위로 분리한다.
+- 객체 타입은 `type` 별칭을 사용한다.
 
-## 금지 & 강제 (lint로 차단됨)
+## 금지 & 강제
 
-- **default export 금지** — Next 특수 파일(page/layout 등)·설정 파일만 예외. 컴포넌트는 named export 1개.
-- **배럴 파일(index.ts/tsx) 금지** — 생성·import 모두.
-- **import 경로** — 같은 라우트 내부는 상대경로, `_shared`/`_global`은 `@/` 절대경로.
-- **피처 코드에서 `_apis` 직접 import 금지** — `@/app/_global/_queries`의 queryOptions 사용.
-- **아키텍처 경계(레이어)** — `feature`끼리 서로 import 금지, `_global`/`_shared`는 `feature`를 역참조 금지. 허용: feature→(global·shared·자기 자신), shared→(global·shared), global→global.
-- **import 위생** — import 자동 정렬(simple-import-sort), 순환 참조 금지(no-cycle), 중복 import 금지. 타입 전용 import는 `import type`.
-- **`console.log` 금지** — `console.warn`/`console.error`만 허용.
-- **테스트 위생** — `describe.only`/`it.only`/`.skip`/주석처리 테스트 커밋 금지.
-- 컴포넌트 폴더 안에 `_hooks/`·`_services/` 중첩 금지.
-- 컴포넌트 **파일명** PascalCase는 lint 강제. 컴포넌트 **폴더명**도 PascalCase로 맞출 것(문서 규칙).
+- **default export 금지** — named export만 사용한다. 단, Next 특수 파일(`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`, `route.ts` 등)과 설정 파일은
+  예외다.
+- **컴포넌트 export 제한** — 컴포넌트 파일은 하나의 컴포넌트만 export한다. 내부 헬퍼 함수/상수는 export하지 않는다.
+- **배럴 파일 금지** — `index.ts`/`index.tsx` 생성과 import를 금지한다.
+- **import 경로** — 같은 route 내부 코드는 상대경로를 사용하고, `_shared`/`_global` 코드는 `@/` 절대경로를 사용한다.
+- **API 직접 import 금지** — feature 코드에서 `_apis`를 직접 import하지 않는다. `@/app/_global/_queries`의 queryOptions를 사용한다.
+- **아키텍처 경계** — feature끼리 서로 import하지 않는다. `_global`/`_shared`는 feature를 역참조하지 않는다. 허용: feature→(global·shared·자기 자신),
+  shared→(global·shared), global→global.
+- **import 규칙** — simple-import-sort 정렬, 순환 참조 금지, 중복 import 금지. 타입 전용 import는 `import type`을 사용한다.
+- **로그 제한** — `console.log`는 금지한다. `console.warn`/`console.error`만 허용한다.
+- **테스트 금지 패턴** — `describe.only`/`it.only`/`.skip`/주석 처리한 테스트를 커밋하지 않는다.
+- **컴포넌트 구조** — 컴포넌트 폴더 내부에 `_hooks/`, `_services/` 같은 프라이빗 폴더를 중첩하지 않는다.
+- **컴포넌트 네이밍** — 컴포넌트 파일명과 폴더명은 `PascalCase`로 맞춘다.
 
 ## Git hook (Husky)
 
-- `pre-commit` — lint-staged(eslint --fix + prettier)
-- `commit-msg` — commitlint (Conventional Commits: `feat:`, `fix:`, `chore:` …)
-- `pre-push` — `pnpm typecheck`
+- `pre-commit` — staged 파일에 `lint-staged` 실행. TS/TSX는 `eslint --fix` + `prettier --write`, JS/JSON/MD/CSS 등은 `prettier --write`.
+- `commit-msg` — commitlint로 Conventional Commits 형식 검사. 예: `feat:`, `fix:`, `chore:`.
+- `pre-push` — `pnpm typecheck` 실행.
 
-훅에서 막히면 위 규칙 위반이다. 우회하지 말고 코드를 고칠 것.
+훅 실패는 코드/포맷/타입/커밋 메시지 규칙 위반으로 보고, 우회하지 말고 원인을 수정한다. 훅은 staged 파일 중심의 최소 안전망이므로 코드 변경 후에는 별도 검증 명령을 실행한
+다.
 
 ## 데이터 패턴 (TanStack Query)
 
-- `_apis/*.api.ts` — fetch 호출만.
-- `_queries/*.queries.ts` — `queryKey` + `queryOptions`만.
-- 사용부 — `useQuery(exampleQueries.list())`.
-- Provider는 `app/_global/_providers/QueryProvider`, `app/layout.tsx`에서 래핑.
+- API 호출 함수는 `app/_global/_apis/*.api.ts`에 둔다. `_apis` 파일은 fetch 호출만 담당한다.
+- 서버 쿼리는 `app/_global/_queries/*.queries.ts`에 둔다. `_queries` 파일은 `queryKey`와 `queryOptions`만 정의하고 `useQuery`를 호출하지 않는다.
+- 사용부에서는 `useQuery(exampleQueries.list())`처럼 `_queries`의 queryOptions를 주입해 호출한다.
+- feature 코드에서 `_apis`를 직접 import하지 않는다. 서버 상태 조회는 `@/app/_global/_queries`를 경유한다.
+- `QueryProvider`는 `app/_global/_providers/QueryProvider`에 두고 `app/layout.tsx`에서 래핑한다.
+- TanStack Query의 queryKey 설계, mutation, invalidation, prefetch/dehydrate 규칙은 `.agents/tanstack-query.md`를 만들어 별도로 관리한다.
 
-참조 예시: `app/example/`, `app/_global/_apis|_queries|_providers/`.
+참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
