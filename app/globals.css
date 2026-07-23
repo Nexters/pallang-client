@@ -12,6 +12,141 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ponytail: 임시 디자인 토큰 — Figma 143:20157(컬러/투명도), 143:20041(타이포그래피). 디자인 확정 시 갱신 */
+@theme {
+  /* Palette — Common */
+  --color-common-0: #ffffff;
+  --color-common-100: #000000;
+
+  /* Palette — 기본 스케일(50~950)과 혼용 방지를 위해 초기화 후 5~90으로 재정의 */
+  --color-neutral-*: initial;
+  --color-neutral-5: #f1f2f4;
+  --color-neutral-10: #e2e4e9;
+  --color-neutral-20: #d4d7de;
+  --color-neutral-30: #b7bcc8;
+  --color-neutral-40: #9aa2b2;
+  --color-neutral-50: #7d879c;
+  --color-neutral-60: #636e82;
+  --color-neutral-70: #4d5565;
+  --color-neutral-80: #373d48;
+  --color-neutral-90: #21252b;
+
+  --color-yellow-*: initial;
+  --color-yellow-5: #fffde6;
+  --color-yellow-10: #fff7bd;
+  --color-yellow-20: #ffef95;
+  --color-yellow-30: #ffe46c;
+  --color-yellow-40: #fedb67;
+  --color-yellow-50: #ffc419;
+  --color-yellow-60: #feba00;
+  --color-yellow-70: #f29d00;
+  --color-yellow-80: #c37e00;
+  --color-yellow-90: #855200;
+
+  --color-red-*: initial;
+  --color-red-5: #fff1f0;
+  --color-red-10: #ffccc7;
+  --color-red-20: #ffa39e;
+  --color-red-30: #ff7875;
+  --color-red-40: #ff4d4f;
+  --color-red-50: #f5222d;
+  --color-red-60: #cf1322;
+  --color-red-70: #a8071a;
+  --color-red-80: #820014;
+  --color-red-90: #5c0011;
+
+  --color-green-*: initial;
+  --color-green-5: #f6ffed;
+  --color-green-10: #d9f7be;
+  --color-green-20: #b7eb8f;
+  --color-green-30: #95de64;
+  --color-green-40: #73d13d;
+  --color-green-50: #52c41a;
+  --color-green-60: #389e0d;
+  --color-green-70: #237804;
+  --color-green-80: #135200;
+  --color-green-90: #092b00;
+
+  --color-blue-*: initial;
+  --color-blue-5: #e6f7ff;
+  --color-blue-10: #a3e0ff;
+  --color-blue-20: #7aceff;
+  --color-blue-30: #52baff;
+  --color-blue-40: #29a2ff;
+  --color-blue-50: #0088ff;
+  --color-blue-60: #006cd9;
+  --color-blue-70: #0053b3;
+  --color-blue-80: #003d8c;
+  --color-blue-90: #002966;
+
+  /* Semantic (정리 진행 중) */
+  --color-primary-normal: #feba00; /* Yellow/60 */
+  --color-status-negative: #f5222d; /* Red/50 */
+  --color-status-positive: #52c41a; /* Green/50 */
+  --color-label-strong: #21252b; /* Neutral/90 */
+  --color-label-normal: #373d48; /* Neutral/80 */
+  --color-label-alternative: #636e82; /* Neutral/60 */
+  --color-label-assistive: #7d879c; /* Neutral/50 */
+  --color-label-disabled: #9aa2b2; /* Neutral/40 */
+  --color-label-white: #ffffff; /* Common/0 */
+  --color-static-black: #000000; /* Common/100 */
+  --color-static-white: #ffffff; /* Common/0 */
+  --color-bg-disabled: #f1f2f4; /* Neutral/5 */
+  --color-interaction-normal: #21252b00; /* Neutral/90 0% */
+  --color-interaction-pressed: #21252b0d; /* Neutral/90 5% */
+  --color-interaction-focused: #21252b14; /* Neutral/90 8% */
+
+  /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
+  --font-suit: 'SUIT Variable', sans-serif;
+  --font-galmuri: 'Galmuri11', sans-serif;
+
+  /* Typography — 스타일 (text-title-24bd 형태로 사용) */
+  --text-dialogue-14rg: 14px;
+  --text-dialogue-14rg--line-height: 1.5;
+  --text-dialogue-14rg--letter-spacing: 0em;
+  --text-dialogue-14rg--font-weight: 400;
+  --text-title-24bd: 24px;
+  --text-title-24bd--line-height: 1.3;
+  --text-title-24bd--letter-spacing: -0.04em;
+  --text-title-24bd--font-weight: 700;
+  --text-title-20sb: 20px;
+  --text-title-20sb--line-height: 1.5;
+  --text-title-20sb--letter-spacing: -0.03em;
+  --text-title-20sb--font-weight: 600;
+  --text-title-18sb: 18px;
+  --text-title-18sb--line-height: 1.3;
+  --text-title-18sb--letter-spacing: -0.03em;
+  --text-title-18sb--font-weight: 600;
+  --text-title-16sb: 16px;
+  --text-title-16sb--line-height: 1.3;
+  --text-title-16sb--letter-spacing: -0.04em;
+  --text-title-16sb--font-weight: 600;
+  --text-title-14bd: 14px;
+  --text-title-14bd--line-height: 1.3;
+  --text-title-14bd--letter-spacing: -0.02em;
+  --text-title-14bd--font-weight: 700;
+  --text-title-12bd: 12px;
+  --text-title-12bd--line-height: 1.3;
+  --text-title-12bd--letter-spacing: -0.02em;
+  --text-title-12bd--font-weight: 700;
+  --text-body-16md: 16px;
+  --text-body-16md--line-height: 1.3;
+  --text-body-16md--letter-spacing: -0.04em;
+  --text-body-16md--font-weight: 500;
+  --text-body-16rg: 16px;
+  --text-body-16rg--line-height: 1.3;
+  --text-body-16rg--letter-spacing: -0.04em;
+  --text-body-16rg--font-weight: 400;
+  --text-body-14md: 14px;
+  --text-body-14md--line-height: 1.5;
+  --text-body-14md--letter-spacing: -0.03em;
+  --text-body-14md--font-weight: 500;
+  --text-caption-12rg: 12px;
+  --text-caption-12rg--line-height: 1.3;
+  --text-caption-12rg--letter-spacing: -0.04em;
+  --text-caption-12rg--font-weight: 400;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
