@@ -70,4 +70,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `QueryProvider`는 `app/_global/_providers/QueryProvider`에 두고 `app/layout.tsx`에서 래핑한다.
 - TanStack Query의 queryKey 설계, mutation, invalidation, prefetch/dehydrate 규칙은 `.agents/tanstack-query.md`를 만들어 별도로 관리한다.
 
+## 아이콘
+
+- 아이콘은 `app/_global/_components/Icon/assets/*.svg`(kebab-case)에 두고 SVGR로 컴포넌트처럼 import해서 쓴다. 색은 `currentColor` 기반.
+- 새 아이콘 추가 절차와 SVG 정리 규칙, 빌드 설정(next/turbopack·storybook/vite·`svg.d.ts`)은 `.agents/icons.md`를 따른다.
+
 참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
