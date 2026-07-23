@@ -13,7 +13,8 @@
 }
 
 /* ponytail: 임시 디자인 토큰 — Figma 143:20157(컬러/투명도), 143:20041(타이포그래피). 디자인 확정 시 갱신 */
-@theme {
+/* static: 미사용 토큰도 CSS 변수로 내보내 스토리북 팔레트에서 var(--color-*)로 참조 가능하게 함 */
+@theme static {
   /* Palette — Common */
   --color-common-0: #ffffff;
   --color-common-100: #000000;
