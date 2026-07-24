@@ -2,7 +2,7 @@
 
 import { type ComponentProps, useState } from 'react'
 
-import { cn } from '@/app/_global/_styles/cn'
+import { cn } from '@/app/_global/_services/cn.service'
 
 type TextareaProps = ComponentProps<'textarea'> & {
   variant?: 'light' | 'dark'

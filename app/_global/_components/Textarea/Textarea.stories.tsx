@@ -5,7 +5,6 @@ import { Textarea } from './Textarea'
 const meta = {
   title: 'Components/Textarea',
   component: Textarea,
-  tags: ['autodocs'],
   argTypes: {
     variant: {
       control: 'radio',
@@ -20,13 +19,7 @@ const meta = {
   },
   decorators: [
     (Story, { args }) => (
-      <div
-        style={{
-          width: 375,
-          padding: 16,
-          background: args.variant === 'dark' ? '#111' : '#fff',
-        }}
-      >
+      <div className={`w-[375px] p-4 ${args.variant === 'dark' ? 'bg-bg-black' : 'bg-bg-default'}`}>
         <Story />
       </div>
     ),
