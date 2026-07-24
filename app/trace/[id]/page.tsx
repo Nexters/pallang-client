@@ -73,7 +73,7 @@ export default function ReaderHighlightsPage() {
           </div>
         </section>
       ) : (
-        <section className="shrink-0 animate-[panel-settle_200ms_ease-out] bg-bg-default">
+        <section className="shrink-0 animate-[panel-settle_200ms_ease-out] bg-bg-book-card">
           <TraceHeader title={bookTitle} />
           <QuotePanel
             quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}
