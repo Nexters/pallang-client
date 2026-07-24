@@ -8,6 +8,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import boundaries from 'eslint-plugin-boundaries'
 import vitest from '@vitest/eslint-plugin'
 import eslintConfigPrettier from 'eslint-config-prettier'
+import storybook from 'eslint-plugin-storybook'
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -173,14 +174,20 @@ const eslintConfig = defineConfig([
       '**/instrumentation.ts',
       '**/*.config.{js,mjs,ts}',
       'next-env.d.ts',
+      // Storybook: CSF meta와 .storybook 설정은 default export가 필수
+      '**/*.stories.{ts,tsx}',
+      '.storybook/**/*.{ts,tsx}',
     ],
     rules: { 'import/no-default-export': 'off' },
   },
 
+  // Storybook 스토리 파일 권장 룰
+  ...storybook.configs['flat/recommended'],
+
   // Prettier와 충돌하는 스타일 룰 비활성 (항상 마지막)
   eslintConfigPrettier,
 
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'storybook-static/**']),
 ])
 
 export default eslintConfig
