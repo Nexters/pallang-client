@@ -13,8 +13,8 @@ const config: StorybookConfig = {
     viteConfig.plugins.push(
       svgr({
         include: /\/app\/.+\.svg(\?.*)?$/,
-        // next.config.ts의 @svgr/webpack 옵션과 동일하게 기본 색 지정
-        svgrOptions: { svgProps: { className: 'text-icon-primary' } },
+        // next.config.ts의 @svgr/webpack 옵션과 동일하게 기본 색 지정, viewBox 보존 위해 svgo 비활성
+        svgrOptions: { svgProps: { className: 'text-icon-primary' }, svgo: false },
       }),
     )
     return viteConfig

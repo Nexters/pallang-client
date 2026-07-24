@@ -46,6 +46,6 @@ import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 
 svg import가 컴포넌트로 동작하는 것은 아래 세 가지 설정에 의존한다.
 
-- `next.config.ts` — `turbopack.rules`의 `*.svg` → `@svgr/webpack` 룰. 글롭은 파일명 기반 `*.svg`여야 한다 (`app/**/*.svg` 같은 경로 글롭은 매칭되지 않아 svg가 static image 객체로 import되고 "Element type is invalid: ... got: object" 런타임 에러가 난다). `svgProps: { className: 'text-icon-primary' }`로 기본 색을 주입한다 (`.storybook/main.ts`의 `svgrOptions`와 동일하게 유지). `images.disableStaticImages: true`는 Next 기본 `*.svg` 타입(any) 주입이 `svg.d.ts`와 충돌하는 것을 막기 위한 것이므로 제거하지 않는다.
+- `next.config.ts` — `turbopack.rules`의 `*.svg` → `@svgr/webpack` 룰. 글롭은 파일명 기반 `*.svg`여야 한다 (`app/**/*.svg` 같은 경로 글롭은 매칭되지 않아 svg가 static image 객체로 import되고 "Element type is invalid: ... got: object" 런타임 에러가 난다). `svgProps: { className: 'text-icon-primary' }`로 기본 색을 주입한다 (`.storybook/main.ts`의 `svgrOptions`와 동일하게 유지). `svgo: false` 필수 — SVGO가 viewBox를 제거하면 width/height 재정의 시 스케일되지 않고 잘린다. `images.disableStaticImages: true`는 Next 기본 `*.svg` 타입(any) 주입이 `svg.d.ts`와 충돌하는 것을 막기 위한 것이므로 제거하지 않는다.
 - `svg.d.ts` — `*.svg` import를 `FC<SVGProps<SVGSVGElement>>`로 타입 선언.
 - `.storybook/main.ts` — `viteFinal`의 `vite-plugin-svgr`. `@storybook/nextjs-vite`가 svg import에 `?ignore` 쿼리를 붙이므로 include는 쿼리까지 매칭하는 정규식이어야 한다.
