@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     rules: {
-      'app/**/*.svg': {
+      '*.svg': {
         loaders: [
           {
             loader: '@svgr/webpack',
