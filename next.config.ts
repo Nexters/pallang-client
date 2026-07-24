@@ -9,7 +9,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     rules: {
       'app/**/*.svg': {
-        loaders: ['@svgr/webpack'],
+        loaders: [
+          {
+            loader: '@svgr/webpack',
+            options: {
+              // 아이콘 기본 색 — className 전달 시 {...props}가 뒤에 스프레드되어 오버라이드됨
+              svgProps: { className: 'text-icon-primary' },
+            },
+          },
+        ],
         as: '*.js',
       },
     },

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 
+import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
+import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
+
 import { traceSeed } from '../../_data/readerHighlights.constant'
-import { Icon } from '../Icon/Icon'
 import { TraceItem } from '../TraceItem/TraceItem'
 
 type TraceListSectionProps = {
@@ -22,7 +24,7 @@ export function TraceListSection({ onToggleComment, onRequestComment }: TraceLis
         <div className="flex items-center gap-1">
           <p className="text-title-16sb text-text-inverse">{traceSeed.length}개의 흔적</p>
           <button type="button" aria-label="흔적 남기기" onClick={onToggleComment}>
-            <Icon name="pencil" size={20} />
+            <PencilIcon width={20} height={20} className="text-icon-active" />
           </button>
         </div>
         <button
@@ -33,7 +35,7 @@ export function TraceListSection({ onToggleComment, onRequestComment }: TraceLis
           className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
         >
           {sortBy === 'latest' ? '최신순' : '좋아요순'}
-          <Icon name="chevronDown" size={20} />
+          <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
       <ul className="flex flex-col px-4 pb-10">

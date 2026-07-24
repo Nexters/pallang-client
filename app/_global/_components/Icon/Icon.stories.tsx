@@ -5,6 +5,8 @@ import { useState } from 'react'
 import BackIcon from './assets/back.svg'
 import BookAddIcon from './assets/book-add.svg'
 import CameraIcon from './assets/camera.svg'
+import CautionIcon from './assets/caution.svg'
+import ChevronDownIcon from './assets/chevron-down.svg'
 import CloseIcon from './assets/close.svg'
 import CommentIcon from './assets/comment.svg'
 import ContentIcon from './assets/content.svg'
@@ -29,6 +31,8 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'TrashIcon', Component: TrashIcon },
   { name: 'BackIcon', Component: BackIcon },
   { name: 'NextIcon', Component: NextIcon },
+  { name: 'ChevronDownIcon', Component: ChevronDownIcon },
+  { name: 'CautionIcon', Component: CautionIcon },
   { name: 'LikeIcon', Component: LikeIcon },
   { name: 'CommentIcon', Component: CommentIcon },
   { name: 'HomeIcon', Component: HomeIcon },

@@ -1,5 +1,6 @@
+import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
+
 import type { Highlight } from '../../_types/readerHighlights.type'
-import { Icon } from '../Icon/Icon'
 
 type HighlightCardProps = {
   highlight: Highlight
@@ -21,7 +22,8 @@ export function HighlightCard({ highlight, quoteIndex, isRevealed, onClick }: Hi
       <p className="h-full overflow-hidden text-body-20md text-text-secondary">{quote}</p>
       {isCovered && (
         <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-[4px] bg-bg-book-card/70 backdrop-blur-[9px]">
-          <Icon name="caution" size={64} color="#3e3e3e" />
+          {/* ponytail: #3e3e3e는 디자인 변수 미연결 색 — 토큰 추가 시 치환 */}
+          <CautionIcon width={64} height={64} className="text-[#3e3e3e]" />
           <span className="flex flex-col gap-1 text-center text-black">
             <span className="text-[20px] leading-[1.4] font-bold tracking-[-0.8px]">
               스포일러가 포함되어있어요!

@@ -1,4 +1,4 @@
-import { Icon } from '../Icon/Icon'
+import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 
 export function CommentBar() {
   return (
@@ -14,7 +14,7 @@ export function CommentBar() {
         aria-label="댓글 등록"
         className="flex size-9.5 shrink-0 items-center justify-center rounded-full bg-interactive-accent"
       >
-        <Icon name="pencil" size={20} />
+        <PencilIcon width={20} height={20} className="text-icon-active" />
       </button>
     </div>
   )

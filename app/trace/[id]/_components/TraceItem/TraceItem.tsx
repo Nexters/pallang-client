@@ -1,8 +1,11 @@
 import { useState, useSyncExternalStore } from 'react'
 
+import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
+import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
+import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
-import { Icon } from '../Icon/Icon'
 
 type TraceItemProps = {
   trace: Trace
@@ -28,7 +31,7 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
     <article className="flex flex-col gap-3 py-4">
       <button type="button" className="flex items-center gap-0.5 self-start opacity-40">
         <span className="text-body-14sb text-text-inverse">{trace.nickname}</span>
-        <Icon name="chevronRight" size={16} />
+        <NextIcon width={16} height={16} className="text-icon-active" />
       </button>
       <button
         type="button"
@@ -50,7 +53,11 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
             }}
             className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >
-            <Icon name="heart" size={20} color={isLiked ? '#ef5a06' : '#fff'} />
+            <LikeIcon
+              width={20}
+              height={20}
+              className={isLiked ? 'text-icon-accent' : 'text-icon-active'}
+            />
             {formatLikeCount(likeCount)}
           </button>
           <button
@@ -58,7 +65,7 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
             onClick={onCommentClick}
             className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >
-            <Icon name="comment" size={20} />
+            <CommentIcon width={20} height={20} className="text-icon-active" />
             {trace.commentCount}
           </button>
         </div>

@@ -20,8 +20,11 @@ SVG를 import하면 SVGR이 React 컴포넌트로 변환한다. 별도 래퍼 �
 ```tsx
 import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 
-// 색은 currentColor를 따르므로 CSS color로 제어
-<CameraIcon className="text-neutral-900" />
+// 기본 색은 text-icon-primary (SVGR svgProps로 주입, currentColor 기반)
+<CameraIcon />
+
+// 다른 색이 필요하면 className으로 오버라이드
+<CameraIcon className="text-icon-active" />
 
 // 크기는 width/height props로 재정의 (기본 24)
 <CameraIcon width={16} height={16} />
@@ -43,6 +46,6 @@ import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 
 svg import가 컴포넌트로 동작하는 것은 아래 세 가지 설정에 의존한다.
 
-- `next.config.ts` — `turbopack.rules`의 `app/**/*.svg` → `@svgr/webpack` 룰. `images.disableStaticImages: true`는 Next 기본 `*.svg` 타입(any) 주입이 `svg.d.ts`와 충돌하는 것을 막기 위한 것이므로 제거하지 않는다.
+- `next.config.ts` — `turbopack.rules`의 `app/**/*.svg` → `@svgr/webpack` 룰. `svgProps: { className: 'text-icon-primary' }`로 기본 색을 주입한다 (`.storybook/main.ts`의 `svgrOptions`와 동일하게 유지). `images.disableStaticImages: true`는 Next 기본 `*.svg` 타입(any) 주입이 `svg.d.ts`와 충돌하는 것을 막기 위한 것이므로 제거하지 않는다.
 - `svg.d.ts` — `*.svg` import를 `FC<SVGProps<SVGSVGElement>>`로 타입 선언.
 - `.storybook/main.ts` — `viteFinal`의 `vite-plugin-svgr`. `@storybook/nextjs-vite`가 svg import에 `?ignore` 쿼리를 붙이므로 include는 쿼리까지 매칭하는 정규식이어야 한다.

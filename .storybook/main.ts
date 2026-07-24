@@ -10,7 +10,13 @@ const config: StorybookConfig = {
     // Next(turbopack)의 @svgr/webpack 룰과 동일하게 svg import를 컴포넌트로 변환
     viteConfig.plugins ??= []
     // nextjs-vite가 svg import에 ?ignore 쿼리를 붙이므로 쿼리까지 포함해 매칭한다
-    viteConfig.plugins.push(svgr({ include: /\/app\/.+\.svg(\?.*)?$/ }))
+    viteConfig.plugins.push(
+      svgr({
+        include: /\/app\/.+\.svg(\?.*)?$/,
+        // next.config.ts의 @svgr/webpack 옵션과 동일하게 기본 색 지정
+        svgrOptions: { svgProps: { className: 'text-icon-primary' } },
+      }),
+    )
     return viteConfig
   },
 }
