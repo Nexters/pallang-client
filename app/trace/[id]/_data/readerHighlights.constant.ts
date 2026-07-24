@@ -57,6 +57,21 @@ export const traceSeed: Trace[] = [
     createdAt: '2026-07-23T02:00:00.000Z',
     likeCount: 4,
     commentCount: 1,
+    isSpoiler: false,
+    comments: [
+      {
+        id: 1,
+        nickname: '지우',
+        content: '책장 냄새가 이렇게 묘사될 수 있구나 싶었어요.',
+        createdAt: '2026-07-23T05:00:00.000Z',
+      },
+      {
+        id: 2,
+        nickname: '책장',
+        content: '헌책방에 갈 때마다 이 냄새를 맡으면 마음이 차분해지거든요.',
+        createdAt: '2026-07-23T08:00:00.000Z',
+      },
+    ],
   },
   {
     id: 2,
@@ -65,6 +80,8 @@ export const traceSeed: Trace[] = [
     createdAt: '2026-07-21T09:00:00.000Z',
     likeCount: 120,
     commentCount: 3,
+    isSpoiler: false,
+    comments: [],
   },
   {
     id: 3,
@@ -73,6 +90,8 @@ export const traceSeed: Trace[] = [
     createdAt: '2026-07-20T09:00:00.000Z',
     likeCount: 8,
     commentCount: 2,
+    isSpoiler: true,
+    comments: [],
   },
   {
     id: 4,
@@ -81,6 +100,8 @@ export const traceSeed: Trace[] = [
     createdAt: '2026-07-09T09:00:00.000Z',
     likeCount: 21,
     commentCount: 5,
+    isSpoiler: false,
+    comments: [],
   },
   {
     id: 5,
@@ -89,5 +110,7 @@ export const traceSeed: Trace[] = [
     createdAt: '2026-07-02T09:00:00.000Z',
     likeCount: 15,
     commentCount: 0,
+    isSpoiler: false,
+    comments: [],
   },
 ]
