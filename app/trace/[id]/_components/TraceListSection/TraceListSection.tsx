@@ -9,18 +9,22 @@ import { TraceItem } from '../TraceItem/TraceItem'
 type TraceListSectionProps = {
   traces: Trace[]
   sortBy: 'latest' | 'likes'
+  revealedSpoilerIds: ReadonlySet<number>
   onToggleSort: () => void
   onToggleComment: () => void
-  onRequestComment: () => void
+  onRevealTrace: (id: number) => void
+  onSelectTrace: (trace: Trace) => void
   onListScroll: (event: UIEvent<HTMLUListElement>) => void
 }
 
 export function TraceListSection({
   traces,
   sortBy,
+  revealedSpoilerIds,
   onToggleSort,
   onToggleComment,
-  onRequestComment,
+  onRevealTrace,
+  onSelectTrace,
   onListScroll,
 }: TraceListSectionProps) {
   return (
@@ -50,7 +54,16 @@ export function TraceListSection({
             key={trace.id}
             className={index > 0 ? 'border-t border-dashed border-white/30' : undefined}
           >
-            <TraceItem trace={trace} onCommentClick={onRequestComment} />
+            <TraceItem
+              trace={trace}
+              isMasked={trace.isSpoiler && !revealedSpoilerIds.has(trace.id)}
+              onReveal={() => {
+                onRevealTrace(trace.id)
+              }}
+              onSelect={() => {
+                onSelectTrace(trace)
+              }}
+            />
           </li>
         ))}
       </ul>

@@ -21,6 +21,7 @@ export default function ReaderHighlightsPage() {
   const { viewMode, handleListScroll } = useTraceViewMode()
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
+  const [revealedSpoilerIds, setRevealedSpoilerIds] = useState<ReadonlySet<number>>(new Set())
 
   const sortedTraces = useMemo(
     () =>
@@ -82,11 +83,15 @@ export default function ReaderHighlightsPage() {
       <TraceListSection
         traces={sortedTraces}
         sortBy={sortBy}
+        revealedSpoilerIds={revealedSpoilerIds}
         onToggleSort={() => {
           setSortBy((prev) => (prev === 'latest' ? 'likes' : 'latest'))
         }}
         onToggleComment={toggleCommentBar}
-        onRequestComment={openCommentBar}
+        onRevealTrace={(id) => {
+          setRevealedSpoilerIds((prev) => new Set(prev).add(id))
+        }}
+        onSelectTrace={() => undefined}
         onListScroll={handleListScroll}
       />
       {isCommentBarOpen && <CommentBar />}

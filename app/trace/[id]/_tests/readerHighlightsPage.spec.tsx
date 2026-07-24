@@ -45,6 +45,18 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByRole('button', { name: '좋아요순' })).toBeInTheDocument()
   })
 
+  it('스포일러 의견은 마스킹되고, 첫 클릭에 해제만 된다', () => {
+    render(<ReaderHighlightsPage />)
+    const spoiler = screen.getByText(
+      '결혼이란 결국 선택의 문제라는 말, 읽을 때마다 다르게 다가와요.',
+    )
+
+    expect(spoiler).toHaveClass('font-galmuri')
+    fireEvent.click(spoiler)
+    expect(spoiler).not.toHaveClass('font-galmuri')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
   it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', () => {
     render(<ReaderHighlightsPage />)
     const list = screen.getByRole('list')
