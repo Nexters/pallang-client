@@ -83,9 +83,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
 
-## Capacitor / iOS (웹뷰 앱)
+## Capacitor (웹뷰 앱, iOS · Android)
 
-이 웹은 Capacitor로 iOS 웹뷰 앱화되어 있다(원격 URL 로드, 카메라). **iOS 빌드/기기 검증 전 반드시 [docs/capacitor-ios.md](docs/capacitor-ios.md)를 읽을 것.** 특히 두 함정:
+이 웹은 Capacitor로 iOS/Android 웹뷰 앱화되어 있다(원격 URL 로드, 카메라). **네이티브 빌드/기기 검증 전 반드시 [docs/capacitor.md](docs/capacitor.md)를 읽을 것.** 특히 함정:
 
-- **`next dev`는 WKWebView에서 하이드레이션이 안 된다**(브라우저는 정상). 웹뷰/기기 테스트는 `pnpm build && pnpm start`(프로덕션)로 한다.
-- **Xcode GUI로 프로젝트를 열면 pbxproj가 손상**되어 `Undefined symbol: _main`이 난다. `ios/`를 재생성하고 `xcodebuild`/`cap` CLI로 빌드한다.
+- **`next dev`는 WKWebView에서 하이드레이션이 안 된다**(브라우저·Android는 정상). 웹뷰/기기 테스트는 `pnpm build && pnpm start`(프로덕션)로 한다.
+- **(iOS)** Xcode GUI로 프로젝트를 열면 pbxproj가 손상되어 `Undefined symbol: _main`이 난다. `ios/`를 재생성하고 `xcodebuild`/`cap` CLI로 빌드한다.
+- **(Android)** APK 빌드에 **JDK 21** 필요(카메라 플러그인 요구). dev(http) 로드는 debug 매니페스트의 `usesCleartextTraffic`로 허용.

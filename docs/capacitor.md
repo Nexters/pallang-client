@@ -1,8 +1,8 @@
-# Capacitor iOS 운영/검증 노트 (Runbook)
+# Capacitor 운영/검증 노트 (iOS · Android Runbook)
 
 이 앱은 **Capacitor 셸이 원격 URL(배포된 Next.js 웹)을 WebView로 로드**하고, 네이티브 기능은 **카메라만** 쓴다. 설계 배경은 [specs/2026-07-24-capacitor-camera-webview-design.md](./superpowers/specs/2026-07-24-capacitor-camera-webview-design.md).
 
-아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것.
+아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것. (함정 1은 iOS·Android 공통, 함정 2는 iOS 전용, Android는 아래 별도 섹션.)
 
 ## ⚠️ 함정 1 — Next.js `dev` 서버는 WKWebView에서 하이드레이션이 안 됨
 
