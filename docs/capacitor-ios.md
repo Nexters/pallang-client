@@ -70,23 +70,55 @@ xcrun simctl io booted screenshot out.png   # 화면 확인
 
 ## Android 노트
 
-iOS만큼 함정은 없다(Gradle 프로젝트라 pbxproj 손상 같은 문제 없음). 확인된 사항:
+iOS만큼 함정은 없다(Gradle 프로젝트라 pbxproj 손상 같은 문제 없음). **에뮬레이터에서 카메라 촬영 → 미리보기 왕복까지 실제 검증 완료.** 확인된 사항:
 
 - **⚠️ 빌드에 JDK 21 필요**: `@capacitor/camera` 플러그인의 Gradle 툴체인이 Java 21을 요구한다. JDK 17로 빌드하면 `Cannot find a Java installation ... matching {languageVersion=21}`로 실패. 빌드 시 `JAVA_HOME`을 **JDK 21**로 지정할 것.
 - **⚠️ cleartext(http) — iOS ATS의 Android판**: targetSdk 36이라 cleartext가 기본 차단된다. **프로덕션(https)은 무관**하지만, **LAN dev 서버(http) 테스트 시** 필요. `android/app/src/debug/AndroidManifest.xml`에 `usesCleartextTraffic="true"`를 두어 **디버그 빌드에만** 허용(릴리스엔 안 들어가 prod 보안 유지).
 - **카메라 권한 불필요**: `@capacitor/camera`가 매니페스트(`queries` IMAGE_CAPTURE 등)를 자동 병합. `CAMERA` 권한 선언 불필요.
-- **APK 빌드 (검증됨)**:
-  ```bash
-  # dev(에뮬레이터): 호스트는 10.0.2.2로 접근
-  CAP_SERVER_URL=http://10.0.2.2:3000/camera-check npx cap sync android
-  cd android && JAVA_HOME=<JDK21_경로> ANDROID_HOME=<SDK> ./gradlew assembleDebug
-  # 산출물: android/app/build/outputs/apk/debug/app-debug.apk
-  ```
-- **에뮬레이터 실행**: 디스크 여유가 넉넉해야 함(에뮬레이터가 userdata에 ~7GB 요구). SDK 구성요소: `sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator" "system-images;android-36;google_apis;arm64-v8a"`, AVD는 `avdmanager create avd`.
-- **하이드레이션**: Android WebView는 Chromium이라 `next dev`도 될 가능성이 높지만, iOS와 동일하게 **prod 빌드 권장**.
+- **하이드레이션 정상**: Android WebView는 Chromium이라 iOS의 WKWebView 문제가 없다. 그래도 배포 아키텍처 일관성을 위해 iOS와 동일하게 **prod 빌드 권장**.
+
+### 최초 1회 셋업 (SDK/에뮬레이터)
+
+```bash
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools   # commandlinetools 설치 경로
+# SDK 구성요소
+sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator" \
+  "system-images;android-36;google_apis;arm64-v8a"
+# AVD 생성
+avdmanager create avd -n pallang_test -k "system-images;android-36;google_apis;arm64-v8a" -d pixel_7
+```
+
+- **JDK 21**은 `~/jdk21`(Temurin)에 로컬 설치돼 있음. Homebrew cask는 sudo가 필요해서, tarball을 풀어 씀.
+- Gradle이 SDK를 찾도록 `android/local.properties`에 `sdk.dir=$ANDROID_HOME` (git-ignored).
+
+### APK 빌드 → 에뮬레이터 실행 → 카메라 확인 (검증된 절차)
+
+```bash
+# 1. 웹 서버(prod) — dev는 WKWebView가 아니라도 prod 권장
+pnpm build && PORT=3000 pnpm start
+
+# 2. 앱이 볼 URL을 에뮬레이터 호스트(10.0.2.2)로 동기화
+CAP_SERVER_URL=http://10.0.2.2:3000/camera-check npx cap sync android
+
+# 3. APK 빌드 (JDK 21 필수)
+cd android
+JAVA_HOME=~/jdk21/jdk-21*/Contents/Home ANDROID_HOME=$ANDROID_HOME ./gradlew assembleDebug
+# 산출물: android/app/build/outputs/apk/debug/app-debug.apk
+
+# 4. 에뮬레이터 실행 (직접 볼 땐 -no-window 빼기. -camera-back webcam0 = 맥 웹캠)
+emulator -avd pallang_test -camera-back webcam0 -partition-size 2048 -no-snapshot
+
+# 5. 설치 & 실행 (다른 탭)
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n kr.pallang.app/.MainActivity
+```
+
+- **디스크 주의**: 에뮬레이터가 userdata에 ~7GB 요구. 부족하면 `Not enough space to create userdata partition`으로 부팅 실패 → 공간 확보 후 재시도. `config.ini`의 `disk.dataPartition.size` 축소로도 완화.
+- **에뮬레이터 카메라**: `-camera-back webcam0`(맥 웹캠, 가장 현실적) / `virtualscene`(3D 가상방) / `emulated`(패턴). iOS 시뮬레이터와 달리 Android 에뮬레이터는 **카메라 촬영까지 테스트 가능**.
+- 검증된 왕복: 버튼 탭 → `Camera.getPhoto {"source":"PROMPT",...}` → "Take Picture" → 웹캠 촬영 → `webPath`로 사진 반환 → `<img>` 미리보기.
 
 ## 미확정 / 배포 전 할 일
 
 - `capacitor.config.ts`의 `appId`(`kr.pallang.app`), `PROD_SERVER_URL`(현재 플레이스홀더)을 실제 값으로 교체.
-- Android는 스캐폴딩만 됨(`android/`), 빌드/기기 검증은 미수행.
+- **iOS**: 시뮬레이터 + 실기기(iPhone 12 Pro) 카메라 검증 완료. **Android**: 에뮬레이터(Android 16) 카메라 검증 완료. 둘 다 실기 스토어 제출(서명·심사)은 미수행.
 - **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
