@@ -19,7 +19,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 디렉토리 규칙
 
-- `app/_global/` — 앱 전역 코드. 하위 폴더: `_providers/ _components/ _hooks/ _queries/ _apis/ _data/ _styles/`.
+- `app/_global/` — 앱 전역 코드. 하위 폴더: `_providers/ _components/ _hooks/ _services/ _queries/ _apis/ _data/ _styles/`.
 - `app/_shared/<domain>/` — 2개 이상 route에서 실제 재사용하는 도메인 공용 코드. 하위 폴더: `_components/ _hooks/ _data/`.
 - `app/<kebab-route>/` — 특정 route 전용 코드. 하위 폴더: `_components/ _hooks/ _services/ _data/ _actions/ _types/ _tests/`.
 - 기본 배치: route-local 우선. 실제 재사용 시 `_shared`, 앱 전역 인프라는 `_global`.
@@ -52,6 +52,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **컴포넌트 구조** — 컴포넌트 폴더 내부에 `_hooks/`, `_services/` 같은 프라이빗 폴더를 중첩하지 않는다.
 - **컴포넌트 네이밍** — 컴포넌트 파일명과 폴더명은 `PascalCase`로 맞춘다.
 
+## 이슈 / 브랜치 / PR 컨벤션
+
+- 태스크마다 GitHub 이슈를 먼저 만든다. `.github/ISSUE_TEMPLATE` 템플릿을 사용한다.
+- 브랜치는 이슈 번호 기반으로 만든다: `feat/<이슈번호>-<슬러그>`. 예: `feat/10-button-component`.
+- PR은 `main`으로 올린다. 제목은 `작업 내용 요약 (#이슈번호)`, 본문에 `Closes #<이슈번호>`를 포함해 머지 시 이슈가 자동으로 닫히게 한다.
+
 ## Git hook (Husky)
 
 - `pre-commit` — staged 파일에 `lint-staged` 실행. TS/TSX는 `eslint --fix` + `prettier --write`, JS/JSON/MD/CSS 등은 `prettier --write`.
@@ -69,5 +75,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - feature 코드에서 `_apis`를 직접 import하지 않는다. 서버 상태 조회는 `@/app/_global/_queries`를 경유한다.
 - `QueryProvider`는 `app/_global/_providers/QueryProvider`에 두고 `app/layout.tsx`에서 래핑한다.
 - TanStack Query의 queryKey 설계, mutation, invalidation, prefetch/dehydrate 규칙은 `.agents/tanstack-query.md`를 만들어 별도로 관리한다.
+
+## 아이콘
+
+- 아이콘은 `app/_global/_components/Icon/assets/*.svg`(kebab-case)에 두고 SVGR로 컴포넌트처럼 import해서 쓴다. 색은 `currentColor` 기반.
+- 새 아이콘 추가 절차와 SVG 정리 규칙, 빌드 설정(next/turbopack·storybook/vite·`svg.d.ts`)은 `.agents/icons.md`를 따른다.
 
 참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
