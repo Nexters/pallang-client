@@ -27,7 +27,7 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
   return (
     <article className="flex flex-col gap-3 py-4">
       <button type="button" className="flex items-center gap-0.5 self-start opacity-40">
-        <span className="text-[14px] font-semibold text-white">{trace.nickname}</span>
+        <span className="text-body-14sb text-text-inverse">{trace.nickname}</span>
         <Icon name="chevronRight" size={16} />
       </button>
       <button
@@ -35,14 +35,12 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
         onClick={() => {
           setIsExpanded((prev) => !prev)
         }}
-        className={`text-left text-[16px] leading-[1.4] font-medium tracking-[-0.32px] text-white ${
-          isExpanded ? '' : 'line-clamp-3'
-        }`}
+        className={`text-left text-body-16md text-text-inverse ${isExpanded ? '' : 'line-clamp-3'}`}
       >
         {trace.content}
       </button>
       <div className="flex items-center justify-between">
-        <span className="text-[14px] tracking-[-0.56px] text-white opacity-50">{dateLabel}</span>
+        <span className="text-body-14rg text-text-inverse opacity-50">{dateLabel}</span>
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -50,7 +48,7 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
             onClick={() => {
               setIsLiked((prev) => !prev)
             }}
-            className="flex items-center gap-0.5 text-[14px] tracking-[-0.56px] text-white"
+            className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >
             <Icon name="heart" size={20} color={isLiked ? '#ef5a06' : '#fff'} />
             {formatLikeCount(likeCount)}
@@ -58,7 +56,7 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
           <button
             type="button"
             onClick={onCommentClick}
-            className="flex items-center gap-0.5 text-[14px] tracking-[-0.56px] text-white"
+            className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >
             <Icon name="comment" size={20} />
             {trace.commentCount}

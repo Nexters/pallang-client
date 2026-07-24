@@ -33,9 +33,9 @@ export default function ReaderHighlightsPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[530px] flex-col bg-[#222]">
-      <section className="relative bg-white pb-10">
-        <div className="absolute inset-x-0 top-0 h-77 bg-[#ef5a06]" />
+    <main className="mx-auto flex min-h-dvh w-full max-w-[530px] flex-col bg-bg-dark">
+      <section className="relative bg-bg-default pb-10">
+        <div className="absolute inset-x-0 top-0 h-77 bg-orange-500" />
         <div className="relative">
           <TraceHeader title={bookTitle} />
           <PageTabs

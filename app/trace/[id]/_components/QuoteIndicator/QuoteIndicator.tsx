@@ -10,7 +10,8 @@ export function QuoteIndicator({ quotes, activeIndex }: QuoteIndicatorProps) {
         <span
           key={quote}
           className={
-            index === activeIndex ? 'h-[17px] w-1.5 bg-[#111]' : 'h-[9px] w-1.5 bg-[#c6c6c6]'
+            // ponytail: 비활성 #c6c6c6은 디자인 변수 미연결 색 — 토큰 추가 시 치환
+            index === activeIndex ? 'h-[17px] w-1.5 bg-neutral-900' : 'h-[9px] w-1.5 bg-[#c6c6c6]'
           }
         />
       ))}

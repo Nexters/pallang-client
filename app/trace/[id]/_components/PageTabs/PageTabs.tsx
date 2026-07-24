@@ -16,10 +16,10 @@ export function PageTabs({ highlights, activePage, onSelect }: PageTabsProps) {
           onClick={() => {
             onSelect(highlight)
           }}
-          className={`h-8 shrink-0 px-2 text-center text-[14px] ${
+          className={`h-8 shrink-0 px-2 text-center ${
             highlight.page === activePage
-              ? 'bg-[#222] font-semibold text-white drop-shadow-[2px_8px_5px_rgba(0,0,0,0.2)]'
-              : 'tracking-[-0.56px] text-[#222]/80'
+              ? 'bg-bg-dark text-body-14sb text-text-inverse drop-shadow-[2px_8px_5px_rgba(0,0,0,0.2)]'
+              : 'text-body-14rg text-text-secondary/80'
           }`}
         >
           {highlight.page}p

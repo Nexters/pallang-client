@@ -20,9 +20,7 @@ export function TraceListSection({ onToggleComment, onRequestComment }: TraceLis
     <section className="flex flex-1 flex-col">
       <div className="flex h-15 items-center justify-between px-4">
         <div className="flex items-center gap-1">
-          <p className="text-[16px] font-semibold tracking-[-0.64px] text-white">
-            {traceSeed.length}개의 흔적
-          </p>
+          <p className="text-title-16sb text-text-inverse">{traceSeed.length}개의 흔적</p>
           <button type="button" aria-label="흔적 남기기" onClick={onToggleComment}>
             <Icon name="pencil" size={20} />
           </button>
@@ -32,7 +30,7 @@ export function TraceListSection({ onToggleComment, onRequestComment }: TraceLis
           onClick={() => {
             setSortBy((prev) => (prev === 'latest' ? 'likes' : 'latest'))
           }}
-          className="flex items-center gap-0.5 text-[14px] tracking-[-0.56px] text-white"
+          className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
         >
           {sortBy === 'latest' ? '최신순' : '좋아요순'}
           <Icon name="chevronDown" size={20} />

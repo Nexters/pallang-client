@@ -8,9 +8,7 @@ export function TraceHeader({ title }: { title: string }) {
       <Link href="/" aria-label="뒤로 가기">
         <Icon name="back" color="#222" />
       </Link>
-      <h1 className="flex-1 text-[18px] leading-[1.2] font-bold tracking-[-0.36px] text-[#222]">
-        {title}
-      </h1>
+      <h1 className="flex-1 text-title-18bd text-text-secondary">{title}</h1>
       <button type="button" aria-label="흔적 추가">
         <Icon name="plus" color="#222" />
       </button>
