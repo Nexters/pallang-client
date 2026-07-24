@@ -51,7 +51,10 @@ export function Textarea({
       />
       <p className="self-end whitespace-nowrap">
         {count}
-        <span className={cn('opacity-40', !isDark && 'text-label-strong')}> / {maxLength}</span>
+        <span className={isDark ? 'text-text-inverse/50' : 'text-text-tertiary'}>
+          {' '}
+          / {maxLength}
+        </span>
       </p>
     </label>
   )
