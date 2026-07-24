@@ -29,8 +29,8 @@ export function Textarea({
       className={cn(
         'text-body-16md flex h-[206px] w-full flex-col gap-2 p-4 transition-colors data-disabled:cursor-not-allowed data-disabled:opacity-50',
         isDark
-          ? 'bg-neutral-700 text-text-inverse rounded-2xl'
-          : 'bg-bg-surface text-text-primary rounded-lg',
+          ? 'bg-bg-gray text-text-inverse rounded-2xl'
+          : 'bg-bg-surface text-text-secondary rounded-lg',
         className,
       )}
     >
@@ -45,7 +45,7 @@ export function Textarea({
         }}
         className={cn(
           'caret-interactive-accent min-h-0 flex-1 resize-none bg-transparent outline-none [word-break:break-word] disabled:cursor-not-allowed',
-          isDark ? 'placeholder:text-text-inverse/50' : 'placeholder:text-text-placeholder',
+          isDark ? 'placeholder:text-text-inverse/50' : 'placeholder:text-text-placeholder/50',
         )}
         {...props}
       />
