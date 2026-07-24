@@ -68,6 +68,23 @@ xcrun simctl io booted screenshot out.png   # 화면 확인
 - `app/layout.tsx`에 `export const viewport = { viewportFit: 'cover', ... }` (이게 있어야 iOS에서 `env(safe-area-inset-*)`가 실제 값을 가짐).
 - 화면 컨테이너에 `padding: max(<기본값>, env(safe-area-inset-*))` 적용.
 
+## Android 노트
+
+iOS만큼 함정은 없다(Gradle 프로젝트라 pbxproj 손상 같은 문제 없음). 확인된 사항:
+
+- **⚠️ 빌드에 JDK 21 필요**: `@capacitor/camera` 플러그인의 Gradle 툴체인이 Java 21을 요구한다. JDK 17로 빌드하면 `Cannot find a Java installation ... matching {languageVersion=21}`로 실패. 빌드 시 `JAVA_HOME`을 **JDK 21**로 지정할 것.
+- **⚠️ cleartext(http) — iOS ATS의 Android판**: targetSdk 36이라 cleartext가 기본 차단된다. **프로덕션(https)은 무관**하지만, **LAN dev 서버(http) 테스트 시** 필요. `android/app/src/debug/AndroidManifest.xml`에 `usesCleartextTraffic="true"`를 두어 **디버그 빌드에만** 허용(릴리스엔 안 들어가 prod 보안 유지).
+- **카메라 권한 불필요**: `@capacitor/camera`가 매니페스트(`queries` IMAGE_CAPTURE 등)를 자동 병합. `CAMERA` 권한 선언 불필요.
+- **APK 빌드 (검증됨)**:
+  ```bash
+  # dev(에뮬레이터): 호스트는 10.0.2.2로 접근
+  CAP_SERVER_URL=http://10.0.2.2:3000/camera-check npx cap sync android
+  cd android && JAVA_HOME=<JDK21_경로> ANDROID_HOME=<SDK> ./gradlew assembleDebug
+  # 산출물: android/app/build/outputs/apk/debug/app-debug.apk
+  ```
+- **에뮬레이터 실행**: 디스크 여유가 넉넉해야 함(에뮬레이터가 userdata에 ~7GB 요구). SDK 구성요소: `sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator" "system-images;android-36;google_apis;arm64-v8a"`, AVD는 `avdmanager create avd`.
+- **하이드레이션**: Android WebView는 Chromium이라 `next dev`도 될 가능성이 높지만, iOS와 동일하게 **prod 빌드 권장**.
+
 ## 미확정 / 배포 전 할 일
 
 - `capacitor.config.ts`의 `appId`(`kr.pallang.app`), `PROD_SERVER_URL`(현재 플레이스홀더)을 실제 값으로 교체.

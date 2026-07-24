@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 디버그 빌드 전용: LAN dev 서버(http) 로드를 위해 cleartext 허용.
+     릴리스(프로덕션 https)엔 병합되지 않아 보안에 영향 없음. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>
