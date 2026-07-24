@@ -12,6 +12,162 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ponytail: 디자인 토큰 — Figma(2026-07) 148:20563(팔레트) 148:20617(뉴트럴/화이트)
+   148:20653(텍스트) 148:20695(배경) 148:20737(인터랙티브) 148:20771(보더/아이콘) 148:20447(타이포그래피) */
+/* static: 미사용 토큰도 CSS 변수로 내보내 스토리북 팔레트에서 var(--color-*)로 참조 가능하게 함 */
+@theme static {
+  /* Palette — Neutral (0~1000, 기본 스케일과 혼용 방지 위해 초기화 후 재정의) */
+  --color-neutral-*: initial;
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #f0f0f0;
+  --color-neutral-100: #f3f2e0;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d1d1d6;
+  --color-neutral-400: #cacaca;
+  --color-neutral-500: #8e8e93;
+  --color-neutral-600: #636366;
+  --color-neutral-700: #3c3c43;
+  --color-neutral-800: #222222;
+  --color-neutral-900: #111111;
+  --color-neutral-1000: #000000;
+
+  /* Palette — White alpha */
+  --color-white-a10: #ffffff1a;
+  --color-white-a20: #ffffff33;
+  --color-white-a40: #ffffff66;
+  --color-white-a60: #ffffff99;
+  --color-white-a80: #ffffffcc;
+
+  --color-orange-*: initial;
+  --color-orange-50: #fff4ee;
+  --color-orange-100: #ffe4cc;
+  --color-orange-200: #ffc594;
+  --color-orange-300: #ff9f5a;
+  --color-orange-400: #ff7a28;
+  --color-orange-500: #ef5a06;
+  --color-orange-600: #ed6243;
+  --color-orange-700: #c44300;
+  --color-orange-800: #9a3400;
+  --color-orange-900: #3d1200;
+
+  --color-blue-*: initial;
+  --color-blue-50: #e8f0ff;
+  --color-blue-100: #b8d0ff;
+  --color-blue-200: #85aaff;
+  --color-blue-300: #5289ff;
+  --color-blue-400: #2e6eff;
+  --color-blue-500: #1a66ff;
+  --color-blue-600: #0050d6;
+  --color-blue-700: #003dab;
+  --color-blue-800: #002a80;
+  --color-blue-900: #001754;
+
+  --color-yellow-*: initial;
+  --color-yellow-50: #fff8e1;
+  --color-yellow-100: #ffedb3;
+  --color-yellow-200: #ffe082;
+  --color-yellow-300: #ffd24d;
+  --color-yellow-400: #ffc11f;
+  --color-yellow-500: #ffa600;
+  --color-yellow-600: #cc8500;
+  --color-yellow-700: #9c6400;
+  --color-yellow-800: #6b4300;
+  --color-yellow-900: #3a2300;
+
+  /* Semantic — Text */
+  --color-text-primary: #111111; /* neutral/900 */
+  --color-text-secondary: #222222; /* neutral/800 */
+  --color-text-tertiary: #5b5b5b;
+  --color-text-placeholder: #313131;
+  --color-text-disabled: #717171;
+  --color-text-inverse: #ffffff; /* neutral/0 */
+  --color-text-accent: #ef5a06; /* orange/500 */
+
+  /* Semantic — Label */
+  --color-label-strong: #000000;
+
+  /* Semantic — Background */
+  --color-bg-default: #ffffff; /* Background/Background, neutral/0 */
+  --color-bg-surface: #f0f0f0; /* neutral/50 */
+  --color-bg-book-card: #f3f2e0; /* neutral/100 */
+  --color-bg-gray: #323232;
+  --color-bg-dark: #222222;
+  --color-bg-black: #111111;
+  --color-bg-overlay: #383838;
+  --color-bg-alternative: #f7f7f8; /* Background/Normal/Alternative */
+  --color-nav-bg: #111111; /* Navigation/bg — 디자인상 black 20% 오버레이 그라디언트 포함 */
+
+  /* Semantic — Interactive */
+  --color-interactive-accent: #ef5a06; /* orange/500 */
+  --color-interactive-btn-primary: #111111; /* neutral/900 */
+  --color-interactive-btn-secondary: #333333;
+  --color-interactive-btn-tertiary: #444444;
+  --color-interactive-btn-disabled: #d2d2d2;
+  --color-interactive-required: #ef5a06; /* orange/500 */
+
+  /* Semantic — Border */
+  --color-border-default: #0000001a; /* #000 10% */
+  --color-border-strong: #222222; /* neutral/800 */
+  --color-border-book: #000000;
+
+  /* Semantic — Icon */
+  --color-icon-primary: #222222; /* neutral/800 */
+  --color-icon-active: #ffffff; /* neutral/0 */
+  --color-icon-accent: #ef5a06; /* orange/500 */
+  --color-icon-inactive: #d9d9d9;
+  --color-icon-muted: #848484;
+
+  /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
+  --font-suit: 'SUIT Variable', sans-serif;
+  --font-galmuri: 'Galmuri11', sans-serif;
+
+  /* Typography — 스타일 (text-title-24bd 형태로 사용) */
+  --text-dialogue-14rg: 14px;
+  --text-dialogue-14rg--line-height: 1.5;
+  --text-dialogue-14rg--letter-spacing: 0em;
+  --text-dialogue-14rg--font-weight: 400;
+  --text-title-24bd: 24px;
+  --text-title-24bd--line-height: 1.3;
+  --text-title-24bd--letter-spacing: -0.04em;
+  --text-title-24bd--font-weight: 700;
+  --text-title-20sb: 20px;
+  --text-title-20sb--line-height: 1.5;
+  --text-title-20sb--letter-spacing: -0.03em;
+  --text-title-20sb--font-weight: 600;
+  --text-title-18sb: 18px;
+  --text-title-18sb--line-height: 1.3;
+  --text-title-18sb--letter-spacing: -0.03em;
+  --text-title-18sb--font-weight: 600;
+  --text-title-16sb: 16px;
+  --text-title-16sb--line-height: 1.3;
+  --text-title-16sb--letter-spacing: -0.04em;
+  --text-title-16sb--font-weight: 600;
+  --text-title-14bd: 14px;
+  --text-title-14bd--line-height: 1.3;
+  --text-title-14bd--letter-spacing: -0.02em;
+  --text-title-14bd--font-weight: 700;
+  --text-title-12bd: 12px;
+  --text-title-12bd--line-height: 1.3;
+  --text-title-12bd--letter-spacing: -0.02em;
+  --text-title-12bd--font-weight: 700;
+  --text-body-16md: 16px;
+  --text-body-16md--line-height: 1.3;
+  --text-body-16md--letter-spacing: -0.04em;
+  --text-body-16md--font-weight: 500;
+  --text-body-16rg: 16px;
+  --text-body-16rg--line-height: 1.3;
+  --text-body-16rg--letter-spacing: -0.04em;
+  --text-body-16rg--font-weight: 400;
+  --text-body-14md: 14px;
+  --text-body-14md--line-height: 1.5;
+  --text-body-14md--letter-spacing: -0.03em;
+  --text-body-14md--font-weight: 500;
+  --text-caption-12rg: 12px;
+  --text-caption-12rg--line-height: 1.3;
+  --text-caption-12rg--letter-spacing: -0.04em;
+  --text-caption-12rg--font-weight: 400;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
