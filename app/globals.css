@@ -202,3 +202,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 흔적 열람: 포스트잇 → 고정 대목 전환 시 진입 애니메이션 */
+@keyframes quote-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

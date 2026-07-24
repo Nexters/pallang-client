@@ -1,45 +1,51 @@
-import { useState } from 'react'
+import type { UIEvent } from 'react'
 
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 
-import { traceSeed } from '../../_data/readerHighlights.constant'
+import type { Trace } from '../../_types/readerHighlights.type'
 import { TraceItem } from '../TraceItem/TraceItem'
 
 type TraceListSectionProps = {
+  traces: Trace[]
+  sortBy: 'latest' | 'likes'
+  onToggleSort: () => void
   onToggleComment: () => void
   onRequestComment: () => void
+  onListScroll: (event: UIEvent<HTMLUListElement>) => void
 }
 
-export function TraceListSection({ onToggleComment, onRequestComment }: TraceListSectionProps) {
-  const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
-
-  const sortedTraces = [...traceSeed].sort((a, b) =>
-    sortBy === 'latest' ? b.createdAt.localeCompare(a.createdAt) : b.likeCount - a.likeCount,
-  )
-
+export function TraceListSection({
+  traces,
+  sortBy,
+  onToggleSort,
+  onToggleComment,
+  onRequestComment,
+  onListScroll,
+}: TraceListSectionProps) {
   return (
-    <section className="flex flex-1 flex-col">
-      <div className="flex h-15 items-center justify-between px-4">
+    <section className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-15 shrink-0 items-center justify-between px-4">
         <div className="flex items-center gap-1">
-          <p className="text-title-16sb text-text-inverse">{traceSeed.length}개의 흔적</p>
+          <p className="text-title-16sb text-text-inverse">{traces.length}개의 흔적</p>
           <button type="button" aria-label="흔적 남기기" onClick={onToggleComment}>
             <PencilIcon width={20} height={20} className="text-icon-active" />
           </button>
         </div>
         <button
           type="button"
-          onClick={() => {
-            setSortBy((prev) => (prev === 'latest' ? 'likes' : 'latest'))
-          }}
+          onClick={onToggleSort}
           className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
         >
           {sortBy === 'latest' ? '최신순' : '좋아요순'}
           <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
-      <ul className="flex flex-col px-4 pb-10">
-        {sortedTraces.map((trace, index) => (
+      <ul
+        onScroll={onListScroll}
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-10"
+      >
+        {traces.map((trace, index) => (
           <li
             key={trace.id}
             className={index > 0 ? 'border-t border-dashed border-white/30' : undefined}

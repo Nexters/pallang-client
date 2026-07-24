@@ -44,4 +44,15 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '최신순' }))
     expect(screen.getByRole('button', { name: '좋아요순' })).toBeInTheDocument()
   })
+
+  it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', () => {
+    render(<ReaderHighlightsPage />)
+    const list = screen.getByRole('list')
+
+    fireEvent.scroll(list, { target: { scrollTop: 60 } })
+    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
+
+    fireEvent.scroll(list, { target: { scrollTop: 0 } })
+    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
+  })
 })
