@@ -202,3 +202,13 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 흔적 열람: 대목 전환 시 자리잡기 모션 — opacity는 건드리지 않는다(어두운 배경 비침 방지) */
+@keyframes panel-settle {
+  from {
+    transform: translateY(-12px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

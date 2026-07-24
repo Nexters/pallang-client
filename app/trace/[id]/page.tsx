@@ -52,7 +52,7 @@ export default function ReaderHighlightsPage() {
   return (
     <main className="mx-auto flex h-dvh w-full max-w-[530px] flex-col overflow-hidden bg-bg-dark">
       {viewMode === 'postit' ? (
-        <section className="relative shrink-0 bg-bg-default pb-10">
+        <section className="relative shrink-0 animate-[panel-settle_200ms_ease-out] bg-bg-default pb-10">
           <div className="absolute inset-x-0 top-0 h-77 bg-orange-500" />
           <div className="relative">
             <TraceHeader title={bookTitle} />
@@ -73,7 +73,7 @@ export default function ReaderHighlightsPage() {
           </div>
         </section>
       ) : (
-        <section className="shrink-0 bg-bg-default">
+        <section className="shrink-0 animate-[panel-settle_200ms_ease-out] bg-bg-default">
           <TraceHeader title={bookTitle} />
           <QuotePanel
             quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}
