@@ -19,7 +19,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 디렉토리 규칙
 
-- `app/_global/` — 앱 전역 코드. 하위 폴더: `_providers/ _components/ _hooks/ _queries/ _apis/ _data/ _styles/`.
+- `app/_global/` — 앱 전역 코드. 하위 폴더: `_providers/ _components/ _hooks/ _services/ _queries/ _apis/ _data/ _styles/`.
 - `app/_shared/<domain>/` — 2개 이상 route에서 실제 재사용하는 도메인 공용 코드. 하위 폴더: `_components/ _hooks/ _data/`.
 - `app/<kebab-route>/` — 특정 route 전용 코드. 하위 폴더: `_components/ _hooks/ _services/ _data/ _actions/ _types/ _tests/`.
 - 기본 배치: route-local 우선. 실제 재사용 시 `_shared`, 앱 전역 인프라는 `_global`.
@@ -51,6 +51,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **테스트 금지 패턴** — `describe.only`/`it.only`/`.skip`/주석 처리한 테스트를 커밋하지 않는다.
 - **컴포넌트 구조** — 컴포넌트 폴더 내부에 `_hooks/`, `_services/` 같은 프라이빗 폴더를 중첩하지 않는다.
 - **컴포넌트 네이밍** — 컴포넌트 파일명과 폴더명은 `PascalCase`로 맞춘다.
+
+## 이슈 / 브랜치 / PR 컨벤션
+
+- 태스크마다 GitHub 이슈를 먼저 만든다. `.github/ISSUE_TEMPLATE` 템플릿을 사용한다.
+- 브랜치는 이슈 번호 기반으로 만든다: `feat/<이슈번호>-<슬러그>`. 예: `feat/10-button-component`.
+- PR은 `main`으로 올린다. 제목은 `작업 내용 요약 (#이슈번호)`, 본문에 `Closes #<이슈번호>`를 포함해 머지 시 이슈가 자동으로 닫히게 한다.
 
 ## Git hook (Husky)
 
