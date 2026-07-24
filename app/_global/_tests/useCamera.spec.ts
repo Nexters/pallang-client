@@ -6,7 +6,7 @@
  */
 import { Camera } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CAMERA_OPTIONS } from '@/app/_global/_data/camera.constant'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
@@ -23,6 +23,10 @@ vi.mock('@capacitor/camera', () => ({
 describe('useCamera', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('네이티브에서는 Camera.getPhoto를 CAMERA_OPTIONS로 호출하고 webPath를 반환한다', async () => {
@@ -57,5 +61,30 @@ describe('useCamera', () => {
     expect(input.type).toBe('file')
     expect(input.accept).toBe('image/*')
     expect(input.getAttribute('capture')).toBe('environment')
+  })
+
+  it('브라우저에서 change 이벤트가 발생하면 webPath를 가진 Photo를 반환한다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false)
+    const createEl = vi.spyOn(document, 'createElement')
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock')
+
+    const photoPromise = useCamera().takePhoto()
+    const input = createEl.mock.results.at(-1)?.value as HTMLInputElement
+    const file = new File(['x'], 'p.png', { type: 'image/png' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    input.dispatchEvent(new Event('change'))
+
+    expect(await photoPromise).toEqual({ webPath: 'blob:mock' })
+  })
+
+  it('브라우저에서 cancel 이벤트가 발생하면 null을 반환한다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false)
+    const createEl = vi.spyOn(document, 'createElement')
+
+    const photoPromise = useCamera().takePhoto()
+    const input = createEl.mock.results.at(-1)?.value as HTMLInputElement
+    input.dispatchEvent(new Event('cancel'))
+
+    expect(await photoPromise).toBeNull()
   })
 })

@@ -32,6 +32,9 @@ function takePhotoFromFileInput(): Promise<Photo | null> {
       const file = input.files?.[0]
       resolve(file ? { webPath: URL.createObjectURL(file) } : null)
     })
+    input.addEventListener('cancel', () => {
+      resolve(null)
+    })
     input.click()
   })
 }
