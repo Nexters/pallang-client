@@ -8,6 +8,7 @@ import { LoginGateModal } from './_components/LoginGateModal/LoginGateModal'
 import { PageTabs } from './_components/PageTabs/PageTabs'
 import { QuoteIndicator } from './_components/QuoteIndicator/QuoteIndicator'
 import { QuotePanel } from './_components/QuotePanel/QuotePanel'
+import { TraceDetailOverlay } from './_components/TraceDetailOverlay/TraceDetailOverlay'
 import { TraceHeader } from './_components/TraceHeader/TraceHeader'
 import { TraceListSection } from './_components/TraceListSection/TraceListSection'
 import { bookTitle, highlightSeed, traceSeed } from './_data/readerHighlights.constant'
@@ -22,6 +23,7 @@ export default function ReaderHighlightsPage() {
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
   const [revealedSpoilerIds, setRevealedSpoilerIds] = useState<ReadonlySet<number>>(new Set())
+  const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
 
   const sortedTraces = useMemo(
     () =>
@@ -30,6 +32,8 @@ export default function ReaderHighlightsPage() {
       ),
     [sortBy],
   )
+
+  const selectedTraceIndex = sortedTraces.findIndex((trace) => trace.id === selectedTraceId)
 
   const openCommentBar = () => {
     gate.runWithLogin(() => {
@@ -91,10 +95,26 @@ export default function ReaderHighlightsPage() {
         onRevealTrace={(id) => {
           setRevealedSpoilerIds((prev) => new Set(prev).add(id))
         }}
-        onSelectTrace={() => undefined}
+        onSelectTrace={(trace) => {
+          setSelectedTraceId(trace.id)
+        }}
         onListScroll={handleListScroll}
       />
       {isCommentBarOpen && <CommentBar />}
+      {selectedTraceIndex >= 0 && (
+        <TraceDetailOverlay
+          traces={sortedTraces}
+          index={selectedTraceIndex}
+          quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}
+          onNavigate={(next) => {
+            const target = sortedTraces[next]
+            if (target) setSelectedTraceId(target.id)
+          }}
+          onClose={() => {
+            setSelectedTraceId(null)
+          }}
+        />
+      )}
       {gate.isGateOpen && <LoginGateModal onLogin={gate.login} onClose={gate.close} />}
     </main>
   )
