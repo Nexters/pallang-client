@@ -72,3 +72,4 @@ xcrun simctl io booted screenshot out.png   # 화면 확인
 
 - `capacitor.config.ts`의 `appId`(`kr.pallang.app`), `PROD_SERVER_URL`(현재 플레이스홀더)을 실제 값으로 교체.
 - Android는 스캐폴딩만 됨(`android/`), 빌드/기기 검증은 미수행.
+- **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
