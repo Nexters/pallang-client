@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react'
 
+import { cn } from '@/app/_global/_services/cn.service'
+
 import { CommentBar } from './_components/CommentBar/CommentBar'
 import { HighlightCard } from './_components/HighlightCard/HighlightCard'
 import { LoginGateModal } from './_components/LoginGateModal/LoginGateModal'
@@ -15,6 +17,7 @@ import { bookTitle, highlightSeed, traceSeed } from './_data/readerHighlights.co
 import { useHighlightViewer } from './_hooks/useHighlightViewer'
 import { useLoginGate } from './_hooks/useLoginGate'
 import { useTraceViewMode } from './_hooks/useTraceViewMode'
+import styles from './page.module.css'
 
 export default function ReaderHighlightsPage() {
   const gate = useLoginGate()
@@ -52,7 +55,7 @@ export default function ReaderHighlightsPage() {
   return (
     <main className="mx-auto flex h-dvh w-full max-w-[530px] flex-col overflow-hidden bg-bg-dark">
       {viewMode === 'postit' ? (
-        <section className="relative shrink-0 animate-[panel-settle_200ms_ease-out] bg-bg-default pb-10">
+        <section className={cn('relative shrink-0 bg-bg-default pb-10', styles['panelSettle'])}>
           <div className="absolute inset-x-0 top-0 h-77 bg-orange-500" />
           <div className="relative">
             <TraceHeader title={bookTitle} />
@@ -73,7 +76,7 @@ export default function ReaderHighlightsPage() {
           </div>
         </section>
       ) : (
-        <section className="shrink-0 animate-[panel-settle_200ms_ease-out] bg-bg-book-card">
+        <section className={cn('shrink-0 bg-bg-book-card', styles['panelSettle'])}>
           <TraceHeader title={bookTitle} />
           <QuotePanel
             quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}

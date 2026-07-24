@@ -3,6 +3,7 @@ import { useState, useSyncExternalStore } from 'react'
 import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { cn } from '@/app/_global/_services/cn.service'
 
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
@@ -37,7 +38,10 @@ export function TraceItem({ trace, isMasked, onReveal, onSelect }: TraceItemProp
       <button
         type="button"
         onClick={isMasked ? onReveal : onSelect}
-        className={`line-clamp-3 text-left text-body-16md text-text-inverse ${isMasked ? 'font-galmuri' : ''}`}
+        className={cn(
+          'line-clamp-3 text-left text-body-16md text-text-inverse',
+          isMasked && 'font-galmuri',
+        )}
       >
         {trace.content}
       </button>
