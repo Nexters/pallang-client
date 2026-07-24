@@ -29,8 +29,8 @@ export function Textarea({
       className={cn(
         'text-body-16md flex h-[206px] w-full flex-col gap-2 p-4 transition-colors data-disabled:cursor-not-allowed data-disabled:opacity-50',
         isDark
-          ? 'bg-neutral-80 text-label-white rounded-2xl'
-          : 'bg-neutral-5 text-label-strong rounded-lg',
+          ? 'bg-neutral-700 text-text-inverse rounded-2xl'
+          : 'bg-bg-surface text-text-primary rounded-lg',
         className,
       )}
     >
@@ -44,15 +44,14 @@ export function Textarea({
           onChange?.(event)
         }}
         className={cn(
-          // ponytail: 캐럿 주황(#ef5a06)은 대응 토큰이 아직 없어 피그마 값 유지 — 토큰 생기면 교체
-          'min-h-0 flex-1 resize-none bg-transparent outline-none [word-break:break-word] caret-[#ef5a06] disabled:cursor-not-allowed',
-          isDark ? 'placeholder:text-label-white/50' : 'placeholder:text-label-assistive',
+          'caret-interactive-accent min-h-0 flex-1 resize-none bg-transparent outline-none [word-break:break-word] disabled:cursor-not-allowed',
+          isDark ? 'placeholder:text-text-inverse/50' : 'placeholder:text-text-placeholder',
         )}
         {...props}
       />
       <p className="self-end whitespace-nowrap">
         {count}
-        <span className={cn('opacity-40', !isDark && 'text-static-black')}> / {maxLength}</span>
+        <span className={cn('opacity-40', !isDark && 'text-label-strong')}> / {maxLength}</span>
       </p>
     </label>
   )
