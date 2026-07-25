@@ -48,11 +48,15 @@ if ! curl -s -o /dev/null "http://localhost:${PORT}" 2>/dev/null; then
 fi
 
 # --- 3. Capacitor sync (config에 CAP_SERVER_URL이 구워짐) ---
-CAP_PLATFORM="$PLATFORM"
-[ "$PLATFORM" = "android-emulator" ] && CAP_PLATFORM="android"
+# 플랫폼명 매핑: android-emulator→android, sync-only→전체(플랫폼 인자 없음)
+case "$PLATFORM" in
+  android-emulator) CAP_PLATFORM="android" ;;
+  sync-only)        CAP_PLATFORM="" ;;
+  *)                CAP_PLATFORM="$PLATFORM" ;;
+esac
 
 echo "🔄 npx cap sync ${CAP_PLATFORM}"
-npx cap sync "$CAP_PLATFORM"
+npx cap sync ${CAP_PLATFORM}
 
 # --- 4. 실행 ---
 case "$PLATFORM" in
