@@ -27,10 +27,42 @@
   ```
   - 재생성 후 `ios/App/App.xcodeproj/project.pbxproj`의 Sources 페이즈에 `AppDelegate.swift`가 있는지 확인(정상이면 크기 ~14KB, 손상되면 ~10KB).
 
+## dev 서버 URL 자동화 (`scripts/cap-dev.sh`)
+
+로컬 dev 서버를 앱이 로드하려면 `CAP_SERVER_URL`에 맥의 **LAN IP**가 필요한데, 이 IP는 **와이파이/네트워크가 바뀌면 달라진다.** `capacitor.config.ts`는 `process.env.CAP_SERVER_URL`을 읽으므로, IP를 앱에 하드코딩하지 않고 스크립트가 매 실행마다 현재 IP를 감지해 sync 한다.
+
+```bash
+# 다른 터미널: 웹 서버 (기기 검증은 prod 권장)
+pnpm build && PORT=3000 pnpm start
+
+# iOS 실기기/시뮬레이터 — 현재 IP 자동 감지 → sync → 실행
+pnpm cap:dev:ios
+# Android 에뮬레이터 (호스트는 10.0.2.2 자동 사용)
+pnpm cap:dev:android
+# 빌드/실행 없이 sync만 (URL만 갱신하고 앱에서 새로고침)
+pnpm cap:dev:sync
+```
+
+- 경로 기본값은 `/camera-check`. 바꾸려면: `bash scripts/cap-dev.sh ios /` (루트).
+
+### IP가 바뀌면? 케이블은 언제 필요한가?
+
+`server.url`은 **빌드 시 앱에 구워진다.** 그래서:
+
+| 상황                                           | 필요한 조치                                | 케이블         |
+| ---------------------------------------------- | ------------------------------------------ | -------------- |
+| **웹만 수정 + IP 그대로**                      | 앱에서 당겨서 새로고침 (라이브)            | ❌             |
+| **IP 바뀜** (네트워크 변경)                    | `pnpm cap:dev:*` 다시 실행 → 재빌드·재설치 | ✅ (재설치 시) |
+| **네이티브 변경** (권한/플러그인/`server.url`) | 재빌드·재설치                              | ✅             |
+
+- **웹뷰 앱이라 웹 변경엔 케이블이 필요 없다.** 케이블은 **네이티브 재설치(=IP 변경 포함)** 때만.
+- 무선 설치를 원하면 최초 1회 케이블로 "네트워크를 통해 연결"을 켜면 이후 무선 가능.
+- **배포(프로덕션)에선 이 문제가 없다** — `server.url`이 고정 https 도메인이라 IP와 무관.
+
 ## 실기기(iPhone) 실행 절차 (CLI 중심, Xcode GUI 회피)
 
 1. **웹 서버(prod)**를 LAN에 띄운다: `pnpm build && PORT=3000 pnpm start`
-2. **앱이 볼 URL**을 맥의 LAN IP로 동기화(폰은 localhost 못 씀):
+2. **앱이 볼 URL**을 맥의 LAN IP로 동기화(폰은 localhost 못 씀) — `pnpm cap:dev:sync`가 자동으로 해준다. 수동이면:
    ```bash
    CAP_SERVER_URL=http://<맥_LAN_IP>:3000/camera-check npx cap sync ios
    ```
