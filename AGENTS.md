@@ -81,3 +81,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 새 아이콘 추가 절차와 SVG 정리 규칙, 빌드 설정(next/turbopack·storybook/vite·`svg.d.ts`)은 `.agents/icons.md`를 따른다.
 
 참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
+
+## Capacitor (웹뷰 앱, iOS · Android)
+
+이 웹은 Capacitor로 iOS/Android 웹뷰 앱화되어 있다(원격 URL 로드, 카메라). **네이티브 빌드/기기 검증 전 반드시 [docs/capacitor.md](docs/capacitor.md)를 읽을 것.** 특히 함정:
+
+- **`next dev`는 WKWebView에서 하이드레이션이 안 된다**(브라우저·Android는 정상). 웹뷰/기기 테스트는 `pnpm build && pnpm start`(프로덕션)로 한다.
+- **(iOS)** Xcode GUI로 프로젝트를 열면 pbxproj가 손상되어 `Undefined symbol: _main`이 난다. `ios/`를 재생성하고 `xcodebuild`/`cap` CLI로 빌드한다.
+- **(Android)** APK 빌드에 **JDK 21** 필요(카메라 플러그인 요구). dev(http) 로드는 debug 매니페스트의 `usesCleartextTraffic`로 허용.
+
+기기에서 dev 서버를 띄울 때 LAN IP는 네트워크마다 바뀐다. IP를 앱에 하드코딩하지 말고 스크립트로 현재 IP를 자동 감지해 실행한다:
+
+- `pnpm cap:dev:ios` — 현재 LAN IP 자동 감지 → sync → iOS 실행
+- `pnpm cap:dev:android` — Android 에뮬레이터(호스트 `10.0.2.2`)로 sync → 실행
+- `pnpm cap:dev:sync` — 빌드·실행 없이 URL만 갱신(웹만 바꿨을 때, 앱에서 새로고침). 웹 변경엔 케이블 불필요, 재설치(IP·네이티브 변경) 시에만 필요.
