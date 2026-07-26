@@ -54,9 +54,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 이슈 / 브랜치 / PR 컨벤션
 
-- 태스크마다 GitHub 이슈를 먼저 만든다. `.github/ISSUE_TEMPLATE` 템플릿을 사용한다.
-- 브랜치는 이슈 번호 기반으로 만든다: `feat/<이슈번호>-<슬러그>`. 예: `feat/10-button-component`.
-- PR은 `main`으로 올린다. 제목은 `작업 내용 요약 (#이슈번호)`, 본문에 `Closes #<이슈번호>`를 포함해 머지 시 이슈가 자동으로 닫히게 한다.
+- 사용자가 이슈 생성을 요청하면 반드시 `.agents/issue-workflow.md`를 읽고 이슈 작성, 담당자 지정 및 브랜치 생성 절차를 따른다.
+- 사용자가 PR 생성을 요청하면 반드시 `.agents/pr-workflow.md`를 읽고 변경 검토, 검증, 초안 승인 및 PR 생성 절차를 따른다.
 
 ## Git hook (Husky)
 
