@@ -53,7 +53,7 @@ export default function ReaderHighlightsPage() {
   }
 
   return (
-    <main className="mx-auto flex h-dvh w-full max-w-[530px] flex-col overflow-hidden bg-bg-dark">
+    <>
       {viewMode === 'postit' ? (
         <section className={cn('relative shrink-0 bg-bg-default pb-10', styles['panelSettle'])}>
           <div className="absolute inset-x-0 top-0 h-77 bg-orange-500" />
@@ -119,6 +119,6 @@ export default function ReaderHighlightsPage() {
         />
       )}
       {gate.isGateOpen && <LoginGateModal onLogin={gate.login} onClose={gate.close} />}
-    </main>
+    </>
   )
 }
