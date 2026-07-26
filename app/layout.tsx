@@ -28,8 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <QueryProvider>{children}</QueryProvider>
+      <body className="flex min-h-dvh bg-bg-dark">
+        <QueryProvider>
+          <main className="mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
+            {children}
+          </main>
+        </QueryProvider>
       </body>
     </html>
   )
