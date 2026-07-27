@@ -4,9 +4,9 @@
 import type { DecorationResponseEffectType } from './decorationResponseEffectType'
 
 export interface DecorationResponse {
-  decorationId?: number
-  startOffset?: number
-  endOffset?: number
-  effectType?: DecorationResponseEffectType
-  color?: string
+  decorationId: number
+  startOffset: number
+  endOffset: number
+  effectType: DecorationResponseEffectType
+  color: string
 }

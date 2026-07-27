@@ -5,6 +5,6 @@ import type { OpinionSummaryResponse } from './opinionSummaryResponse'
 import type { PageInfo } from './pageInfo'
 
 export interface OpinionListResponse {
-  opinions?: OpinionSummaryResponse[]
-  pageInfo?: PageInfo
+  opinions: OpinionSummaryResponse[]
+  pageInfo: PageInfo
 }

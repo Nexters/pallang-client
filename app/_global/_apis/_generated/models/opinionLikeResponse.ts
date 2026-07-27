@@ -3,7 +3,7 @@
  */
 
 export interface OpinionLikeResponse {
-  opinionId?: number
-  liked?: boolean
-  likeCount?: number
+  opinionId: number
+  liked: boolean
+  likeCount: number
 }

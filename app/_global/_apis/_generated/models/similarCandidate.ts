@@ -3,8 +3,8 @@
  */
 
 export interface SimilarCandidate {
-  passageId?: number
-  quotedText?: string
-  pageNumber?: number
-  opinionCount?: number
+  passageId: number
+  quotedText: string
+  pageNumber: number
+  opinionCount: number
 }

@@ -5,6 +5,6 @@ import type { LikedOpinionResponse } from './likedOpinionResponse'
 import type { PageInfo } from './pageInfo'
 
 export interface LikedOpinionListResponse {
-  opinions?: LikedOpinionResponse[]
-  pageInfo?: PageInfo
+  opinions: LikedOpinionResponse[]
+  pageInfo: PageInfo
 }

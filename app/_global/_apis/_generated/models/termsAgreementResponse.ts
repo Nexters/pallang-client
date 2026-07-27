@@ -3,5 +3,5 @@
  */
 
 export interface TermsAgreementResponse {
-  termsAgreed?: boolean
+  termsAgreed: boolean
 }

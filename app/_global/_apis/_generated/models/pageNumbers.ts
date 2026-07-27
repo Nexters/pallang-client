@@ -4,6 +4,6 @@
 import type { PageInfo } from './pageInfo'
 
 export interface PageNumbers {
-  pageNumbers?: number[]
-  pageInfo?: PageInfo
+  pageNumbers: number[]
+  pageInfo: PageInfo
 }

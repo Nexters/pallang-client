@@ -4,5 +4,5 @@
 import type { SimilarCandidate } from './similarCandidate'
 
 export interface SimilarCandidates {
-  passages?: SimilarCandidate[]
+  passages: SimilarCandidate[]
 }

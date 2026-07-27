@@ -3,12 +3,13 @@
  */
 
 export interface CommentResponse {
-  commentId?: number
-  userId?: number
-  nickname?: string
-  profileImageUrl?: string
-  content?: string
-  isDeleted?: boolean
-  createdAt?: string
-  updatedAt?: string
+  commentId: number
+  userId: number
+  nickname: string
+  /** @nullable */
+  profileImageUrl?: string | null
+  content: string
+  isDeleted: boolean
+  createdAt: string
+  updatedAt: string
 }

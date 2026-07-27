@@ -5,6 +5,6 @@ import type { ExternalBookResponse } from './externalBookResponse'
 import type { PageInfo } from './pageInfo'
 
 export interface ExternalBookListResponse {
-  books?: ExternalBookResponse[]
-  pageInfo?: PageInfo
+  books: ExternalBookResponse[]
+  pageInfo: PageInfo
 }
