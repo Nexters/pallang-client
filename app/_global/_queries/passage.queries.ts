@@ -42,7 +42,7 @@ export const passageMutations = {
   ocr: () =>
     mutationOptions({
       mutationKey: [...passageMutations.all(), 'ocr'],
-      mutationFn: (data: CreateOcrResultBody | undefined) => createOcrResult(data),
+      mutationFn: (data: CreateOcrResultBody) => createOcrResult(data),
     }),
   similarCheck: () =>
     mutationOptions({
