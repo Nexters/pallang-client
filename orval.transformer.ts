@@ -11,12 +11,17 @@ const renameTag = (tag: string) => TAG_RENAMES[tag] ?? tag
 type SpecSubset = {
   tags?: { name: string }[]
   paths?: Record<string, Record<string, { tags?: string[] } | undefined> | undefined>
+  components?: { securitySchemes?: Record<string, { type?: string; name?: string }> }
 }
 
 export default defineTransformer((spec) => {
   const raw = spec as unknown as SpecSubset
   raw.tags?.forEach((tag) => {
     tag.name = renameTag(tag.name)
+  })
+  // 서버 스펙 버그 우회: http 타입 securityScheme에는 name 속성이 허용되지 않는다.
+  Object.values(raw.components?.securitySchemes ?? {}).forEach((scheme) => {
+    if (scheme.type === 'http') delete scheme.name
   })
   Object.values(raw.paths ?? {}).forEach((methods) => {
     Object.values(methods ?? {}).forEach((operation) => {

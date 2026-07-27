@@ -99,7 +99,7 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             {
-              group: ['**/_apis/*', '@/app/_global/_apis/*'],
+              group: ['**/_apis/**', '@/app/_global/_apis/**'],
               message:
                 'API 함수는 직접 import하지 말고 @/app/_global/_queries의 queryOptions를 사용하세요.',
             },
@@ -189,6 +189,7 @@ const eslintConfig = defineConfig([
   eslintConfigPrettier,
 
   globalIgnores([
+    'app/_global/_apis/_generated/**',
     '.next/**',
     'out/**',
     'build/**',
