@@ -87,4 +87,24 @@ describe('customFetch', () => {
     expect(refresher).not.toHaveBeenCalled()
     expect(spy).toHaveBeenCalledTimes(1)
   })
+
+  it('body가 FormData면 Content-Type을 설정하지 않는다', async () => {
+    const spy = mockFetch(new Response('{}', { status: 200 }))
+    const formData = new FormData()
+    formData.append('image', new Blob(['x'], { type: 'image/png' }))
+
+    await customFetch('/api/passages/ocr', { method: 'POST', body: formData })
+
+    const headers = new Headers((spy.mock.calls[0]?.[1] as RequestInit).headers)
+    expect(headers.has('Content-Type')).toBe(false)
+  })
+
+  it('body가 JSON 문자열이면 Content-Type을 application/json으로 설정한다', async () => {
+    const spy = mockFetch(new Response('{}', { status: 200 }))
+
+    await customFetch('/api/opinions', { method: 'POST', body: JSON.stringify({ bookId: 1 }) })
+
+    const headers = new Headers((spy.mock.calls[0]?.[1] as RequestInit).headers)
+    expect(headers.get('Content-Type')).toBe('application/json')
+  })
 })

@@ -70,7 +70,8 @@ export async function customFetch<T>(
   const headers = new Headers(options.headers)
   const token = getAccessToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
-  if (options.body != null && !headers.has('Content-Type')) {
+  const isFormData = options.body instanceof FormData
+  if (options.body != null && !isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
