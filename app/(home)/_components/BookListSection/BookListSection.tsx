@@ -95,14 +95,14 @@ const LAST_BOOK_CENTER_X = BOOK_LAYOUTS.at(-1)?.centerX ?? FIRST_BOOK_CENTER_X
 const BOOK_TRACK_START_PADDING = `calc(50% - ${String(FIRST_BOOK_CENTER_X)}px)`
 const BOOK_TRACK_WIDTH = `${String(LAST_BOOK_CENTER_X)}px`
 
-type BookStatLinkProps = {
+type BookStatisticLinkProps = {
   count: number
   href: string
   icon: typeof ContentIcon
   label: string
 }
 
-function BookStatLink({ count, href, icon: Icon, label }: BookStatLinkProps) {
+function BookStatisticLink({ count, href, icon: Icon, label }: BookStatisticLinkProps) {
   return (
     <Link
       href={href}
@@ -120,6 +120,7 @@ export function BookListSection() {
   const bookListRef = useRef<HTMLDivElement>(null)
   const [activeBookIndex, setActiveBookIndex] = useState(INITIAL_BOOK_INDEX)
   const activeBook = BOOKS[activeBookIndex] ?? FALLBACK_BOOK
+  const { author, bookId, opinionCount, passageCount, title } = activeBook
 
   useEffect(() => {
     const scrollContainer = bookListRef.current
@@ -179,13 +180,23 @@ export function BookListSection() {
 
       <div className="flex w-full flex-col items-center gap-4">
         <div className="flex w-full flex-col items-center gap-2 text-center">
-          <h2 className="w-full text-title-24bd text-text-primary">{activeBook.title}</h2>
-          <p className="w-full text-body-16md text-text-secondary">{activeBook.author}</p>
+          <h2 className="w-full text-title-24bd text-text-primary">{title}</h2>
+          <p className="w-full text-body-16md text-text-secondary">{author}</p>
         </div>
 
         <div className="flex items-center justify-center gap-2">
-          <BookStatLink count={6} href="#" icon={ContentIcon} label="대목" />
-          <BookStatLink count={17} href="#" icon={PencilIcon} label="흔적" />
+          <BookStatisticLink
+            count={passageCount}
+            href={`/trace/${String(bookId)}`}
+            icon={ContentIcon}
+            label="대목"
+          />
+          <BookStatisticLink
+            count={opinionCount}
+            href={`/trace/${String(bookId)}`}
+            icon={PencilIcon}
+            label="흔적"
+          />
         </div>
       </div>
     </section>
