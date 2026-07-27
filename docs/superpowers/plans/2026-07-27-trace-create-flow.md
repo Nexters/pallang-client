@@ -830,13 +830,22 @@ type SnackbarProps = {
 const AUTO_DISMISS_MS = 3000
 
 export function Snackbar({ message, onClose }: SnackbarProps) {
+  // 사용부는 인라인 화살표 함수를 넘긴다. onClose를 effect 의존성에 두면 부모가
+  // 리렌더될 때마다 타이머가 처음부터 다시 시작되어 영영 닫히지 않는다.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   useEffect(() => {
     if (!message) return
-    const timer = setTimeout(onClose, AUTO_DISMISS_MS)
+    const timer = setTimeout(() => {
+      onCloseRef.current()
+    }, AUTO_DISMISS_MS)
     return () => {
       clearTimeout(timer)
     }
-  }, [message, onClose])
+  }, [message])
 
   if (!message) return null
 
