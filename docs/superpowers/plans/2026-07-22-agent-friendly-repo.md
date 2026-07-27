@@ -821,7 +821,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
   pull_request:
 
 jobs:

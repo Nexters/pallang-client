@@ -187,7 +187,15 @@ const eslintConfig = defineConfig([
   // Prettier와 충돌하는 스타일 룰 비활성 (항상 마지막)
   eslintConfigPrettier,
 
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'storybook-static/**']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    'storybook-static/**',
+    'ios/**',
+    'android/**',
+  ]),
 ])
 
 export default eslintConfig
