@@ -343,7 +343,10 @@ export function refreshTokens(): Promise<string | null> {
   inFlight ??= (async () => {
     const refreshToken = readRefreshToken()
     if (!refreshToken) return null
-    const accessToken = await requestRefresh(refreshToken)
+    // 네트워크 예외도 HTTP 실패와 같은 경로를 타야 한다. 여기서 흡수하지 않으면
+    // clearTokens()가 건너뛰어져 만료 토큰이 남고, 호출부가 원래 ApiError 대신
+    // raw TypeError를 받는다.
+    const accessToken = await requestRefresh(refreshToken).catch(() => null)
     if (!accessToken) clearTokens()
     return accessToken
   })().finally(() => {
