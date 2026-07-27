@@ -13,7 +13,8 @@
 }
 
 /* ponytail: 디자인 토큰 — Figma(2026-07) 148:20563(팔레트) 148:20617(뉴트럴/화이트)
-   148:20653(텍스트) 148:20695(배경) 148:20737(인터랙티브) 148:20771(보더/아이콘) 148:20447(타이포그래피) */
+   148:20653(텍스트) 148:20695(배경) 148:20737(인터랙티브) 148:20771(보더/아이콘) 148:20447(타이포그래피)
+   155:3658(Reader — border-book·pretendard·타이포 보정) */
 /* static: 미사용 토큰도 CSS 변수로 내보내 스토리북 팔레트에서 var(--color-*)로 참조 가능하게 함 */
 @theme static {
   /* Palette — Neutral (0~1000, 기본 스케일과 혼용 방지 위해 초기화 후 재정의) */
@@ -108,7 +109,7 @@
   /* Semantic — Border */
   --color-border-default: #0000001a; /* #000 10% */
   --color-border-strong: #222222; /* neutral/800 */
-  --color-border-book: #000000;
+  --color-border-book: #222222; /* neutral/800 — Reader(155:3658) Border/Book */
 
   /* Semantic — Icon */
   --color-icon-primary: #222222; /* neutral/800 */
@@ -120,6 +121,7 @@
   /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
   --font-suit: 'SUIT Variable', sans-serif;
   --font-galmuri: 'Galmuri11', sans-serif;
+  --font-pretendard: 'Pretendard', sans-serif; /* Reader 화면 fontFamily/base */
 
   /* Typography — 스타일 (text-title-24bd 형태로 사용) */
   --text-dialogue-14rg: 14px;
@@ -134,6 +136,10 @@
   --text-title-20sb--line-height: 1.5;
   --text-title-20sb--letter-spacing: -0.03em;
   --text-title-20sb--font-weight: 600;
+  --text-title-18bd: 18px; /* Reader Title/S/Bold */
+  --text-title-18bd--line-height: 1.2;
+  --text-title-18bd--letter-spacing: -0.02em;
+  --text-title-18bd--font-weight: 700;
   --text-title-18sb: 18px;
   --text-title-18sb--line-height: 1.3;
   --text-title-18sb--letter-spacing: -0.03em;
@@ -154,14 +160,26 @@
   --text-body-16bd--line-height: 1.4;
   --text-body-16bd--letter-spacing: -0.02em;
   --text-body-16bd--font-weight: 700;
-  --text-body-16md: 16px;
-  --text-body-16md--line-height: 1.3;
-  --text-body-16md--letter-spacing: -0.04em;
+  --text-body-20md: 20px; /* Reader Title/Body/L/Medium */
+  --text-body-20md--line-height: 1.5;
+  --text-body-20md--letter-spacing: -0.04em;
+  --text-body-20md--font-weight: 500;
+  --text-body-16md: 16px; /* Reader Title/Body/M/medium 기준으로 lh·ls 갱신 */
+  --text-body-16md--line-height: 1.4;
+  --text-body-16md--letter-spacing: -0.02em;
   --text-body-16md--font-weight: 500;
   --text-body-16rg: 16px;
   --text-body-16rg--line-height: 1.3;
   --text-body-16rg--letter-spacing: -0.04em;
   --text-body-16rg--font-weight: 400;
+  --text-body-14sb: 14px; /* Reader Title/Body/S/SemiBold */
+  --text-body-14sb--line-height: 1.2;
+  --text-body-14sb--letter-spacing: 0em;
+  --text-body-14sb--font-weight: 600;
+  --text-body-14rg: 14px; /* Reader Title/Body/S/regular */
+  --text-body-14rg--line-height: 1.3;
+  --text-body-14rg--letter-spacing: -0.04em;
+  --text-body-14rg--font-weight: 400;
   --text-body-14md: 14px;
   --text-body-14md--line-height: 1.5;
   --text-body-14md--letter-spacing: -0.03em;
