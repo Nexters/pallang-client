@@ -19,6 +19,8 @@ export class ApiError extends Error {
 
 type AccessTokenGetter = () => string | null
 
+// TODO(auth): 카카오 로그인 구현 시 앱 초기화 지점에서 setAccessTokenGetter(() => 저장된 accessToken) 호출.
+// 미설정 시 Authorization 헤더 없이 요청한다.
 let getAccessToken: AccessTokenGetter = () => null
 
 export function setAccessTokenGetter(getter: AccessTokenGetter) {
