@@ -173,6 +173,7 @@ const eslintConfig = defineConfig([
       '**/middleware.ts',
       '**/instrumentation.ts',
       '**/*.config.{js,mjs,ts}',
+      'orval.transformer.ts',
       '**/*.d.ts',
       // Storybook: CSF meta와 .storybook 설정은 default export가 필수
       '**/*.stories.{ts,tsx}',
