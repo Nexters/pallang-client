@@ -887,7 +887,9 @@ export function Dialog({ open, title, children }: DialogProps) {
         aria-modal="true"
         className="flex w-full max-w-84 flex-col gap-5 rounded-[20px] bg-bg-default px-5 py-7"
       >
-        <h2 className="text-center text-title-18sb text-text-primary">{title}</h2>
+        <h2 className="whitespace-pre-line text-center text-title-18sb text-text-primary">
+          {title}
+        </h2>
         {children}
       </div>
     </div>
@@ -3036,7 +3038,7 @@ export function MergeDialog({
 }
 ```
 
-`Dialog`의 `title`은 `ReactNode`이고 `whitespace-pre-line`이 적용되지 않으므로, `Dialog.tsx`의 `<h2>`에 `whitespace-pre-line`을 추가한다.
+`Dialog`의 `<h2>`에는 Task 5에서 이미 `whitespace-pre-line`이 들어 있으므로 `\n`이 든 제목이 두 줄로 렌더된다. 추가 작업이 없다.
 
 - [ ] **Step 2: TraceDecorateForm에 병합 흐름 연결**
 
