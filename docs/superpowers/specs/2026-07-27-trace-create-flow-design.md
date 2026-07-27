@@ -169,9 +169,12 @@ invalidation·navigation 같은 side effect는 사용부에서 처리한다(`.ag
 `customFetch.api.ts`에 이미 `setAccessTokenGetter`와 `TODO(auth)` 주석이 심으로 박혀 있다. 그 뒤를 채운다.
 
 - `app/_global/_data/authToken.store.ts` — `accessToken` / `refreshToken`의 localStorage 읽기·쓰기·삭제
-- `app/_global/_services/authToken.service.ts` — 회전 재발급 수행
-- `app/_global/_providers/AuthProvider/AuthProvider.tsx` — 마운트 시 `setAccessTokenGetter` 등록. `app/layout.tsx`에서 `QueryProvider` 안쪽에 래핑
-- `customFetch` 확장 — 401이고 refreshToken이 있으면 재발급 1회 후 원 요청 재시도. 재발급 실패 시 토큰을 폐기하고 `ApiError`를 그대로 전파
+- `app/_global/_apis/authRefresh.api.ts` — `POST /api/auth/refresh` 호출과 단일 in-flight 공유
+- `customFetch` 확장 — 기본 토큰 getter가 `authToken.store`를 직접 읽는다. 401이고 refreshToken이 있으면 재발급 1회 후 원 요청 재시도. 재발급 실패 시 토큰을 폐기하고 `ApiError`를 그대로 전파
+
+**Provider를 두지 않는다.** `eslint.config.mjs`의 `no-restricted-imports`가 `**/_apis/**` import를 `_global/_queries` · `_global/_apis` · `_global/_tests` 밖에서 금지하므로 `_providers`나 `_services`에서 `customFetch.api`를 참조할 수 없다. 토큰 주입을 `customFetch` 안쪽으로 내리면 등록 시점을 잡을 Provider 자체가 불필요해진다.
+
+같은 이유로 `authRefresh.api.ts`는 생성된 `refresh()`를 쓰지 않고 맨 `fetch`로 엔드포인트를 직접 호출한다. `_generated/auth/auth.ts`가 `customFetch`를 import하므로 그쪽을 참조하면 `import/no-cycle`에 걸린다.
 
 **리프레시 토큰이 회전식(사용 즉시 폐기)이라 재발급은 단일 in-flight Promise로 공유해야 한다.** 동시 401이 두 건 나면 각자 재발급을 시도하다 서로의 토큰을 무효화한다. `refresh` 호출 자체의 401은 재시도하지 않는다(무한 루프 방지).
 
