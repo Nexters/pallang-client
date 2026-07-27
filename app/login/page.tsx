@@ -9,7 +9,7 @@ export default function LoginPage() {
     <div className="relative flex min-h-0 flex-1 flex-col bg-bg-alternative bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-size-[24px_24px]">
       <div className="flex flex-col items-center gap-1 px-6 pt-25">
         <Logo aria-label="Pallang" className="h-auto w-60" />
-        <p className="text-title-16sb text-text-primary">흔적을 넘기면, 다른 생각이 팔랑</p>
+        <p className="mt-[15px] text-title-16sb text-text-primary">흔적을 넘기면, 다른 생각이 팔랑</p>
       </div>
 
       <div className="flex min-h-0 flex-1 items-center justify-center px-6">
