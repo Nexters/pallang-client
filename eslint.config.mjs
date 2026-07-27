@@ -92,14 +92,14 @@ const eslintConfig = defineConfig([
   // 서버 상태: 피처 코드에서 _apis 직접 import 금지 (_queries 경유)
   {
     files: ['app/**/*.{ts,tsx}'],
-    ignores: ['app/_global/_queries/**', 'app/_global/_apis/**'],
+    ignores: ['app/_global/_queries/**', 'app/_global/_apis/**', 'app/_global/_tests/**'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['**/_apis/*', '@/app/_global/_apis/*'],
+              group: ['**/_apis/**', '@/app/_global/_apis/**'],
               message:
                 'API 함수는 직접 import하지 말고 @/app/_global/_queries의 queryOptions를 사용하세요.',
             },
@@ -173,6 +173,7 @@ const eslintConfig = defineConfig([
       '**/middleware.ts',
       '**/instrumentation.ts',
       '**/*.config.{js,mjs,ts}',
+      'orval.transformer.ts',
       '**/*.d.ts',
       // Storybook: CSF meta와 .storybook 설정은 default export가 필수
       '**/*.stories.{ts,tsx}',
@@ -188,6 +189,7 @@ const eslintConfig = defineConfig([
   eslintConfigPrettier,
 
   globalIgnores([
+    'app/_global/_apis/_generated/**',
     '.next/**',
     'out/**',
     'build/**',
