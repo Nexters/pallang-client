@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import ReaderHighlightsPage from '../page'
@@ -43,5 +43,53 @@ describe('ReaderHighlightsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '최신순' }))
     expect(screen.getByRole('button', { name: '좋아요순' })).toBeInTheDocument()
+  })
+
+  it('스포일러 의견은 마스킹되고, 첫 클릭에 해제만 된다', () => {
+    render(<ReaderHighlightsPage />)
+    const spoiler = screen.getByText(
+      '결혼이란 결국 선택의 문제라는 말, 읽을 때마다 다르게 다가와요.',
+    )
+
+    expect(spoiler).toHaveClass('font-galmuri')
+    fireEvent.click(spoiler)
+    expect(spoiler).not.toHaveClass('font-galmuri')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('의견 클릭 시 상세 오버레이가 열리고 X로 닫힌다', () => {
+    render(<ReaderHighlightsPage />)
+
+    fireEvent.click(
+      screen.getByText('이 문장에서 한참을 머물렀어요. 안진진의 마음이 그대로 전해지는 것 같아요.'),
+    )
+    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
+    expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
+
+    fireEvent.click(within(dialog).getByLabelText('닫기'))
+    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+  })
+
+  it('상세에서 다음 의견으로 이동할 수 있고, 첫 의견에서는 이전 버튼이 비활성화된다', () => {
+    render(<ReaderHighlightsPage />)
+
+    // 최신순 첫 번째 의견(책책책을읽자)을 연다
+    fireEvent.click(screen.getByText(/책장 냄새가 이렇게 묘사될 수 있구나 싶었어요\. 헌책방에/))
+    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
+
+    expect(within(dialog).getByLabelText('이전 의견')).toBeDisabled()
+    fireEvent.click(within(dialog).getByLabelText('다음 의견'))
+    expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
+  })
+
+  it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', () => {
+    render(<ReaderHighlightsPage />)
+    const list = screen.getByRole('list')
+
+    fireEvent.scroll(list, { target: { scrollTop: 60 } })
+    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
+
+    fireEvent.scroll(list, { target: { scrollTop: 0 } })
+    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 })

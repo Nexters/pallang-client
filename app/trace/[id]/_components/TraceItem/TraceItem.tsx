@@ -3,21 +3,23 @@ import { useState, useSyncExternalStore } from 'react'
 import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { cn } from '@/app/_global/_services/cn.service'
 
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
 
 type TraceItemProps = {
   trace: Trace
-  onCommentClick: () => void
+  isMasked: boolean
+  onReveal: () => void
+  onSelect: () => void
 }
 
 const noop = () => undefined
 const emptySubscribe = () => noop
 
-export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
+export function TraceItem({ trace, isMasked, onReveal, onSelect }: TraceItemProps) {
   const [isLiked, setIsLiked] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
   const isHydrated = useSyncExternalStore(
     emptySubscribe,
@@ -35,10 +37,11 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
       </button>
       <button
         type="button"
-        onClick={() => {
-          setIsExpanded((prev) => !prev)
-        }}
-        className={`text-left text-body-16md text-text-inverse ${isExpanded ? '' : 'line-clamp-3'}`}
+        onClick={isMasked ? onReveal : onSelect}
+        className={cn(
+          'line-clamp-3 text-left text-body-16md text-text-inverse',
+          isMasked && 'font-galmuri',
+        )}
       >
         {trace.content}
       </button>
@@ -62,7 +65,7 @@ export function TraceItem({ trace, onCommentClick }: TraceItemProps) {
           </button>
           <button
             type="button"
-            onClick={onCommentClick}
+            onClick={onSelect}
             className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >
             <CommentIcon width={20} height={20} className="text-icon-active" />
