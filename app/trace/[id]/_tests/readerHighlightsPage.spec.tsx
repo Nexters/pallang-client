@@ -1,7 +1,14 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
+import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
 import ReaderHighlightsPage from '../page'
+
+// 스크롤 컨테이너는 페이지가 그리는 첫 요소다
+const renderPage = () => {
+  const { container } = render(<ReaderHighlightsPage />)
+  return container.firstElementChild as HTMLElement
+}
 
 describe('ReaderHighlightsPage', () => {
   it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 후 이동한다', () => {
@@ -82,14 +89,23 @@ describe('ReaderHighlightsPage', () => {
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
   })
 
-  it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', () => {
-    render(<ReaderHighlightsPage />)
-    const list = screen.getByRole('list')
+  it('스크롤 진행률을 CSS 변수로 흘려보내고, 전환 도중에는 페이지 탭을 남겨둔다', () => {
+    const scroller = renderPage()
 
-    fireEvent.scroll(list, { target: { scrollTop: 60 } })
+    fireEvent.scroll(scroller, { target: { scrollTop: COLLAPSE_DISTANCE / 2 } })
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('0.5')
+    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
+  })
+
+  it('전환이 끝나면 페이지 탭이 사라지고, 최상단 복귀 시 다시 보인다', () => {
+    const scroller = renderPage()
+
+    fireEvent.scroll(scroller, { target: { scrollTop: COLLAPSE_DISTANCE } })
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
 
-    fireEvent.scroll(list, { target: { scrollTop: 0 } })
+    fireEvent.scroll(scroller, { target: { scrollTop: 0 } })
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('0')
     expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 })

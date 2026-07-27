@@ -1,5 +1,3 @@
-import type { UIEvent } from 'react'
-
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 
@@ -14,7 +12,6 @@ type TraceListSectionProps = {
   onToggleComment: () => void
   onRevealTrace: (id: number) => void
   onSelectTrace: (trace: Trace) => void
-  onListScroll: (event: UIEvent<HTMLUListElement>) => void
 }
 
 export function TraceListSection({
@@ -25,11 +22,11 @@ export function TraceListSection({
   onToggleComment,
   onRevealTrace,
   onSelectTrace,
-  onListScroll,
 }: TraceListSectionProps) {
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
-      <div className="flex h-15 shrink-0 items-center justify-between px-4">
+    <section className="flex flex-col">
+      {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
+      <div className="sticky top-[var(--stage-collapsed)] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
           <p className="text-title-16sb text-text-inverse">{traces.length}개의 흔적</p>
           <button type="button" aria-label="흔적 남기기" onClick={onToggleComment}>
@@ -45,10 +42,7 @@ export function TraceListSection({
           <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
-      <ul
-        onScroll={onListScroll}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-10"
-      >
+      <ul className="flex flex-col px-4 pb-10">
         {traces.map((trace, index) => (
           <li
             key={trace.id}

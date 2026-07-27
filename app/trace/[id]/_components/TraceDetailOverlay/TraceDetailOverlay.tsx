@@ -60,7 +60,7 @@ export function TraceDetailOverlay({
           <CloseIcon />
         </button>
       </header>
-      <QuotePanel quote={quote} isCovered={false} onClick={() => undefined} />
+      <QuotePanel quote={quote} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
         <p className="text-body-16md text-text-inverse">{trace.content}</p>
         <div className="flex items-center justify-between text-body-14rg text-text-inverse opacity-50">

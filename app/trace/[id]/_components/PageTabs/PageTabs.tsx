@@ -6,11 +6,17 @@ type PageTabsProps = {
   highlights: Highlight[]
   activePage: number
   onSelect: (highlight: Highlight) => void
+  className?: string
 }
 
-export function PageTabs({ highlights, activePage, onSelect }: PageTabsProps) {
+export function PageTabs({ highlights, activePage, onSelect, className }: PageTabsProps) {
   return (
-    <nav className="flex items-center gap-4 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav
+      className={cn(
+        'flex items-center gap-4 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        className,
+      )}
+    >
       {highlights.map((highlight) => (
         <button
           key={highlight.page}

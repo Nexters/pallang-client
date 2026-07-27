@@ -1,0 +1,21 @@
+/* 스테이지 좌표계(--stage-*, --card-* 등)와 스크롤 진행률 --collapse가 모두 이 요소에 실린다.
+   진행률은 스크롤 훅이 직접 써 넣으므로 스크롤 중 React 리렌더가 일어나지 않는다 */
+.scroller {
+  --collapse: 0;
+
+  overflow-x: hidden;
+}
+
+/* 높이 0짜리 sticky 앵커. 레이아웃 자리를 차지하지 않아 아래 spacer가 그대로 흘러가고,
+   덕분에 목록은 손가락과 1:1로 움직이면서 스테이지만 상단에 붙어 축소된다 */
+.stageAnchor {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 0;
+}
+
+/* 펼친 상태 스테이지가 차지할 자리 */
+.stageSpacer {
+  height: var(--stage-expanded);
+}
