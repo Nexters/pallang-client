@@ -4,9 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import ReaderHighlightsPage from '../page'
 
-vi.mock('next/navigation', () => ({
-  useParams: () => ({ id: '1' }),
-}))
+// page의 params(Promise)를 use()가 동기적으로 언래핑하도록 status/value를 태깅한 thenable을 넘긴다.
+function stubParams(id: string) {
+  return Object.assign(Promise.resolve({ id }), { status: 'fulfilled' as const, value: { id } })
+}
 
 const passageSeedByPage: Record<number, { quotedText: string; isSpoiler: boolean }[]> = {
   7: [
@@ -31,7 +32,7 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <ReaderHighlightsPage />
+      <ReaderHighlightsPage params={stubParams('1')} />
     </QueryClientProvider>,
   )
   await screen.findByRole('button', { name: `${String(pages[0])}p` })
