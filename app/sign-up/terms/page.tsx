@@ -6,10 +6,8 @@ import { useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Checkbox } from '@/app/_global/_components/Checkbox/Checkbox'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
-
-const GRID_BACKGROUND =
-  'bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-size-[24px_24px]'
 
 type TermsRowProps = {
   checked: boolean
@@ -72,7 +70,7 @@ export default function SignUpTermsPage() {
   return (
     <section
       aria-label="약관 동의"
-      className={`relative flex min-h-0 flex-1 flex-col overflow-hidden bg-bg-alternative ${GRID_BACKGROUND}`}
+      className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-163.75 bg-linear-to-b from-transparent to-neutral-200" />
 

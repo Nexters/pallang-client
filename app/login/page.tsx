@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import KakaoIcon from '@/app/_global/_components/Icon/assets/kakao.svg'
+import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
 export default function LoginPage() {
@@ -17,7 +18,7 @@ export default function LoginPage() {
   return (
     <section
       aria-label="로그인"
-      className="flex min-h-0 flex-1 flex-col justify-end overflow-hidden bg-bg-alternative bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-size-[24px_24px]"
+      className={`flex min-h-0 flex-1 flex-col justify-end overflow-hidden ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="h-11 shrink-0" />

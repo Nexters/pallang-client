@@ -4,9 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
-
-const GRID_BACKGROUND =
-  'bg-[linear-gradient(rgba(0,0,0,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.045)_1px,transparent_1px)] bg-size-[24px_24px]'
+import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 
 export default function SignUpWelcomePage() {
   const router = useRouter()
@@ -18,7 +16,7 @@ export default function SignUpWelcomePage() {
   return (
     <section
       aria-label="가입 환영"
-      className={`flex min-h-0 flex-1 flex-col justify-end overflow-hidden bg-bg-alternative ${GRID_BACKGROUND}`}
+      className={`flex min-h-0 flex-1 flex-col justify-end overflow-hidden ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="h-11 shrink-0" />
 
