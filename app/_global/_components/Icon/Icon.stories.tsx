@@ -43,7 +43,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
 ]
 
 const meta = {
-  title: 'Global/Icon',
+  title: 'Foundation/Icons',
 } satisfies Meta
 
 export default meta

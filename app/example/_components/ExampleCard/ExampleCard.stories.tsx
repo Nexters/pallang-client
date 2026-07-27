@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ExampleCard } from './ExampleCard'
 
 const meta = {
-  title: 'Example/ExampleCard',
+  title: 'Examples/ExampleCard',
   component: ExampleCard,
 } satisfies Meta<typeof ExampleCard>
 
