@@ -16,7 +16,7 @@ import { QuotePanel } from './_components/QuotePanel/QuotePanel'
 import { TraceDetailOverlay } from './_components/TraceDetailOverlay/TraceDetailOverlay'
 import { TraceHeader } from './_components/TraceHeader/TraceHeader'
 import { TraceListSection } from './_components/TraceListSection/TraceListSection'
-import { bookTitle, highlightSeed, traceSeed } from './_data/readerHighlights.constant'
+import { bookTitle, traceSeed } from './_data/readerHighlights.constant'
 import { useHighlightViewer } from './_hooks/useHighlightViewer'
 import { useLoginGate } from './_hooks/useLoginGate'
 import { useTraceViewMode } from './_hooks/useTraceViewMode'
@@ -26,22 +26,23 @@ export default function ReaderHighlightsPage() {
   const { id } = useParams<{ id: string }>()
   const bookId = Number(id)
   const gate = useLoginGate()
-  const viewer = useHighlightViewer(gate.runWithLogin)
   const { viewMode, handleListScroll } = useTraceViewMode()
   const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
+  const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
+  const viewer = useHighlightViewer(gate.runWithLogin, pages[0])
+  const { data: passagesData } = useQuery({
+    ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
+    enabled: viewer.activePage !== undefined,
+  })
 
-  // TODO(passage): getPassagesByPage 연결 전까지 quotes/isSpoiler는 mock에서 가져온다.
-  const highlights = useMemo(() => {
-    const pages = pageNumbersData?.data?.pageNumbers ?? []
-    return pages.map(
-      (page) =>
-        highlightSeed.find((highlight) => highlight.page === page) ?? {
-          page,
-          quotes: [],
-          isSpoiler: false,
-        },
-    )
-  }, [pageNumbersData])
+  const highlight = useMemo(() => {
+    const passages = passagesData?.data?.passages ?? []
+    return {
+      page: viewer.activePage ?? 0,
+      quotes: passages.map((passage) => passage.quotedText ?? ''),
+      isSpoiler: passages.some((passage) => passage.isSpoiler ?? false),
+    }
+  }, [passagesData, viewer.activePage])
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
   const [revealedSpoilerIds, setRevealedSpoilerIds] = useState<ReadonlySet<number>>(new Set())
@@ -78,31 +79,31 @@ export default function ReaderHighlightsPage() {
           <div className="absolute inset-x-0 top-0 h-77 bg-orange-500" />
           <div className="relative">
             <TraceHeader title={bookTitle} />
-            <PageTabs
-              highlights={highlights}
-              activePage={viewer.highlight.page}
-              onSelect={viewer.select}
-            />
+            <PageTabs pages={pages} activePage={viewer.activePage} onSelect={viewer.select} />
             <div className="mt-8 flex justify-center">
               <HighlightCard
-                highlight={viewer.highlight}
+                highlight={highlight}
                 quoteIndex={viewer.quoteIndex}
                 isRevealed={viewer.isRevealed}
-                onClick={viewer.clickCard}
+                onClick={() => {
+                  viewer.clickCard(highlight)
+                }}
               />
             </div>
-            <QuoteIndicator quotes={viewer.highlight.quotes} activeIndex={viewer.quoteIndex} />
+            <QuoteIndicator quotes={highlight.quotes} activeIndex={viewer.quoteIndex} />
           </div>
         </section>
       ) : (
         <section className={cn('shrink-0 bg-bg-book-card', styles['panelSettle'])}>
           <TraceHeader title={bookTitle} />
           <QuotePanel
-            quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}
-            isCovered={viewer.highlight.isSpoiler && !viewer.isRevealed}
-            onClick={viewer.clickCard}
+            quote={highlight.quotes[viewer.quoteIndex] ?? ''}
+            isCovered={highlight.isSpoiler && !viewer.isRevealed}
+            onClick={() => {
+              viewer.clickCard(highlight)
+            }}
           >
-            <QuoteIndicator quotes={viewer.highlight.quotes} activeIndex={viewer.quoteIndex} />
+            <QuoteIndicator quotes={highlight.quotes} activeIndex={viewer.quoteIndex} />
           </QuotePanel>
         </section>
       )}
@@ -127,7 +128,7 @@ export default function ReaderHighlightsPage() {
         <TraceDetailOverlay
           traces={sortedTraces}
           index={selectedTraceIndex}
-          quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}
+          quote={highlight.quotes[viewer.quoteIndex] ?? ''}
           onNavigate={(next) => {
             const target = sortedTraces[next]
             if (target) setSelectedTraceId(target.id)

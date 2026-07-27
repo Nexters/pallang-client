@@ -8,11 +8,25 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({ id: '1' }),
 }))
 
-// 대목 페이지 목록 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
+const passageSeedByPage: Record<number, { quotedText: string; isSpoiler: boolean }[]> = {
+  7: [
+    { quotedText: '첫 번째 대목 인용문', isSpoiler: false },
+    { quotedText: '두 번째 대목 인용문', isSpoiler: false },
+  ],
+  9: [{ quotedText: '스포일러 대목 인용문', isSpoiler: true }],
+}
+
+// 대목 페이지 목록/페이지별 대목 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
 async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { pageNumbers: pages } }))),
+    vi.fn().mockImplementation((url: string) => {
+      const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
+      const body = pageMatch
+        ? { data: { passages: passageSeedByPage[Number(pageMatch[1])] ?? [] } }
+        : { data: { pageNumbers: pages } }
+      return Promise.resolve(new Response(JSON.stringify(body)))
+    }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
@@ -35,6 +49,14 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
   })
 
+  it('카드 인용문은 페이지별 대목 조회 API로 채우고, 클릭하면 다음 인용문으로 넘어간다', async () => {
+    await renderPage()
+
+    const firstQuote = await screen.findByText('첫 번째 대목 인용문')
+    fireEvent.click(firstQuote)
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+  })
+
   it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 후 이동한다', async () => {
     await renderPage()
 
@@ -45,7 +67,7 @@ describe('ReaderHighlightsPage', () => {
     expect(
       screen.queryByText('해당 페이지부터는 로그인해야 확인할 수 있어요!'),
     ).not.toBeInTheDocument()
-    expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
   it('스포일러 하이라이트는 가림막을 먼저 보여주고, 누르면 내용을 보여준다', async () => {
@@ -54,8 +76,9 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
 
-    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+    fireEvent.click(await screen.findByText('스포일러가 포함되어있어요!'))
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
+    expect(screen.getByText('스포일러 대목 인용문')).toBeInTheDocument()
   })
 
   it('비로그인 시 댓글 입력은 로그인 유도 후 열린다', async () => {
