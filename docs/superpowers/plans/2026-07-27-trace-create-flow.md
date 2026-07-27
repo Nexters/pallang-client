@@ -32,6 +32,13 @@
 
 **테스트 규약:** Vitest `globals: true`(import 없이 `describe`/`it`/`expect` 사용 가능하지만 기존 코드는 명시적 import를 쓴다 — 따라간다), 환경은 `happy-dom`, 테스트 파일은 각 폴더의 `_tests/*.spec.ts(x)`, `@` 별칭은 레포 루트.
 
+**실행 중 확인된 환경 함정 (전 태스크 공통)**
+
+- **Node는 22를 쓴다.** 레포 루트에 `.nvmrc`가 있으니 `export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use`로 전환한 뒤 검증한다. Node 25에서는 실험적 webstorage 전역이 happy-dom과 충돌해 `localStorage`를 쓰는 테스트가 실패한다 — 코드 문제가 아니다.
+- **좁힌 테스트는 `pnpm test <패턴>`으로 돌린다.** `pnpm test -- <패턴>`은 `--`가 vitest까지 전달되어 파일 필터가 무시되고 **전체 스위트가 돈다.** 좁혔다고 보고하려면 출력의 `Test Files 1 passed (1)`을 실제로 확인할 것.
+- **커밋 제목은 한글 또는 소문자로 시작한다.** commitlint의 `subject-case` 규칙이 대문자로 시작하는 제목(`feat: Dialog ...`)을 거부한다.
+- **리뷰 수정은 새 커밋으로 쌓는다.** `git commit --amend`를 쓰면 리뷰가 본 커밋이 히스토리에서 떨어져 나가 추적이 끊긴다.
+
 ---
 
 ## Task 1: orval 생성물 재생성
@@ -118,7 +125,7 @@ it('body가 JSON 문자열이면 Content-Type을 application/json으로 설정�
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- customFetch`
+Run: `pnpm test customFetch`
 Expected: FAIL — "body가 FormData면..." 테스트가 `expected true to be false`로 떨어진다.
 
 - [ ] **Step 3: 최소 구현**
@@ -134,7 +141,7 @@ if (options.body != null && !isFormData && !headers.has('Content-Type')) {
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- customFetch`
+Run: `pnpm test customFetch`
 Expected: PASS (6 tests)
 
 - [ ] **Step 5: 커밋**
@@ -221,7 +228,7 @@ describe('authToken.store', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- authToken`
+Run: `pnpm test authToken`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 토큰 저장소 구현**
@@ -270,7 +277,7 @@ export function clearTokens(): void {
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- authToken`
+Run: `pnpm test authToken`
 Expected: PASS (3 tests)
 
 - [ ] **Step 5: env 키 문서화**
@@ -459,7 +466,7 @@ import { clearTokens, readAccessToken, writeTokens } from '@/app/_global/_data/a
 
 - [ ] **Step 8: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- customFetch`
+Run: `pnpm test customFetch`
 Expected: FAIL — 401 재발급 테스트 3개가 떨어진다 (재시도가 일어나지 않아 호출 횟수가 1).
 
 - [ ] **Step 9: customFetch에 401 재시도 구현**
@@ -617,7 +624,7 @@ describe('BottomSheet', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- bottomSheet`
+Run: `pnpm test bottomSheet`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 구현**
@@ -688,7 +695,7 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- bottomSheet`
+Run: `pnpm test bottomSheet`
 Expected: PASS (4 tests)
 
 - [ ] **Step 5: 스토리 작성**
@@ -808,7 +815,7 @@ describe('Snackbar', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- snackbar`
+Run: `pnpm test snackbar`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: Snackbar 구현**
@@ -870,7 +877,7 @@ export function Snackbar({ message, onClose }: SnackbarProps) {
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- snackbar`
+Run: `pnpm test snackbar`
 Expected: PASS (3 tests)
 
 - [ ] **Step 5: Dialog 구현**
@@ -1061,7 +1068,7 @@ describe('SegmentedControl', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- segmentedControl`
+Run: `pnpm test segmentedControl`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 구현**
@@ -1116,7 +1123,7 @@ export function SegmentedControl({ label, options, value, onChange }: SegmentedC
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- segmentedControl`
+Run: `pnpm test segmentedControl`
 Expected: PASS (3 tests)
 
 - [ ] **Step 5: 스토리 작성 후 커밋**
@@ -1367,7 +1374,7 @@ describe('traceDraftReducer', () => {
 
 - [ ] **Step 3: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- traceDraft`
+Run: `pnpm test traceDraft`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 4: store 구현**
@@ -1443,7 +1450,7 @@ export const TraceDraftContext = createContext<{
 
 - [ ] **Step 5: 테스트 통과 확인**
 
-Run: `pnpm test -- traceDraft`
+Run: `pnpm test traceDraft`
 Expected: PASS (9 tests)
 
 - [ ] **Step 6: Provider와 훅 구현**
@@ -1600,7 +1607,7 @@ describe('resolveGuardRedirect', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- traceGuard`
+Run: `pnpm test traceGuard`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 가드 서비스 구현**
@@ -1637,7 +1644,7 @@ export function resolveGuardRedirect(pathname: string, draft: TraceDraft): strin
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- traceGuard`
+Run: `pnpm test traceGuard`
 Expected: PASS (8 tests)
 
 - [ ] **Step 5: 가드 훅과 래퍼 구현**
@@ -2239,7 +2246,7 @@ describe('splitByDecorations', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- decoration`
+Run: `pnpm test decoration`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 분할 함수 구현**
@@ -2275,7 +2282,7 @@ export function splitByDecorations(text: string, decorations: DraftDecoration[])
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- decoration`
+Run: `pnpm test decoration`
 Expected: PASS (8 tests)
 
 - [ ] **Step 5: 효과 상수 작성**
@@ -2464,7 +2471,7 @@ describe('normalizeRange', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- textRangeSelection`
+Run: `pnpm test textRangeSelection`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 정규화 함수 구현**
@@ -2484,7 +2491,7 @@ export function normalizeRange(anchor: number, focus: number): TextRange {
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- textRangeSelection`
+Run: `pnpm test textRangeSelection`
 Expected: PASS (3 tests)
 
 - [ ] **Step 5: 훅과 컴포넌트 구현**
@@ -3447,7 +3454,7 @@ describe('clampQuote', () => {
 
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
-Run: `pnpm test -- ocrText`
+Run: `pnpm test ocrText`
 Expected: FAIL — 모듈을 찾을 수 없다.
 
 - [ ] **Step 3: 구현**
@@ -3471,7 +3478,7 @@ export function clampQuote(text: string, max: number): string {
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `pnpm test -- ocrText`
+Run: `pnpm test ocrText`
 Expected: PASS (6 tests)
 
 - [ ] **Step 5: useCamera에 blob 변환 추가**
