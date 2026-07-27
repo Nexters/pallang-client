@@ -1,7 +1,10 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
+import { useParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 
+import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { CommentBar } from './_components/CommentBar/CommentBar'
@@ -20,9 +23,25 @@ import { useTraceViewMode } from './_hooks/useTraceViewMode'
 import styles from './page.module.css'
 
 export default function ReaderHighlightsPage() {
+  const { id } = useParams<{ id: string }>()
+  const bookId = Number(id)
   const gate = useLoginGate()
   const viewer = useHighlightViewer(gate.runWithLogin)
   const { viewMode, handleListScroll } = useTraceViewMode()
+  const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
+
+  // TODO(passage): getPassagesByPage 연결 전까지 quotes/isSpoiler는 mock에서 가져온다.
+  const highlights = useMemo(() => {
+    const pages = pageNumbersData?.data?.pageNumbers ?? []
+    return pages.map(
+      (page) =>
+        highlightSeed.find((highlight) => highlight.page === page) ?? {
+          page,
+          quotes: [],
+          isSpoiler: false,
+        },
+    )
+  }, [pageNumbersData])
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
   const [revealedSpoilerIds, setRevealedSpoilerIds] = useState<ReadonlySet<number>>(new Set())
@@ -60,7 +79,7 @@ export default function ReaderHighlightsPage() {
           <div className="relative">
             <TraceHeader title={bookTitle} />
             <PageTabs
-              highlights={highlightSeed}
+              highlights={highlights}
               activePage={viewer.highlight.page}
               onSelect={viewer.select}
             />

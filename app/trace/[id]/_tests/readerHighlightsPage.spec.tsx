@@ -1,11 +1,42 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import ReaderHighlightsPage from '../page'
 
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ id: '1' }),
+}))
+
+// 대목 페이지 목록 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
+async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { pageNumbers: pages } }))),
+  )
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
+      <ReaderHighlightsPage />
+    </QueryClientProvider>,
+  )
+  await screen.findByRole('button', { name: `${String(pages[0])}p` })
+}
+
 describe('ReaderHighlightsPage', () => {
-  it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 후 이동한다', () => {
-    render(<ReaderHighlightsPage />)
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('페이지 탭은 API의 대목 페이지 목록으로 그린다', async () => {
+    await renderPage([7, 200])
+
+    expect(screen.getByRole('button', { name: '200p' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
+  })
+
+  it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 후 이동한다', async () => {
+    await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
     expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
@@ -17,8 +48,8 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
-  it('스포일러 하이라이트는 가림막을 먼저 보여주고, 누르면 내용을 보여준다', () => {
-    render(<ReaderHighlightsPage />)
+  it('스포일러 하이라이트는 가림막을 먼저 보여주고, 누르면 내용을 보여준다', async () => {
+    await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
@@ -27,8 +58,8 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
   })
 
-  it('비로그인 시 댓글 입력은 로그인 유도 후 열린다', () => {
-    render(<ReaderHighlightsPage />)
+  it('비로그인 시 댓글 입력은 로그인 유도 후 열린다', async () => {
+    await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
     expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
@@ -38,15 +69,15 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
   })
 
-  it('정렬 버튼을 누르면 최신순과 좋아요순이 토글된다', () => {
-    render(<ReaderHighlightsPage />)
+  it('정렬 버튼을 누르면 최신순과 좋아요순이 토글된다', async () => {
+    await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '최신순' }))
     expect(screen.getByRole('button', { name: '좋아요순' })).toBeInTheDocument()
   })
 
-  it('스포일러 의견은 마스킹되고, 첫 클릭에 해제만 된다', () => {
-    render(<ReaderHighlightsPage />)
+  it('스포일러 의견은 마스킹되고, 첫 클릭에 해제만 된다', async () => {
+    await renderPage()
     const spoiler = screen.getByText(
       '결혼이란 결국 선택의 문제라는 말, 읽을 때마다 다르게 다가와요.',
     )
@@ -57,8 +88,8 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('의견 클릭 시 상세 오버레이가 열리고 X로 닫힌다', () => {
-    render(<ReaderHighlightsPage />)
+  it('의견 클릭 시 상세 오버레이가 열리고 X로 닫힌다', async () => {
+    await renderPage()
 
     fireEvent.click(
       screen.getByText('이 문장에서 한참을 머물렀어요. 안진진의 마음이 그대로 전해지는 것 같아요.'),
@@ -70,8 +101,8 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
   })
 
-  it('상세에서 다음 의견으로 이동할 수 있고, 첫 의견에서는 이전 버튼이 비활성화된다', () => {
-    render(<ReaderHighlightsPage />)
+  it('상세에서 다음 의견으로 이동할 수 있고, 첫 의견에서는 이전 버튼이 비활성화된다', async () => {
+    await renderPage()
 
     // 최신순 첫 번째 의견(책책책을읽자)을 연다
     fireEvent.click(screen.getByText(/책장 냄새가 이렇게 묘사될 수 있구나 싶었어요\. 헌책방에/))
@@ -82,8 +113,8 @@ describe('ReaderHighlightsPage', () => {
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
   })
 
-  it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', () => {
-    render(<ReaderHighlightsPage />)
+  it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', async () => {
+    await renderPage()
     const list = screen.getByRole('list')
 
     fireEvent.scroll(list, { target: { scrollTop: 60 } })
