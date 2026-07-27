@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { ColorPalette } from './ColorPalette'
 
 const meta = {
-  title: 'Foundation/ColorPalette',
+  title: 'Foundation/Colors',
   component: ColorPalette,
 } satisfies Meta<typeof ColorPalette>
 

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { Button } from '@/app/_global/_components/Button/Button'
 
 const meta = {
-  title: 'Global/Button',
+  title: 'Components/Button',
   component: Button,
   args: {
     children: '다음',
