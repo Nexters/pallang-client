@@ -447,9 +447,12 @@ describe('customFetch 401 재발급', () => {
 ```ts
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiError, customFetch, setAccessTokenGetter } from '@/app/_global/_apis/customFetch.api'
+import { customFetch, setAccessTokenGetter } from '@/app/_global/_apis/customFetch.api'
+import { ApiError } from '@/app/_global/_data/api.model'
 import { clearTokens, readAccessToken, writeTokens } from '@/app/_global/_data/authToken.store'
 ```
+
+`ApiError`는 Step 5-1에서 `_data/api.model.ts`로 옮겼으므로 `customFetch.api`가 아니라 거기서 가져온다.
 
 - [ ] **Step 8: 테스트가 실패하는지 확인**
 
