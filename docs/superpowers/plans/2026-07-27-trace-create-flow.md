@@ -1803,12 +1803,12 @@ export const passageMutations = {
   ocr: () =>
     mutationOptions({
       mutationKey: [...passageMutations.all(), 'ocr'],
-      mutationFn: createOcrResult,
+      mutationFn: (data: CreateOcrResultBody) => createOcrResult(data),
     }),
   similarCheck: () =>
     mutationOptions({
       mutationKey: [...passageMutations.all(), 'similar-check'],
-      mutationFn: checkSimilarPassages,
+      mutationFn: (data: SimilarCheck) => checkSimilarPassages(data),
     }),
 }
 ```
@@ -1827,10 +1827,12 @@ export const opinionMutations = {
   create: () =>
     mutationOptions({
       mutationKey: [...opinionMutations.all(), 'create'],
-      mutationFn: createOpinion,
+      mutationFn: (data: CreateOpinionRequest) => createOpinion(data),
     }),
 }
 ```
+
+**생성 함수를 `mutationFn`에 직접 대입하면 컴파일되지 않는다.** TanStack Query v5의 `MutationFunction`은 두 번째 파라미터가 `MutationFunctionContext`인데 orval 생성 함수의 두 번째 파라미터는 `options?: Parameters<typeof customFetch>[1]`이라, `strictFunctionTypes` 아래에서 위치 2의 파라미터 타입이 충돌한다(`TS2769`). 위처럼 첫 인자만 받는 화살표 함수로 감싼다. 인자 타입은 생성 request 타입과 정확히 일치시키고 **`| undefined`로 넓히지 않는다** — 넓히면 호출부가 `.mutate(undefined)`를 컴파일 에러 없이 부를 수 있다.
 
 - [ ] **Step 4: 검증**
 
