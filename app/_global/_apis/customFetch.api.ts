@@ -27,6 +27,14 @@ export function setAccessTokenGetter(getter: AccessTokenGetter) {
   getAccessToken = getter
 }
 
+// dev 브라우저에서만 same-origin(next.config.ts의 /api/* rewrite 프록시)으로 호출한다.
+// 개발 API 서버에 CORS 헤더가 없기 때문이다. 서버 사이드 fetch는 CORS 제약이 없고
+// 절대 URL이 필요하므로 환경과 무관하게 API origin을 직접 호출한다.
+function getBaseUrl() {
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') return ''
+  return process.env.NEXT_PUBLIC_API_URL ?? ''
+}
+
 export async function customFetch<T>(url: string, options: RequestInit): Promise<T> {
   const headers = new Headers(options.headers)
   const token = getAccessToken()
@@ -35,8 +43,7 @@ export async function customFetch<T>(url: string, options: RequestInit): Promise
     headers.set('Content-Type', 'application/json')
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
-  const res = await fetch(`${baseUrl}${url}`, { ...options, headers })
+  const res = await fetch(`${getBaseUrl()}${url}`, { ...options, headers })
 
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ErrorBody | null

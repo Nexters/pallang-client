@@ -5,6 +5,6 @@ import type { BookActivityResponse } from './bookActivityResponse'
 import type { PageInfo } from './pageInfo'
 
 export interface BookActivityListResponse {
-  books?: BookActivityResponse[]
-  pageInfo?: PageInfo
+  books: BookActivityResponse[]
+  pageInfo: PageInfo
 }

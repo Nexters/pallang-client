@@ -3,10 +3,10 @@
  */
 
 export interface OpinionSummaryResponse {
-  opinionId?: number
-  userId?: number
-  nickname?: string
-  content?: string
-  likeCount?: number
-  createdAt?: string
+  opinionId: number
+  userId: number
+  nickname: string
+  content: string
+  likeCount: number
+  createdAt: string
 }

@@ -3,8 +3,8 @@
  */
 
 export interface NoticeResponse {
-  noticeId?: number
-  title?: string
-  content?: string
-  createdAt?: string
+  noticeId: number
+  title: string
+  content: string
+  createdAt: string
 }

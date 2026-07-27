@@ -5,6 +5,6 @@ import type { PageInfo } from './pageInfo'
 import type { RootCommentResponse } from './rootCommentResponse'
 
 export interface RootCommentListResponse {
-  comments?: RootCommentResponse[]
-  pageInfo?: PageInfo
+  comments: RootCommentResponse[]
+  pageInfo: PageInfo
 }

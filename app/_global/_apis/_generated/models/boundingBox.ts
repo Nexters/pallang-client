@@ -4,5 +4,5 @@
 import type { Point } from './point'
 
 export interface BoundingBox {
-  vertices?: Point[]
+  vertices: Point[]
 }
