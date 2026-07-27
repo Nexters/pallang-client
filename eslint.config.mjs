@@ -92,7 +92,7 @@ const eslintConfig = defineConfig([
   // 서버 상태: 피처 코드에서 _apis 직접 import 금지 (_queries 경유)
   {
     files: ['app/**/*.{ts,tsx}'],
-    ignores: ['app/_global/_queries/**', 'app/_global/_apis/**'],
+    ignores: ['app/_global/_queries/**', 'app/_global/_apis/**', 'app/_global/_tests/**'],
     rules: {
       'no-restricted-imports': [
         'error',
