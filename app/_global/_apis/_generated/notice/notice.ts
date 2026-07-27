@@ -5,11 +5,11 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type {
-  DataResponseNoticeListResponse,
-  DataResponseNoticeResponse,
-  GetNoticesParams,
-} from '../models'
+import type { DataResponseNoticeListResponse } from '../models/dataResponseNoticeListResponse'
+
+import type { DataResponseNoticeResponse } from '../models/dataResponseNoticeResponse'
+
+import type { GetNoticesParams } from '../models/getNoticesParams'
 
 import { customFetch } from '../../customFetch.api'
 

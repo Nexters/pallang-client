@@ -5,18 +5,25 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type {
-  CreateBookRequest,
-  DataResponseBookActivityListResponse,
-  DataResponseBookListResponse,
-  DataResponseBookResponse,
-  DataResponseExternalBookListResponse,
-  GetHomeCarouselBooksParams,
-  GetPopularBooksParams,
-  GetRecentBooksParams,
-  SearchExternalBooksParams,
-  SearchInternalBooksParams,
-} from '../models'
+import type { CreateBookRequest } from '../models/createBookRequest'
+
+import type { DataResponseBookActivityListResponse } from '../models/dataResponseBookActivityListResponse'
+
+import type { DataResponseBookListResponse } from '../models/dataResponseBookListResponse'
+
+import type { DataResponseBookResponse } from '../models/dataResponseBookResponse'
+
+import type { DataResponseExternalBookListResponse } from '../models/dataResponseExternalBookListResponse'
+
+import type { GetHomeCarouselBooksParams } from '../models/getHomeCarouselBooksParams'
+
+import type { GetPopularBooksParams } from '../models/getPopularBooksParams'
+
+import type { GetRecentBooksParams } from '../models/getRecentBooksParams'
+
+import type { SearchExternalBooksParams } from '../models/searchExternalBooksParams'
+
+import type { SearchInternalBooksParams } from '../models/searchInternalBooksParams'
 
 import { customFetch } from '../../customFetch.api'
 

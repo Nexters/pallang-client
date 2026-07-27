@@ -5,15 +5,19 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type {
-  CreateOcrResultBody,
-  DataResponseOcrRecognize,
-  DataResponsePageNumbers,
-  DataResponsePassagesByPage,
-  DataResponseSimilarCandidates,
-  GetPageNumbersParams,
-  SimilarCheck,
-} from '../models'
+import type { CreateOcrResultBody } from '../models/createOcrResultBody'
+
+import type { DataResponseOcrRecognize } from '../models/dataResponseOcrRecognize'
+
+import type { DataResponsePageNumbers } from '../models/dataResponsePageNumbers'
+
+import type { DataResponsePassagesByPage } from '../models/dataResponsePassagesByPage'
+
+import type { DataResponseSimilarCandidates } from '../models/dataResponseSimilarCandidates'
+
+import type { GetPageNumbersParams } from '../models/getPageNumbersParams'
+
+import type { SimilarCheck } from '../models/similarCheck'
 
 import { customFetch } from '../../customFetch.api'
 

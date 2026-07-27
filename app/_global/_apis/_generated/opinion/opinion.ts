@@ -5,16 +5,21 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type {
-  CreateOpinionRequest,
-  DataResponseOpinionDetailResponse,
-  DataResponseOpinionLikeResponse,
-  DataResponseOpinionListResponse,
-  DataResponseOpinionResponse,
-  DataResponseVoid,
-  GetOpinionsParams,
-  UpdateOpinionRequest,
-} from '../models'
+import type { CreateOpinionRequest } from '../models/createOpinionRequest'
+
+import type { DataResponseOpinionDetailResponse } from '../models/dataResponseOpinionDetailResponse'
+
+import type { DataResponseOpinionLikeResponse } from '../models/dataResponseOpinionLikeResponse'
+
+import type { DataResponseOpinionListResponse } from '../models/dataResponseOpinionListResponse'
+
+import type { DataResponseOpinionResponse } from '../models/dataResponseOpinionResponse'
+
+import type { DataResponseVoid } from '../models/dataResponseVoid'
+
+import type { GetOpinionsParams } from '../models/getOpinionsParams'
+
+import type { UpdateOpinionRequest } from '../models/updateOpinionRequest'
 
 import { customFetch } from '../../customFetch.api'
 

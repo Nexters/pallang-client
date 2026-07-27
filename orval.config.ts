@@ -14,6 +14,7 @@ export default defineConfig({
       target: 'app/_global/_apis/_generated',
       schemas: 'app/_global/_apis/_generated/models',
       formatter: 'prettier',
+      indexFiles: false,
       override: {
         mutator: {
           path: 'app/_global/_apis/customFetch.api.ts',

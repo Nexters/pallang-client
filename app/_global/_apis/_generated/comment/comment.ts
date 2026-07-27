@@ -5,16 +5,21 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type {
-  CreateCommentRequest,
-  DataResponseCommentListResponse,
-  DataResponseCommentResponse,
-  DataResponseRootCommentListResponse,
-  DataResponseVoid,
-  GetCommentsParams,
-  GetRepliesParams,
-  UpdateCommentRequest,
-} from '../models'
+import type { CreateCommentRequest } from '../models/createCommentRequest'
+
+import type { DataResponseCommentListResponse } from '../models/dataResponseCommentListResponse'
+
+import type { DataResponseCommentResponse } from '../models/dataResponseCommentResponse'
+
+import type { DataResponseRootCommentListResponse } from '../models/dataResponseRootCommentListResponse'
+
+import type { DataResponseVoid } from '../models/dataResponseVoid'
+
+import type { GetCommentsParams } from '../models/getCommentsParams'
+
+import type { GetRepliesParams } from '../models/getRepliesParams'
+
+import type { UpdateCommentRequest } from '../models/updateCommentRequest'
 
 import { customFetch } from '../../customFetch.api'
 

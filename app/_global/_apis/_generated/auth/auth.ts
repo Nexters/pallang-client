@@ -5,14 +5,17 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type {
-  DataResponseLoginResponse,
-  DataResponseTermsAgreementResponse,
-  DataResponseTokenResponse,
-  DataResponseVoid,
-  KakaoLoginRequest,
-  RefreshTokenRequest,
-} from '../models'
+import type { DataResponseLoginResponse } from '../models/dataResponseLoginResponse'
+
+import type { DataResponseTermsAgreementResponse } from '../models/dataResponseTermsAgreementResponse'
+
+import type { DataResponseTokenResponse } from '../models/dataResponseTokenResponse'
+
+import type { DataResponseVoid } from '../models/dataResponseVoid'
+
+import type { KakaoLoginRequest } from '../models/kakaoLoginRequest'
+
+import type { RefreshTokenRequest } from '../models/refreshTokenRequest'
 
 import { customFetch } from '../../customFetch.api'
 

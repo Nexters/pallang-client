@@ -5,7 +5,9 @@
  * Pallang(팔랑) 프로젝트 API 명세서
  * OpenAPI spec version: 0.0.1
  */
-import type { DataResponseUserBookStatusResponse, UpdateUserBookStatusRequest } from '../models'
+import type { DataResponseUserBookStatusResponse } from '../models/dataResponseUserBookStatusResponse'
+
+import type { UpdateUserBookStatusRequest } from '../models/updateUserBookStatusRequest'
 
 import { customFetch } from '../../customFetch.api'
 
