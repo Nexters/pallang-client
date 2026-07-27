@@ -4,12 +4,14 @@
 import type { BookResponseSource } from './bookResponseSource'
 
 export interface BookResponse {
-  bookId?: number
-  title?: string
-  author?: string
-  publisher?: string
-  pageCount?: number
-  isbn?: string
-  coverImageUrl?: string
-  source?: BookResponseSource
+  bookId: number
+  title: string
+  author: string
+  publisher: string
+  pageCount: number
+  /** @nullable */
+  isbn?: string | null
+  /** @nullable */
+  coverImageUrl?: string | null
+  source: BookResponseSource
 }

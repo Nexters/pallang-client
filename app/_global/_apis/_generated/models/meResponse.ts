@@ -4,10 +4,12 @@
 import type { MeResponseSnsProvider } from './meResponseSnsProvider'
 
 export interface MeResponse {
-  userId?: number
-  nickname?: string
-  profileImageUrl?: string
-  backgroundColor?: string
-  snsProvider?: MeResponseSnsProvider
-  opinionCount?: number
+  userId: number
+  nickname: string
+  /** @nullable */
+  profileImageUrl?: string | null
+  /** @nullable */
+  backgroundColor?: string | null
+  snsProvider: MeResponseSnsProvider
+  opinionCount: number
 }

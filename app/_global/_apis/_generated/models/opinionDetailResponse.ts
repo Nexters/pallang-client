@@ -4,12 +4,12 @@
 import type { DecorationResponse } from './decorationResponse'
 
 export interface OpinionDetailResponse {
-  opinionId?: number
-  passageId?: number
-  userId?: number
-  nickname?: string
-  content?: string
-  likeCount?: number
-  decorations?: DecorationResponse[]
-  createdAt?: string
+  opinionId: number
+  passageId: number
+  userId: number
+  nickname: string
+  content: string
+  likeCount: number
+  decorations: DecorationResponse[]
+  createdAt: string
 }

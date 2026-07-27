@@ -3,14 +3,15 @@
  */
 
 export interface MyOpinionResponse {
-  opinionId?: number
-  bookId?: number
-  bookTitle?: string
-  bookCoverImageUrl?: string
-  passageId?: number
-  quotedText?: string
-  pageNumber?: number
-  content?: string
-  likeCount?: number
-  createdAt?: string
+  opinionId: number
+  bookId: number
+  bookTitle: string
+  /** @nullable */
+  bookCoverImageUrl?: string | null
+  passageId: number
+  quotedText: string
+  pageNumber: number
+  content: string
+  likeCount: number
+  createdAt: string
 }
