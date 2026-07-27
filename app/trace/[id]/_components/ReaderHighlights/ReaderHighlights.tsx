@@ -42,8 +42,8 @@ export function ReaderHighlights({ params }: ReaderHighlightsProps) {
     const passages = passagesData?.data?.passages ?? []
     return {
       page: viewer.activePage ?? 0,
-      quotes: passages.map((passage) => passage.quotedText ?? ''),
-      isSpoiler: passages.some((passage) => passage.isSpoiler ?? false),
+      quotes: passages.map((passage) => passage.quotedText),
+      isSpoiler: passages.some((passage) => passage.isSpoiler),
     }
   }, [passagesData, viewer.activePage])
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
