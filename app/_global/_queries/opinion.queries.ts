@@ -6,8 +6,9 @@ import {
   skipToken,
 } from '@tanstack/react-query'
 
+import type { CreateOpinionRequest } from '../_apis/_generated/models/createOpinionRequest'
 import type { GetOpinionsParams } from '../_apis/_generated/models/getOpinionsParams'
-import { getOpinions, toggleOpinionLike } from '../_apis/_generated/opinion/opinion'
+import { createOpinion, getOpinions, toggleOpinionLike } from '../_apis/_generated/opinion/opinion'
 
 /** feature 코드는 _apis를 직접 import할 수 없어 정렬 타입을 여기서 재노출한다 */
 export type OpinionSortType = NonNullable<GetOpinionsParams['sortType']>
@@ -68,6 +69,11 @@ export const opinionQueries = {
 }
 
 export const opinionMutations = {
+  create: () =>
+    mutationOptions({
+      mutationKey: [...opinionQueries.all(), 'create'],
+      mutationFn: (data: CreateOpinionRequest) => createOpinion(data),
+    }),
   toggleLike: (opinionId: number) =>
     mutationOptions({
       mutationKey: [...opinionQueries.all(), 'like', opinionId],

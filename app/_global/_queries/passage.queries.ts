@@ -1,6 +1,13 @@
-import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query'
 
-import { getPageNumbers, getPassagesByPage } from '../_apis/_generated/passage/passage'
+import type { CreateOcrResultBody } from '../_apis/_generated/models/createOcrResultBody'
+import type { SimilarCheck } from '../_apis/_generated/models/similarCheck'
+import {
+  checkSimilarPassages,
+  createOcrResult,
+  getPageNumbers,
+  getPassagesByPage,
+} from '../_apis/_generated/passage/passage'
 
 const PAGE_NUMBER_PAGE_SIZE = 100
 
@@ -27,5 +34,19 @@ export const passageQueries = {
     queryOptions({
       queryKey: [...passageQueries.all(), 'by-page', bookId, page],
       queryFn: () => getPassagesByPage(bookId, page, options),
+    }),
+}
+
+export const passageMutations = {
+  all: () => ['passage'] as const,
+  ocr: () =>
+    mutationOptions({
+      mutationKey: [...passageMutations.all(), 'ocr'],
+      mutationFn: (data: CreateOcrResultBody | undefined) => createOcrResult(data),
+    }),
+  similarCheck: () =>
+    mutationOptions({
+      mutationKey: [...passageMutations.all(), 'similar-check'],
+      mutationFn: (data: SimilarCheck) => checkSimilarPassages(data),
     }),
 }
