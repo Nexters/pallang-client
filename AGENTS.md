@@ -14,6 +14,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `pnpm typecheck` — TypeScript 검사 (`tsc --noEmit`)
 - `pnpm test` / `pnpm test:watch` — Vitest
 - `pnpm format` / `pnpm format:check` — Prettier 쓰기/검사
+- `pnpm api:gen` — orval로 OpenAPI 스펙에서 API 클라이언트 생성 (`app/_global/_apis/_generated/`, 생성물 커밋, 수동 수정 금지)
 
   **코드 변경 후 반드시 `pnpm lint && pnpm typecheck && pnpm test`로 검증할 것. 문서만 변경한 경우 검증 생략 가능.**
 
