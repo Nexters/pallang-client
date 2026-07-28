@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { use, useMemo, useState } from 'react'
+import { type CSSProperties, type ReactNode, type UIEvent, use, useMemo, useState } from 'react'
 
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -9,27 +9,33 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { bookTitle, traceSeed } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useLoginGate } from '../../_hooks/useLoginGate'
-import { useTraceViewMode } from '../../_hooks/useTraceViewMode'
+import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { CommentBar } from '../CommentBar/CommentBar'
-import { HighlightCard } from '../HighlightCard/HighlightCard'
 import { LoginGateModal } from '../LoginGateModal/LoginGateModal'
-import { PageTabs } from '../PageTabs/PageTabs'
-import { QuoteIndicator } from '../QuoteIndicator/QuoteIndicator'
-import { QuotePanel } from '../QuotePanel/QuotePanel'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
-import { TraceHeader } from '../TraceHeader/TraceHeader'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
-import styles from './ReaderHighlights.module.css'
+import styles from './TraceCollapseView.module.css'
 
-type ReaderHighlightsProps = {
+type TraceCollapseViewProps = {
   params: Promise<{ id: string }>
+  stageStyle: CSSProperties
+  isCollapsed: boolean
+  onScroll: (event: UIEvent<HTMLDivElement>) => void
+  /** 시안마다 다른 것은 상단 스테이지뿐이라 이 자리만 갈아 끼운다 */
+  renderStage: (props: QuoteStageProps) => ReactNode
 }
 
-export function ReaderHighlights({ params }: ReaderHighlightsProps) {
+export function TraceCollapseView({
+  params,
+  stageStyle,
+  isCollapsed,
+  onScroll,
+  renderStage,
+}: TraceCollapseViewProps) {
+  // use(params)는 서스펜드할 수 있어 페이지가 아니라 Suspense 안쪽인 여기서 언래핑한다
   const { id } = use(params)
   const bookId = Number(id)
   const gate = useLoginGate()
-  const { viewMode, handleListScroll } = useTraceViewMode()
   const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
   const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
   const viewer = useHighlightViewer(gate.runWithLogin, pages[0])
@@ -77,55 +83,42 @@ export function ReaderHighlights({ params }: ReaderHighlightsProps) {
 
   return (
     <>
-      {viewMode === 'postit' ? (
-        <section className={cn('relative shrink-0 bg-bg-default pb-10', styles['panelSettle'])}>
-          <div className="absolute inset-x-0 top-0 h-77 bg-orange-500" />
-          <div className="relative">
-            <TraceHeader title={bookTitle} />
-            <PageTabs pages={pages} activePage={viewer.activePage} onSelect={viewer.select} />
-            <div className="mt-8 flex justify-center">
-              <HighlightCard
-                highlight={highlight}
-                quoteIndex={viewer.quoteIndex}
-                isRevealed={viewer.isRevealed}
-                onClick={() => {
-                  viewer.clickCard(highlight)
-                }}
-              />
-            </div>
-            <QuoteIndicator quotes={highlight.quotes} activeIndex={viewer.quoteIndex} />
-          </div>
-        </section>
-      ) : (
-        <section className={cn('shrink-0 bg-bg-book-card', styles['panelSettle'])}>
-          <TraceHeader title={bookTitle} />
-          <QuotePanel
-            quote={highlight.quotes[viewer.quoteIndex] ?? ''}
-            isCovered={highlight.isSpoiler && !viewer.isRevealed}
-            onClick={() => {
+      <div
+        onScroll={onScroll}
+        style={stageStyle}
+        className={cn('min-h-0 flex-1 overflow-y-auto', styles['scroller'])}
+      >
+        <div className={styles['stageAnchor']}>
+          {renderStage({
+            title: bookTitle,
+            pages,
+            highlight,
+            quoteIndex: viewer.quoteIndex,
+            isRevealed: viewer.isRevealed,
+            isCollapsed,
+            onSelectPage: viewer.select,
+            onClickQuote: () => {
               viewer.clickCard(highlight)
-            }}
-          >
-            <QuoteIndicator quotes={highlight.quotes} activeIndex={viewer.quoteIndex} />
-          </QuotePanel>
-        </section>
-      )}
-      <TraceListSection
-        traces={sortedTraces}
-        sortBy={sortBy}
-        revealedSpoilerIds={revealedSpoilerIds}
-        onToggleSort={() => {
-          setSortBy((prev) => (prev === 'latest' ? 'likes' : 'latest'))
-        }}
-        onToggleComment={toggleCommentBar}
-        onRevealTrace={(id) => {
-          setRevealedSpoilerIds((prev) => new Set(prev).add(id))
-        }}
-        onSelectTrace={(trace) => {
-          setSelectedTraceId(trace.id)
-        }}
-        onListScroll={handleListScroll}
-      />
+            },
+          })}
+        </div>
+        <div aria-hidden className={styles['stageSpacer']} />
+        <TraceListSection
+          traces={sortedTraces}
+          sortBy={sortBy}
+          revealedSpoilerIds={revealedSpoilerIds}
+          onToggleSort={() => {
+            setSortBy((prev) => (prev === 'latest' ? 'likes' : 'latest'))
+          }}
+          onToggleComment={toggleCommentBar}
+          onRevealTrace={(id) => {
+            setRevealedSpoilerIds((prev) => new Set(prev).add(id))
+          }}
+          onSelectTrace={(trace) => {
+            setSelectedTraceId(trace.id)
+          }}
+        />
+      </div>
       {isCommentBarOpen && <CommentBar />}
       {selectedTraceIndex >= 0 && (
         <TraceDetailOverlay

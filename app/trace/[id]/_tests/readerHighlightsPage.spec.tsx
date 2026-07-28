@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
 import ReaderHighlightsPage from '../page'
 
 // page의 params(Promise)를 use()가 동기적으로 언래핑하도록 status/value를 태깅한 thenable을 넘긴다.
@@ -18,6 +19,7 @@ const passageSeedByPage: Record<number, { quotedText: string; isSpoiler: boolean
 }
 
 // 대목 페이지 목록/페이지별 대목 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
+// 반환값은 페이지가 그리는 첫 요소인 스크롤 컨테이너다.
 async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
   vi.stubGlobal(
     'fetch',
@@ -30,12 +32,13 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
     }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
+  const { container } = render(
     <QueryClientProvider client={client}>
       <ReaderHighlightsPage params={stubParams('1')} />
     </QueryClientProvider>,
   )
   await screen.findByRole('button', { name: `${String(pages[0])}p` })
+  return container.firstElementChild as HTMLElement
 }
 
 describe('ReaderHighlightsPage', () => {
@@ -137,14 +140,23 @@ describe('ReaderHighlightsPage', () => {
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
   })
 
-  it('리스트를 스크롤하면 페이지 탭이 숨겨지고, 최상단 복귀 시 다시 보인다', async () => {
-    await renderPage()
-    const list = screen.getByRole('list')
+  it('스크롤 진행률을 CSS 변수로 흘려보내고, 전환 도중에는 페이지 탭을 남겨둔다', async () => {
+    const scroller = await renderPage()
 
-    fireEvent.scroll(list, { target: { scrollTop: 60 } })
+    fireEvent.scroll(scroller, { target: { scrollTop: COLLAPSE_DISTANCE / 2 } })
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('0.5')
+    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
+  })
+
+  it('전환이 끝나면 페이지 탭이 사라지고, 최상단 복귀 시 다시 보인다', async () => {
+    const scroller = await renderPage()
+
+    fireEvent.scroll(scroller, { target: { scrollTop: COLLAPSE_DISTANCE } })
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
 
-    fireEvent.scroll(list, { target: { scrollTop: 0 } })
+    fireEvent.scroll(scroller, { target: { scrollTop: 0 } })
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('0')
     expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 })

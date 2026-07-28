@@ -1,35 +1,8 @@
-import type { ReactNode } from 'react'
-
-type QuotePanelProps = {
-  quote: string
-  isCovered: boolean
-  onClick: () => void
-  children?: ReactNode
-}
-
-export function QuotePanel({ quote, isCovered, onClick, children }: QuotePanelProps) {
+/** 의견 상세에서 인용문만 보여주는 고정 패널. 흔적 목록 화면의 전환형 패널은 QuoteStage가 담당한다 */
+export function QuotePanel({ quote }: { quote: string }) {
   return (
-    <div className="relative h-[270px] bg-bg-book-card">
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex h-full w-full flex-col px-6 py-8 text-left"
-      >
-        <p className="min-h-0 flex-1 overflow-hidden text-body-20md text-text-secondary">{quote}</p>
-        {children}
-      </button>
-      {isCovered && (
-        <button
-          type="button"
-          onClick={onClick}
-          className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-bg-book-card/70 backdrop-blur-[9px]"
-        >
-          <span className="text-title-16sb text-text-secondary">스포일러가 포함되어있어요!</span>
-          <span className="text-body-14rg text-text-secondary opacity-70">
-            누르면 확인 할 수 있어요
-          </span>
-        </button>
-      )}
+    <div className="flex h-[270px] shrink-0 flex-col bg-bg-book-card px-6 py-8">
+      <p className="min-h-0 flex-1 overflow-hidden text-body-20md text-text-secondary">{quote}</p>
     </div>
   )
 }

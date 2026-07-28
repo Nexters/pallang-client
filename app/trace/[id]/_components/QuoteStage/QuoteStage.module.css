@@ -1,0 +1,150 @@
+/* 모든 전환은 스크롤 진행률 --collapse(0~1) 하나로만 구동한다.
+   좌표 수치(--stage-*, --card-* 등)는 useQuoteCollapse가 스크롤 컨테이너에 내려준다. */
+
+.stage {
+  --inv: calc(1 - var(--collapse));
+  /* 폭만 따로 타이밍을 받는다(widthTiming.constant). 지정이 없으면 스크롤과 1:1 */
+  --width-inv: calc(1 - var(--width-progress, var(--collapse)));
+
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  /* 스테이지 하단이 정렬 바 상단과 정확히 같은 속도로 올라온다 */
+  height: calc(var(--stage-expanded) - var(--stage-shift) * var(--collapse));
+}
+
+/* 축소 상태 배경 */
+.base {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-bg-book-card);
+}
+
+/* 펼친 상태 흰 배경 — 진행에 따라 걷힌다 */
+.sheet {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-bg-default);
+  opacity: var(--inv);
+}
+
+/* 오렌지 배너 — 반투명해지며 흐려지지 않도록, 채도를 유지한 채 자기 높이만큼 걷혀 올라간다 */
+.banner {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--banner-height);
+  background-color: var(--color-orange-500);
+  transform: translateY(calc(-1 * var(--banner-height) * var(--collapse)));
+}
+
+.header {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+}
+
+/* 탭은 헤더 바로 아래에서 잘리며 헤더 밑으로 미끄러져 들어간다 — 흐려질 필요가 없다.
+   글자가 잘린 채 오래 남지 않도록 전환 전반부에 빠르게 빠져나간다 */
+.tabsClip {
+  --tabs-progress: clamp(0, calc(var(--collapse) * 2), 1);
+
+  position: absolute;
+  inset-inline: 0;
+  top: var(--header-height);
+  height: calc(var(--tabs-height) * (1 - var(--tabs-progress)));
+  overflow: hidden;
+}
+
+.tabs {
+  transform: translateY(calc(-1 * var(--tabs-height) * var(--tabs-progress)));
+}
+
+/* 기울어진 포스트잇 → 화면 폭 패널.
+   회전·위치·크기·테두리·그림자가 모두 같은 진행률을 따른다 */
+.card {
+  position: absolute;
+  top: calc(var(--card-top-collapsed) + var(--card-rise) * var(--inv));
+  left: calc((100% - var(--card-width)) / 2 * var(--width-inv));
+  right: calc((100% - var(--card-width)) / 2 * var(--width-inv));
+  display: flex;
+  height: calc(var(--card-height) - var(--card-shrink) * var(--collapse));
+  flex-direction: column;
+  padding-block: calc(40px - 8px * var(--collapse));
+  padding-inline: 24px;
+  border: 1px solid rgb(34 34 34 / var(--inv));
+  border-radius: calc(4px * var(--inv));
+  background-color: var(--color-bg-book-card);
+  text-align: left;
+  transform: rotate(calc(-3deg * var(--inv)));
+  box-shadow: 4px 10px 17.5px rgb(0 0 0 / calc(0.2 * var(--inv)));
+}
+
+.quote {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 카드 아래 → 패널 안쪽 하단으로 이동한다 */
+.indicator {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--indicator-top-expanded) - var(--indicator-rise) * var(--collapse));
+  padding-inline: calc(64px + 24px * var(--collapse));
+}
+
+/* 스포일러 가림막 — 카드 안에 있으므로 회전·크기 변화를 그대로 따라간다 */
+.cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* 아이콘이 사라지면 간격도 함께 접힌다 */
+  gap: calc(12px * var(--inv));
+  border-radius: inherit;
+  background-color: color-mix(in srgb, var(--color-bg-book-card) 70%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) calc(var(--collapse) * 100%), #000000);
+  backdrop-filter: blur(9px);
+}
+
+/* ponytail: #3e3e3e는 디자인 변수 미연결 색 — 토큰 추가 시 치환 */
+.coverIcon {
+  width: calc(64px * var(--inv));
+  height: calc(64px * var(--inv));
+  color: #3e3e3e;
+  opacity: var(--inv);
+}
+
+.coverText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.coverTitle {
+  font-size: calc(20px - 4px * var(--collapse));
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.04em;
+}
+
+/* 가변 폰트가 아니라 굵기는 보간되지 않는다 — 전환이 끝난 시점에만 바꾼다 */
+.coverTitleCollapsed {
+  font-weight: 600;
+}
+
+.coverSubtitle {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+  opacity: 0.7;
+}
+
+.coverSubtitleCollapsed {
+  font-weight: 400;
+}

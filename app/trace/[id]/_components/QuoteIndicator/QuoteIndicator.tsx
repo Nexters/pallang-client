@@ -1,11 +1,14 @@
+import { cn } from '@/app/_global/_services/cn.service'
+
 type QuoteIndicatorProps = {
   quotes: string[]
   activeIndex: number
+  className?: string
 }
 
-export function QuoteIndicator({ quotes, activeIndex }: QuoteIndicatorProps) {
+export function QuoteIndicator({ quotes, activeIndex, className }: QuoteIndicatorProps) {
   return (
-    <div className="mt-10 flex items-center justify-end gap-2 px-16">
+    <div className={cn('flex items-center justify-end gap-2', className)}>
       {quotes.map((quote, index) => (
         <span
           key={quote}

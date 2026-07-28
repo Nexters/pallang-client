@@ -4,11 +4,17 @@ type PageTabsProps = {
   pages: number[]
   activePage: number | undefined
   onSelect: (page: number) => void
+  className?: string
 }
 
-export function PageTabs({ pages, activePage, onSelect }: PageTabsProps) {
+export function PageTabs({ pages, activePage, onSelect, className }: PageTabsProps) {
   return (
-    <nav className="flex items-center gap-4 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav
+      className={cn(
+        'flex items-center gap-4 overflow-x-auto px-5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        className,
+      )}
+    >
       {pages.map((page) => (
         <button
           key={page}

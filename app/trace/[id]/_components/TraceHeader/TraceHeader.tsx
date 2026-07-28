@@ -2,10 +2,16 @@ import Link from 'next/link'
 
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import PlusIcon from '@/app/_global/_components/Icon/assets/plus.svg'
+import { cn } from '@/app/_global/_services/cn.service'
 
-export function TraceHeader({ title }: { title: string }) {
+type TraceHeaderProps = {
+  title: string
+  className?: string
+}
+
+export function TraceHeader({ title, className }: TraceHeaderProps) {
   return (
-    <header className="flex items-center gap-2 px-4 py-2.5">
+    <header className={cn('flex items-center gap-2 px-4 py-2.5', className)}>
       <Link href="/" aria-label="뒤로 가기">
         <BackIcon />
       </Link>
