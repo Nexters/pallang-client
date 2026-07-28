@@ -18,6 +18,8 @@ const MAX_QUOTE_LENGTH = 150
 
 const OCR_FAILURE_MESSAGE = '글자를 읽지 못했어요. 다시 찍어주세요.'
 
+const QUOTE_LIMIT_MESSAGE = '150자까지만 담을 수 있어요.'
+
 export function OcrSelector() {
   const router = useRouter()
   const { dispatch } = useTraceDraft()
@@ -126,12 +128,15 @@ export function OcrSelector() {
             type="button"
             aria-pressed={selected.has(index)}
             onClick={() => {
-              setSelected((prev) => {
-                const next = new Set(prev)
-                if (next.has(index)) next.delete(index)
-                else next.add(index)
-                return next
-              })
+              const next = new Set(selected)
+              if (next.has(index)) next.delete(index)
+              else next.add(index)
+              // 절단은 파생값이라 effect에서 알리면 set-state-in-effect에 걸린다.
+              // 선택이 바뀌는 이 지점에서 직접 알린다.
+              if (joinBlockTexts(blocks.filter((_, i) => next.has(i))).length > MAX_QUOTE_LENGTH) {
+                setMessage(QUOTE_LIMIT_MESSAGE)
+              }
+              setSelected(next)
             }}
             style={{
               left: `${String(block.left * scale)}px`,
