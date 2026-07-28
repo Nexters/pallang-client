@@ -63,4 +63,20 @@ describe('resolveGuardRedirect', () => {
       ),
     ).toBeNull()
   })
+
+  it('결과가 있는데 done 밖으로 나가면 done으로 되돌린다', () => {
+    const saved = draftWith({
+      book,
+      quotedText: '문장',
+      pageNumber: 87,
+      decorations: [{ startOffset: 0, endOffset: 2, effectType: 'UNDERLINE', color: '#fff' }],
+      content: '의견',
+      result: { opinionId: 1, merged: false },
+    })
+
+    expect(resolveGuardRedirect('/trace/new/decorate', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new/opinion', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new/detail', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new', saved)).toBe('/trace/new/done')
+  })
 })
