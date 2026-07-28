@@ -1,31 +1,20 @@
 import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import type { Highlight } from '../../_types/readerHighlights.type'
+import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { PageTabs } from '../PageTabs/PageTabs'
 import { QuoteIndicator } from '../QuoteIndicator/QuoteIndicator'
 import { TraceHeader } from '../TraceHeader/TraceHeader'
 import styles from './QuoteStage.module.css'
 
-type QuoteStageProps = {
-  title: string
-  highlights: Highlight[]
-  highlight: Highlight
-  quoteIndex: number
-  isRevealed: boolean
-  isCollapsed: boolean
-  onSelectHighlight: (highlight: Highlight) => void
-  onClickQuote: () => void
-}
-
 export function QuoteStage({
   title,
-  highlights,
+  pages,
   highlight,
   quoteIndex,
   isRevealed,
   isCollapsed,
-  onSelectHighlight,
+  onSelectPage,
   onClickQuote,
 }: QuoteStageProps) {
   const quote = highlight.quotes[quoteIndex] ?? ''
@@ -41,9 +30,9 @@ export function QuoteStage({
       {!isCollapsed && (
         <div className={styles['tabsClip']}>
           <PageTabs
-            highlights={highlights}
+            pages={pages}
             activePage={highlight.page}
-            onSelect={onSelectHighlight}
+            onSelect={onSelectPage}
             className={styles['tabs']}
           />
         </div>

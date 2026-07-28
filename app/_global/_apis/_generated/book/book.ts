@@ -88,7 +88,7 @@ export const getSearchExternalBooksUrl = (params: SearchExternalBooksParams) => 
 }
 
 /**
- * 알라딘 Open API로 도서를 검색합니다. 응답 속도를 위해 pageCount는 채우지 않으며 항상 null입니다.
+ * 알라딘 Open API로 도서를 검색합니다. 응답 속도를 위해 pageCount는 내려주지 않으며, 등록 시 사용자가 직접 입력합니다.
  * @summary 도서 외부 검색
  */
 export const searchExternalBooks = async (

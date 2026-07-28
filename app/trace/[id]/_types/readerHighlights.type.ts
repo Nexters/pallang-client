@@ -7,12 +7,12 @@ export type Highlight = {
 /** 시안별 스테이지 컴포넌트가 공통으로 받는 props */
 export type QuoteStageProps = {
   title: string
-  highlights: Highlight[]
+  pages: number[]
   highlight: Highlight
   quoteIndex: number
   isRevealed: boolean
   isCollapsed: boolean
-  onSelectHighlight: (highlight: Highlight) => void
+  onSelectPage: (page: number) => void
   onClickQuote: () => void
 }
 

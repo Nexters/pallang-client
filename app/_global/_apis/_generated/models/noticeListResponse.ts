@@ -5,6 +5,6 @@ import type { NoticeResponse } from './noticeResponse'
 import type { PageInfo } from './pageInfo'
 
 export interface NoticeListResponse {
-  notices?: NoticeResponse[]
-  pageInfo?: PageInfo
+  notices: NoticeResponse[]
+  pageInfo: PageInfo
 }

@@ -4,30 +4,19 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { PageTabs } from '../../../_components/PageTabs/PageTabs'
 import { QuoteIndicator } from '../../../_components/QuoteIndicator/QuoteIndicator'
 import { TraceHeader } from '../../../_components/TraceHeader/TraceHeader'
-import type { Highlight } from '../../../_types/readerHighlights.type'
+import type { QuoteStageProps } from '../../../_types/readerHighlights.type'
 import styles from './QuoteZoomStage.module.css'
-
-type QuoteZoomStageProps = {
-  title: string
-  highlights: Highlight[]
-  highlight: Highlight
-  quoteIndex: number
-  isRevealed: boolean
-  isCollapsed: boolean
-  onSelectHighlight: (highlight: Highlight) => void
-  onClickQuote: () => void
-}
 
 export function QuoteZoomStage({
   title,
-  highlights,
+  pages,
   highlight,
   quoteIndex,
   isRevealed,
   isCollapsed,
-  onSelectHighlight,
+  onSelectPage,
   onClickQuote,
-}: QuoteZoomStageProps) {
+}: QuoteStageProps) {
   const quote = highlight.quotes[quoteIndex] ?? ''
   const isCovered = highlight.isSpoiler && !isRevealed
 
@@ -40,9 +29,9 @@ export function QuoteZoomStage({
       {!isCollapsed && (
         <div className={styles['tabsClip']}>
           <PageTabs
-            highlights={highlights}
+            pages={pages}
             activePage={highlight.page}
-            onSelect={onSelectHighlight}
+            onSelect={onSelectPage}
             className={styles['tabs']}
           />
         </div>

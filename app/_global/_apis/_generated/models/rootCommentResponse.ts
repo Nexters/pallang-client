@@ -4,15 +4,16 @@
 import type { CommentResponse } from './commentResponse'
 
 export interface RootCommentResponse {
-  commentId?: number
-  userId?: number
-  nickname?: string
-  profileImageUrl?: string
-  content?: string
-  isDeleted?: boolean
-  createdAt?: string
-  updatedAt?: string
-  replies?: CommentResponse[]
-  replyCount?: number
-  hasMoreReplies?: boolean
+  commentId: number
+  userId: number
+  nickname: string
+  /** @nullable */
+  profileImageUrl?: string | null
+  content: string
+  isDeleted: boolean
+  createdAt: string
+  updatedAt: string
+  replies: CommentResponse[]
+  replyCount: number
+  hasMoreReplies: boolean
 }

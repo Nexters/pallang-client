@@ -6,11 +6,6 @@ export interface ExternalBookResponse {
   title?: string
   author?: string
   publisher?: string
-  /**
-   * 응답 속도를 위해 채우지 않으며 항상 null입니다.
-   * @nullable
-   */
-  pageCount?: number | null
   isbn?: string
   coverImageUrl?: string
 }

@@ -4,7 +4,8 @@
 import type { UserBookStatusResponseStatus } from './userBookStatusResponseStatus'
 
 export interface UserBookStatusResponse {
-  bookId?: number
-  status?: UserBookStatusResponseStatus
-  currentPage?: number
+  bookId: number
+  status: UserBookStatusResponseStatus
+  /** @nullable */
+  currentPage?: number | null
 }

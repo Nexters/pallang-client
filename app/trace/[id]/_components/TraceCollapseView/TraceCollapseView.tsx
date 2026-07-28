@@ -1,10 +1,12 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import { type CSSProperties, type ReactNode, type UIEvent, useMemo, useState } from 'react'
 
+import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { bookTitle, highlightSeed, traceSeed } from '../../_data/readerHighlights.constant'
+import { bookTitle, traceSeed } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useLoginGate } from '../../_hooks/useLoginGate'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
@@ -15,6 +17,7 @@ import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
 
 type TraceCollapseViewProps = {
+  bookId: number
   stageStyle: CSSProperties
   isCollapsed: boolean
   onScroll: (event: UIEvent<HTMLDivElement>) => void
@@ -23,13 +26,29 @@ type TraceCollapseViewProps = {
 }
 
 export function TraceCollapseView({
+  bookId,
   stageStyle,
   isCollapsed,
   onScroll,
   renderStage,
 }: TraceCollapseViewProps) {
   const gate = useLoginGate()
-  const viewer = useHighlightViewer(gate.runWithLogin)
+  const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
+  const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
+  const viewer = useHighlightViewer(gate.runWithLogin, pages[0])
+  const { data: passagesData } = useQuery({
+    ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
+    enabled: viewer.activePage !== undefined,
+  })
+
+  const highlight = useMemo(() => {
+    const passages = passagesData?.data?.passages ?? []
+    return {
+      page: viewer.activePage ?? 0,
+      quotes: passages.map((passage) => passage.quotedText),
+      isSpoiler: passages.some((passage) => passage.isSpoiler),
+    }
+  }, [passagesData, viewer.activePage])
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
   const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
   const [revealedSpoilerIds, setRevealedSpoilerIds] = useState<ReadonlySet<number>>(new Set())
@@ -69,13 +88,15 @@ export function TraceCollapseView({
         <div className={styles['stageAnchor']}>
           {renderStage({
             title: bookTitle,
-            highlights: highlightSeed,
-            highlight: viewer.highlight,
+            pages,
+            highlight,
             quoteIndex: viewer.quoteIndex,
             isRevealed: viewer.isRevealed,
             isCollapsed,
-            onSelectHighlight: viewer.select,
-            onClickQuote: viewer.clickCard,
+            onSelectPage: viewer.select,
+            onClickQuote: () => {
+              viewer.clickCard(highlight)
+            },
           })}
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
@@ -100,7 +121,7 @@ export function TraceCollapseView({
         <TraceDetailOverlay
           traces={sortedTraces}
           index={selectedTraceIndex}
-          quote={viewer.highlight.quotes[viewer.quoteIndex] ?? ''}
+          quote={highlight.quotes[viewer.quoteIndex] ?? ''}
           onNavigate={(next) => {
             const target = sortedTraces[next]
             if (target) setSelectedTraceId(target.id)

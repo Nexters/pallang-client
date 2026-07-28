@@ -4,7 +4,7 @@
 import type { BoundingBox } from './boundingBox'
 
 export interface TextBlock {
-  text?: string
-  boundingBox?: BoundingBox
-  lineBreak?: boolean
+  text: string
+  boundingBox: BoundingBox
+  lineBreak: boolean
 }
