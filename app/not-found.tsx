@@ -24,7 +24,7 @@ export default function NotFound() {
 
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <Image
-            src="/images/not-found.png"
+            src="/images/sad-friends.png"
             alt=""
             width={275}
             height={220}

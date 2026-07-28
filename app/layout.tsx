@@ -35,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-dvh bg-bg-surface">
+      <body className="flex min-h-dvh">
         <QueryProvider>
           <AuthProvider>
             <main className="mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">

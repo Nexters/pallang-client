@@ -11,6 +11,7 @@ import CloseIcon from './assets/close.svg'
 import CommentIcon from './assets/comment.svg'
 import ContentIcon from './assets/content.svg'
 import HomeIcon from './assets/home.svg'
+import KakaoIcon from './assets/kakao.svg'
 import LikeIcon from './assets/like.svg'
 import MyIcon from './assets/my.svg'
 import NextIcon from './assets/next.svg'
@@ -40,6 +41,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'SearchIcon', Component: SearchIcon },
   { name: 'BookAddIcon', Component: BookAddIcon },
   { name: 'SettingIcon', Component: SettingIcon },
+  { name: 'KakaoIcon', Component: KakaoIcon },
 ]
 
 const meta = {

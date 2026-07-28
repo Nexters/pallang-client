@@ -26,3 +26,5 @@ export const TOKEN_EXPIRED_CODE = 'AUTH_401_2'
 // 로그인 후 이동 경로.
 export const HOME_PATH = '/'
 export const LOGIN_PATH = '/login'
+export const SIGN_UP_TERMS_PATH = '/sign-up/terms'
+export const SIGN_UP_WELCOME_PATH = '/sign-up/welcome'
