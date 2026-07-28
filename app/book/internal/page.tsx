@@ -26,18 +26,19 @@ export default function BookPage() {
 
   const books = booksQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
   const totalCount = booksQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
-  const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = booksQuery
+  const { fetchNextPage, hasNextPage, isError, isFetching, isFetchingNextPage } = booksQuery
   const isDebouncing = keyword.trim() !== debouncedKeyword
+  const canObserveLoadMore = hasNextPage && !isError && !isFetchingNextPage
   const shouldShowTotalCount = !isDebouncing && !isFetching
   const shouldShowPageSkeleton = booksQuery.isPending && keyword.trim().length === 0
-  const shouldShowPageError = booksQuery.isError && books.length === 0
-  const shouldShowNextPageError = booksQuery.isError && books.length > 0
+  const shouldShowPageError = isError && books.length === 0
+  const shouldShowNextPageError = isError && books.length > 0
   const shouldShowEmptyState = !isDebouncing && !isFetching && books.length === 0
 
   useEffect(() => {
     const target = loadMoreRef.current
     const scrollRoot = scrollRef.current
-    if (!target || !scrollRoot || !hasNextPage || isFetchingNextPage || booksQuery.isError) return
+    if (!target || !scrollRoot || !canObserveLoadMore) return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -55,7 +56,7 @@ export default function BookPage() {
     return () => {
       observer.disconnect()
     }
-  }, [booksQuery.isError, fetchNextPage, hasNextPage, isFetchingNextPage])
+  }, [canObserveLoadMore, fetchNextPage])
 
   if (shouldShowPageSkeleton) return <BookInternalPageSkeleton />
 
