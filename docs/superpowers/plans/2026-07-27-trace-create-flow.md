@@ -2053,21 +2053,24 @@ export function BookPicker() {
   const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
   const [keyword, setKeyword] = useState('')
-  const [sheet, setSheet] = useState<'none' | 'source' | 'manual'>('none')
+  // 완료 화면에서 '흔적 남기기'로 돌아오면 책이 유지된 채 진입한다. 바로 방식 선택을 띄운다.
+  // effect가 아니라 lazy initializer인 이유: `react-hooks/set-state-in-effect`가
+  // eslint-config-next의 recommended에 error로 들어 있어 effect 안의 setState를 막는다.
+  // 형제 세그먼트 이동은 leaf page를 remount하므로(draft는 layout의 Provider에 있어 살아남는다)
+  // 마운트 시 1회 계산으로 충분하다.
+  const [sheet, setSheet] = useState<'none' | 'source' | 'manual'>(() =>
+    draft.book && !draft.quotedText ? 'source' : 'none',
+  )
   const deferredKeyword = useDeferredValue(keyword)
 
   const recent = useQuery(bookQueries.recent())
   const searched = useQuery(bookQueries.internalSearch({ keyword: deferredKeyword }))
 
-  // 완료 화면에서 '흔적 남기기'로 돌아오면 책이 유지된 채 진입한다. 바로 방식 선택을 띄운다.
-  useEffect(() => {
-    if (draft.book && !draft.quotedText) setSheet('source')
-  }, [draft.book, draft.quotedText])
-
+  // DataResponseBookListResponse.data가 optional이라 옵셔널 체이닝이 두 겹 필요하다.
   const books =
     deferredKeyword.trim().length > 0
-      ? (searched.data?.data.books ?? [])
-      : (recent.data?.data.books ?? [])
+      ? (searched.data?.data?.books ?? [])
+      : (recent.data?.data?.books ?? [])
 
   return (
     <div className="flex flex-1 flex-col bg-bg-dark">
