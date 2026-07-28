@@ -10,7 +10,7 @@ type TraceNoteProps = {
 }
 
 const effectClassMap: Record<DraftEffectType, string> = {
-  HIGHLIGHT: 'rounded-[2px] px-0.5',
+  HIGHLIGHT: 'rounded-[2px]',
   WAVY: 'underline decoration-wavy decoration-2 underline-offset-4',
   UNDERLINE: 'underline decoration-2 underline-offset-4',
 }

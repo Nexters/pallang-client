@@ -21,10 +21,14 @@ export function TraceDecorateForm() {
   const [message, setMessage] = useState('')
 
   const handlePick = (option: EffectOption) => {
-    if (!range || !option.effectType) {
+    if (!range) {
       setMessage('영역 선택 후 효과를 입력해주세요!')
       return
     }
+    // EffectPicker가 disabled 항목의 클릭 자체를 막아 effectType이 null인 값은 여기 도달하지 않는다.
+    // EffectOption.effectType 타입 자체는 여전히 `DraftEffectType | null`이므로, dispatch에 넘기기 전
+    // 컴파일러가 non-null을 알 수 있도록 좁혀준다(as 캐스팅 없이).
+    if (option.effectType === null) return
     dispatch({
       type: 'applyDecoration',
       decoration: { ...range, effectType: option.effectType, color: option.color },
