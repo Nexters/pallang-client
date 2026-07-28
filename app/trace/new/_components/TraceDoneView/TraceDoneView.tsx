@@ -37,7 +37,7 @@ export function TraceDoneView() {
             variant="back"
             className="flex-1"
             onClick={() => {
-              dispatch({ type: 'reset' })
+              // app/trace/new/layout의 Provider가 언마운트되므로 dispatch 불필요
               router.push('/')
             }}
           >
