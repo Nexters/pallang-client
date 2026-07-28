@@ -22,9 +22,14 @@ export function useCamera(): { takePhoto: () => Promise<Photo | null> } {
   return { takePhoto }
 }
 
-async function toPhoto(webPath: string): Promise<Photo> {
-  const res = await fetch(webPath)
-  return { webPath, blob: await res.blob() }
+async function toPhoto(webPath: string): Promise<Photo | null> {
+  try {
+    const res = await fetch(webPath)
+    return { webPath, blob: await res.blob() }
+  } catch (error) {
+    console.error('사진 웹뷰 경로를 blob으로 변환하는 데 실패했습니다.', error)
+    return null
+  }
 }
 
 function takePhotoFromFileInput(): Promise<Photo | null> {

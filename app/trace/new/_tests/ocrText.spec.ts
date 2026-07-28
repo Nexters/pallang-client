@@ -28,6 +28,15 @@ describe('joinBlockTexts', () => {
   it('마지막 블록 뒤에는 구분자를 붙이지 않는다', () => {
     expect(joinBlockTexts([{ text: '끝', lineBreak: true }])).toBe('끝')
   })
+
+  it('마지막 블록의 text가 비어 있어도 꼬리 구분자가 남지 않는다', () => {
+    expect(
+      joinBlockTexts([
+        { text: 'A', lineBreak: true },
+        { text: '', lineBreak: false },
+      ]),
+    ).toBe('A')
+  })
 })
 
 describe('clampQuote', () => {
