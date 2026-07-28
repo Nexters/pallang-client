@@ -1,6 +1,7 @@
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
@@ -32,9 +33,8 @@ export function TraceDetailOverlay({
       aria-label="의견 상세"
       className="fixed inset-0 z-20 mx-auto flex h-dvh w-full max-w-[530px] flex-col bg-bg-dark"
     >
-      <header className="flex items-center gap-2 bg-bg-book-card px-4 py-2.5">
-        <button
-          type="button"
+      <TopBar.Root className="bg-bg-book-card">
+        <TopBar.Action
           aria-label="이전 의견"
           disabled={index === 0}
           onClick={() => {
@@ -43,10 +43,9 @@ export function TraceDetailOverlay({
           className="disabled:opacity-30"
         >
           <BackIcon />
-        </button>
-        <span className="text-title-18bd text-text-secondary">{trace.nickname}</span>
-        <button
-          type="button"
+        </TopBar.Action>
+        <TopBar.Title>{trace.nickname}</TopBar.Title>
+        <TopBar.Action
           aria-label="다음 의견"
           disabled={index === traces.length - 1}
           onClick={() => {
@@ -55,11 +54,12 @@ export function TraceDetailOverlay({
           className="disabled:opacity-30"
         >
           <NextIcon />
-        </button>
-        <button type="button" aria-label="닫기" onClick={onClose} className="ml-auto">
+        </TopBar.Action>
+        <TopBar.Spacer />
+        <TopBar.Action aria-label="닫기" onClick={onClose}>
           <CloseIcon />
-        </button>
-      </header>
+        </TopBar.Action>
+      </TopBar.Root>
       <QuotePanel quote={quote} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
         <p className="text-body-16md text-text-inverse">{trace.content}</p>

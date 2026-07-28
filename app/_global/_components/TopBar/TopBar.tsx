@@ -15,11 +15,13 @@ function Root({ className, ...props }: RootProps) {
   )
 }
 
-type TitleProps = ComponentPropsWithoutRef<'div'>
+type TitleProps = ComponentPropsWithoutRef<'div'> & {
+  as?: 'div' | 'h1' | 'span'
+}
 
-function Title({ className, ...props }: TitleProps) {
+function Title({ as: Component = 'div', className, ...props }: TitleProps) {
   return (
-    <div
+    <Component
       data-slot="top-bar-title"
       className={cn(
         'flex min-w-px items-center gap-1 whitespace-nowrap font-pretendard text-title-18bd text-text-secondary',
