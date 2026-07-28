@@ -10,16 +10,49 @@ type PickableBook = {
 
 type BookPickListProps = {
   books: PickableBook[]
+  /** 로딩·에러·빈 목록은 서로 다른 상황이라 같은 문구로 뭉개면 서버 장애가 '책 없음'으로 읽힌다. */
+  status: 'pending' | 'error' | 'ready'
+  emptyMessage: string
   onSelect: (book: PickableBook) => void
+  onRetry: () => void
 }
 
-export function BookPickList({ books, onSelect }: BookPickListProps) {
-  if (books.length === 0) {
+const NOTICE_CLASS = 'px-4 py-10 text-center text-body-14md text-text-inverse opacity-60'
+
+export function BookPickList({
+  books,
+  status,
+  emptyMessage,
+  onSelect,
+  onRetry,
+}: BookPickListProps) {
+  if (status === 'pending') {
     return (
-      <p className="px-4 py-10 text-center text-body-14md text-text-inverse opacity-60">
-        아직 흔적을 남긴 책이 없어요.
+      <p role="status" className={NOTICE_CLASS}>
+        책을 불러오는 중이에요.
       </p>
     )
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="flex flex-col items-center gap-3 px-4 py-10">
+        <p role="alert" className="text-center text-body-14md text-text-inverse opacity-60">
+          책을 불러오지 못했어요.
+        </p>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-full border border-white-a20 px-4 py-2 text-body-14md text-text-inverse"
+        >
+          다시 시도
+        </button>
+      </div>
+    )
+  }
+
+  if (books.length === 0) {
+    return <p className={NOTICE_CLASS}>{emptyMessage}</p>
   }
 
   return (

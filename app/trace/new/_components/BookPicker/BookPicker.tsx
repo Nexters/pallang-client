@@ -25,10 +25,15 @@ export function BookPicker() {
   const recent = useQuery(bookQueries.recent())
   const searched = useQuery(bookQueries.internalSearch({ keyword: deferredKeyword }))
 
-  const books =
-    deferredKeyword.trim().length > 0
-      ? (searched.data?.data?.books ?? [])
-      : (recent.data?.data?.books ?? [])
+  // internalSearch는 keyword가 비면 enabled=false라 isPending이 계속 true다.
+  // 검색 중일 때만 searched를 읽어야 '검색 안 함'이 로딩으로 보이지 않는다.
+  const isSearching = deferredKeyword.trim().length > 0
+  const books = (isSearching ? searched.data?.data?.books : recent.data?.data?.books) ?? []
+  const status = (() => {
+    if (isSearching ? searched.isPending : recent.isPending) return 'pending'
+    if (isSearching ? searched.isError : recent.isError) return 'error'
+    return 'ready'
+  })()
 
   return (
     <div className="flex flex-1 flex-col bg-bg-dark">
@@ -44,6 +49,11 @@ export function BookPicker() {
       />
       <BookPickList
         books={books}
+        status={status}
+        emptyMessage={isSearching ? '검색 결과가 없어요.' : '아직 흔적을 남긴 책이 없어요.'}
+        onRetry={() => {
+          void (isSearching ? searched.refetch() : recent.refetch())
+        }}
         onSelect={(book) => {
           dispatch({
             type: 'selectBook',
