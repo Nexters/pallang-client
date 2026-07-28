@@ -3364,7 +3364,9 @@ export function TraceDoneView() {
             variant="back"
             className="flex-1"
             onClick={() => {
-              dispatch({ type: 'reset' })
+              // reset을 dispatch하지 않는다. draft는 app/trace/new/layout의 Provider가 들고 있고
+              // 홈은 그 바깥이라 나가는 순간 언마운트되어 어차피 사라진다. 여기서 result를 비우면
+              // pathname이 아직 done인 채로 가드가 발화해 /trace/new로 replace하며 홈 이동과 경합한다.
               router.push('/')
             }}
           >
