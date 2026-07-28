@@ -26,8 +26,10 @@ export default function BookPage() {
   const books = booksQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
   const totalCount = booksQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
   const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = booksQuery
+  const isDebouncing = keyword.trim() !== debouncedKeyword
+  const shouldShowTotalCount = !isDebouncing && !isFetching
   const shouldShowPageSkeleton = booksQuery.isPending && keyword.trim().length === 0
-  const shouldShowEmptyState = !isFetching && books.length === 0
+  const shouldShowEmptyState = !isDebouncing && !isFetching && books.length === 0
 
   useEffect(() => {
     const target = loadMoreRef.current
@@ -59,7 +61,7 @@ export default function BookPage() {
       <TopBar.Root>
         <TopBar.Title>
           도서 목록
-          <span className="text-text-placeholder-a50">{totalCount}</span>
+          {shouldShowTotalCount && <span className="text-text-placeholder-a50">{totalCount}</span>}
         </TopBar.Title>
         <TopBar.Spacer />
         <TopBar.LinkAction href="/" aria-label="닫기">
