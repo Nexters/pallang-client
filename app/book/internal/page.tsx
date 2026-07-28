@@ -9,6 +9,7 @@ import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 
 import { BookEmptyState } from './_components/BookEmptyState/BookEmptyState'
+import { BookInternalPageSkeleton } from './_components/BookInternalPageSkeleton/BookInternalPageSkeleton'
 import { BookItemList } from './_components/BookItemList/BookItemList'
 import { BookSearchBar } from './_components/BookSearchBar/BookSearchBar'
 
@@ -25,6 +26,7 @@ export default function BookPage() {
   const books = booksQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
   const totalCount = booksQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
   const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = booksQuery
+  const shouldShowPageSkeleton = booksQuery.isPending && keyword.trim().length === 0
   const shouldShowEmptyState = !isFetching && books.length === 0
 
   useEffect(() => {
@@ -49,6 +51,8 @@ export default function BookPage() {
       observer.disconnect()
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  if (shouldShowPageSkeleton) return <BookInternalPageSkeleton />
 
   return (
     <main className="flex h-full min-h-0 flex-col bg-bg-default">
