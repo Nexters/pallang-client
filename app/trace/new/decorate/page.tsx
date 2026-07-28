@@ -1,3 +1,5 @@
+import { TraceDecorateForm } from '../_components/TraceDecorateForm/TraceDecorateForm'
+
 export default function TraceDecoratePage() {
-  return <div className="flex flex-1 flex-col bg-bg-dark" />
+  return <TraceDecorateForm />
 }
