@@ -3096,7 +3096,8 @@ const handleNext = () => {
     },
     {
       onSuccess: (response) => {
-        const first = response.data.passages?.[0]
+        // DataResponseSimilarCandidates.data가 optional이고 SimilarCandidates.passages는 required다.
+        const first = response.data?.passages[0]
         if (first) {
           setCandidate({ passageId: first.passageId, quotedText: first.quotedText })
           return
@@ -3130,7 +3131,7 @@ const handleNext = () => {
 
 `다음` 버튼은 `onClick={handleNext}`, `disabled={draft.decorations.length === 0 || similarCheck.isPending}`으로 바꾼다.
 
-`response.data.passages`의 실제 접근 경로는 `DataResponseSimilarCandidates` 생성 타입을 열어 확인한다.
+`DataResponse*` 래퍼는 `data`가 optional인 경우가 많으므로, 새 응답 타입을 쓸 때마다 생성 타입을 열어 옵셔널 체이닝 위치를 확인한다.
 
 - [ ] **Step 3: 검증 후 커밋**
 
