@@ -38,6 +38,10 @@ export function OcrSelector() {
     latestRef.current = { takePhoto, ocrMutateAsync, router }
   })
 
+  // started는 컴포넌트 인스턴스마다 새로 생성되는 ref라, 언마운트 후 재마운트되면
+  // 자동으로 false에서 다시 시작한다 — cleanup으로 되돌릴 필요가 없다.
+  // (StrictMode 개발 모드의 mount→cleanup→remount 시퀀스에서 cleanup이 이 가드를
+  // 풀어버리면 takePhoto()가 두 번 불려 카메라/파일 선택 프롬프트가 두 번 뜬다.)
   useEffect(() => {
     if (started.current) return
     started.current = true
@@ -77,10 +81,6 @@ export function OcrSelector() {
         setMessage(OCR_FAILURE_MESSAGE)
       }
     })()
-
-    return () => {
-      started.current = false
-    }
   }, [])
 
   useEffect(() => {
