@@ -15,11 +15,18 @@ const SPOILER_OPTIONS = [
   { value: 'yes', label: '있어요' },
 ] as const
 
+// pageCount가 null인 책에서 자릿수를 막지 않으면 1e23 같은 값이 Number.isInteger를
+// 통과하고 JSON에 '1e+23'으로 직렬화되어 서버가 400을 반환한다.
+const MAX_PAGE_DIGITS = 5
+
 export function TraceDetailForm() {
   const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
-  const [page, setPage] = useState('')
-  const [spoiler, setSpoiler] = useState('no')
+  // 뒤로 가기로 이 화면에 다시 오면 leaf page가 리마운트된다.
+  // draft에서 시드하지 않으면 입력이 비고, 그대로 '다음'을 누를 때 스포일러 여부가
+  // 사용자 의사와 무관하게 false로 덮인다.
+  const [page, setPage] = useState(draft.pageNumber === null ? '' : String(draft.pageNumber))
+  const [spoiler, setSpoiler] = useState<'no' | 'yes'>(draft.isSpoiler ? 'yes' : 'no')
 
   const pageNumber = Number(page)
   const maxPage = draft.book?.pageCount ?? null
@@ -44,10 +51,11 @@ export function TraceDetailForm() {
           <span className="flex items-center gap-2 rounded-lg border border-white-a20 px-4 py-3">
             <input
               inputMode="numeric"
+              maxLength={MAX_PAGE_DIGITS}
               value={page}
               placeholder="000"
               onChange={(event) => {
-                setPage(event.target.value.replace(/[^0-9]/g, ''))
+                setPage(event.target.value.replace(/[^0-9]/g, '').slice(0, MAX_PAGE_DIGITS))
               }}
               className="min-w-0 flex-1 bg-transparent text-body-16rg text-text-inverse outline-none placeholder:opacity-40"
             />
@@ -61,7 +69,9 @@ export function TraceDetailForm() {
             label="스포일러"
             options={SPOILER_OPTIONS}
             value={spoiler}
-            onChange={setSpoiler}
+            onChange={(value) => {
+              setSpoiler(value === 'yes' ? 'yes' : 'no')
+            }}
           />
         </div>
       </div>
