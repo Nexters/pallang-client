@@ -1,15 +1,18 @@
 'use client'
 
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
+import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
 import type { EffectOption } from '../../_data/effect.constant'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import type { TextRange } from '../../_services/textRange.service'
 import { EffectPicker } from '../EffectPicker/EffectPicker'
+import { MergeDialog } from '../MergeDialog/MergeDialog'
 import { TextRangeSelector } from '../TextRangeSelector/TextRangeSelector'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
@@ -19,6 +22,35 @@ export function TraceDecorateForm() {
   const { draft, dispatch } = useTraceDraft()
   const [range, setRange] = useState<TextRange | null>(null)
   const [message, setMessage] = useState('')
+  const [candidate, setCandidate] = useState<{ passageId: number; quotedText: string } | null>(null)
+  const similarCheck = useMutation(passageMutations.similarCheck())
+
+  const goToOpinion = () => {
+    router.push('/trace/new/opinion')
+  }
+
+  const handleNext = () => {
+    if (!draft.book || draft.pageNumber === null) return
+    similarCheck.mutate(
+      {
+        bookId: draft.book.bookId,
+        pageNumber: draft.pageNumber,
+        quotedText: draft.quotedText,
+      },
+      {
+        onSuccess: (response) => {
+          const first = response.data?.passages[0]
+          if (first) {
+            setCandidate({ passageId: first.passageId, quotedText: first.quotedText })
+            return
+          }
+          goToOpinion()
+        },
+        // 유사 검사는 편의 기능이다. 실패해도 흔적 작성을 막지 않는다.
+        onError: goToOpinion,
+      },
+    )
+  }
 
   const handlePick = (option: EffectOption) => {
     if (!range) {
@@ -67,10 +99,8 @@ export function TraceDecorateForm() {
         <Button
           variant="activated"
           className="flex-1"
-          disabled={draft.decorations.length === 0}
-          onClick={() => {
-            router.push('/trace/new/opinion')
-          }}
+          disabled={draft.decorations.length === 0 || similarCheck.isPending}
+          onClick={handleNext}
         >
           다음
         </Button>
@@ -80,6 +110,20 @@ export function TraceDecorateForm() {
         message={message}
         onClose={() => {
           setMessage('')
+        }}
+      />
+
+      <MergeDialog
+        open={candidate !== null}
+        myQuote={draft.quotedText}
+        candidateQuote={candidate?.quotedText ?? ''}
+        onMerge={() => {
+          dispatch({ type: 'setMergeTarget', passageId: candidate?.passageId ?? null })
+          goToOpinion()
+        }}
+        onSeparate={() => {
+          dispatch({ type: 'setMergeTarget', passageId: null })
+          goToOpinion()
         }}
       />
     </div>
