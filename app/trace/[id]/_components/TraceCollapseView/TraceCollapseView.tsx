@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { type CSSProperties, type ReactNode, type UIEvent, useMemo, useState } from 'react'
+import { type CSSProperties, type ReactNode, type UIEvent, use, useMemo, useState } from 'react'
 
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -17,7 +17,7 @@ import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
 
 type TraceCollapseViewProps = {
-  bookId: number
+  params: Promise<{ id: string }>
   stageStyle: CSSProperties
   isCollapsed: boolean
   onScroll: (event: UIEvent<HTMLDivElement>) => void
@@ -26,12 +26,15 @@ type TraceCollapseViewProps = {
 }
 
 export function TraceCollapseView({
-  bookId,
+  params,
   stageStyle,
   isCollapsed,
   onScroll,
   renderStage,
 }: TraceCollapseViewProps) {
+  // use(params)는 서스펜드할 수 있어 페이지가 아니라 Suspense 안쪽인 여기서 언래핑한다
+  const { id } = use(params)
+  const bookId = Number(id)
   const gate = useLoginGate()
   const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
   const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
