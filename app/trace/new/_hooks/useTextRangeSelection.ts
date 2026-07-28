@@ -30,8 +30,9 @@ export function useTextRangeSelection(onSelect: (range: TextRange) => void) {
   }
 
   const onPointerUp = () => {
-    if (range) onSelect(range)
+    if (anchor !== null && range) onSelect(range)
     setAnchor(null)
+    setRange(null)
   }
 
   return { range, handlers: { onPointerDown, onPointerMove, onPointerUp } }
