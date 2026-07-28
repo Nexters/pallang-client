@@ -2445,7 +2445,7 @@ git commit -m "feat: 대목 카드와 효과 분할 렌더링 추가"
 
 - Produces:
   - `useTextRangeSelection(onSelect: (range: { startOffset: number; endOffset: number }) => void)` — `{ range, handlers }` 반환. `handlers`는 `{ onPointerDown, onPointerMove, onPointerUp }`. `range`는 드래그 중인 미확정 범위(`null` 가능).
-  - `TextRangeSelector({ text, selection, onSelect })` — 글자마다 `<span data-offset>`을 렌더하고 드래그를 처리한다.
+  - `TextRangeSelector({ text, onSelect })` — 글자마다 `<span data-offset>`을 렌더하고 드래그를 처리한다. 드래그 중인 범위는 훅이 돌려주는 내부 `range`로 직접 칠하므로 외부에서 선택 상태를 넘길 필요가 없다.
 - 확정된 `endOffset`은 **exclusive**다. 마지막으로 지나간 글자의 인덱스 + 1.
 
 - [ ] **Step 1: 선택 계산 테스트 작성**
@@ -2536,8 +2536,12 @@ export function useTextRangeSelection(onSelect: (range: TextRange) => void) {
   }
 
   const onPointerUp = () => {
-    if (range) onSelect(range)
+    // anchor 가드가 없으면, 화면 다른 곳에서 시작한 제스처를 이 텍스트 위에서 뗐을 때
+    // 버블링으로 들어온 pointerup이 직전 선택 범위를 다시 흘려보낸다.
+    // range를 비우지 않으면 효과 적용 후에도 드래그 하이라이트가 영구히 남는다.
+    if (anchor !== null && range) onSelect(range)
     setAnchor(null)
+    setRange(null)
   }
 
   return { range, handlers: { onPointerDown, onPointerMove, onPointerUp } }
