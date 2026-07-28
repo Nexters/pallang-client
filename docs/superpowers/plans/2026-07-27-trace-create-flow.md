@@ -3488,10 +3488,14 @@ Expected: FAIL — 모듈을 찾을 수 없다.
 export type OcrBlock = { text: string; lineBreak: boolean }
 
 export function joinBlockTexts(blocks: OcrBlock[]): string {
-  return blocks.reduce((acc, block, index) => {
-    if (index === blocks.length - 1) return acc + block.text
-    return acc + block.text + (block.lineBreak ? '\n' : ' ')
-  }, '')
+  // trim이 필요하다. 마지막 블록의 text가 비어 있으면 그 앞 블록의 구분자가 살아남아
+  // 저장되는 대목 본문에 꼬리 개행이 붙는다.
+  return blocks
+    .reduce((acc, block, index) => {
+      if (index === blocks.length - 1) return acc + block.text
+      return acc + block.text + (block.lineBreak ? '\n' : ' ')
+    }, '')
+    .trim()
 }
 
 export function clampQuote(text: string, max: number): string {
@@ -3511,9 +3515,16 @@ Expected: PASS (6 tests)
 ```ts
 export type Photo = { webPath: string; blob: Blob }
 
-async function toPhoto(webPath: string): Promise<Photo> {
-  const res = await fetch(webPath)
-  return { webPath, blob: await res.blob() }
+// takePhoto의 계약은 `Photo | null`(null = 취소)이고 호출부는 예외를 예상하지 않는다.
+// fetch 실패를 흘려보내면 CameraCheck처럼 try/catch 없는 호출부에서 unhandled rejection이 된다.
+async function toPhoto(webPath: string): Promise<Photo | null> {
+  try {
+    const res = await fetch(webPath)
+    return { webPath, blob: await res.blob() }
+  } catch (error) {
+    console.error('사진 웹뷰 경로를 blob으로 변환하는 데 실패했습니다.', error)
+    return null
+  }
 }
 ```
 
