@@ -3594,23 +3594,44 @@ export function OcrSelector() {
   const [message, setMessage] = useState('')
   const started = useRef(false)
 
+  // cleanup에서 started를 되돌리려면 effect가 마운트/언마운트에만 반응해야 한다.
+  // deps에 takePhoto/ocr/router(매 렌더 새 참조)를 두면 리렌더마다 cleanup이 돌아
+  // 가드가 풀리고 카메라가 무한히 다시 뜬다. Snackbar의 onCloseRef와 같은 패턴으로
+  // 최신 값을 ref에 담고 아래 effect의 deps는 []로 둔다.
+  const latestRef = useRef({ takePhoto, ocrMutateAsync: ocr.mutateAsync, router })
+  useEffect(() => {
+    latestRef.current = { takePhoto, ocrMutateAsync: ocr.mutateAsync, router }
+  })
+
   useEffect(() => {
     if (started.current) return
     started.current = true
 
     void (async () => {
-      const photo = await takePhoto()
+      const photo = await latestRef.current.takePhoto()
       if (!photo) {
-        router.back()
+        latestRef.current.router.back()
         return
       }
       setImageUrl(photo.webPath)
       try {
-        const response = await ocr.mutateAsync({ image: photo.blob })
+        const response = await latestRef.current.ocrMutateAsync({ image: photo.blob })
+        // DataResponseOcrRecognize.data가 optional이다. vertices와 Point.x/y는 required라
+        // `?? []`가 필요 없다. vertices가 런타임에 비어 오면 Math.min(...[])이 Infinity를 내고
+        // style에 "Infinitypx"가 들어가 그 블록 버튼이 엉뚱한 위치의 죽은 요소가 되므로 걸러낸다.
+        const recognized = (response.data?.blocks ?? []).filter(
+          (block) => block.boundingBox.vertices.length > 0,
+        )
+        // 200인데 블록이 0개인 경우(흐린 사진, 글자 없는 면)는 예외가 아니라 catch를 타지 않는다.
+        // 그대로 두면 오버레이도 안내도 없이 '다음'만 비활성인 막다른 화면이 된다.
+        if (recognized.length === 0) {
+          setMessage('글자를 읽지 못했어요. 다시 찍어주세요.')
+          return
+        }
         setBlocks(
-          (response.data.blocks ?? []).map((block) => {
-            const xs = (block.boundingBox.vertices ?? []).map((point) => point.x)
-            const ys = (block.boundingBox.vertices ?? []).map((point) => point.y)
+          recognized.map((block) => {
+            const xs = block.boundingBox.vertices.map((point) => point.x)
+            const ys = block.boundingBox.vertices.map((point) => point.y)
             const left = Math.min(...xs)
             const top = Math.min(...ys)
             return {
@@ -3623,11 +3644,17 @@ export function OcrSelector() {
             }
           }),
         )
-      } catch {
+      } catch (error) {
+        console.error('OCR 처리에 실패했습니다.', error)
         setMessage('글자를 읽지 못했어요. 다시 찍어주세요.')
       }
     })()
-  }, [takePhoto, ocr, router])
+
+    // 언마운트 시 되돌려, 뒤로 갔다 돌아왔을 때 카메라가 다시 뜨도록 한다.
+    return () => {
+      started.current = false
+    }
+  }, [])
 
   const quotedText = clampQuote(
     joinBlockTexts(blocks.filter((_, index) => selected.has(index))),
@@ -3715,6 +3742,8 @@ onLoad={(event) => {
   setScale(image.clientWidth / image.naturalWidth)
 }}
 ```
+
+**`onLoad` 한 번으로는 부족하다.** iOS `Info.plist`는 가로/세로를 모두 지원하고 Android 매니페스트는 `configChanges`에 `orientation|screenSize`가 있어 회전해도 액티비티가 재시작되지 않는다 — 즉 JS가 대응해야 한다. 블록을 여러 개 고르는 화면이라 도중 회전이 실제로 가능하고, 회전하면 `clientWidth`가 바뀌어 배율이 낡아 모든 오버레이가 사진과 어긋난다. `<img>`에 `ResizeObserver`를 붙여 배율을 다시 계산하고 cleanup에서 `disconnect()` 한다. `react-hooks/set-state-in-effect`가 error이므로 린트를 통과하는 형태인지 확인할 것.
 
 블록 `style`의 네 값에 각각 `* scale`을 곱한다.
 
