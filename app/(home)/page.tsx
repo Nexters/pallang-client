@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { TabBar } from '@/app/_global/_components/TabBar/TabBar'
@@ -27,13 +29,13 @@ export default function Home() {
 
           <div className="mt-9 flex flex-col gap-1">
             <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
-            <button
-              type="button"
+            <Link
+              href="/book"
               className="flex items-center gap-0.5 self-start text-title-16sb text-text-primary opacity-60"
             >
               <span>12권 모두 보기</span>
               <NextIcon aria-hidden="true" className="size-4" />
-            </button>
+            </Link>
           </div>
         </div>
 
