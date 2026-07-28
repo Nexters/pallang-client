@@ -22,6 +22,7 @@ const SEMANTIC_GROUPS = [
       'text-secondary',
       'text-tertiary',
       'text-placeholder',
+      'text-placeholder-a50',
       'text-disabled',
       'text-inverse',
       'text-accent',
