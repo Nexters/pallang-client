@@ -3207,6 +3207,8 @@ export function TraceOpinionForm() {
         onSuccess: (response) => {
           dispatch({
             type: 'setResult',
+            // DataResponseOpinionResponse.data는 optional이므로 앞에서
+            // `if (!response.data) { ...실패 처리; return }` 가드가 필요하다. as 캐스팅으로 우회하지 않는다.
             result: { opinionId: response.data.opinionId, merged: response.data.merged },
           })
           router.replace('/trace/new/done')
