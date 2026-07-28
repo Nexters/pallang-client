@@ -1,3 +1,5 @@
+import { OcrSelector } from '../_components/OcrSelector/OcrSelector'
+
 export default function TracePhotoPage() {
-  return <div className="flex flex-1 flex-col bg-bg-dark" />
+  return <OcrSelector />
 }
