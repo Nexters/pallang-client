@@ -2333,7 +2333,10 @@ type TraceNoteProps = {
 }
 
 const effectClassMap: Record<DraftEffectType, string> = {
-  HIGHLIGHT: 'rounded-[2px] px-0.5',
+  // px-0.5 같은 가로 패딩을 주면 안 된다. 인라인 폭을 실제로 먹어서, 2/3 화면에서
+  // 겹쳐 올리는 TextRangeSelector(decorations를 모른다)와 글자 위치가 어긋난다.
+  // 형광펜을 칠할수록 오차가 누적되어 유령 글자처럼 겹쳐 보인다.
+  HIGHLIGHT: 'rounded-[2px]',
   WAVY: 'underline decoration-wavy decoration-2 underline-offset-4',
   UNDERLINE: 'underline decoration-2 underline-offset-4',
 }
@@ -2905,10 +2908,16 @@ export function TraceDecorateForm() {
   const [message, setMessage] = useState('')
 
   const handlePick = (option: EffectOption) => {
-    if (!range || !option.effectType) {
+    // `!option.effectType`을 이 조건에 넣지 않는다. EffectPicker가 그 항목을 HTML disabled로
+    // 렌더하므로 브라우저가 click을 보내지 않아 도달 불가능한 죽은 분기가 되고,
+    // 메시지("영역 선택 후...")도 원인과 맞지 않는다.
+    if (!range) {
       setMessage('영역 선택 후 효과를 입력해주세요!')
       return
     }
+    // EffectOption.effectType 타입은 여전히 `DraftEffectType | null`이라, dispatch에 넘기기 전
+    // 컴파일러가 non-null을 알 수 있도록 좁힌다. as 캐스팅을 쓰지 않는다.
+    if (option.effectType === null) return
     dispatch({
       type: 'applyDecoration',
       decoration: { ...range, effectType: option.effectType, color: option.color },
