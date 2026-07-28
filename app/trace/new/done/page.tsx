@@ -1,3 +1,5 @@
+import { TraceDoneView } from '../_components/TraceDoneView/TraceDoneView'
+
 export default function TraceDonePage() {
-  return <div className="flex flex-1 flex-col bg-bg-dark" />
+  return <TraceDoneView />
 }
