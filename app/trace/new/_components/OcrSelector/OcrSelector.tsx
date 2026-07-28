@@ -16,6 +16,8 @@ type PositionedBlock = OcrBlock & { left: number; top: number; width: number; he
 
 const MAX_QUOTE_LENGTH = 150
 
+const OCR_FAILURE_MESSAGE = '글자를 읽지 못했어요. 다시 찍어주세요.'
+
 export function OcrSelector() {
   const router = useRouter()
   const { dispatch } = useTraceDraft()
@@ -27,23 +29,31 @@ export function OcrSelector() {
   const [message, setMessage] = useState('')
   const [scale, setScale] = useState(1)
   const started = useRef(false)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const ocrMutateAsync = ocr.mutateAsync
+  // 매 렌더마다 최신 값을 ref에 반영 (exhaustive-deps 규칙을 만족시키면서도
+  // 아래 effect를 마운트 시 한 번만 실행하기 위함 — Snackbar.tsx의 onCloseRef와 동일한 패턴)
+  const latestRef = useRef({ takePhoto, ocrMutateAsync, router })
+  useEffect(() => {
+    latestRef.current = { takePhoto, ocrMutateAsync, router }
+  })
 
   useEffect(() => {
     if (started.current) return
     started.current = true
 
     void (async () => {
-      const photo = await takePhoto()
+      const photo = await latestRef.current.takePhoto()
       if (!photo) {
-        router.back()
+        latestRef.current.router.back()
         return
       }
       setImageUrl(photo.webPath)
       try {
-        const response = await ocrMutateAsync({ image: photo.blob })
-        setBlocks(
-          (response.data?.blocks ?? []).map((block) => {
+        const response = await latestRef.current.ocrMutateAsync({ image: photo.blob })
+        const positionedBlocks = (response.data?.blocks ?? [])
+          .filter((block) => block.boundingBox.vertices.length > 0)
+          .map((block) => {
             const xs = block.boundingBox.vertices.map((point) => point.x)
             const ys = block.boundingBox.vertices.map((point) => point.y)
             const left = Math.min(...xs)
@@ -56,13 +66,38 @@ export function OcrSelector() {
               width: Math.max(...xs) - left,
               height: Math.max(...ys) - top,
             }
-          }),
-        )
-      } catch {
-        setMessage('글자를 읽지 못했어요. 다시 찍어주세요.')
+          })
+        if (positionedBlocks.length === 0) {
+          setMessage(OCR_FAILURE_MESSAGE)
+        } else {
+          setBlocks(positionedBlocks)
+        }
+      } catch (error) {
+        console.error('OCR 인식에 실패했습니다.', error)
+        setMessage(OCR_FAILURE_MESSAGE)
       }
     })()
-  }, [takePhoto, ocrMutateAsync, router])
+
+    return () => {
+      started.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const image = imageRef.current
+    if (!imageUrl || !image) return
+
+    const observer = new ResizeObserver(() => {
+      if (image.naturalWidth > 0) {
+        setScale(image.clientWidth / image.naturalWidth)
+      }
+    })
+    observer.observe(image)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [imageUrl])
 
   const quotedText = clampQuote(
     joinBlockTexts(blocks.filter((_, index) => selected.has(index))),
@@ -75,6 +110,7 @@ export function OcrSelector() {
         {imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element -- blob URL은 next/image가 다루지 않는다
           <img
+            ref={imageRef}
             src={imageUrl}
             alt="촬영한 책 페이지"
             className="w-full"
