@@ -4,9 +4,9 @@
 import type { DecorationResponse } from './decorationResponse'
 
 export interface Detail {
-  passageId?: number
-  pageNumber?: number
-  quotedText?: string
-  isSpoiler?: boolean
-  decorations?: DecorationResponse[]
+  passageId: number
+  pageNumber: number
+  quotedText: string
+  isSpoiler: boolean
+  decorations: DecorationResponse[]
 }

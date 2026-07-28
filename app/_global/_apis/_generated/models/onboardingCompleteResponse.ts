@@ -3,5 +3,5 @@
  */
 
 export interface OnboardingCompleteResponse {
-  hasCompletedOnboarding?: boolean
+  hasCompletedOnboarding: boolean
 }

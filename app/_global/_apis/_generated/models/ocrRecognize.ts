@@ -4,5 +4,5 @@
 import type { TextBlock } from './textBlock'
 
 export interface OcrRecognize {
-  blocks?: TextBlock[]
+  blocks: TextBlock[]
 }

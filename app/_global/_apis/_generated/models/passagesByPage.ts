@@ -4,5 +4,5 @@
 import type { Detail } from './detail'
 
 export interface PassagesByPage {
-  passages?: Detail[]
+  passages: Detail[]
 }

@@ -3,10 +3,11 @@
  */
 
 export interface BookActivityResponse {
-  bookId?: number
-  title?: string
-  author?: string
-  coverImageUrl?: string
-  passageCount?: number
-  opinionCount?: number
+  bookId: number
+  title: string
+  author: string
+  /** @nullable */
+  coverImageUrl?: string | null
+  passageCount: number
+  opinionCount: number
 }
