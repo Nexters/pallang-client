@@ -10,24 +10,83 @@ function stubParams(id: string) {
   return Object.assign(Promise.resolve({ id }), { status: 'fulfilled' as const, value: { id } })
 }
 
-const passageSeedByPage: Record<number, { quotedText: string; isSpoiler: boolean }[]> = {
+const passageSeedByPage: Record<
+  number,
+  { passageId: number; quotedText: string; isSpoiler: boolean }[]
+> = {
   7: [
-    { quotedText: '첫 번째 대목 인용문', isSpoiler: false },
-    { quotedText: '두 번째 대목 인용문', isSpoiler: false },
+    { passageId: 71, quotedText: '첫 번째 대목 인용문', isSpoiler: false },
+    { passageId: 72, quotedText: '두 번째 대목 인용문', isSpoiler: false },
   ],
-  9: [{ quotedText: '스포일러 대목 인용문', isSpoiler: true }],
+  9: [{ passageId: 91, quotedText: '스포일러 대목 인용문', isSpoiler: true }],
 }
 
-// 대목 페이지 목록/페이지별 대목 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
+const opinionSeedByPassage: Record<
+  number,
+  {
+    opinionId: number
+    userId: number
+    nickname: string
+    content: string
+    likeCount: number
+    createdAt: string
+  }[]
+> = {
+  71: [
+    {
+      opinionId: 1,
+      userId: 1,
+      nickname: '책책책을읽자',
+      content: '첫 대목의 첫 번째 흔적',
+      likeCount: 4,
+      createdAt: '2026-07-23T02:00:00.000Z',
+    },
+    {
+      opinionId: 2,
+      userId: 2,
+      nickname: '밤의독서가',
+      content: '첫 대목의 두 번째 흔적',
+      likeCount: 120,
+      createdAt: '2026-07-21T09:00:00.000Z',
+    },
+  ],
+  72: [
+    {
+      opinionId: 3,
+      userId: 3,
+      nickname: '모순덩어리',
+      content: '두 번째 대목의 흔적',
+      likeCount: 8,
+      createdAt: '2026-07-20T09:00:00.000Z',
+    },
+  ],
+}
+
+// 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
 // 반환값은 페이지가 그리는 첫 요소인 스크롤 컨테이너다.
 async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
       const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
+      const opinionMatch = /\/passages\/(\d+)\/opinions/.exec(url)
+      const opinions = opinionMatch ? (opinionSeedByPassage[Number(opinionMatch[1])] ?? []) : []
       const body = pageMatch
         ? { data: { passages: passageSeedByPage[Number(pageMatch[1])] ?? [] } }
-        : { data: { pageNumbers: pages } }
+        : opinionMatch
+          ? {
+              data: {
+                opinions,
+                pageInfo: {
+                  page: 0,
+                  size: 100,
+                  totalElements: opinions.length,
+                  totalPages: 1,
+                  hasNext: false,
+                },
+              },
+            }
+          : { data: { pageNumbers: pages } }
       return Promise.resolve(new Response(JSON.stringify(body)))
     }),
   )
@@ -59,6 +118,22 @@ describe('ReaderHighlightsPage', () => {
     const firstQuote = await screen.findByText('첫 번째 대목 인용문')
     fireEvent.click(firstQuote)
     expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('흔적 목록은 선택된 대목의 흔적 조회 API 응답으로 그린다', async () => {
+    await renderPage()
+
+    expect(await screen.findByText('첫 대목의 첫 번째 흔적')).toBeInTheDocument()
+    expect(screen.getByText('2개의 흔적')).toBeInTheDocument()
+    expect(screen.queryByText('두 번째 대목의 흔적')).not.toBeInTheDocument()
+  })
+
+  it('인용문을 전환하면 해당 대목의 흔적 목록으로 갱신된다', async () => {
+    await renderPage()
+
+    fireEvent.click(await screen.findByText('첫 번째 대목 인용문'))
+    expect(await screen.findByText('두 번째 대목의 흔적')).toBeInTheDocument()
+    expect(screen.queryByText('첫 대목의 첫 번째 흔적')).not.toBeInTheDocument()
   })
 
   it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 후 이동한다', async () => {
@@ -96,31 +171,26 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
   })
 
-  it('정렬 버튼을 누르면 최신순과 좋아요순이 토글된다', async () => {
+  it('정렬 버튼을 누르면 라벨이 토글되고 서버 정렬(sortType)로 다시 조회한다', async () => {
     await renderPage()
+    await screen.findByText('첫 대목의 첫 번째 흔적')
 
     fireEvent.click(screen.getByRole('button', { name: '최신순' }))
     expect(screen.getByRole('button', { name: '좋아요순' })).toBeInTheDocument()
-  })
 
-  it('스포일러 의견은 마스킹되고, 첫 클릭에 해제만 된다', async () => {
-    await renderPage()
-    const spoiler = screen.getByText(
-      '결혼이란 결국 선택의 문제라는 말, 읽을 때마다 다르게 다가와요.',
-    )
-
-    expect(spoiler).toHaveClass('font-galmuri')
-    fireEvent.click(spoiler)
-    expect(spoiler).not.toHaveClass('font-galmuri')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const requestedUrls = vi
+      .mocked(fetch)
+      .mock.calls.map(([url]) => url)
+      .filter((url): url is string => typeof url === 'string')
+    expect(
+      requestedUrls.some((url) => url.includes('/opinions') && url.includes('sortType=LIKES')),
+    ).toBe(true)
   })
 
   it('의견 클릭 시 상세 오버레이가 열리고 X로 닫힌다', async () => {
     await renderPage()
 
-    fireEvent.click(
-      screen.getByText('이 문장에서 한참을 머물렀어요. 안진진의 마음이 그대로 전해지는 것 같아요.'),
-    )
+    fireEvent.click(await screen.findByText('첫 대목의 두 번째 흔적'))
     const dialog = screen.getByRole('dialog', { name: '의견 상세' })
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
 
@@ -131,8 +201,7 @@ describe('ReaderHighlightsPage', () => {
   it('상세에서 다음 의견으로 이동할 수 있고, 첫 의견에서는 이전 버튼이 비활성화된다', async () => {
     await renderPage()
 
-    // 최신순 첫 번째 의견(책책책을읽자)을 연다
-    fireEvent.click(screen.getByText(/책장 냄새가 이렇게 묘사될 수 있구나 싶었어요\. 헌책방에/))
+    fireEvent.click(await screen.findByText('첫 대목의 첫 번째 흔적'))
     const dialog = screen.getByRole('dialog', { name: '의견 상세' })
 
     expect(within(dialog).getByLabelText('이전 의견')).toBeDisabled()

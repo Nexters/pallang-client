@@ -16,20 +16,11 @@ export type QuoteStageProps = {
   onClickQuote: () => void
 }
 
-export type TraceComment = {
-  id: number
-  nickname: string
-  content: string
-  createdAt: string
-}
-
+/** 서버 OpinionSummaryResponse 중 목록 UI가 쓰는 필드만 추린 뷰 타입 */
 export type Trace = {
-  id: number
+  opinionId: number
   nickname: string
   content: string
   createdAt: string
   likeCount: number
-  commentCount: number
-  isSpoiler: boolean
-  comments: TraceComment[]
 }

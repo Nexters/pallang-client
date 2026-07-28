@@ -3,10 +3,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { type CSSProperties, type ReactNode, type UIEvent, use, useMemo, useState } from 'react'
 
+import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { bookTitle, traceSeed } from '../../_data/readerHighlights.constant'
+import { bookTitle } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useLoginGate } from '../../_hooks/useLoginGate'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
@@ -44,28 +45,28 @@ export function TraceCollapseView({
     enabled: viewer.activePage !== undefined,
   })
 
-  const highlight = useMemo(() => {
-    const passages = passagesData?.data?.passages ?? []
-    return {
+  const passages = useMemo(() => passagesData?.data?.passages ?? [], [passagesData])
+  const highlight = useMemo(
+    () => ({
       page: viewer.activePage ?? 0,
       quotes: passages.map((passage) => passage.quotedText),
       isSpoiler: passages.some((passage) => passage.isSpoiler),
-    }
-  }, [passagesData, viewer.activePage])
+    }),
+    [passages, viewer.activePage],
+  )
+  // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
+  const activePassage = passages[viewer.quoteIndex]
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
-  const [sortBy, setSortBy] = useState<'latest' | 'likes'>('latest')
-  const [revealedSpoilerIds, setRevealedSpoilerIds] = useState<ReadonlySet<number>>(new Set())
+  const [sortType, setSortType] = useState<OpinionSortType>('LATEST')
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
 
-  const sortedTraces = useMemo(
-    () =>
-      [...traceSeed].sort((a, b) =>
-        sortBy === 'latest' ? b.createdAt.localeCompare(a.createdAt) : b.likeCount - a.likeCount,
-      ),
-    [sortBy],
+  const { data: opinionsData } = useQuery(
+    opinionQueries.listByPassage(activePassage?.passageId, sortType),
   )
+  const traces = opinionsData?.data?.opinions ?? []
+  const traceCount = opinionsData?.data?.pageInfo.totalElements ?? 0
 
-  const selectedTraceIndex = sortedTraces.findIndex((trace) => trace.id === selectedTraceId)
+  const selectedTraceIndex = traces.findIndex((trace) => trace.opinionId === selectedTraceId)
 
   const openCommentBar = () => {
     gate.runWithLogin(() => {
@@ -104,30 +105,27 @@ export function TraceCollapseView({
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
         <TraceListSection
-          traces={sortedTraces}
-          sortBy={sortBy}
-          revealedSpoilerIds={revealedSpoilerIds}
+          traces={traces}
+          traceCount={traceCount}
+          sortType={sortType}
           onToggleSort={() => {
-            setSortBy((prev) => (prev === 'latest' ? 'likes' : 'latest'))
+            setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
           }}
           onToggleComment={toggleCommentBar}
-          onRevealTrace={(id) => {
-            setRevealedSpoilerIds((prev) => new Set(prev).add(id))
-          }}
           onSelectTrace={(trace) => {
-            setSelectedTraceId(trace.id)
+            setSelectedTraceId(trace.opinionId)
           }}
         />
       </div>
       {isCommentBarOpen && <CommentBar />}
       {selectedTraceIndex >= 0 && (
         <TraceDetailOverlay
-          traces={sortedTraces}
+          traces={traces}
           index={selectedTraceIndex}
           quote={highlight.quotes[viewer.quoteIndex] ?? ''}
           onNavigate={(next) => {
-            const target = sortedTraces[next]
-            if (target) setSelectedTraceId(target.id)
+            const target = traces[next]
+            if (target) setSelectedTraceId(target.opinionId)
           }}
           onClose={() => {
             setSelectedTraceId(null)

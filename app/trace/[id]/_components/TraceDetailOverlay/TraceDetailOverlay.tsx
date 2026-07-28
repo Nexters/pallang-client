@@ -67,23 +67,8 @@ export function TraceDetailOverlay({
           <span>{formatTraceDate(trace.createdAt)}</span>
           <span>공감 {formatLikeCount(trace.likeCount)}</span>
         </div>
-        <p className="text-body-14sb text-text-inverse">댓글 ({trace.comments.length})</p>
-        <ul className="flex flex-col">
-          {trace.comments.map((comment) => (
-            <li
-              key={comment.id}
-              className="flex flex-col gap-2 border-t border-dashed border-white/30 py-4"
-            >
-              <span className="text-body-14sb text-text-inverse opacity-60">
-                {comment.nickname}
-              </span>
-              <p className="text-body-14rg text-text-inverse">{comment.content}</p>
-              <span className="text-body-14rg text-text-inverse opacity-50">
-                {formatTraceDate(comment.createdAt)}
-              </span>
-            </li>
-          ))}
-        </ul>
+        {/* ponytail: 댓글 목록은 별도 이슈에서 연결 — 헤더만 남긴다 (#44 제외 범위) */}
+        <p className="text-body-14sb text-text-inverse">댓글</p>
       </div>
       <CommentBar />
     </div>

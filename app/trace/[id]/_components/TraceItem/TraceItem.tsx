@@ -3,22 +3,19 @@ import { useState, useSyncExternalStore } from 'react'
 import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
-import { cn } from '@/app/_global/_services/cn.service'
 
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
 
 type TraceItemProps = {
   trace: Trace
-  isMasked: boolean
-  onReveal: () => void
   onSelect: () => void
 }
 
 const noop = () => undefined
 const emptySubscribe = () => noop
 
-export function TraceItem({ trace, isMasked, onReveal, onSelect }: TraceItemProps) {
+export function TraceItem({ trace, onSelect }: TraceItemProps) {
   const [isLiked, setIsLiked] = useState(false)
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
   const isHydrated = useSyncExternalStore(
@@ -37,11 +34,8 @@ export function TraceItem({ trace, isMasked, onReveal, onSelect }: TraceItemProp
       </button>
       <button
         type="button"
-        onClick={isMasked ? onReveal : onSelect}
-        className={cn(
-          'line-clamp-3 text-left text-body-16md text-text-inverse',
-          isMasked && 'font-galmuri',
-        )}
+        onClick={onSelect}
+        className="line-clamp-3 text-left text-body-16md text-text-inverse"
       >
         {trace.content}
       </button>
@@ -63,13 +57,9 @@ export function TraceItem({ trace, isMasked, onReveal, onSelect }: TraceItemProp
             />
             {formatLikeCount(likeCount)}
           </button>
-          <button
-            type="button"
-            onClick={onSelect}
-            className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
-          >
+          {/* ponytail: 댓글 수는 API에 없어 아이콘만 노출 — commentCount 필드 추가 협의 후 표시 (#44) */}
+          <button type="button" onClick={onSelect} aria-label="댓글 보기">
             <CommentIcon width={20} height={20} className="text-icon-active" />
-            {trace.commentCount}
           </button>
         </div>
       </div>
