@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { type CSSProperties, type ReactNode, type UIEvent, use, useMemo, useState } from 'react'
 
-import { opinionQueries } from '@/app/_global/_queries/opinion.queries'
+import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -57,13 +57,12 @@ export function TraceCollapseView({
   // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
   const activePassage = passages[viewer.quoteIndex]
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
-  const [sortType, setSortType] = useState<'LATEST' | 'LIKES'>('LATEST')
+  const [sortType, setSortType] = useState<OpinionSortType>('LATEST')
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
 
-  const { data: opinionsData } = useQuery({
-    ...opinionQueries.listByPassage(activePassage?.passageId ?? 0, sortType),
-    enabled: activePassage !== undefined,
-  })
+  const { data: opinionsData } = useQuery(
+    opinionQueries.listByPassage(activePassage?.passageId, sortType),
+  )
   const traces = opinionsData?.data?.opinions ?? []
   const traceCount = opinionsData?.data?.pageInfo.totalElements ?? 0
 

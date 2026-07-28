@@ -1,5 +1,6 @@
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
+import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 
 import type { Trace } from '../../_types/readerHighlights.type'
 import { TraceItem } from '../TraceItem/TraceItem'
@@ -7,7 +8,7 @@ import { TraceItem } from '../TraceItem/TraceItem'
 type TraceListSectionProps = {
   traces: Trace[]
   traceCount: number
-  sortType: 'LATEST' | 'LIKES'
+  sortType: OpinionSortType
   onToggleSort: () => void
   onToggleComment: () => void
   onSelectTrace: (trace: Trace) => void
