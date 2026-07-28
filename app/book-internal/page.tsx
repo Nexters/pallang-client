@@ -1,0 +1,81 @@
+'use client'
+
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
+
+import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
+import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
+import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
+
+import { BookEmptyState } from './_components/BookEmptyState/BookEmptyState'
+import { BookItemList } from './_components/BookItemList/BookItemList'
+import { BookSearchBar } from './_components/BookSearchBar/BookSearchBar'
+
+export default function BookPage() {
+  const [keyword, setKeyword] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
+
+  const booksQuery = useInfiniteQuery({
+    ...bookQueries.searchInternal({ keyword: debouncedKeyword, size: 20 }),
+  })
+
+  const books = booksQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  const totalCount = booksQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
+  const { fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } = booksQuery
+  const shouldShowEmptyState = !isFetching && books.length === 0
+
+  useEffect(() => {
+    const target = loadMoreRef.current
+    const scrollRoot = scrollRef.current
+    if (!target || !scrollRoot || !hasNextPage || isFetchingNextPage) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void fetchNextPage()
+        }
+      },
+      {
+        root: scrollRoot,
+        rootMargin: '160px 0px',
+      },
+    )
+
+    observer.observe(target)
+    return () => {
+      observer.disconnect()
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+
+  return (
+    <main className="flex h-full min-h-0 flex-col bg-bg-default">
+      <TopBar.Root>
+        <TopBar.Title>
+          도서 목록
+          <span className="text-text-placeholder-a50">{totalCount}</span>
+        </TopBar.Title>
+        <TopBar.Spacer />
+        <TopBar.LinkAction href="/" aria-label="닫기">
+          <CloseIcon />
+        </TopBar.LinkAction>
+      </TopBar.Root>
+      <BookSearchBar onKeywordChange={setKeyword} />
+      <div
+        ref={scrollRef}
+        className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
+      >
+        {shouldShowEmptyState ? (
+          <BookEmptyState />
+        ) : (
+          <>
+            <BookItemList books={books} />
+            <div ref={loadMoreRef} className="h-6 w-full" aria-hidden="true" />
+          </>
+        )}
+      </div>
+    </main>
+  )
+}
