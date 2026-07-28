@@ -3,6 +3,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 
+import { Button } from '@/app/_global/_components/Button/Button'
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
@@ -29,12 +30,14 @@ export default function BookPage() {
   const isDebouncing = keyword.trim() !== debouncedKeyword
   const shouldShowTotalCount = !isDebouncing && !isFetching
   const shouldShowPageSkeleton = booksQuery.isPending && keyword.trim().length === 0
+  const shouldShowPageError = booksQuery.isError && books.length === 0
+  const shouldShowNextPageError = booksQuery.isError && books.length > 0
   const shouldShowEmptyState = !isDebouncing && !isFetching && books.length === 0
 
   useEffect(() => {
     const target = loadMoreRef.current
     const scrollRoot = scrollRef.current
-    if (!target || !scrollRoot || !hasNextPage || isFetchingNextPage) return
+    if (!target || !scrollRoot || !hasNextPage || isFetchingNextPage || booksQuery.isError) return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -52,7 +55,7 @@ export default function BookPage() {
     return () => {
       observer.disconnect()
     }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+  }, [booksQuery.isError, fetchNextPage, hasNextPage, isFetchingNextPage])
 
   if (shouldShowPageSkeleton) return <BookInternalPageSkeleton />
 
@@ -73,7 +76,7 @@ export default function BookPage() {
         ref={scrollRef}
         className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
       >
-        {booksQuery.isError ? (
+        {shouldShowPageError ? (
           <FeedbackState
             aria-label="도서 목록 오류"
             message={
@@ -105,6 +108,18 @@ export default function BookPage() {
         ) : (
           <>
             <BookItemList books={books} />
+            {shouldShowNextPageError && (
+              <div className="flex w-full justify-center px-4 py-4">
+                <Button
+                  className="h-[54px] w-[168px] bg-interactive-btn-secondary"
+                  onClick={() => {
+                    void fetchNextPage()
+                  }}
+                >
+                  다시 시도
+                </Button>
+              </div>
+            )}
             <div ref={loadMoreRef} className="h-6 w-full" aria-hidden="true" />
           </>
         )}
