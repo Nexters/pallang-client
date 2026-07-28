@@ -56,7 +56,14 @@ const SEMANTIC_GROUPS = [
   { role: 'Border', tokens: ['border-default', 'border-strong', 'border-book'] },
   {
     role: 'Icon',
-    tokens: ['icon-primary', 'icon-active', 'icon-accent', 'icon-inactive', 'icon-muted'],
+    tokens: [
+      'icon-primary',
+      'icon-active',
+      'icon-accent',
+      'icon-inactive',
+      'icon-muted',
+      'icon-muted-a50',
+    ],
   },
 ] as const
 
