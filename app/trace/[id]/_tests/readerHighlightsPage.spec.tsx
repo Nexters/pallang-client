@@ -1,9 +1,27 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
 import ReaderHighlightsPage from '../page'
+
+const { pushMock, replaceMock, authState } = vi.hoisted(() => ({
+  pushMock: vi.fn(),
+  replaceMock: vi.fn(),
+  authState: { isAuthenticated: true },
+}))
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: pushMock, replace: replaceMock }),
+}))
+
+vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
+  useAuth: () => ({
+    status: authState.isAuthenticated ? 'authenticated' : 'unauthenticated',
+    isAuthenticated: authState.isAuthenticated,
+    signOut: vi.fn(),
+  }),
+}))
 
 // page의 params(Promise)를 use()가 동기적으로 언래핑하도록 status/value를 태깅한 thenable을 넘긴다.
 function stubParams(id: string) {
@@ -101,6 +119,12 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
 }
 
 describe('ReaderHighlightsPage', () => {
+  beforeEach(() => {
+    authState.isAuthenticated = true
+    pushMock.mockClear()
+    replaceMock.mockClear()
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -136,13 +160,21 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('첫 대목의 첫 번째 흔적')).not.toBeInTheDocument()
   })
 
-  it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 후 이동한다', async () => {
+  it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 페이지로 이동한다', async () => {
+    authState.isAuthenticated = false
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
     expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
+    expect(pushMock).toHaveBeenCalledWith('/login')
+  })
+
+  it('로그인 상태에서 다른 페이지 탭을 누르면 바로 이동한다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
     expect(
       screen.queryByText('해당 페이지부터는 로그인해야 확인할 수 있어요!'),
     ).not.toBeInTheDocument()
@@ -153,22 +185,25 @@ describe('ReaderHighlightsPage', () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
-
     fireEvent.click(await screen.findByText('스포일러가 포함되어있어요!'))
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
     expect(screen.getByText('스포일러 대목 인용문')).toBeInTheDocument()
   })
 
-  it('비로그인 시 댓글 입력은 로그인 유도 후 열린다', async () => {
+  it('로그인 상태에서 댓글 입력이 바로 열린다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+  })
+
+  it('비로그인 시 댓글 입력은 로그인 유도 팝업을 띄운다', async () => {
+    authState.isAuthenticated = false
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
     expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
     expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
-    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
   })
 
   it('정렬 버튼을 누르면 라벨이 토글되고 서버 정렬(sortType)로 다시 조회한다', async () => {

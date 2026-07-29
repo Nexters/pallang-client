@@ -1,27 +1,29 @@
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
+import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
+
 export function useLoginGate() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
+  const [isGateOpen, setIsGateOpen] = useState(false)
 
   const runWithLogin = (action: () => void) => {
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       action()
       return
     }
-    setPendingAction(() => action)
+    setIsGateOpen(true)
   }
 
   const login = () => {
-    // ponytail: 목 로그인, 실제로는 로그인 페이지로 이동
-    setIsLoggedIn(true)
-    pendingAction?.()
-    setPendingAction(null)
+    router.push(LOGIN_PATH)
   }
 
   const close = () => {
-    setPendingAction(null)
+    setIsGateOpen(false)
   }
 
-  return { isGateOpen: pendingAction !== null, runWithLogin, login, close }
+  return { isGateOpen, runWithLogin, login, close }
 }

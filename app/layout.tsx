@@ -4,6 +4,7 @@ import 'galmuri/dist/galmuri.css'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 
+import { AuthProvider } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { QueryProvider } from '@/app/_global/_providers/QueryProvider/QueryProvider'
 
 const geistSans = Geist({
@@ -36,9 +37,11 @@ export default function RootLayout({
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-dvh">
         <QueryProvider>
-          <main className="mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
-            {children}
-          </main>
+          <AuthProvider>
+            <main className="mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
+              {children}
+            </main>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

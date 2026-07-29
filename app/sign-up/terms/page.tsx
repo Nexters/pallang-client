@@ -6,6 +6,8 @@ import { useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Checkbox } from '@/app/_global/_components/Checkbox/Checkbox'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { SIGN_UP_WELCOME_PATH } from '@/app/_global/_data/auth.constant'
+import { agreeTerms } from '@/app/_global/_queries/auth.queries'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
@@ -42,8 +44,9 @@ export default function SignUpTermsPage() {
   const router = useRouter()
   const [termsChecked, setTermsChecked] = useState<TermsChecked>({
     privacy: false,
-    service: true,
+    service: false,
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const termsAgreed = termsChecked.service && termsChecked.privacy
 
@@ -64,7 +67,15 @@ export default function SignUpTermsPage() {
   }
 
   const handleNextClick = () => {
-    router.push('/sign-up/welcome')
+    setIsSubmitting(true)
+    agreeTerms()
+      .then(() => {
+        router.push(SIGN_UP_WELCOME_PATH)
+      })
+      .catch((error: unknown) => {
+        console.error('약관 동의 실패', error)
+        setIsSubmitting(false)
+      })
   }
 
   return (
@@ -120,7 +131,11 @@ export default function SignUpTermsPage() {
       </div>
 
       <div className="relative z-10 mt-auto flex shrink-0 items-center justify-center p-4">
-        <Button disabled={!termsAgreed} onClick={handleNextClick} className="h-14 w-full">
+        <Button
+          disabled={!termsAgreed || isSubmitting}
+          onClick={handleNextClick}
+          className="h-14 w-full"
+        >
           다음
         </Button>
       </div>

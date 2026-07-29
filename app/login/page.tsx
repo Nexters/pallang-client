@@ -1,18 +1,17 @@
 'use client'
 
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import KakaoIcon from '@/app/_global/_components/Icon/assets/kakao.svg'
+import { KAKAO_LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
 export default function LoginPage() {
-  const router = useRouter()
-
   const handleKakaoLoginClick = () => {
-    router.push('/sign-up/terms')
+    // API route가 카카오 authorize로 302 하므로 router.push가 아닌 full navigation이 필요하다.
+    window.location.assign(KAKAO_LOGIN_PATH)
   }
 
   return (

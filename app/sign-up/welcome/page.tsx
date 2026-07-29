@@ -1,16 +1,21 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
+import { HOME_PATH } from '@/app/_global/_data/auth.constant'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 
 export default function SignUpWelcomePage() {
   const router = useRouter()
+  const { data } = useQuery(userQueries.me())
+  const nickname = data?.data?.nickname
 
   const handleStartClick = () => {
-    router.push('/')
+    router.push(HOME_PATH)
   }
 
   return (
@@ -22,7 +27,7 @@ export default function SignUpWelcomePage() {
 
       <div className="flex h-75 shrink-0 flex-col items-center justify-center gap-2.5 px-6 py-25 text-center">
         <h1 className="whitespace-nowrap text-[24px] font-bold leading-[1.2] tracking-[-0.02em] text-text-secondary">
-          다정한 연필 님, 환영합니다!
+          {nickname ? `${nickname} 님, 환영합니다!` : '환영합니다!'}
         </h1>
         <p className="whitespace-nowrap text-title-18md text-text-tertiary">
           다양한 사람들과 각각 느낀 점들을 비교하며
