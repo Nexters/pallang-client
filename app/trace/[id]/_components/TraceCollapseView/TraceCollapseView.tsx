@@ -22,6 +22,7 @@ import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { CommentBar } from '../CommentBar/CommentBar'
 import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
+import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
 
@@ -57,12 +58,12 @@ export function TraceCollapseView({
     !pageNumbersQuery.isError &&
     !pageNumbersQuery.isFetchingNextPage
   const viewer = useHighlightViewer(runWithLogin, pages[0])
-  const { data: passagesData } = useQuery({
+  const passagesQuery = useQuery({
     ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
     enabled: viewer.activePage !== undefined,
   })
 
-  const passages = useMemo(() => passagesData?.data?.passages ?? [], [passagesData])
+  const passages = useMemo(() => passagesQuery.data?.data?.passages ?? [], [passagesQuery.data])
   const highlight = useMemo(
     () => ({
       page: viewer.activePage ?? 0,
@@ -88,6 +89,16 @@ export function TraceCollapseView({
   const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
 
   const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
+
+  // 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다
+  const failedTraceListQueries = [pageNumbersQuery, passagesQuery, opinionsQuery].filter(
+    (query) => query.isError,
+  )
+  const isTraceListError = failedTraceListQueries.length > 0
+
+  const retryTraceList = () => {
+    for (const query of failedTraceListQueries) void query.refetch()
+  }
 
   // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
   //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
@@ -153,21 +164,27 @@ export function TraceCollapseView({
           })}
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
-        <TraceListSection
-          traces={traces}
-          traceCount={traceCount}
-          isMasked={isTraceListMasked}
-          sortType={sortType}
-          onToggleSort={() => {
-            setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
-          }}
-          onToggleComment={toggleCommentBar}
-          onSelectTrace={(trace) => {
-            setSelectedTraceId(trace.opinionId)
-          }}
-        />
-        {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
-        <div ref={traceLoadMoreRef} aria-hidden className="h-px w-full" />
+        {isTraceListError ? (
+          <TraceListError onRetry={retryTraceList} />
+        ) : (
+          <>
+            <TraceListSection
+              traces={traces}
+              traceCount={traceCount}
+              isMasked={isTraceListMasked}
+              sortType={sortType}
+              onToggleSort={() => {
+                setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
+              }}
+              onToggleComment={toggleCommentBar}
+              onSelectTrace={(trace) => {
+                setSelectedTraceId(trace.opinionId)
+              }}
+            />
+            {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
+            <div ref={traceLoadMoreRef} aria-hidden className="h-px w-full" />
+          </>
+        )}
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
       {isCommentBarOpen && <CommentBar />}
