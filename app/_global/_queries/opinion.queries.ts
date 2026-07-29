@@ -20,9 +20,19 @@ export type OpinionLikeState = {
 
 const OPINION_PAGE_SIZE = 20
 
+/**
+ * 서버 프리페치에서 요청 스코프 인증 헤더를 넣기 위한 fetch 옵션(브라우저에서는 생략).
+ * queryKey에는 넣지 않는다 — 서버/클라이언트가 같은 캐시 엔트리를 공유해야 한다.
+ */
+type FetchOptions = Parameters<typeof getOpinions>[2]
+
 export const opinionQueries = {
   all: () => ['opinion'] as const,
-  listByPassage: (passageId: number | undefined, sortType: OpinionSortType) =>
+  listByPassage: (
+    passageId: number | undefined,
+    sortType: OpinionSortType,
+    options?: FetchOptions,
+  ) =>
     infiniteQueryOptions({
       queryKey: [...opinionQueries.all(), 'by-passage', passageId, sortType],
       // 정렬·대목 전환 시 이전 목록을 유지해 "0개의 흔적" 깜빡임을 막는다
@@ -31,7 +41,11 @@ export const opinionQueries = {
         passageId === undefined
           ? skipToken
           : ({ pageParam }) =>
-              getOpinions(passageId, { sortType, page: pageParam, size: OPINION_PAGE_SIZE }),
+              getOpinions(
+                passageId,
+                { sortType, page: pageParam, size: OPINION_PAGE_SIZE },
+                options,
+              ),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
