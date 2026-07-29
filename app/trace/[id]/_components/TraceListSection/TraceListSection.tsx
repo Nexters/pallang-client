@@ -1,5 +1,3 @@
-import type { RefObject } from 'react'
-
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
@@ -14,8 +12,6 @@ type TraceListSectionProps = {
   /** 스포일러 대목이 가림막 해제 전일 때 목록을 블러 처리한다 */
   isMasked: boolean
   sortType: OpinionSortType
-  /** 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다 */
-  loadMoreRef: RefObject<HTMLDivElement | null>
   onToggleSort: () => void
   onToggleComment: () => void
   onSelectTrace: (trace: Trace) => void
@@ -26,7 +22,6 @@ export function TraceListSection({
   traceCount,
   isMasked,
   sortType,
-  loadMoreRef,
   onToggleSort,
   onToggleComment,
   onSelectTrace,
@@ -71,8 +66,6 @@ export function TraceListSection({
           </li>
         ))}
       </ul>
-      {/* 목록 여백(pb-10)을 건드리지 않도록 높이는 1px만 차지한다 */}
-      <div ref={loadMoreRef} aria-hidden className="h-px w-full" />
     </section>
   )
 }

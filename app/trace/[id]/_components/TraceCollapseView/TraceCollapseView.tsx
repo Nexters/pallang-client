@@ -159,7 +159,6 @@ export function TraceCollapseView({
           traceCount={traceCount}
           isMasked={isTraceListMasked}
           sortType={sortType}
-          loadMoreRef={traceLoadMoreRef}
           onToggleSort={() => {
             setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
           }}
@@ -168,6 +167,8 @@ export function TraceCollapseView({
             setSelectedTraceId(trace.opinionId)
           }}
         />
+        {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
+        <div ref={traceLoadMoreRef} aria-hidden className="h-px w-full" />
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
       {isCommentBarOpen && <CommentBar />}
