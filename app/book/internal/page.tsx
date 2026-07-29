@@ -1,13 +1,14 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
+import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 
 import { BookInternalPageSkeleton } from './_components/BookInternalPageSkeleton/BookInternalPageSkeleton'
@@ -35,28 +36,14 @@ export default function BookPage() {
   const shouldShowNextPageError = isError && books.length > 0
   const shouldShowEmptyState = !isDebouncing && !isFetching && books.length === 0
 
-  useEffect(() => {
-    const target = loadMoreRef.current
-    const scrollRoot = scrollRef.current
-    if (!target || !scrollRoot || !canObserveLoadMore) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void fetchNextPage()
-        }
-      },
-      {
-        root: scrollRoot,
-        rootMargin: '160px 0px',
-      },
-    )
-
-    observer.observe(target)
-    return () => {
-      observer.disconnect()
-    }
-  }, [canObserveLoadMore, fetchNextPage])
+  useLoadMoreOnVisible({
+    targetRef: loadMoreRef,
+    rootRef: scrollRef,
+    enabled: canObserveLoadMore,
+    onLoadMore: () => {
+      void fetchNextPage()
+    },
+  })
 
   if (shouldShowPageSkeleton) return <BookInternalPageSkeleton />
 

@@ -15,6 +15,7 @@ export function QuoteStage({
   isRevealed,
   isCollapsed,
   onSelectPage,
+  onLoadMorePages,
   onClickQuote,
 }: QuoteStageProps) {
   const quote = highlight.quotes[quoteIndex] ?? ''
@@ -33,6 +34,7 @@ export function QuoteStage({
             pages={pages}
             activePage={highlight.page}
             onSelect={onSelectPage}
+            onLoadMore={onLoadMorePages}
             className={styles['tabs']}
           />
         </div>

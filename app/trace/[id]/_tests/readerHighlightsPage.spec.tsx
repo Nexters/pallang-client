@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
@@ -37,7 +37,18 @@ const passageSeedByPage: Record<
     { passageId: 72, quotedText: '두 번째 대목 인용문', isSpoiler: false },
   ],
   9: [{ passageId: 91, quotedText: '스포일러 대목 인용문', isSpoiler: true }],
+  15: [{ passageId: 151, quotedText: '흔적이 많은 대목 인용문', isSpoiler: false }],
 }
+
+// 흔적 한 페이지(20개)를 넘겨 페이지네이션을 태우기 위한 시드
+const manyOpinionSeed = Array.from({ length: 25 }, (_, index) => ({
+  opinionId: 100 + index,
+  userId: 5,
+  nickname: '기록광',
+  content: `많은 흔적 ${String(index + 1)}`,
+  likeCount: 0,
+  createdAt: '2026-07-18T09:00:00.000Z',
+}))
 
 const opinionSeedByPassage: Record<
   number,
@@ -88,34 +99,94 @@ const opinionSeedByPassage: Record<
       createdAt: '2026-07-19T09:00:00.000Z',
     },
   ],
+  151: manyOpinionSeed,
+}
+
+// happy-dom의 IntersectionObserver는 실제로 교차를 감지하지 않아, 테스트가 직접 트리거할 수 있게 갈아끼운다.
+const mountedObservers = new Set<MockIntersectionObserver>()
+
+class MockIntersectionObserver {
+  private readonly callback: IntersectionObserverCallback
+  private readonly targets = new Set<Element>()
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback
+    mountedObservers.add(this)
+  }
+
+  observe(target: Element) {
+    this.targets.add(target)
+  }
+
+  unobserve(target: Element) {
+    this.targets.delete(target)
+  }
+
+  disconnect() {
+    this.targets.clear()
+    mountedObservers.delete(this)
+  }
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+
+  emitIntersection() {
+    const entries = [...this.targets].map(
+      (target) => ({ isIntersecting: true, target }) as IntersectionObserverEntry,
+    )
+    if (entries.length > 0) this.callback(entries, this as unknown as IntersectionObserver)
+  }
+}
+
+/** 관찰 중인 sentinel이 모두 화면에 들어온 것처럼 만든다 */
+function scrollSentinelsIntoView() {
+  act(() => {
+    mountedObservers.forEach((observer) => {
+      observer.emitIntersection()
+    })
+  })
 }
 
 // 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
 // 반환값은 페이지가 그리는 첫 요소인 스크롤 컨테이너다.
 async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
+  vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
       const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
+      if (pageMatch) {
+        const passages = passageSeedByPage[Number(pageMatch[1])] ?? []
+        return Promise.resolve(new Response(JSON.stringify({ data: { passages } })))
+      }
+
       const opinionMatch = /\/passages\/(\d+)\/opinions/.exec(url)
-      const opinions = opinionMatch ? (opinionSeedByPassage[Number(opinionMatch[1])] ?? []) : []
-      const body = pageMatch
-        ? { data: { passages: passageSeedByPage[Number(pageMatch[1])] ?? [] } }
-        : opinionMatch
-          ? {
+      if (opinionMatch) {
+        const seed = opinionSeedByPassage[Number(opinionMatch[1])] ?? []
+        const query = new URLSearchParams(url.split('?')[1] ?? '')
+        const size = Number(query.get('size') ?? '20')
+        const page = Number(query.get('page') ?? '0')
+        const offset = page * size
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
               data: {
-                opinions,
+                opinions: seed.slice(offset, offset + size),
                 pageInfo: {
-                  page: 0,
-                  size: 100,
-                  totalElements: opinions.length,
-                  totalPages: 1,
-                  hasNext: false,
+                  page,
+                  size,
+                  totalElements: seed.length,
+                  totalPages: Math.ceil(seed.length / size),
+                  hasNext: offset + size < seed.length,
                 },
               },
-            }
-          : { data: { pageNumbers: pages } }
-      return Promise.resolve(new Response(JSON.stringify(body)))
+            }),
+          ),
+        )
+      }
+
+      return Promise.resolve(new Response(JSON.stringify({ data: { pageNumbers: pages } })))
     }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -136,6 +207,7 @@ describe('ReaderHighlightsPage', () => {
   })
 
   afterEach(() => {
+    mountedObservers.clear()
     vi.unstubAllGlobals()
   })
 
@@ -160,6 +232,25 @@ describe('ReaderHighlightsPage', () => {
     expect(await screen.findByText('첫 대목의 첫 번째 흔적')).toBeInTheDocument()
     expect(screen.getByText('2개의 흔적')).toBeInTheDocument()
     expect(screen.queryByText('두 번째 대목의 흔적')).not.toBeInTheDocument()
+  })
+
+  it('흔적이 한 페이지를 넘으면 헤더는 전체 개수를 보여주고 목록은 첫 페이지만 그린다', async () => {
+    await renderPage([15])
+
+    expect(await screen.findByText('많은 흔적 1')).toBeInTheDocument()
+    expect(screen.getByText('25개의 흔적')).toBeInTheDocument()
+    expect(screen.getByText('많은 흔적 20')).toBeInTheDocument()
+    expect(screen.queryByText('많은 흔적 21')).not.toBeInTheDocument()
+  })
+
+  it('목록 끝에 닿으면 다음 흔적 페이지를 이어 붙여 전체를 탐색할 수 있다', async () => {
+    await renderPage([15])
+    await screen.findByText('많은 흔적 1')
+
+    scrollSentinelsIntoView()
+
+    expect(await screen.findByText('많은 흔적 25')).toBeInTheDocument()
+    expect(screen.getByText('많은 흔적 1')).toBeInTheDocument()
   })
 
   it('인용문을 전환하면 해당 대목의 흔적 목록으로 갱신된다', async () => {
