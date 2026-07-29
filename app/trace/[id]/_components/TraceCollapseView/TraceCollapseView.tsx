@@ -68,6 +68,12 @@ export function TraceCollapseView({
 
   const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
 
+  // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
+  //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
+  // TODO(#49): 해제 상태 유지 범위 미확정 — 현재는 페이지 단위 유지라(useHighlightViewer.isRevealed)
+  //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
+  const isTraceListMasked = Boolean(activePassage?.isSpoiler) && !viewer.isRevealed
+
   const openCommentBar = () => {
     gate.runWithLogin(() => {
       setIsCommentBarOpen(true)
@@ -107,6 +113,7 @@ export function TraceCollapseView({
         <TraceListSection
           traces={traces}
           traceCount={traceCount}
+          isMasked={isTraceListMasked}
           sortType={sortType}
           onToggleSort={() => {
             setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))

@@ -78,6 +78,16 @@ const opinionSeedByPassage: Record<
       createdAt: '2026-07-20T09:00:00.000Z',
     },
   ],
+  91: [
+    {
+      opinionId: 4,
+      userId: 4,
+      nickname: '결말을아는자',
+      content: '스포일러 대목의 흔적',
+      likeCount: 1,
+      createdAt: '2026-07-19T09:00:00.000Z',
+    },
+  ],
 }
 
 // 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
@@ -188,6 +198,17 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(await screen.findByText('스포일러가 포함되어있어요!'))
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
     expect(screen.getByText('스포일러 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('스포일러 대목의 흔적 목록은 가려지고, 가림막을 해제하면 함께 노출된다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    const maskedTrace = await screen.findByText('스포일러 대목의 흔적')
+    expect(maskedTrace.closest('ul')).toHaveAttribute('aria-hidden', 'true')
+
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+    expect(maskedTrace.closest('ul')).not.toHaveAttribute('aria-hidden')
   })
 
   it('로그인 상태에서 댓글 입력이 바로 열린다', async () => {
