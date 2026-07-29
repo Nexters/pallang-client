@@ -3,11 +3,12 @@ import { useSyncExternalStore } from 'react'
 import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
-import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 
 type TraceItemProps = {
   trace: Trace
@@ -49,7 +50,7 @@ export function TraceItem({ trace, onSelect }: TraceItemProps) {
             aria-label="좋아요"
             aria-pressed={isLiked}
             onClick={() => {
-              runWithLogin(toggle)
+              runWithLogin(toggle, LOGIN_GATE_MESSAGE.like)
             }}
             className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >

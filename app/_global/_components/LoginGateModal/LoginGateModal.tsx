@@ -1,9 +1,11 @@
 type LoginGateModalProps = {
+  /** 막힌 액션에 맞는 안내 문구 — 문구 선택은 게이트를 호출한 쪽이 정한다 */
+  message: string
   onLogin: () => void
   onClose: () => void
 }
 
-export function LoginGateModal({ onLogin, onClose }: LoginGateModalProps) {
+export function LoginGateModal({ message, onLogin, onClose }: LoginGateModalProps) {
   return (
     // 의견 상세 오버레이(z-20) 안에서 댓글 작성 게이트로도 뜨므로 그 위(z-30)에 그린다
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-6">
@@ -12,9 +14,7 @@ export function LoginGateModal({ onLogin, onClose }: LoginGateModalProps) {
         aria-modal="true"
         className="flex w-full max-w-78 flex-col gap-4 rounded-[12px] bg-white p-6 text-center"
       >
-        <p className="text-title-16sb text-text-secondary">
-          해당 페이지부터는 로그인해야 확인할 수 있어요!
-        </p>
+        <p className="text-title-16sb text-text-secondary">{message}</p>
         <button
           type="button"
           onClick={onLogin}

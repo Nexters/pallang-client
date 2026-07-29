@@ -3,7 +3,9 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { use, useMemo, useRef, useState } from 'react'
 
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -12,7 +14,6 @@ import { bookTitle } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
-import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
 import { TraceListError } from '../TraceListError/TraceListError'
@@ -40,7 +41,10 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
     pageNumbersQuery.hasNextPage &&
     !pageNumbersQuery.isError &&
     !pageNumbersQuery.isFetchingNextPage
-  const viewer = useHighlightViewer(runWithLogin, pages[0])
+  // 기본 문구가 범용이라 페이지 탭 게이트는 전용 문구를 명시적으로 넘긴다
+  const viewer = useHighlightViewer((action) => {
+    runWithLogin(action, LOGIN_GATE_MESSAGE.pageView)
+  }, pages[0])
   const passagesQuery = useQuery({
     ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
     enabled: viewer.activePage !== undefined,
@@ -108,7 +112,7 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   const openCommentBar = () => {
     runWithLogin(() => {
       setIsCommentBarOpen(true)
-    })
+    }, LOGIN_GATE_MESSAGE.traceCreate)
   }
 
   const toggleCommentBar = () => {
