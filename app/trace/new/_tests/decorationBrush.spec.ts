@@ -48,6 +48,15 @@ describe('decorationBrushStyle', () => {
     expect(style.backgroundColor).toBe('color-mix(in srgb, #FFA600 40%, transparent)')
   })
 
+  it('동그라미만 세로 패딩으로 배경 영역을 넓힌다', () => {
+    // 인라인 박스가 낮아 타원의 위아래 호가 잘린다. 세로 패딩은 줄 배치를 바꾸지 않고
+    // 배경 영역만 넓힌다. 가로 패딩은 글자를 밀어 드래그 좌표를 어긋나게 하므로 없어야 한다.
+    const circle = decorationBrushStyle(decoration('CIRCLE', '#ED6243'))
+    expect(circle.paddingBlock).toBe('0.45em')
+    expect(circle.paddingInline).toBeUndefined()
+    expect(decorationBrushStyle(decoration('WAVY', '#ED6243')).paddingBlock).toBeUndefined()
+  })
+
   it('점선만 반복해 깔고 나머지는 한 번만 그린다', () => {
     expect(decorationBrushStyle(decoration('DOTTED', '#ED6243')).backgroundRepeat).toBe('repeat-x')
     expect(decorationBrushStyle(decoration('WAVY', '#ED6243')).backgroundRepeat).toBe('no-repeat')
