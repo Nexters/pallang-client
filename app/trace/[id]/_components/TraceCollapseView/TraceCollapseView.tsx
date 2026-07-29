@@ -26,9 +26,9 @@ type TraceCollapseViewProps = {
 
 export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
-  const { stageStyle, isCollapsed, handleScroll } = useQuoteCollapse()
   const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
+  const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
   const traceLoadMoreRef = useRef<HTMLDivElement>(null)
   const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
   const pages = useMemo(
@@ -126,9 +126,12 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
     <>
       <div
         ref={scrollerRef}
-        onScroll={handleScroll}
         style={stageStyle}
-        className={cn('min-h-0 flex-1 overflow-y-auto', styles['scroller'])}
+        className={cn(
+          'min-h-0 flex-1',
+          styles['scroller'],
+          !isCollapsed && styles['scrollerLocked'],
+        )}
       >
         <div className={styles['stageAnchor']}>
           <QuoteStage
@@ -151,8 +154,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
             }}
           />
         </div>
-        <div aria-hidden className={styles['stageSpacerHead']} />
-        <div aria-hidden className={styles['stageSpacerTail']} />
+        <div aria-hidden className={styles['stageSpacer']} />
         {isTraceListError ? (
           <TraceListError className={styles['listArea']} onRetry={retryTraceList} />
         ) : (

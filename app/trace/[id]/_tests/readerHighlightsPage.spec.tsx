@@ -6,7 +6,7 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
-import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
+import { COLLAPSE_ANIMATION_MS } from '../_services/quoteCollapse.service'
 
 const { pushMock, replaceMock, authState } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -138,6 +138,13 @@ class MockIntersectionObserver {
     )
     if (entries.length > 0) this.callback(entries, this as unknown as IntersectionObserver)
   }
+}
+
+/** 접힘/펼침 애니메이션(rAF 기반)이 끝날 때까지 act 안에서 기다린다 */
+async function waitForCollapseAnimation() {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, COLLAPSE_ANIMATION_MS + 150))
+  })
 }
 
 /** 관찰 중인 sentinel이 모두 화면에 들어온 것처럼 만든다 */
@@ -391,23 +398,38 @@ describe('ReaderHighlightsPage', () => {
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
   })
 
-  it('스크롤 진행률을 CSS 변수로 흘려보내고, 전환 도중에는 페이지 탭을 남겨둔다', async () => {
+  it('아래로 스크롤 제스처 한 번에 접힘 전환이 완료되고 페이지 탭이 사라진다', async () => {
     const scroller = await renderPage()
 
-    fireEvent.scroll(scroller, { target: { scrollTop: COLLAPSE_DISTANCE / 2 } })
-    expect(scroller.style.getPropertyValue('--collapse')).toBe('0.5')
+    fireEvent.wheel(scroller, { deltaY: 120 })
+    await waitForCollapseAnimation()
+
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
+    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
+  })
+
+  it('목록 최상단에서 위로 스크롤하면 펼침으로 돌아와 페이지 탭이 다시 보인다', async () => {
+    const scroller = await renderPage()
+    fireEvent.wheel(scroller, { deltaY: 120 })
+    await waitForCollapseAnimation()
+
+    fireEvent.wheel(scroller, { deltaY: -120 })
+    await waitForCollapseAnimation()
+
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('0')
     expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 
-  it('전환이 끝나면 페이지 탭이 사라지고, 최상단 복귀 시 다시 보인다', async () => {
+  it('목록 중간에서는 위로 스크롤해도 펼침으로 돌아가지 않는다', async () => {
     const scroller = await renderPage()
+    fireEvent.wheel(scroller, { deltaY: 120 })
+    await waitForCollapseAnimation()
 
-    fireEvent.scroll(scroller, { target: { scrollTop: COLLAPSE_DISTANCE } })
+    scroller.scrollTop = 100
+    fireEvent.wheel(scroller, { deltaY: -120 })
+    await waitForCollapseAnimation()
+
     expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
-
-    fireEvent.scroll(scroller, { target: { scrollTop: 0 } })
-    expect(scroller.style.getPropertyValue('--collapse')).toBe('0')
-    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 })

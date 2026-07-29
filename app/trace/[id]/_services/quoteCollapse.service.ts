@@ -52,10 +52,41 @@ export const INDICATOR_TOP_EXPANDED = STAGE_EXPANDED - STAGE_PADDING_BOTTOM - IN
 export const INDICATOR_RISE =
   INDICATOR_TOP_EXPANDED - (STAGE_COLLAPSED - PANEL_PADDING_BOTTOM - INDICATOR_HEIGHT)
 
-/** 스크롤 위치를 0~1 전환 진행률로 환산한다 */
-export function getCollapseProgress(scrollTop: number) {
-  // iOS 러버밴딩에서는 scrollTop이 음수로 들어온다
-  if (scrollTop <= 0) return 0
-  if (scrollTop >= COLLAPSE_DISTANCE) return 1
-  return scrollTop / COLLAPSE_DISTANCE
+/* 전환은 스크롤 스크럽이 아니라 상태 점프 한 번이다(#76).
+   스크럽은 관성 세기에 따라 전환이 통째로 건너뛰어지거나(플릭 한 번에 목록 바닥까지)
+   어중간한 중간 상태에 걸렸다. 점프 방식은 제스처 의도만 읽고 시간 기반 애니메이션으로 전환한다. */
+
+/** 접힘 전환 애니메이션 길이(ms) — 포스트잇 접히는 손맛과 목록 대기 시간 사이 절충 */
+export const COLLAPSE_ANIMATION_MS = 350
+
+/** 빠르게 시작해 부드럽게 멎는 감속 이징 */
+export function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3
+}
+
+/** 트랙패드 미세 흔들림을 전환으로 오인하지 않는 휠 최소 크기(px) */
+export const WHEEL_TRIGGER_DELTA = 10
+/** 접힘을 일으키는 터치 드래그 최소 거리 — 작아야 첫 스와이프가 즉각 반응한다 */
+export const TOUCH_COLLAPSE_DRAG = 24
+/** 펼침을 일으키는 터치 드래그 최소 거리 — 목록을 최상단으로 되돌린 직후 오작동하지 않게 접힘보다 크다 */
+export const TOUCH_EXPAND_DRAG = 48
+
+export type TransitionIntent = 'collapse' | 'expand' | null
+
+/** 제스처가 상태 전환을 일으키는지 판정한다.
+    - 펼침 상태에서 아래로 스크롤 의도 → 접힘
+    - 접힘 상태 + 목록 최상단에서 위로 스크롤 의도 → 펼침
+    - 목록 중간에서는 어떤 제스처도 전환을 일으키지 않는다(목록 스크롤은 완전 네이티브) */
+export function getTransitionIntent(input: {
+  isCollapsed: boolean
+  /** 아래로 스크롤하려는 방향이 양수(px) */
+  scrollIntent: number
+  isListAtTop: boolean
+  collapseThreshold: number
+  expandThreshold: number
+}): TransitionIntent {
+  const { isCollapsed, scrollIntent, isListAtTop, collapseThreshold, expandThreshold } = input
+  if (!isCollapsed && scrollIntent >= collapseThreshold) return 'collapse'
+  if (isCollapsed && isListAtTop && -scrollIntent >= expandThreshold) return 'expand'
+  return null
 }
