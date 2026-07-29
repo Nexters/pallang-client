@@ -5,8 +5,7 @@ import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import SettingIcon from '@/app/_global/_components/Icon/assets/setting.svg'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
 
-import { mockRecentTraces } from '../../_data/myUser.constant'
-import type { MyUser } from '../../_types/myUser.type'
+import type { MyTrace, MyUser } from '../../_types/myUser.type'
 
 const loggedInSettings = [
   '공지사항',
@@ -20,11 +19,12 @@ const loggedOutSettings = ['공지사항', '개인정보 처리 방침', '서비
 
 type MyPageViewProps = {
   user: MyUser | null
+  recentTraces?: MyTrace[]
   onLoginClick?: () => void
   onLogout?: () => void
 }
 
-export function MyPageView({ user, onLoginClick, onLogout }: MyPageViewProps) {
+export function MyPageView({ user, recentTraces = [], onLoginClick, onLogout }: MyPageViewProps) {
   return (
     <TabScreenLayout
       aria-label="마이페이지"
@@ -35,7 +35,7 @@ export function MyPageView({ user, onLoginClick, onLogout }: MyPageViewProps) {
         <h1 className="text-title-18sb font-bold text-text-secondary">마이페이지</h1>
       </header>
       {user ? (
-        <LoggedInContent user={user} onLogout={onLogout} />
+        <LoggedInContent user={user} recentTraces={recentTraces} onLogout={onLogout} />
       ) : (
         <LoggedOutContent onLoginClick={onLoginClick} />
       )}
@@ -43,7 +43,15 @@ export function MyPageView({ user, onLoginClick, onLogout }: MyPageViewProps) {
   )
 }
 
-function LoggedInContent({ user, onLogout }: { user: MyUser; onLogout?: () => void }) {
+function LoggedInContent({
+  user,
+  recentTraces,
+  onLogout,
+}: {
+  user: MyUser
+  recentTraces: MyTrace[]
+  onLogout?: () => void
+}) {
   return (
     <div className="flex flex-1 flex-col gap-8 py-4">
       <section className="flex items-center gap-3 px-4">
@@ -79,19 +87,26 @@ function LoggedInContent({ user, onLogout }: { user: MyUser; onLogout?: () => vo
         </button>
       </section>
 
-      <section className="flex flex-col gap-6 px-4">
-        <h2 className="text-body-16bd text-text-primary">{user.nickname}님이 최근에 남긴 흔적</h2>
-        <ul className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
-          {/* ponytail: 흔적 목록 API 미연동(#57 제외 범위) — 배경색 placeholder */}
-          {mockRecentTraces.map((trace) => (
-            <li
-              key={trace.id}
-              title={trace.title}
-              className="h-27 w-18 shrink-0 rounded-xs bg-bg-book-card"
-            />
-          ))}
-        </ul>
-      </section>
+      {recentTraces.length > 0 && (
+        <section className="flex flex-col gap-6 px-4">
+          <h2 className="text-body-16bd text-text-primary">{user.nickname}님이 최근에 남긴 흔적</h2>
+          <ul className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
+            {recentTraces.map((trace) => (
+              <li
+                key={trace.id}
+                title={trace.title}
+                className="h-27 w-18 shrink-0 overflow-hidden rounded-xs bg-bg-book-card"
+              >
+                {trace.coverImageUrl && (
+                  // 외부 이미지 도메인이 유동적이라 next/image 대신 img 사용
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={trace.coverImageUrl} alt="" className="size-full object-cover" />
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <SettingSection items={loggedInSettings} onLogout={onLogout} />
 

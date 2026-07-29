@@ -13,6 +13,10 @@ export function MyPageContent() {
   const router = useRouter()
   const { status, isAuthenticated, signOut } = useAuth()
   const { data, isError } = useQuery({ ...userQueries.me(), enabled: isAuthenticated })
+  const { data: opinionsData } = useQuery({
+    ...userQueries.myOpinions(),
+    enabled: isAuthenticated,
+  })
 
   const me = data?.data
 
@@ -25,9 +29,17 @@ export function MyPageContent() {
       ? { nickname: me.nickname, traceCount: me.opinionCount, profileImageUrl: me.profileImageUrl }
       : null
 
+  const recentTraces =
+    opinionsData?.data?.opinions.map((opinion) => ({
+      id: opinion.opinionId,
+      title: opinion.bookTitle,
+      coverImageUrl: opinion.bookCoverImageUrl,
+    })) ?? []
+
   return (
     <MyPageView
       user={user}
+      recentTraces={recentTraces}
       onLoginClick={() => {
         router.push(LOGIN_PATH)
       }}
