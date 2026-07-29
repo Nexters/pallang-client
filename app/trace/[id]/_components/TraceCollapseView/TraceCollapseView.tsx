@@ -1,8 +1,17 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { type CSSProperties, type ReactNode, type UIEvent, use, useMemo, useState } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import {
+  type CSSProperties,
+  type ReactNode,
+  type UIEvent,
+  use,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
+import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -37,8 +46,17 @@ export function TraceCollapseView({
   const { id } = use(params)
   const bookId = Number(id)
   const gate = useLoginGate()
-  const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
-  const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const traceLoadMoreRef = useRef<HTMLDivElement>(null)
+  const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
+  const pages = useMemo(
+    () => pageNumbersQuery.data?.pages.flatMap((page) => page.data?.pageNumbers ?? []) ?? [],
+    [pageNumbersQuery.data],
+  )
+  const canLoadMorePages =
+    pageNumbersQuery.hasNextPage &&
+    !pageNumbersQuery.isError &&
+    !pageNumbersQuery.isFetchingNextPage
   const viewer = useHighlightViewer(gate.runWithLogin, pages[0])
   const { data: passagesData } = useQuery({
     ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
@@ -60,11 +78,15 @@ export function TraceCollapseView({
   const [sortType, setSortType] = useState<OpinionSortType>('LATEST')
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
 
-  const { data: opinionsData } = useQuery(
+  const opinionsQuery = useInfiniteQuery(
     opinionQueries.listByPassage(activePassage?.passageId, sortType),
   )
-  const traces = opinionsData?.data?.opinions ?? []
-  const traceCount = opinionsData?.data?.pageInfo.totalElements ?? 0
+  const traces = useMemo(
+    () => opinionsQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
+    [opinionsQuery.data],
+  )
+  // 헤더 숫자는 서버가 알려준 전체 개수라, 목록을 끝까지 불러오면 둘이 맞는다
+  const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
 
   const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
 
@@ -73,6 +95,22 @@ export function TraceCollapseView({
   // TODO(#49): 해제 상태 유지 범위 미확정 — 현재는 페이지 단위 유지라(useHighlightViewer.isRevealed)
   //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
   const isTraceListMasked = Boolean(activePassage?.isSpoiler) && !viewer.isRevealed
+
+  // placeholderData로 이전 대목의 목록이 보이는 동안에는 다음 페이지를 당기지 않는다
+  const canFetchMoreTraces =
+    opinionsQuery.hasNextPage &&
+    !opinionsQuery.isError &&
+    !opinionsQuery.isFetchingNextPage &&
+    !opinionsQuery.isPlaceholderData
+
+  useLoadMoreOnVisible({
+    targetRef: traceLoadMoreRef,
+    rootRef: scrollerRef,
+    enabled: canFetchMoreTraces && !isTraceListMasked,
+    onLoadMore: () => {
+      void opinionsQuery.fetchNextPage()
+    },
+  })
 
   const openCommentBar = () => {
     gate.runWithLogin(() => {
@@ -91,6 +129,7 @@ export function TraceCollapseView({
   return (
     <>
       <div
+        ref={scrollerRef}
         onScroll={onScroll}
         style={stageStyle}
         className={cn('min-h-0 flex-1 overflow-y-auto', styles['scroller'])}
@@ -104,6 +143,11 @@ export function TraceCollapseView({
             isRevealed: viewer.isRevealed,
             isCollapsed,
             onSelectPage: viewer.select,
+            onLoadMorePages: canLoadMorePages
+              ? () => {
+                  void pageNumbersQuery.fetchNextPage()
+                }
+              : undefined,
             onClickQuote: () => {
               viewer.clickCard(highlight)
             },
@@ -115,6 +159,7 @@ export function TraceCollapseView({
           traceCount={traceCount}
           isMasked={isTraceListMasked}
           sortType={sortType}
+          loadMoreRef={traceLoadMoreRef}
           onToggleSort={() => {
             setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
           }}
@@ -135,6 +180,10 @@ export function TraceCollapseView({
           onNavigate={(next) => {
             const target = traces[next]
             if (target) setSelectedTraceId(target.opinionId)
+            // 상세에서도 마지막 흔적에 닿으면 다음 페이지를 이어 붙인다
+            if (next >= traces.length - 1 && canFetchMoreTraces) {
+              void opinionsQuery.fetchNextPage()
+            }
           }}
           onClose={() => {
             setSelectedTraceId(null)
