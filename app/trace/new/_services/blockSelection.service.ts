@@ -32,3 +32,24 @@ export function selectIndicesInRect(blocks: BlockBox[], rect: Rect): number[] {
     return indices
   }, [])
 }
+
+export type ToggleMode = 'add' | 'remove'
+
+/**
+ * 제스처가 처음 닿은 블록의 상태로 모드를 정한다.
+ * 이미 고른 블록에서 시작하면 그 제스처는 해제만, 아니면 추가만 한다.
+ * (한 제스처가 블록마다 뒤집으면 지나간 자리가 뒤죽박죽이 된다.)
+ */
+export function resolveToggleMode(selected: number[], touched: number[]): ToggleMode {
+  const first = touched[0]
+  return first !== undefined && selected.includes(first) ? 'remove' : 'add'
+}
+
+/** 제스처가 시작될 때의 선택에 지나간 블록을 더하거나 뺀다. 결과는 읽기 순서를 유지한다. */
+export function applyToggle(base: number[], swept: number[], mode: ToggleMode): number[] {
+  const sweptSet = new Set(swept)
+  const kept = base.filter((index) => mode === 'add' || !sweptSet.has(index))
+  if (mode === 'remove') return kept
+  const baseSet = new Set(base)
+  return [...kept, ...swept.filter((index) => !baseSet.has(index))].sort((a, b) => a - b)
+}
