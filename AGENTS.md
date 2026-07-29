@@ -90,6 +90,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **`next dev`는 WKWebView에서 하이드레이션이 안 된다**(브라우저·Android는 정상). 웹뷰/기기 테스트는 `pnpm build && pnpm start`(프로덕션)로 한다.
 - **(iOS)** Xcode GUI로 프로젝트를 열면 pbxproj가 손상되어 `Undefined symbol: _main`이 난다. `ios/`를 재생성하고 `xcodebuild`/`cap` CLI로 빌드한다.
 - **(Android)** APK 빌드에 **JDK 21** 필요(카메라 플러그인 요구). dev(http) 로드는 debug 매니페스트의 `usesCleartextTraffic`로 허용.
+- **네이티브가 준 파일 경로(`capacitor://localhost/...`)를 `fetch`로 읽을 수 없다.** 원격 URL을 로드하므로 교차 오리진이다. 카메라·파일 플러그인은 경로 대신 데이터(`DataUrl` 등)로 받는다. 이미지 표시는 되고 바이트 읽기만 막혀서 놓치기 쉽다.
 
 기기에서 dev 서버를 띄울 때 LAN IP는 네트워크마다 바뀐다. IP를 앱에 하드코딩하지 말고 스크립트로 현재 IP를 자동 감지해 실행한다:
 
