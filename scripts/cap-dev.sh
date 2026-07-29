@@ -12,12 +12,12 @@
 #   scripts/cap-dev.sh android [경로]    # Android 에뮬레이터/기기
 #   scripts/cap-dev.sh sync-only [경로]  # 빌드/실행 없이 sync만
 #
-# [경로] 생략 시 "/camera-check" (기본 확인 화면). 예: scripts/cap-dev.sh ios /
+# [경로] 생략 시 "/" (홈). 예: scripts/cap-dev.sh ios /camera-check
 #
 set -euo pipefail
 
 PLATFORM="${1:-ios}"
-ROUTE="${2:-/camera-check}"
+ROUTE="${2:-/}"
 PORT="${PORT:-3000}"
 
 # --- 1. 현재 LAN IP 감지 (en0=Wi-Fi 우선, en1 폴백) ---
