@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  ApiError,
   customFetch,
   setAccessTokenGetter,
   setTokenRefresher,
 } from '@/app/_global/_apis/customFetch.api'
+import { ApiError } from '@/app/_global/_data/api.model'
 
 function mockFetch(response: Response) {
   const spy = vi.fn().mockResolvedValue(response)

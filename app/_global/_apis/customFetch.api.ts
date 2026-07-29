@@ -1,4 +1,5 @@
 // orval mutator — 생성된 fetch 함수가 이 함수를 경유한다.
+import { ApiError } from '@/app/_global/_data/api.model'
 import { TOKEN_EXPIRED_CODE } from '@/app/_global/_data/auth.constant'
 
 type ErrorBody = {
@@ -6,17 +7,6 @@ type ErrorBody = {
   title?: string
   status?: number
   detail?: string
-}
-
-export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-  ) {
-    super(message)
-    this.name = 'ApiError'
-  }
 }
 
 type AccessTokenGetter = () => string | null
