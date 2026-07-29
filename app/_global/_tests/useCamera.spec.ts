@@ -27,19 +27,23 @@ describe('useCamera', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
-  it('네이티브에서는 Camera.getPhoto를 CAMERA_OPTIONS로 호출하고 webPath를 반환한다', async () => {
+  it('네이티브에서는 Camera.getPhoto를 CAMERA_OPTIONS로 호출하고 webPath와 blob을 반환한다', async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
     vi.mocked(Camera.getPhoto).mockResolvedValue({
       webPath: 'capacitor://photo/1',
     } as Awaited<ReturnType<typeof Camera.getPhoto>>)
+    const mockBlob = new Blob(['photo'])
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ blob: () => Promise.resolve(mockBlob) }))
 
     const { takePhoto } = useCamera()
     const result = await takePhoto()
 
     expect(Camera.getPhoto).toHaveBeenCalledWith(CAMERA_OPTIONS)
-    expect(result).toEqual({ webPath: 'capacitor://photo/1' })
+    expect(fetch).toHaveBeenCalledWith('capacitor://photo/1')
+    expect(result).toEqual({ webPath: 'capacitor://photo/1', blob: mockBlob })
   })
 
   it('네이티브에서 webPath가 없으면 null을 반환한다', async () => {
@@ -63,7 +67,7 @@ describe('useCamera', () => {
     expect(input.getAttribute('capture')).toBe('environment')
   })
 
-  it('브라우저에서 change 이벤트가 발생하면 webPath를 가진 Photo를 반환한다', async () => {
+  it('브라우저에서 change 이벤트가 발생하면 webPath와 blob을 가진 Photo를 반환한다', async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false)
     const createEl = vi.spyOn(document, 'createElement')
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock')
@@ -74,7 +78,7 @@ describe('useCamera', () => {
     Object.defineProperty(input, 'files', { value: [file], configurable: true })
     input.dispatchEvent(new Event('change'))
 
-    expect(await photoPromise).toEqual({ webPath: 'blob:mock' })
+    expect(await photoPromise).toEqual({ webPath: 'blob:mock', blob: file })
   })
 
   it('브라우저에서 cancel 이벤트가 발생하면 null을 반환한다', async () => {

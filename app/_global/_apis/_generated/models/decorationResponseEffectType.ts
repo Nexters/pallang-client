@@ -9,4 +9,7 @@ export const DecorationResponseEffectType = {
   UNDERLINE: 'UNDERLINE',
   WAVY: 'WAVY',
   HIGHLIGHT: 'HIGHLIGHT',
+  DOTTED: 'DOTTED',
+  DOUBLE_LINE: 'DOUBLE_LINE',
+  CIRCLE: 'CIRCLE',
 } as const

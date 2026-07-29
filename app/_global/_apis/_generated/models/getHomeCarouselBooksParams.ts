@@ -4,11 +4,11 @@
 
 export type GetHomeCarouselBooksParams = {
   /**
-   * 페이지 번호 (0부터 시작, 기본값 0)
+   * 조회 시작 위치 (0부터 시작). 생략하면 전체 목록 중 가운데를 기준으로 조회
    */
-  page?: number
+  offset?: number
   /**
-   * 페이지 크기 (기본값 20, 최대 100)
+   * 조회 개수 (기본값 20, 최대 100)
    */
   size?: number
 }
