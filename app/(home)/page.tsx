@@ -3,6 +3,7 @@ import Link from 'next/link'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
+import { cn } from '@/app/_global/_services/cn.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
@@ -13,7 +14,7 @@ export default function Home() {
     <TabScreenLayout
       aria-label="홈"
       activeTab="home"
-      className={`overflow-y-auto ${GRID_BACKGROUND_CLASS_NAME}`}
+      className={cn('overflow-y-auto', GRID_BACKGROUND_CLASS_NAME)}
     >
       <div className="px-4 pt-4">
         <header className="flex items-center justify-between">
