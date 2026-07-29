@@ -19,6 +19,13 @@ const config: CapacitorConfig = {
     cleartext: serverUrl.startsWith('http://'),
     allowNavigation: [],
   },
+  plugins: {
+    // 인증 상태(로그인/비로그인) 결정 전까지 비로그인 화면이 깜빡 보이는 것 방지.
+    // AuthProvider가 초기화 완료 후 SplashScreen.hide()를 호출한다.
+    SplashScreen: {
+      launchAutoHide: false,
+    },
+  },
 }
 
 export default config
