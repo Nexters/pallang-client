@@ -125,6 +125,9 @@ export function TraceDecorateForm() {
               color={editing.decoration.color}
               left={editing.left}
               top={editing.top}
+              onClose={() => {
+                setEditing(null)
+              }}
               onRecolor={(color) => {
                 dispatch({
                   type: 'recolorDecoration',
