@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 
-import { KAKAO_AUTHORIZE_URL, KAKAO_CALLBACK_PATH, KAKAO_STATE_COOKIE } from '@/app/_global/_data/auth.constant'
+import {
+  KAKAO_AUTHORIZE_URL,
+  KAKAO_CALLBACK_PATH,
+  KAKAO_STATE_COOKIE,
+} from '@/app/_global/_data/auth.constant'
 
 // GET /api/auth/kakao/login
 // 카카오 authorize로 302 리다이렉트한다. REST 키는 서버에만 두고, CSRF 방지를 위해 state를 쿠키로 남긴다.
@@ -11,7 +15,11 @@ export function GET(request: Request): NextResponse {
   }
 
   const requestUrl = new URL(request.url)
-  const origin = requestUrl.origin
+  // request.url의 host는 Next가 localhost로 치환하므로 신뢰할 수 없다.
+  // 웹뷰(LAN IP) 접속 시 콜백이 localhost로 새는 것을 막기 위해 실제 요청 헤더로 origin을 만든다.
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host')
+  const proto = request.headers.get('x-forwarded-proto') ?? requestUrl.protocol.replace(':', '')
+  const origin = host ? `${proto}://${host}` : requestUrl.origin
   const redirectUri = `${origin}${KAKAO_CALLBACK_PATH}`
   const state = globalThis.crypto.randomUUID()
 
