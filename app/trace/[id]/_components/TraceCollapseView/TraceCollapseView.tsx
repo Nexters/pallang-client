@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { type CSSProperties, type ReactNode, type UIEvent, use, useMemo, useState } from 'react'
+import { use, useMemo, useState } from 'react'
 
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
@@ -10,32 +10,23 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { bookTitle } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useLoginGate } from '../../_hooks/useLoginGate'
-import type { QuoteStageProps } from '../../_types/readerHighlights.type'
+import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
 import { LoginGateModal } from '../LoginGateModal/LoginGateModal'
+import { QuoteStage } from '../QuoteStage/QuoteStage'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
 
 type TraceCollapseViewProps = {
   params: Promise<{ id: string }>
-  stageStyle: CSSProperties
-  isCollapsed: boolean
-  onScroll: (event: UIEvent<HTMLDivElement>) => void
-  /** 시안마다 다른 것은 상단 스테이지뿐이라 이 자리만 갈아 끼운다 */
-  renderStage: (props: QuoteStageProps) => ReactNode
 }
 
-export function TraceCollapseView({
-  params,
-  stageStyle,
-  isCollapsed,
-  onScroll,
-  renderStage,
-}: TraceCollapseViewProps) {
+export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   // use(params)는 서스펜드할 수 있어 페이지가 아니라 Suspense 안쪽인 여기서 언래핑한다
   const { id } = use(params)
   const bookId = Number(id)
+  const { stageStyle, isCollapsed, handleScroll } = useQuoteCollapse()
   const gate = useLoginGate()
   const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
   const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
@@ -91,26 +82,28 @@ export function TraceCollapseView({
   return (
     <>
       <div
-        onScroll={onScroll}
+        onScroll={handleScroll}
         style={stageStyle}
         className={cn('min-h-0 flex-1 overflow-y-auto', styles['scroller'])}
       >
         <div className={styles['stageAnchor']}>
-          {renderStage({
-            title: bookTitle,
-            pages,
-            highlight,
-            quoteIndex: viewer.quoteIndex,
-            isRevealed: viewer.isRevealed,
-            isCollapsed,
-            onSelectPage: viewer.select,
-            onClickQuote: () => {
+          <QuoteStage
+            title={bookTitle}
+            pages={pages}
+            highlight={highlight}
+            quoteIndex={viewer.quoteIndex}
+            isRevealed={viewer.isRevealed}
+            isCollapsed={isCollapsed}
+            onSelectPage={viewer.select}
+            onClickQuote={() => {
               viewer.clickCard(highlight)
-            },
-          })}
+            }}
+          />
         </div>
-        <div aria-hidden className={styles['stageSpacer']} />
+        <div aria-hidden className={styles['stageSpacerHead']} />
+        <div aria-hidden className={styles['stageSpacerTail']} />
         <TraceListSection
+          className={styles['listArea']}
           traces={traces}
           traceCount={traceCount}
           isMasked={isTraceListMasked}

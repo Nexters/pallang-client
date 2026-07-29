@@ -4,7 +4,7 @@ export type Highlight = {
   isSpoiler: boolean
 }
 
-/** 시안별 스테이지 컴포넌트가 공통으로 받는 props */
+/** 상단 스테이지(QuoteStage)가 받는 props */
 export type QuoteStageProps = {
   title: string
   pages: number[]
