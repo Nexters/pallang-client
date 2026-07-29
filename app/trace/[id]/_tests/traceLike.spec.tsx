@@ -2,8 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
-import { LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+
 import ReaderHighlightsPage from '../page'
 
 const { pushMock, authState } = vi.hoisted(() => ({

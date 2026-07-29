@@ -2,11 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import type { RootCommentResponse } from '@/app/_global/_queries/comment.queries'
 
-import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
 import { TraceDetailOverlay } from '../_components/TraceDetailOverlay/TraceDetailOverlay'
-import { LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
 
 const { authState } = vi.hoisted(() => ({ authState: { isAuthenticated: true } }))
 

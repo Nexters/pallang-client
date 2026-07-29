@@ -2,8 +2,8 @@
 
 import { createContext, type ReactNode, useContext } from 'react'
 
-import { useLoginGateState } from '../../_hooks/useLoginGateState'
-import { LoginGateModal } from '../LoginGateModal/LoginGateModal'
+import { LoginGateModal } from '@/app/_global/_components/LoginGateModal/LoginGateModal'
+import { useLoginGateState } from '@/app/_global/_hooks/useLoginGateState'
 
 /**
  * 로그인 상태면 action을 실행하고, 비로그인이면 로그인 유도 팝업을 띄운다.
@@ -13,7 +13,7 @@ type RunWithLogin = (action: () => void, message?: string) => void
 
 const LoginGateContext = createContext<RunWithLogin | null>(null)
 
-/** 흔적 보기 트리 전체가 로그인 게이트를 쓰므로 팝업과 게이트 함수를 이 자리에서 한 번만 준비한다 */
+/** 로그인이 필요한 액션은 앱 어디에나 있어 팝업과 게이트 함수를 루트 레이아웃에서 한 번만 준비한다 */
 export function LoginGateProvider({ children }: { children: ReactNode }) {
   const gate = useLoginGateState()
 

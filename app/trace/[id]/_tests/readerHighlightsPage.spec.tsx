@@ -2,8 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
-import { DEFAULT_LOGIN_GATE_MESSAGE, LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+
 import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
 import ReaderHighlightsPage from '../page'
 
@@ -291,7 +292,7 @@ describe('ReaderHighlightsPage', () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.getByText(DEFAULT_LOGIN_GATE_MESSAGE)).toBeInTheDocument()
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
     expect(pushMock).toHaveBeenCalledWith('/login')
@@ -306,7 +307,7 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.getByText(DEFAULT_LOGIN_GATE_MESSAGE)).toBeInTheDocument()
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
     expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
   })
 
@@ -314,7 +315,7 @@ describe('ReaderHighlightsPage', () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.queryByText(DEFAULT_LOGIN_GATE_MESSAGE)).not.toBeInTheDocument()
+    expect(screen.queryByText(LOGIN_GATE_MESSAGE.pageView)).not.toBeInTheDocument()
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 

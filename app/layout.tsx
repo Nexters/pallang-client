@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 
 import { AuthProvider } from '@/app/_global/_providers/AuthProvider/AuthProvider'
+import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { QueryProvider } from '@/app/_global/_providers/QueryProvider/QueryProvider'
 import { SplashProvider } from '@/app/_global/_providers/SplashProvider/SplashProvider'
 
@@ -50,7 +51,10 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <main className="relative mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
-              <SplashProvider>{children}</SplashProvider>
+              {/* 게이트가 로그인 상태를 읽어야 해서 AuthProvider 안쪽에 둔다 */}
+              <LoginGateProvider>
+                <SplashProvider>{children}</SplashProvider>
+              </LoginGateProvider>
             </main>
           </AuthProvider>
         </QueryProvider>

@@ -2,9 +2,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
+import { DEFAULT_LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
-
-import { DEFAULT_LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
 
 /**
  * 게이트 팝업의 열림 상태를 소유한다. 소비자는 LoginGateProvider의 useLoginGate를 쓴다.
