@@ -2,12 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
+import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { commentQueries } from '@/app/_global/_queries/comment.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { useCommentActions } from '../../_hooks/useCommentActions'
+import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
 import { CommentBar } from '../CommentBar/CommentBar'
@@ -37,6 +39,7 @@ export function TraceDetailOverlay({
   // 비로그인이면 me 조회가 실패해 myUserId가 없고, 수정·삭제 버튼이 숨겨진다
   const { data: meData } = useQuery(userQueries.me())
   const actions = useCommentActions(trace.opinionId)
+  const like = useOpinionLike(trace.opinionId, trace.likeCount)
 
   const comments = commentsData?.data?.comments ?? []
   const myUserId = meData?.data?.userId
@@ -78,9 +81,24 @@ export function TraceDetailOverlay({
       <QuotePanel quote={quote} />
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-5">
         <p className="text-body-16md text-text-inverse">{trace.content}</p>
-        <div className="flex items-center justify-between text-body-14rg text-text-inverse opacity-50">
-          <span>{formatTraceDate(trace.createdAt)}</span>
-          <span>공감 {formatLikeCount(trace.likeCount)}</span>
+        <div className="flex items-center justify-between text-body-14rg text-text-inverse">
+          <span className="opacity-50">{formatTraceDate(trace.createdAt)}</span>
+          <button
+            type="button"
+            aria-label="좋아요"
+            aria-pressed={like.isLiked}
+            onClick={() => {
+              runWithLogin(like.toggle)
+            }}
+            className="flex items-center gap-0.5"
+          >
+            <LikeIcon
+              width={20}
+              height={20}
+              className={like.isLiked ? 'text-icon-accent' : 'text-icon-active'}
+            />
+            공감 {formatLikeCount(like.likeCount)}
+          </button>
         </div>
         <p className="text-body-14sb text-text-inverse">댓글</p>
         {comments.map((comment) => (

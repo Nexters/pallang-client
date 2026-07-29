@@ -122,6 +122,7 @@ export function TraceCollapseView({
           onSelectTrace={(trace) => {
             setSelectedTraceId(trace.opinionId)
           }}
+          runWithLogin={gate.runWithLogin}
         />
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
