@@ -6,6 +6,7 @@ import { createContext, type ReactNode, useContext, useEffect, useRef, useState 
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { initAuthSession, signOut as signOutSession } from '@/app/_global/_queries/auth.queries'
 import { hasTokens, subscribeAuthTokens } from '@/app/_global/_services/authToken.service'
+import { hideSplashScreen } from '@/app/_global/_services/splashScreen.service'
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated'
 
@@ -37,7 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (active) setStatus(hasTokens() ? 'authenticated' : 'unauthenticated')
     }
     const unsubscribe = subscribeAuthTokens(sync)
-    void initAuthSession().then(sync)
+    // 초기화 실패 시에도 스플래시는 반드시 내린다(무한 스플래시 방지).
+    void initAuthSession().then(sync).finally(hideSplashScreen)
     return () => {
       active = false
       unsubscribe()

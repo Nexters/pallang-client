@@ -8,8 +8,8 @@ type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   author: string
   coverImageUrl?: null | string
   opinionCount: number
+  passageCount: number
   publisher?: string
-  traceCount: number
   title: string
 }
 
@@ -31,9 +31,9 @@ export function BookItem({
   className,
   coverImageUrl,
   opinionCount,
+  passageCount,
   publisher,
   title,
-  traceCount,
   ...props
 }: BookItemProps) {
   const description = publisher ? `${publisher} · ${author}` : author
@@ -59,7 +59,7 @@ export function BookItem({
           <p className="w-full truncate text-body-14md text-text-secondary/50">{description}</p>
         </div>
         <div className="flex items-center gap-1">
-          <BookStat icon="content" value={traceCount} />
+          <BookStat icon="content" value={passageCount} />
           <BookStat icon="pencil" value={opinionCount} />
         </div>
       </div>

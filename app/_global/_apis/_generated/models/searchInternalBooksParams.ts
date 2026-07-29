@@ -4,7 +4,7 @@
 
 export type SearchInternalBooksParams = {
   /**
-   * 검색 키워드
+   * 검색 키워드 (빈 문자열이면 전체 목록)
    */
   keyword: string
   /**
