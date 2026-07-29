@@ -102,7 +102,9 @@ export function OcrSelector() {
   const quotedText = clampQuote(selectedText, MAX_QUOTE_LENGTH)
 
   return (
-    <div className="flex flex-1 flex-col bg-bg-black">
+    // min-h-0이 없으면 사진이 세로로 길 때 flex 아이템이 콘텐츠 높이 아래로 줄지 못해
+    // 아래 시트가 화면 밖으로 밀린다
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-bg-black">
       {imageUrl ? (
         <OcrPhotoStage
           imageUrl={imageUrl}

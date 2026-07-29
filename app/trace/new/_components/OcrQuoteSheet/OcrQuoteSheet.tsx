@@ -16,7 +16,10 @@ type OcrQuoteSheetProps = {
 
 export function OcrQuoteSheet({ onClose, onRetake, onSubmit, quotedText }: OcrQuoteSheetProps) {
   return (
-    <section aria-label="발췌한 텍스트" className="flex flex-col rounded-t-[32px] bg-bg-default">
+    <section
+      aria-label="발췌한 텍스트"
+      className="flex shrink-0 flex-col rounded-t-[32px] bg-bg-default"
+    >
       <div className="flex flex-col gap-4 pt-6">
         <TopBar.Root>
           <TopBar.Title as="h1">사진으로 입력</TopBar.Title>
