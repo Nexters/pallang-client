@@ -8,6 +8,8 @@ import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { Textarea } from '@/app/_global/_components/Textarea/Textarea'
 import { ApiError } from '@/app/_global/_data/api.model'
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
@@ -19,6 +21,7 @@ export function TraceOpinionForm() {
   const { draft, dispatch } = useTraceDraft()
   const [message, setMessage] = useState('')
   const createOpinion = useMutation(opinionMutations.create())
+  const runWithLogin = useLoginGate()
 
   const handleSubmit = () => {
     if (!draft.book) return
@@ -51,6 +54,14 @@ export function TraceOpinionForm() {
         },
         onError: (error) => {
           // draft는 그대로 둔다. 여기서 날리면 사용자가 입력한 전부가 사라진다.
+          // 저장은 로그인이 필요하다. 일반 문구로 뭉개면 다시 눌러도 계속 실패한다.
+          if (error instanceof ApiError && error.status === 401) {
+            runWithLogin(() => {
+              // 로그인 상태인데도 401이면 토큰이 만료된 것이다. 다시 시도하도록 알린다.
+              setMessage('로그인 정보가 만료됐어요. 다시 시도해주세요.')
+            }, LOGIN_GATE_MESSAGE.traceCreate)
+            return
+          }
           if (
             error instanceof ApiError &&
             (error.code === 'PASSAGE_400_2' || error.code === 'PASSAGE_404_1')
