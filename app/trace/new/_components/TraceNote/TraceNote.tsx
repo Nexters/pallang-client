@@ -49,7 +49,11 @@ export function TraceNote({
       <p
         {...handlers}
         className={cn(
-          'text-body-20md h-full min-w-px flex-1 overflow-hidden whitespace-pre-wrap text-text-secondary',
+          'text-body-20md min-w-px flex-1 overflow-hidden whitespace-pre-wrap text-text-secondary',
+          // 동그라미 효과는 글자 사방으로 삐져나오는데 이 박스의 overflow-hidden에 잘린다.
+          // 음수 마진과 같은 크기의 패딩으로 글자 위치는 그대로 두고 잘리는 경계만 넓힌다.
+          // (z-index로는 안 된다 — overflow는 쌓임 순서와 무관하게 잘라낸다.)
+          '-mx-4 -my-3 h-[calc(100%+1.5rem)] px-4 py-3',
           selectable && 'touch-none select-none',
         )}
       >

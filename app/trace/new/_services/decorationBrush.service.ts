@@ -18,12 +18,28 @@ const BRUSH_BY_EFFECT: Record<Exclude<DraftEffectType, 'HIGHLIGHT'>, string> = {
 /** 글자를 감싸는 효과는 칸 전체로 늘이고, 밑줄 계열은 아랫단에 정해진 높이로 깐다. */
 const LAYOUT_BY_EFFECT: Record<
   Exclude<DraftEffectType, 'HIGHLIGHT'>,
-  Pick<CSSProperties, 'backgroundPosition' | 'backgroundRepeat' | 'backgroundSize'>
+  Pick<
+    CSSProperties,
+    | 'backgroundPosition'
+    | 'backgroundRepeat'
+    | 'backgroundSize'
+    | 'marginInline'
+    | 'paddingBlock'
+    | 'paddingInline'
+  >
 > = {
   CIRCLE: {
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     backgroundSize: '100% 100%',
+    // 자국은 아이콘용 원(30×27)이 아니라 글줄을 감싸도록 그려진 가로로 긴 손그림(2209:16733)이다.
+    // viewBox가 110×30인데 루프는 그 안쪽 4~106 / 2~28에만 있어, 칸에 그대로 늘이면
+    // 루프가 글자보다 안쪽으로 들어와 글자 끝을 가른다. 그만큼 칸을 넓혀 준다.
+    // 세로 패딩은 줄 배치를 바꾸지 않고 배경 영역만 넓히고(CSS 2.1 §10.8.1),
+    // 가로는 같은 크기의 음수 마진으로 글자 진행 폭을 0으로 상쇄해 글자 위치를 지킨다.
+    marginInline: '-0.7em',
+    paddingBlock: '0.3em',
+    paddingInline: '0.7em',
   },
   // 점은 늘이면 타원이 된다. 일정 간격으로 반복해 어느 길이에서도 동그랗게 유지한다.
   DOTTED: {

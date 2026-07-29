@@ -4,7 +4,9 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
+import type { Photo, PhotoSource } from '@/app/_global/_hooks/useCamera'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
@@ -17,7 +19,7 @@ import { OcrQuoteSheet } from '../OcrQuoteSheet/OcrQuoteSheet'
 
 type PositionedBlock = BlockBox & OcrBlock
 
-const OCR_FAILURE_MESSAGE = '글자를 읽지 못했어요. 다시 찍어주세요.'
+const OCR_FAILURE_MESSAGE = '사진에서 글자를 읽지 못했어요.\n다시 찍거나 갤러리에서 골라주세요.'
 
 const QUOTE_LIMIT_MESSAGE = `${String(MAX_QUOTE_LENGTH)}자까지만 담을 수 있어요.`
 
@@ -31,6 +33,8 @@ export function OcrSelector() {
   const [selected, setSelected] = useState<number[]>([])
   // 인식이 틀린 글자를 손으로 고친 값. null이면 선택한 블록에서 그대로 뽑아 쓴다.
   const [editedText, setEditedText] = useState<null | string>(null)
+  // 사진이 놓일 자리에 대신 띄우는 실패 안내. 갤러리로 이어서 진행할 수 있다.
+  const [failure, setFailure] = useState<null | string>(null)
   const [message, setMessage] = useState('')
   const started = useRef(false)
   const objectUrlRef = useRef<string | null>(null)
@@ -50,14 +54,28 @@ export function OcrSelector() {
     [],
   )
 
-  const runCapture = useCallback(async (isInitial: boolean) => {
-    const photo = await latestRef.current.takePhoto()
+  const runCapture = useCallback(async (isInitial: boolean, source: PhotoSource = 'camera') => {
+    let photo: null | Photo
+    try {
+      photo = await latestRef.current.takePhoto(source)
+    } catch (error) {
+      // 취소는 null로 오고 여기 오는 건 실제 실패다. 되돌리지 말고 대안을 보여준다.
+      console.error('사진을 가져오지 못했습니다.', error)
+      setFailure(
+        source === 'camera'
+          ? '카메라를 열지 못했어요.\n갤러리에서 사진을 골라주세요.'
+          : '사진을 가져오지 못했어요.\n다시 시도해주세요.',
+      )
+      return
+    }
+
     if (!photo) {
       // 첫 진입에서 촬영을 취소하면 보여줄 사진이 없다. 다시 찍기 취소는 기존 사진을 유지한다.
       if (isInitial) latestRef.current.router.back()
       return
     }
 
+    setFailure(null)
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
     objectUrlRef.current = photo.webPath.startsWith('blob:') ? photo.webPath : null
     setImageUrl(photo.webPath)
@@ -83,11 +101,12 @@ export function OcrSelector() {
             width: Math.max(...xs) - left,
           }
         })
-      if (positionedBlocks.length === 0) setMessage(OCR_FAILURE_MESSAGE)
+      // 한 글자도 못 읽었으면 사진만 덩그러니 남는다. 실패와 같은 자리에서 안내한다.
+      if (positionedBlocks.length === 0) setFailure(OCR_FAILURE_MESSAGE)
       else setBlocks(positionedBlocks)
     } catch (error) {
-      console.error('OCR 인식에 실패했습니다.', error)
-      setMessage(OCR_FAILURE_MESSAGE)
+      console.error('글자 인식에 실패했습니다.', error)
+      setFailure(OCR_FAILURE_MESSAGE)
     }
   }, [])
 
@@ -108,7 +127,24 @@ export function OcrSelector() {
     // min-h-0이 없으면 사진이 세로로 길 때 flex 아이템이 콘텐츠 높이 아래로 줄지 못해
     // 아래 시트가 화면 밖으로 밀린다
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-bg-black">
-      {imageUrl ? (
+      {failure ? (
+        <div
+          role="alert"
+          className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-6 text-center"
+        >
+          <p className="whitespace-pre-line text-body-16md text-text-inverse opacity-80">
+            {failure}
+          </p>
+          <Button
+            className="h-[54px] px-6"
+            onClick={() => {
+              void runCapture(false, 'gallery')
+            }}
+          >
+            갤러리에서 선택하기
+          </Button>
+        </div>
+      ) : imageUrl ? (
         <OcrPhotoStage
           imageUrl={imageUrl}
           blocks={blocks}

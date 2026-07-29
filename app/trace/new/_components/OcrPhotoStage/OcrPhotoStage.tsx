@@ -63,7 +63,7 @@ export function OcrPhotoStage({ blocks, imageUrl, onSelect, selected }: OcrPhoto
     top: box.top * scale,
     width: box.width * scale,
   }))
-  const { handlers, marquee } = useBlockDragSelection(scaledBlocks, onSelect)
+  const { handlers, marquee } = useBlockDragSelection(scaledBlocks, selected, onSelect)
   const selectedSet = new Set(selected)
 
   return (

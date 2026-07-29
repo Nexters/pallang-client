@@ -48,6 +48,18 @@ describe('decorationBrushStyle', () => {
     expect(style.backgroundColor).toBe('color-mix(in srgb, #FFA600 40%, transparent)')
   })
 
+  it('동그라미만 배경 영역을 사방으로 넓힌다', () => {
+    const circle = decorationBrushStyle(decoration('CIRCLE', '#ED6243'))
+    expect(circle.paddingBlock).toBe('0.3em')
+    expect(circle.paddingInline).toBe('0.7em')
+    // 가로는 같은 크기의 음수 마진으로 상쇄해야 글자가 밀리지 않는다
+    expect(circle.marginInline).toBe(`-${String(circle.paddingInline)}`)
+
+    const wavy = decorationBrushStyle(decoration('WAVY', '#ED6243'))
+    expect(wavy.paddingBlock).toBeUndefined()
+    expect(wavy.paddingInline).toBeUndefined()
+  })
+
   it('점선만 반복해 깔고 나머지는 한 번만 그린다', () => {
     expect(decorationBrushStyle(decoration('DOTTED', '#ED6243')).backgroundRepeat).toBe('repeat-x')
     expect(decorationBrushStyle(decoration('WAVY', '#ED6243')).backgroundRepeat).toBe('no-repeat')
