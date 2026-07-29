@@ -1,5 +1,6 @@
-import { type CSSProperties, type UIEvent, useCallback, useMemo, useState } from 'react'
+import { type CSSProperties, type UIEvent, useCallback, useState } from 'react'
 
+import { WIDTH_TIMING } from '../_data/widthTiming.constant'
 import {
   BANNER_HEIGHT,
   CARD_HEIGHT,
@@ -20,7 +21,8 @@ import {
 const px = (value: number) => `${String(value)}px`
 
 // 시안 수치를 한 번만 CSS로 내보내 TS와 CSS의 값이 어긋나지 않게 한다
-const stageGeometry = {
+const stageStyle = {
+  '--width-progress': WIDTH_TIMING,
   '--stage-expanded': px(STAGE_EXPANDED),
   '--stage-collapsed': px(STAGE_COLLAPSED),
   '--stage-shift': px(COLLAPSE_DISTANCE),
@@ -34,17 +36,11 @@ const stageGeometry = {
   '--card-top-collapsed': px(CARD_TOP_COLLAPSED),
   '--indicator-top-expanded': px(INDICATOR_TOP_EXPANDED),
   '--indicator-rise': px(INDICATOR_RISE),
-}
+} as CSSProperties
 
-/** widthTiming: 종이 폭만 따로 쓰는 진행률 식(widthTiming.constant) */
-export function useQuoteCollapse(widthTiming: string) {
+export function useQuoteCollapse() {
   // 진행률 자체는 CSS 변수로만 흘려보내고, 마운트가 바뀌어야 하는 조각만 상태로 둔다
   const [isCollapsed, setIsCollapsed] = useState(false)
-
-  const stageStyle = useMemo(
-    () => ({ ...stageGeometry, '--width-progress': widthTiming }) as CSSProperties,
-    [widthTiming],
-  )
 
   const handleScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
     const scroller = event.currentTarget

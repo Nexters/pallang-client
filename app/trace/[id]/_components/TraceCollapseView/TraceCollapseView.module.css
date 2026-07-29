@@ -4,6 +4,11 @@
   --collapse: 0;
 
   overflow-x: hidden;
+  /* 전환 구간에서 손을 떼면 펼침(0)과 접힘(--stage-shift) 중 가까운 쪽으로 붙는다.
+     화면 높이나 흔적 개수와 무관하게 어중간한 중간 상태로 멈추지 않는다.
+     mandatory가 아니라 proximity인 이유: 전환 구간을 벗어난 목록 스크롤까지
+     스냅에 끌려다니면 안 된다 */
+  scroll-snap-type: y proximity;
 }
 
 /* 높이 0짜리 sticky 앵커. 레이아웃 자리를 차지하지 않아 아래 spacer가 그대로 흘러가고,
@@ -15,7 +20,23 @@
   height: 0;
 }
 
-/* 펼친 상태 스테이지가 차지할 자리 */
-.stageSpacer {
-  height: var(--stage-expanded);
+/* 펼친 상태 스테이지가 차지할 자리. 전환이 끝나는 지점(--stage-shift)에서 한 번 끊어
+   그 경계를 스냅 포인트로 쓴다 — 두 조각의 높이 합은 --stage-expanded 그대로다.
+   head의 상단은 스크롤 0, tail의 상단은 정확히 전환 거리 지점에 온다 */
+.stageSpacerHead {
+  height: var(--stage-shift);
+  scroll-snap-align: start;
+}
+
+.stageSpacerTail {
+  height: calc(var(--stage-expanded) - var(--stage-shift));
+  scroll-snap-align: start;
+}
+
+/* 흔적이 적어도 전환을 끝까지 밀어낼 수 있도록 최소 스크롤 여유를 보장한다.
+   (--stage-expanded + 이 최소 높이) - 스크롤러 높이 = --stage-shift 가 되어
+   최대 스크롤량이 전환 거리 이상임이 화면 크기와 무관하게 성립한다.
+   이게 없으면 목록이 짧을 때 progress가 1에 도달하지 못해 반쯤 접힌 채 고정된다 */
+.listArea {
+  min-height: calc(100% - var(--stage-collapsed));
 }

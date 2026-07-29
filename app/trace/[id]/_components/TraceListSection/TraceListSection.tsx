@@ -15,6 +15,7 @@ type TraceListSectionProps = {
   onToggleSort: () => void
   onToggleComment: () => void
   onSelectTrace: (trace: Trace) => void
+  className?: string
 }
 
 export function TraceListSection({
@@ -25,9 +26,10 @@ export function TraceListSection({
   onToggleSort,
   onToggleComment,
   onSelectTrace,
+  className,
 }: TraceListSectionProps) {
   return (
-    <section className="flex flex-col">
+    <section className={cn('flex flex-col', className)}>
       {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
       <div className="sticky top-[var(--stage-collapsed)] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
