@@ -50,8 +50,8 @@ describe('decorationBrushStyle', () => {
 
   it('동그라미만 배경 영역을 사방으로 넓힌다', () => {
     const circle = decorationBrushStyle(decoration('CIRCLE', '#ED6243'))
-    expect(circle.paddingBlock).toBe('0.15em')
-    expect(circle.paddingInline).toBe('0.25em')
+    expect(circle.paddingBlock).toBe('0.3em')
+    expect(circle.paddingInline).toBe('0.7em')
     // 가로는 같은 크기의 음수 마진으로 상쇄해야 글자가 밀리지 않는다
     expect(circle.marginInline).toBe(`-${String(circle.paddingInline)}`)
 
