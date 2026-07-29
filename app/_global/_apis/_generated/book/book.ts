@@ -5,6 +5,8 @@ import type { CreateBookRequest } from '../models/createBookRequest'
 
 import type { DataResponseBookActivityListResponse } from '../models/dataResponseBookActivityListResponse'
 
+import type { DataResponseBookCarouselListResponse } from '../models/dataResponseBookCarouselListResponse'
+
 import type { DataResponseBookListResponse } from '../models/dataResponseBookListResponse'
 
 import type { DataResponseBookResponse } from '../models/dataResponseBookResponse'
@@ -60,14 +62,14 @@ export const getGetHomeCarouselBooksUrl = (params?: GetHomeCarouselBooksParams) 
 }
 
 /**
- * 흔적이 남은 도서를 대목/흔적 수와 함께 조회합니다.
+ * 흔적이 남은 도서를 대목/흔적 수와 함께 조회합니다. offset을 생략하면 전체 목록 중 정가운데 책들을 기준으로 조회하며, 좌우 스크롤 시에는 응답으로 받은 pageInfo를 참고해 offset - size(이전) 또는 offset + size(다음)로 다시 요청하면 됩니다.
  * @summary 홈 캐러셀 도서 목록
  */
 export const getHomeCarouselBooks = async (
   params?: GetHomeCarouselBooksParams,
   options?: Parameters<typeof customFetch>[1],
-): Promise<DataResponseBookActivityListResponse> => {
-  return customFetch<DataResponseBookActivityListResponse>(getGetHomeCarouselBooksUrl(params), {
+): Promise<DataResponseBookCarouselListResponse> => {
+  return customFetch<DataResponseBookCarouselListResponse>(getGetHomeCarouselBooksUrl(params), {
     ...options,
     method: 'GET',
   })
