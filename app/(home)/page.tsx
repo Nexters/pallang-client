@@ -10,7 +10,11 @@ import { BookListSection } from './_components/BookListSection/BookListSection'
 
 export default function Home() {
   return (
-    <TabScreenLayout aria-label="홈" activeTab="home" className={GRID_BACKGROUND_CLASS_NAME}>
+    <TabScreenLayout
+      aria-label="홈"
+      activeTab="home"
+      className={`overflow-y-auto ${GRID_BACKGROUND_CLASS_NAME}`}
+    >
       <div className="px-4 pt-4">
         <header className="flex items-center justify-between">
           <Logo aria-label="Pallang" className="h-7 w-18.75" />
