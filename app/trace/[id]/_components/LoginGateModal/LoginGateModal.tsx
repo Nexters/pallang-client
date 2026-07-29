@@ -5,7 +5,8 @@ type LoginGateModalProps = {
 
 export function LoginGateModal({ onLogin, onClose }: LoginGateModalProps) {
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/60 p-6">
+    // 의견 상세 오버레이(z-20) 안에서 댓글 작성 게이트로도 뜨므로 그 위(z-30)에 그린다
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-6">
       <div
         role="dialog"
         aria-modal="true"

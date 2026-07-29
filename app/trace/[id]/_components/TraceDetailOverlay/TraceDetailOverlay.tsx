@@ -1,30 +1,45 @@
+import { useQuery } from '@tanstack/react-query'
+
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
+import { commentQueries } from '@/app/_global/_queries/comment.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
+import { useCommentActions } from '../../_hooks/useCommentActions'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
 import { CommentBar } from '../CommentBar/CommentBar'
+import { CommentThread } from '../CommentThread/CommentThread'
 import { QuotePanel } from '../QuotePanel/QuotePanel'
 
 type TraceDetailOverlayProps = {
-  traces: Trace[]
+  trace: Trace
   index: number
+  count: number
   quote: string
   onNavigate: (index: number) => void
   onClose: () => void
+  runWithLogin: (action: () => void) => void
 }
 
 export function TraceDetailOverlay({
-  traces,
+  trace,
   index,
+  count,
   quote,
   onNavigate,
   onClose,
+  runWithLogin,
 }: TraceDetailOverlayProps) {
-  const trace = traces[index]
-  if (!trace) return null
+  const { data: commentsData } = useQuery(commentQueries.listByOpinion(trace.opinionId))
+  // 비로그인이면 me 조회가 실패해 myUserId가 없고, 수정·삭제 버튼이 숨겨진다
+  const { data: meData } = useQuery(userQueries.me())
+  const actions = useCommentActions(trace.opinionId)
+
+  const comments = commentsData?.data?.comments ?? []
+  const myUserId = meData?.data?.userId
 
   return (
     <div
@@ -47,7 +62,7 @@ export function TraceDetailOverlay({
         <TopBar.Title>{trace.nickname}</TopBar.Title>
         <TopBar.Action
           aria-label="다음 의견"
-          disabled={index === traces.length - 1}
+          disabled={index === count - 1}
           onClick={() => {
             onNavigate(index + 1)
           }}
@@ -67,10 +82,28 @@ export function TraceDetailOverlay({
           <span>{formatTraceDate(trace.createdAt)}</span>
           <span>공감 {formatLikeCount(trace.likeCount)}</span>
         </div>
-        {/* ponytail: 댓글 목록은 별도 이슈에서 연결 — 헤더만 남긴다 (#44 제외 범위) */}
         <p className="text-body-14sb text-text-inverse">댓글</p>
+        {comments.map((comment) => (
+          <CommentThread
+            key={comment.commentId}
+            comment={comment}
+            myUserId={myUserId}
+            onUpdate={(commentId, content) => {
+              actions.update.mutate({ commentId, content })
+            }}
+            onRemove={(commentId) => {
+              actions.remove.mutate(commentId)
+            }}
+          />
+        ))}
       </div>
-      <CommentBar />
+      <CommentBar
+        onSubmit={(content) => {
+          runWithLogin(() => {
+            actions.create.mutate(content)
+          })
+        }}
+      />
     </div>
   )
 }
