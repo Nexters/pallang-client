@@ -1,88 +1,98 @@
 'use client'
 
-type PickableBook = {
-  bookId: number
-  title: string
-  author: string
-  coverImageUrl?: string | null
-  pageCount?: number | null
+import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
+
+import type { SelectedBook } from '../../_types/traceDraft.type'
+
+export type PickableBook = SelectedBook & {
+  opinionCount: number
+  passageCount: number
+  publisher: string
 }
 
 type BookPickListProps = {
   books: PickableBook[]
-  /** 로딩·에러·빈 목록은 서로 다른 상황이라 같은 문구로 뭉개면 서버 장애가 '책 없음'으로 읽힌다. */
-  status: 'pending' | 'error' | 'ready'
-  emptyMessage: string
-  onSelect: (book: PickableBook) => void
   onRetry: () => void
+  onSelect: (book: SelectedBook) => void
+  /** 로딩·에러·빈 목록은 서로 다른 상황이라 같은 문구로 뭉개면 서버 장애가 '책 없음'으로 읽힌다. */
+  status: 'error' | 'pending' | 'ready'
 }
 
-const NOTICE_CLASS = 'px-4 py-10 text-center text-body-14md text-text-inverse opacity-60'
+const SKELETON_KEYS = ['a', 'b', 'c']
 
-export function BookPickList({
-  books,
-  status,
-  emptyMessage,
-  onSelect,
-  onRetry,
-}: BookPickListProps) {
+export function BookPickList({ books, onRetry, onSelect, status }: BookPickListProps) {
   if (status === 'pending') {
     return (
-      <p role="status" className={NOTICE_CLASS}>
-        책을 불러오는 중이에요.
-      </p>
+      <div role="status" aria-label="책을 불러오는 중" className="flex flex-col gap-3 px-4 py-6">
+        {SKELETON_KEYS.map((key) => (
+          <div key={key} className="flex animate-pulse gap-4">
+            <div className="h-[120px] w-20 shrink-0 rounded-[2px] bg-bg-surface" />
+            <div className="flex flex-1 flex-col gap-2 pt-1">
+              <div className="h-5 w-2/3 rounded bg-bg-surface" />
+              <div className="h-4 w-1/2 rounded bg-bg-surface" />
+            </div>
+          </div>
+        ))}
+      </div>
     )
   }
 
   if (status === 'error') {
     return (
-      <div className="flex flex-col items-center gap-3 px-4 py-10">
-        <p role="alert" className="text-center text-body-14md text-text-inverse opacity-60">
-          책을 불러오지 못했어요.
-        </p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="rounded-full border border-white-a20 px-4 py-2 text-body-14md text-text-inverse"
-        >
-          다시 시도
-        </button>
-      </div>
+      <FeedbackState
+        aria-label="도서 검색 오류"
+        message={
+          <>
+            책을 불러오지 못했어요.
+            <br />
+            다시 시도해주세요!
+          </>
+        }
+        actionLabel="다시 시도"
+        onAction={onRetry}
+      />
     )
   }
 
   if (books.length === 0) {
-    return <p className={NOTICE_CLASS}>{emptyMessage}</p>
+    return (
+      <FeedbackState
+        aria-label="빈 도서 목록"
+        message={
+          <>
+            등록된 책이 없어요!
+            <br />
+            오탈자가 있는지 확인해주시거나
+            <br />
+            직접 책을 등록해 주세요.
+          </>
+        }
+      />
+    )
   }
 
   return (
-    <ul className="flex flex-col">
-      {books.map((book) => (
-        <li key={book.bookId}>
+    <ul aria-label="도서 검색 결과" className="flex flex-col gap-3 px-4 py-6">
+      {books.map((book, index) => (
+        <li key={book.bookId} className="flex flex-col gap-3">
           <button
             type="button"
             onClick={() => {
               onSelect(book)
             }}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left"
+            className="w-full cursor-pointer text-left"
           >
-            {book.coverImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다
-              <img
-                src={book.coverImageUrl}
-                alt=""
-                className="h-16 w-11 shrink-0 rounded-[2px] object-cover"
-              />
-            ) : (
-              <span className="h-16 w-11 shrink-0 rounded-[2px] bg-bg-gray" />
-            )}
-            <span className="flex min-w-0 flex-col gap-1">
-              <span className="truncate text-title-16sb text-text-inverse">{book.title}</span>
-              <span className="truncate text-body-14rg text-text-inverse opacity-60">
-                {book.author}
-              </span>
-            </span>
+            <BookItem
+              author={book.author}
+              coverImageUrl={book.coverImageUrl}
+              opinionCount={book.opinionCount}
+              publisher={book.publisher}
+              title={book.title}
+              traceCount={book.passageCount}
+            />
           </button>
+          {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}
         </li>
       ))}
     </ul>

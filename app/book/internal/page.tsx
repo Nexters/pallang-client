@@ -10,10 +10,10 @@ import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
 
 import { BookInternalPageSkeleton } from './_components/BookInternalPageSkeleton/BookInternalPageSkeleton'
 import { BookItemList } from './_components/BookItemList/BookItemList'
-import { BookSearchBar } from './_components/BookSearchBar/BookSearchBar'
 
 export default function BookPage() {
   const [keyword, setKeyword] = useState('')

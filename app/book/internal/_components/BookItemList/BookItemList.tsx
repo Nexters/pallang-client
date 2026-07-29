@@ -2,8 +2,7 @@ import Link from 'next/link'
 import type { ComponentPropsWithoutRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
-
-import { BookItem } from '../BookItem/BookItem'
+import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 
 type BookItemListItem = {
   author: string
