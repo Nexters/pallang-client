@@ -1,0 +1,16 @@
+{
+  "name": "팔랑",
+  "short_name": "팔랑",
+  "description": "흔적을 넘기면, 다른 생각이 팔랑",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon/android-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
