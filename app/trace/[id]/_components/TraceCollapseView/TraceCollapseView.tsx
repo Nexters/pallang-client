@@ -8,6 +8,7 @@ import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opi
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
+import { LOGIN_GATE_MESSAGE } from '../../_data/loginGate.constant'
 import { bookTitle } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
@@ -108,7 +109,7 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   const openCommentBar = () => {
     runWithLogin(() => {
       setIsCommentBarOpen(true)
-    })
+    }, LOGIN_GATE_MESSAGE.traceCreate)
   }
 
   const toggleCommentBar = () => {

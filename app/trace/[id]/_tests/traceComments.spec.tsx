@@ -6,6 +6,7 @@ import type { RootCommentResponse } from '@/app/_global/_queries/comment.queries
 
 import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
 import { TraceDetailOverlay } from '../_components/TraceDetailOverlay/TraceDetailOverlay'
+import { LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
 
 const { authState } = vi.hoisted(() => ({ authState: { isAuthenticated: true } }))
 
@@ -232,7 +233,7 @@ describe('TraceDetailOverlay 댓글', () => {
     expect(screen.queryByRole('button', { name: '답글 더보기' })).not.toBeInTheDocument()
   })
 
-  it('비로그인 상태에서 댓글을 등록하면 로그인 게이트가 막는다', async () => {
+  it('비로그인 상태에서 댓글을 등록하면 댓글 문구의 로그인 게이트가 막는다', async () => {
     authState.isAuthenticated = false
     renderOverlay()
     await screen.findByText('내가 쓴 댓글')
@@ -242,7 +243,7 @@ describe('TraceDetailOverlay 댓글', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
 
-    expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.commentCreate)).toBeInTheDocument()
     const postCalls = vi
       .mocked(fetch)
       .mock.calls.filter(([, options]) => options?.method === 'POST')

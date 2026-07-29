@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
+import { DEFAULT_LOGIN_GATE_MESSAGE, LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
 import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
 import ReaderHighlightsPage from '../page'
 
@@ -290,19 +291,30 @@ describe('ReaderHighlightsPage', () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
+    expect(screen.getByText(DEFAULT_LOGIN_GATE_MESSAGE)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
     expect(pushMock).toHaveBeenCalledWith('/login')
+  })
+
+  it('앞선 게이트의 문구가 다음 게이트에 남지 않는다', async () => {
+    authState.isAuthenticated = false
+    await renderPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: '흔적 남기기' }))
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    expect(screen.getByText(DEFAULT_LOGIN_GATE_MESSAGE)).toBeInTheDocument()
+    expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
   })
 
   it('로그인 상태에서 다른 페이지 탭을 누르면 바로 이동한다', async () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(
-      screen.queryByText('해당 페이지부터는 로그인해야 확인할 수 있어요!'),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText(DEFAULT_LOGIN_GATE_MESSAGE)).not.toBeInTheDocument()
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
@@ -333,13 +345,13 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
   })
 
-  it('비로그인 시 댓글 입력은 로그인 유도 팝업을 띄운다', async () => {
+  it('비로그인 시 댓글 입력은 흔적 남기기 문구의 로그인 유도 팝업을 띄운다', async () => {
     authState.isAuthenticated = false
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
     expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
-    expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
   })
 
   it('정렬 버튼을 누르면 라벨이 토글되고 서버 정렬(sortType)로 다시 조회한다', async () => {

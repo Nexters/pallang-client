@@ -4,6 +4,7 @@ import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 
+import { LOGIN_GATE_MESSAGE } from '../../_data/loginGate.constant'
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
@@ -49,7 +50,7 @@ export function TraceItem({ trace, onSelect }: TraceItemProps) {
             aria-label="좋아요"
             aria-pressed={isLiked}
             onClick={() => {
-              runWithLogin(toggle)
+              runWithLogin(toggle, LOGIN_GATE_MESSAGE.like)
             }}
             className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >

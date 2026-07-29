@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
+import { LOGIN_GATE_MESSAGE } from '../_data/loginGate.constant'
 import ReaderHighlightsPage from '../page'
 
 const { pushMock, authState } = vi.hoisted(() => ({
@@ -197,14 +198,26 @@ describe('흔적 좋아요', () => {
     expect(detailLike).toHaveTextContent('공감 10')
   })
 
-  it('비로그인 상태에서 좋아요를 누르면 로그인 유도 팝업이 뜨고 요청은 나가지 않는다', async () => {
+  it('비로그인 상태에서 좋아요를 누르면 좋아요 문구의 로그인 유도 팝업이 뜨고 요청은 나가지 않는다', async () => {
     authState.isAuthenticated = false
     await renderPage()
 
     fireEvent.click(likeButton())
 
-    expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()
     expect(postLikeCalls()).toHaveLength(0)
     expect(likeButton()).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('상세 오버레이의 좋아요도 좋아요 문구로 막는다', async () => {
+    authState.isAuthenticated = false
+    await renderPage()
+
+    fireEvent.click(screen.getByText('첫 번째 흔적'))
+    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
+    fireEvent.click(within(dialog).getByRole('button', { name: '좋아요' }))
+
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()
+    expect(postLikeCalls()).toHaveLength(0)
   })
 })

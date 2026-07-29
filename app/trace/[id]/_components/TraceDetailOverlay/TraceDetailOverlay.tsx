@@ -8,6 +8,7 @@ import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { commentQueries } from '@/app/_global/_queries/comment.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 
+import { LOGIN_GATE_MESSAGE } from '../../_data/loginGate.constant'
 import { useCommentActions } from '../../_hooks/useCommentActions'
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
@@ -88,7 +89,7 @@ export function TraceDetailOverlay({
             aria-label="좋아요"
             aria-pressed={like.isLiked}
             onClick={() => {
-              runWithLogin(like.toggle)
+              runWithLogin(like.toggle, LOGIN_GATE_MESSAGE.like)
             }}
             className="flex items-center gap-0.5"
           >
@@ -119,7 +120,7 @@ export function TraceDetailOverlay({
         onSubmit={(content) => {
           runWithLogin(() => {
             actions.create.mutate(content)
-          })
+          }, LOGIN_GATE_MESSAGE.commentCreate)
         }}
       />
     </div>

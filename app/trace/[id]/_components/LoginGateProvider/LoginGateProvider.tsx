@@ -5,8 +5,11 @@ import { createContext, type ReactNode, useContext } from 'react'
 import { useLoginGateState } from '../../_hooks/useLoginGateState'
 import { LoginGateModal } from '../LoginGateModal/LoginGateModal'
 
-/** 로그인 상태면 action을 실행하고, 비로그인이면 로그인 유도 팝업을 띄운다 */
-type RunWithLogin = (action: () => void) => void
+/**
+ * 로그인 상태면 action을 실행하고, 비로그인이면 로그인 유도 팝업을 띄운다.
+ * message를 넘기면 그 액션에 맞는 안내 문구로, 생략하면 기본 문구로 뜬다.
+ */
+type RunWithLogin = (action: () => void, message?: string) => void
 
 const LoginGateContext = createContext<RunWithLogin | null>(null)
 
@@ -17,7 +20,9 @@ export function LoginGateProvider({ children }: { children: ReactNode }) {
   return (
     <LoginGateContext.Provider value={gate.runWithLogin}>
       {children}
-      {gate.isGateOpen && <LoginGateModal onLogin={gate.login} onClose={gate.close} />}
+      {gate.gateMessage !== null && (
+        <LoginGateModal message={gate.gateMessage} onLogin={gate.login} onClose={gate.close} />
+      )}
     </LoginGateContext.Provider>
   )
 }
