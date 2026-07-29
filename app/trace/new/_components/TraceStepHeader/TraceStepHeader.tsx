@@ -13,7 +13,11 @@ export function TraceStepHeader({ step, title }: TraceStepHeaderProps) {
   const router = useRouter()
 
   return (
-    <header className="flex flex-col gap-6 px-4 pt-4">
+    <header
+      className="flex flex-col gap-6 px-4 pt-4"
+      // 노치/상태바 아래로 파고들지 않게 한다(layout에 viewportFit: 'cover'가 있어야 값이 잡힌다)
+      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+    >
       <div className="flex items-center justify-between">
         <span className="text-body-16md text-text-primary">{step}/3</span>
         <button

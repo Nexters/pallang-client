@@ -89,7 +89,10 @@ export function TraceOpinionForm() {
         />
       </div>
 
-      <div className="mt-auto flex gap-2 px-4 pb-4">
+      <div
+        className="mt-auto flex gap-2 px-4 pb-4"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         <Button
           variant="back"
           className="flex-1"

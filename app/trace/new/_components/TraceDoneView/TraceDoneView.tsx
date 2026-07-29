@@ -25,7 +25,10 @@ export function TraceDoneView() {
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-2 rounded-t-[28px] bg-bg-default px-4 pt-8 pb-4">
+      <div
+        className="flex flex-col items-center gap-2 rounded-t-[28px] bg-bg-default px-4 pt-8 pb-4"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         <h1 className="text-title-20sb text-text-primary">흔적을 책에 끼워두었어요!</h1>
         <p className="text-center text-body-14md text-text-tertiary">
           또 남기고 싶은 문장이 있다면

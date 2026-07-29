@@ -36,7 +36,11 @@ export function BookPicker() {
   })()
 
   return (
-    <div className="flex flex-1 flex-col bg-bg-dark">
+    <div
+      className="flex flex-1 flex-col bg-bg-dark"
+      // 노치/상태바 아래로 파고들지 않게 한다(layout에 viewportFit: 'cover'가 있어야 값이 잡힌다)
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <input
         type="search"
         value={keyword}

@@ -153,7 +153,10 @@ export function OcrSelector() {
         ))}
       </div>
 
-      <div className="flex gap-2 px-4 py-4">
+      <div
+        className="flex gap-2 px-4 py-4"
+        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      >
         <Button
           variant="back"
           className="flex-1"

@@ -197,6 +197,9 @@ const eslintConfig = defineConfig([
     'storybook-static/**',
     'ios/**',
     'android/**',
+    // docs/capacitor.md의 기기 검증 절차가 만드는 Xcode 파생 데이터
+    'build-ios/**',
+    'build-sim/**',
   ]),
 ])
 

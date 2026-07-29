@@ -6,3 +6,5 @@ coverage
 ios
 android
 app/_global/_apis/_generated
+build-ios
+build-sim

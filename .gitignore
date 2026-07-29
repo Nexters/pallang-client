@@ -49,3 +49,7 @@ storybook-static
 
 # playwright mcp artifacts
 .playwright-mcp/
+
+# Xcode 파생 데이터 (docs/capacitor.md의 기기 검증 절차 산출물)
+build-ios/
+build-sim/
