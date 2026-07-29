@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
-import ReaderHighlightsPage from '../page'
+import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
 
 const { pushMock, authState } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -24,10 +24,8 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
   }),
 }))
 
-// page의 params(Promise)를 use()가 동기적으로 언래핑하도록 status/value를 태깅한 thenable을 넘긴다.
-function stubParams(id: string) {
-  return Object.assign(Promise.resolve({ id }), { status: 'fulfilled' as const, value: { id } })
-}
+// page는 서버 컴포넌트(프리페치 셸)라 브라우저 테스트에서는 그 안쪽 클라이언트 화면을 그대로 렌더한다.
+const BOOK_ID = 1
 
 const opinion = {
   opinionId: 1,
@@ -102,11 +100,11 @@ async function renderPage({ shouldFail = false, holdLike = false }: RenderOption
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
-  // 로그인 게이트는 route layout이 제공하므로 페이지만 렌더하는 테스트에서는 직접 감싼다
+  // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   render(
     <QueryClientProvider client={client}>
       <LoginGateProvider>
-        <ReaderHighlightsPage params={stubParams('1')} />
+        <TraceCollapseView bookId={BOOK_ID} />
       </LoginGateProvider>
     </QueryClientProvider>,
   )

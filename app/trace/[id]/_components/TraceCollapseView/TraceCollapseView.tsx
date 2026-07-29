@@ -1,7 +1,7 @@
 'use client'
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { use, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
@@ -10,7 +10,7 @@ import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opi
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { bookTitle } from '../../_data/readerHighlights.constant'
+import { bookTitle, DEFAULT_OPINION_SORT_TYPE } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
@@ -21,13 +21,11 @@ import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
 
 type TraceCollapseViewProps = {
-  params: Promise<{ id: string }>
+  bookId: number
 }
 
-export function TraceCollapseView({ params }: TraceCollapseViewProps) {
-  // use(params)는 서스펜드할 수 있어 페이지가 아니라 Suspense 안쪽인 여기서 언래핑한다
-  const { id } = use(params)
-  const bookId = Number(id)
+export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
+  // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const { stageStyle, isCollapsed, handleScroll } = useQuoteCollapse()
   const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -62,7 +60,8 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
   const activePassage = passages[viewer.quoteIndex]
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
-  const [sortType, setSortType] = useState<OpinionSortType>('LATEST')
+  // 서버 프리페치가 채운 queryKey와 맞아야 첫 렌더에서 캐시가 그대로 쓰인다
+  const [sortType, setSortType] = useState<OpinionSortType>(DEFAULT_OPINION_SORT_TYPE)
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
 
   const opinionsQuery = useInfiniteQuery(
