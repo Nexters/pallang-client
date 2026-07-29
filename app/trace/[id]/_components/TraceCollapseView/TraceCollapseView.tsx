@@ -18,10 +18,9 @@ import { cn } from '@/app/_global/_services/cn.service'
 
 import { bookTitle } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
-import { useLoginGate } from '../../_hooks/useLoginGate'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { CommentBar } from '../CommentBar/CommentBar'
-import { LoginGateModal } from '../LoginGateModal/LoginGateModal'
+import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
@@ -45,7 +44,7 @@ export function TraceCollapseView({
   // use(params)는 서스펜드할 수 있어 페이지가 아니라 Suspense 안쪽인 여기서 언래핑한다
   const { id } = use(params)
   const bookId = Number(id)
-  const gate = useLoginGate()
+  const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const traceLoadMoreRef = useRef<HTMLDivElement>(null)
   const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
@@ -57,7 +56,7 @@ export function TraceCollapseView({
     pageNumbersQuery.hasNextPage &&
     !pageNumbersQuery.isError &&
     !pageNumbersQuery.isFetchingNextPage
-  const viewer = useHighlightViewer(gate.runWithLogin, pages[0])
+  const viewer = useHighlightViewer(runWithLogin, pages[0])
   const { data: passagesData } = useQuery({
     ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
     enabled: viewer.activePage !== undefined,
@@ -113,7 +112,7 @@ export function TraceCollapseView({
   })
 
   const openCommentBar = () => {
-    gate.runWithLogin(() => {
+    runWithLogin(() => {
       setIsCommentBarOpen(true)
     })
   }
@@ -189,10 +188,8 @@ export function TraceCollapseView({
           onClose={() => {
             setSelectedTraceId(null)
           }}
-          runWithLogin={gate.runWithLogin}
         />
       )}
-      {gate.isGateOpen && <LoginGateModal onLogin={gate.login} onClose={gate.close} />}
     </>
   )
 }

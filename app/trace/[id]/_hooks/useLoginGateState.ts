@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 
-export function useLoginGate() {
+/** 게이트 팝업의 열림 상태를 소유한다. 소비자는 LoginGateProvider의 useLoginGate를 쓴다 */
+export function useLoginGateState() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()
   const [isGateOpen, setIsGateOpen] = useState(false)

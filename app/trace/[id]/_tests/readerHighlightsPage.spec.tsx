@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
 import { COLLAPSE_DISTANCE } from '../_services/quoteCollapse.service'
 import ReaderHighlightsPage from '../page'
 
@@ -190,9 +191,12 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
     }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  // 로그인 게이트는 route layout이 제공하므로 페이지만 렌더하는 테스트에서는 직접 감싼다
   const { container } = render(
     <QueryClientProvider client={client}>
-      <ReaderHighlightsPage params={stubParams('1')} />
+      <LoginGateProvider>
+        <ReaderHighlightsPage params={stubParams('1')} />
+      </LoginGateProvider>
     </QueryClientProvider>,
   )
   await screen.findByRole('button', { name: `${String(pages[0])}p` })
