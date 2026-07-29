@@ -8,11 +8,10 @@ type BookItemListItem = {
   author: string
   bookId: number
   coverImageUrl?: null | string
-  opinionCount?: number
-  passageCount?: number
+  opinionCount: number
+  passageCount: number
   publisher?: string
   title: string
-  traceCount?: number
 }
 
 type BookItemListProps = ComponentPropsWithoutRef<'section'> & {
@@ -32,10 +31,10 @@ export function BookItemList({ books, className, ...props }: BookItemListProps) 
             <BookItem
               author={book.author}
               coverImageUrl={book.coverImageUrl}
-              opinionCount={book.opinionCount ?? 0}
+              opinionCount={book.opinionCount}
+              passageCount={book.passageCount}
               publisher={book.publisher}
               title={book.title}
-              traceCount={book.traceCount ?? book.passageCount ?? 0}
             />
             {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}
           </div>
