@@ -1,6 +1,7 @@
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
+import { cn } from '@/app/_global/_services/cn.service'
 
 import type { Trace } from '../../_types/readerHighlights.type'
 import { TraceItem } from '../TraceItem/TraceItem'
@@ -8,6 +9,8 @@ import { TraceItem } from '../TraceItem/TraceItem'
 type TraceListSectionProps = {
   traces: Trace[]
   traceCount: number
+  /** 스포일러 대목이 가림막 해제 전일 때 목록을 블러 처리한다 */
+  isMasked: boolean
   sortType: OpinionSortType
   onToggleSort: () => void
   onToggleComment: () => void
@@ -17,6 +20,7 @@ type TraceListSectionProps = {
 export function TraceListSection({
   traces,
   traceCount,
+  isMasked,
   sortType,
   onToggleSort,
   onToggleComment,
@@ -41,7 +45,13 @@ export function TraceListSection({
           <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
-      <ul className="flex flex-col px-4 pb-10">
+      <ul
+        aria-hidden={isMasked || undefined}
+        className={cn(
+          'flex flex-col px-4 pb-10',
+          isMasked && 'pointer-events-none blur-md select-none',
+        )}
+      >
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
