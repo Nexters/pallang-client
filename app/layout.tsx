@@ -21,11 +21,21 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: '팔랑',
   description: '흔적을 넘기면, 다른 생각이 팔랑',
+  manifest: '/favicon/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon/favicon.ico', sizes: 'any' },
+      { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/favicon/apple-icon-180x180.png', sizes: '180x180', type: 'image/png' }],
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#ffffff',
   viewportFit: 'cover',
 }
 
