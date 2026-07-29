@@ -7,7 +7,8 @@ export type SelectedBook = {
 }
 
 /** 생성 타입 DecorationRequestEffectType과 값이 같다. _apis import 금지 규칙 때문에 로컬로 둔다. */
-export type DraftEffectType = 'UNDERLINE' | 'WAVY' | 'HIGHLIGHT'
+export type DraftEffectType =
+  'CIRCLE' | 'DOTTED' | 'DOUBLE_LINE' | 'HIGHLIGHT' | 'UNDERLINE' | 'WAVY'
 
 export type DraftDecoration = {
   startOffset: number
@@ -35,6 +36,7 @@ export type TraceDraftAction =
   | { type: 'setQuotedText'; quotedText: string }
   | { type: 'setPageDetail'; pageNumber: number; isSpoiler: boolean }
   | { type: 'applyDecoration'; decoration: DraftDecoration }
+  | { type: 'recolorDecoration'; startOffset: number; color: string }
   | { type: 'removeDecoration'; startOffset: number }
   | { type: 'setContent'; content: string }
   | { type: 'setMergeTarget'; passageId: number | null }

@@ -91,6 +91,23 @@ describe('traceDraftReducer', () => {
     expect(removed.decorations).toEqual([])
   })
 
+  it('recolorDecoration은 해당 항목의 색만 바꾼다', () => {
+    const applied = [
+      { type: 'applyDecoration', decoration: decoration(0, 5) } as const,
+      { type: 'applyDecoration', decoration: decoration(10, 15) } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    const recolored = traceDraftReducer(applied, {
+      type: 'recolorDecoration',
+      startOffset: 10,
+      color: '#1A66FF',
+    })
+    expect(recolored.decorations.map((d) => [d.startOffset, d.color])).toEqual([
+      [0, decoration(0, 5).color],
+      [10, '#1A66FF'],
+    ])
+  })
+
   it('resetKeepingBook은 책만 남기고 나머지를 비운다', () => {
     const filled = [
       { type: 'selectBook', book } as const,

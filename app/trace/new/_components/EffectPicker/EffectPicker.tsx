@@ -31,18 +31,17 @@ export function EffectPicker({ disabled, onPick }: EffectPickerProps) {
     <div className="grid grid-cols-3 gap-2 px-2">
       {EFFECT_OPTIONS.map((option) => {
         const Icon = iconByKey[option.key]
-        const isDisabled = disabled || option.effectType === null
         return (
           <button
             key={option.key}
             type="button"
-            disabled={isDisabled}
+            disabled={disabled}
             onClick={() => {
               onPick(option)
             }}
             className={cn(
               'flex cursor-pointer flex-col items-center rounded-2xl bg-bg-gray p-3.5 text-body-14md text-text-inverse backdrop-blur-[1px]',
-              isDisabled && 'cursor-not-allowed opacity-40',
+              disabled && 'cursor-not-allowed opacity-40',
             )}
           >
             <Icon aria-hidden="true" className="size-[30px]" />

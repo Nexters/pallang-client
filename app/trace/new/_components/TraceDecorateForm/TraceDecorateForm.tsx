@@ -2,18 +2,21 @@
 
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { type PointerEvent, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
+import { DEFAULT_DECORATION_COLOR } from '../../_data/decorationColor.constant'
 import type { EffectOption } from '../../_data/effect.constant'
+import { useTextRangeSelection } from '../../_hooks/useTextRangeSelection'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import type { TextRange } from '../../_services/textRange.service'
+import type { DraftDecoration } from '../../_types/traceDraft.type'
+import { DecorationEditPopover } from '../DecorationEditPopover/DecorationEditPopover'
 import { EffectPicker } from '../EffectPicker/EffectPicker'
 import { MergeDialog } from '../MergeDialog/MergeDialog'
-import { TextRangeSelector } from '../TextRangeSelector/TextRangeSelector'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
@@ -24,6 +27,41 @@ export function TraceDecorateForm() {
   const [message, setMessage] = useState('')
   const [candidate, setCandidate] = useState<{ passageId: number; quotedText: string } | null>(null)
   const similarCheck = useMutation(passageMutations.similarCheck())
+  const { handlers } = useTextRangeSelection(setRange)
+  const noteRef = useRef<HTMLDivElement>(null)
+  const [editing, setEditing] = useState<{
+    decoration: DraftDecoration
+    left: number
+    top: number
+  } | null>(null)
+
+  // 이미 효과가 들어간 자리를 누르면 새 범위를 잡는 대신 색·삭제 팝오버를 연다.
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    const target = event.target instanceof Element ? event.target : null
+    const marked = target?.closest('[data-decoration-start]')
+    const note = noteRef.current
+    const startOffset = Number(marked?.getAttribute('data-decoration-start'))
+    const decoration = draft.decorations.find((item) => item.startOffset === startOffset)
+
+    if (marked && note && decoration) {
+      const markedRect = marked.getBoundingClientRect()
+      const noteRect = note.getBoundingClientRect()
+      setRange(null)
+      setEditing({
+        decoration,
+        // 팝오버 폭(218px)의 절반만큼은 노트 안쪽에 두어야 화면 밖으로 나가지 않는다
+        left: Math.min(
+          Math.max(markedRect.left + markedRect.width / 2 - noteRect.left, 109),
+          noteRect.width - 109,
+        ),
+        top: markedRect.top - noteRect.top,
+      })
+      return
+    }
+
+    setEditing(null)
+    handlers.onPointerDown(event)
+  }
 
   const goToOpinion = () => {
     router.push('/trace/new/opinion')
@@ -57,15 +95,12 @@ export function TraceDecorateForm() {
       setMessage('영역 선택 후 효과를 입력해주세요!')
       return
     }
-    // EffectPicker가 disabled 항목의 클릭 자체를 막아 effectType이 null인 값은 여기 도달하지 않는다.
-    // EffectOption.effectType 타입 자체는 여전히 `DraftEffectType | null`이므로, dispatch에 넘기기 전
-    // 컴파일러가 non-null을 알 수 있도록 좁혀준다(as 캐스팅 없이).
-    if (option.effectType === null) return
     dispatch({
       type: 'applyDecoration',
-      decoration: { ...range, effectType: option.effectType, color: option.color },
+      decoration: { ...range, effectType: option.effectType, color: DEFAULT_DECORATION_COLOR },
     })
     setRange(null)
+    setEditing(null)
   }
 
   return (
@@ -76,12 +111,34 @@ export function TraceDecorateForm() {
       {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
       <div className="relative bg-bg-default px-8">
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
-        <div className="relative">
-          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations}>
-            <div className="absolute inset-0 px-6 py-10">
-              <TextRangeSelector text={draft.quotedText} onSelect={setRange} />
-            </div>
-          </TraceNote>
+        <div ref={noteRef} className="relative">
+          <TraceNote
+            quotedText={draft.quotedText}
+            decorations={draft.decorations}
+            pendingRange={range}
+            selectable
+            {...handlers}
+            onPointerDown={handlePointerDown}
+          />
+          {editing && (
+            <DecorationEditPopover
+              color={editing.decoration.color}
+              left={editing.left}
+              top={editing.top}
+              onRecolor={(color) => {
+                dispatch({
+                  type: 'recolorDecoration',
+                  startOffset: editing.decoration.startOffset,
+                  color,
+                })
+                setEditing({ ...editing, decoration: { ...editing.decoration, color } })
+              }}
+              onRemove={() => {
+                dispatch({ type: 'removeDecoration', startOffset: editing.decoration.startOffset })
+                setEditing(null)
+              }}
+            />
+          )}
         </div>
       </div>
 

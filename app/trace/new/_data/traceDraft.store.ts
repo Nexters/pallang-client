@@ -38,6 +38,13 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
           action.decoration,
         ].sort((a, b) => a.startOffset - b.startOffset),
       }
+    case 'recolorDecoration':
+      return {
+        ...state,
+        decorations: state.decorations.map((item) =>
+          item.startOffset === action.startOffset ? { ...item, color: action.color } : item,
+        ),
+      }
     case 'removeDecoration':
       return {
         ...state,
