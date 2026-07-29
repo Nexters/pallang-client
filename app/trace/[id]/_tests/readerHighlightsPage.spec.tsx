@@ -151,19 +151,21 @@ function scrollSentinelsIntoView() {
 
 // 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
 // 반환값은 페이지가 그리는 첫 요소인 스크롤 컨테이너다.
-async function renderPage(pages = [7, 9, 12, 23, 34, 123]) {
+async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' | 'opinions') {
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
       const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
       if (pageMatch) {
+        if (failing === 'passages') return Promise.resolve(new Response('{}', { status: 500 }))
         const passages = passageSeedByPage[Number(pageMatch[1])] ?? []
         return Promise.resolve(new Response(JSON.stringify({ data: { passages } })))
       }
 
       const opinionMatch = /\/passages\/(\d+)\/opinions/.exec(url)
       if (opinionMatch) {
+        if (failing === 'opinions') return Promise.resolve(new Response('{}', { status: 500 }))
         const seed = opinionSeedByPassage[Number(opinionMatch[1])] ?? []
         const query = new URLSearchParams(url.split('?')[1] ?? '')
         const size = Number(query.get('size') ?? '20')
@@ -255,6 +257,24 @@ describe('ReaderHighlightsPage', () => {
 
     expect(await screen.findByText('많은 흔적 25')).toBeInTheDocument()
     expect(screen.getByText('많은 흔적 1')).toBeInTheDocument()
+  })
+
+  it('흔적 조회에 실패하면 "0개의 흔적" 대신 에러 상태를 보여준다', async () => {
+    await renderPage([7, 9], 'opinions')
+
+    expect(await screen.findByLabelText('흔적 목록 오류')).toBeInTheDocument()
+    expect(screen.getByText(/앗! 흔적들이 도착하지 않았어요!/)).toBeInTheDocument()
+    expect(screen.queryByText('0개의 흔적')).not.toBeInTheDocument()
+  })
+
+  it('대목 조회에 실패해도 같은 에러 상태를 보여주고, 다시 시도하면 재조회한다', async () => {
+    await renderPage([7, 9], 'passages')
+
+    expect(await screen.findByLabelText('흔적 목록 오류')).toBeInTheDocument()
+
+    const callsBeforeRetry = vi.mocked(fetch).mock.calls.length
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도하기' }))
+    expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(callsBeforeRetry)
   })
 
   it('인용문을 전환하면 해당 대목의 흔적 목록으로 갱신된다', async () => {
