@@ -1,6 +1,5 @@
-import { MyPageView } from './_components/MyPageView/MyPageView'
-import { mockMyUser } from './_data/myUser.constant'
+import { MyPageContent } from './_components/MyPageContent/MyPageContent'
 
 export default function MyPage() {
-  return <MyPageView user={mockMyUser} />
+  return <MyPageContent />
 }

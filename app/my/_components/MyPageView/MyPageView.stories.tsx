@@ -24,7 +24,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const LoggedIn: Story = {
-  args: { user: mockMyUser },
+  args: { user: mockMyUser, onLogout: () => undefined },
 }
 
 export const LoggedOut: Story = {
