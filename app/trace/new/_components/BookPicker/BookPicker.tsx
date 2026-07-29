@@ -1,6 +1,6 @@
 'use client'
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
@@ -32,8 +32,11 @@ export function BookPicker() {
   )
   const scrollRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  // 한 글자마다 요청이 나가지 않도록 입력이 멎은 뒤에 검색한다
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
   const isSearching = debouncedKeyword.length > 0
+  // 디바운스가 끝나기 전까지 화면에 남아 있는 결과는 직전 키워드의 것이다
+  const isTypingAhead = keyword.trim() !== debouncedKeyword
 
   const me = useQuery(userQueries.me())
   const recent = useQuery(bookQueries.recent({ size: PAGE_SIZE }))
@@ -42,10 +45,15 @@ export function BookPicker() {
     ...bookQueries.searchInternal({ keyword: debouncedKeyword, size: PAGE_SIZE }),
     // 키워드가 비면 서버가 전체 목록을 돌려주는데, 그 화면은 캐러셀이 대신한다.
     enabled: isSearching,
+    // 키워드가 바뀌면 쿼리 키도 바뀐다. 이전 결과를 남겨 두지 않으면
+    // 글자를 지우고 다시 칠 때마다 목록이 스켈레톤으로 깜빡인다.
+    placeholderData: keepPreviousData,
   })
 
   const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = searched
-  const canObserveLoadMore = isSearching && hasNextPage && !isError && !isFetchingNextPage
+  // 입력이 이어지는 동안에는 곧 버려질 키워드의 다음 페이지를 당겨오지 않는다
+  const canObserveLoadMore =
+    isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage
 
   useEffect(() => {
     const target = loadMoreRef.current
