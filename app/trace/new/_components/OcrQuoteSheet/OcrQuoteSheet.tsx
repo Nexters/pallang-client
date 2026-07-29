@@ -3,18 +3,26 @@
 import { Button } from '@/app/_global/_components/Button/Button'
 import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
+import { Textarea } from '@/app/_global/_components/Textarea/Textarea'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 
 import { MAX_QUOTE_LENGTH } from '../../_data/quote.constant'
 
 type OcrQuoteSheetProps = {
+  onChange: (quotedText: string) => void
   onClose: () => void
   onRetake: () => void
   onSubmit: () => void
   quotedText: string
 }
 
-export function OcrQuoteSheet({ onClose, onRetake, onSubmit, quotedText }: OcrQuoteSheetProps) {
+export function OcrQuoteSheet({
+  onChange,
+  onClose,
+  onRetake,
+  onSubmit,
+  quotedText,
+}: OcrQuoteSheetProps) {
   return (
     <section
       aria-label="발췌한 텍스트"
@@ -29,23 +37,17 @@ export function OcrQuoteSheet({ onClose, onRetake, onSubmit, quotedText }: OcrQu
           </TopBar.Action>
         </TopBar.Root>
 
-        <div className="mx-4 flex h-[206px] flex-col gap-2 rounded-lg bg-bg-surface p-4">
-          {quotedText ? (
-            <p className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap text-body-16md text-text-secondary">
-              {quotedText}
-            </p>
-          ) : (
-            <p className="min-h-0 flex-1 text-body-16md text-text-placeholder/50">
-              발췌하고 싶은 텍스트를 드래그해주세요.
-              <br />
-              최대 {MAX_QUOTE_LENGTH}자까지 가능해요.
-            </p>
-          )}
-          <p className="shrink-0 self-end text-body-16md">
-            <span className="text-text-secondary">{quotedText.length}</span>
-            <span className="text-text-tertiary"> / {MAX_QUOTE_LENGTH}</span>
-          </p>
-        </div>
+        {/* 인식이 틀린 글자는 여기서 바로 고칠 수 있다 */}
+        <Textarea
+          aria-label="발췌한 텍스트"
+          className="mx-4 w-auto"
+          maxLength={MAX_QUOTE_LENGTH}
+          value={quotedText}
+          placeholder={`발췌하고 싶은 텍스트를 드래그해주세요.\n최대 ${String(MAX_QUOTE_LENGTH)}자까지 가능해요.`}
+          onChange={(event) => {
+            onChange(event.target.value)
+          }}
+        />
 
         <div
           className="flex gap-2 p-4"

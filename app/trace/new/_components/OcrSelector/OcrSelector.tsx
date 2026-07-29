@@ -29,6 +29,8 @@ export function OcrSelector() {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [blocks, setBlocks] = useState<PositionedBlock[]>([])
   const [selected, setSelected] = useState<number[]>([])
+  // 인식이 틀린 글자를 손으로 고친 값. null이면 선택한 블록에서 그대로 뽑아 쓴다.
+  const [editedText, setEditedText] = useState<null | string>(null)
   const [message, setMessage] = useState('')
   const started = useRef(false)
   const objectUrlRef = useRef<string | null>(null)
@@ -61,6 +63,7 @@ export function OcrSelector() {
     setImageUrl(photo.webPath)
     setBlocks([])
     setSelected([])
+    setEditedText(null)
 
     try {
       const response = await latestRef.current.ocrMutateAsync({ image: photo.blob })
@@ -99,7 +102,7 @@ export function OcrSelector() {
   }, [runCapture])
 
   const selectedText = joinBlockTexts(selected.map((index) => blocks[index]).filter((b) => !!b))
-  const quotedText = clampQuote(selectedText, MAX_QUOTE_LENGTH)
+  const quotedText = editedText ?? clampQuote(selectedText, MAX_QUOTE_LENGTH)
 
   return (
     // min-h-0이 없으면 사진이 세로로 길 때 flex 아이템이 콘텐츠 높이 아래로 줄지 못해
@@ -119,6 +122,8 @@ export function OcrSelector() {
             )
               setMessage(QUOTE_LIMIT_MESSAGE)
             setSelected(indices)
+            // 새로 끌면 손으로 고친 내용 대신 새 선택을 따른다
+            setEditedText(null)
           }}
         />
       ) : (
@@ -132,6 +137,7 @@ export function OcrSelector() {
 
       <OcrQuoteSheet
         quotedText={quotedText}
+        onChange={setEditedText}
         onClose={() => {
           router.back()
         }}
