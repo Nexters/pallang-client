@@ -22,6 +22,7 @@ const SEMANTIC_GROUPS = [
       'text-secondary',
       'text-tertiary',
       'text-placeholder',
+      'text-placeholder-a50',
       'text-disabled',
       'text-inverse',
       'text-accent',
@@ -56,7 +57,14 @@ const SEMANTIC_GROUPS = [
   { role: 'Border', tokens: ['border-default', 'border-strong', 'border-book'] },
   {
     role: 'Icon',
-    tokens: ['icon-primary', 'icon-active', 'icon-accent', 'icon-inactive', 'icon-muted'],
+    tokens: [
+      'icon-primary',
+      'icon-active',
+      'icon-accent',
+      'icon-inactive',
+      'icon-muted',
+      'icon-muted-a50',
+    ],
   },
 ] as const
 

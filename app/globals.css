@@ -80,6 +80,7 @@
   --color-text-secondary: #222222; /* neutral/800 */
   --color-text-tertiary: #5b5b5b;
   --color-text-placeholder: #313131;
+  --color-text-placeholder-a50: #31313180;
   --color-text-disabled: #717171;
   --color-text-inverse: #ffffff; /* neutral/0 */
   --color-text-accent: #ef5a06; /* orange/500 */
@@ -117,6 +118,7 @@
   --color-icon-accent: #ef5a06; /* orange/500 */
   --color-icon-inactive: #d9d9d9;
   --color-icon-muted: #848484;
+  --color-icon-muted-a50: #84848480;
 
   /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
   --font-suit: 'SUIT Variable', sans-serif;
