@@ -1,18 +1,20 @@
-/* 스테이지 좌표계(--stage-*, --card-* 등)와 스크롤 진행률 --collapse가 모두 이 요소에 실린다.
-   진행률은 스크롤 훅이 직접 써 넣으므로 스크롤 중 React 리렌더가 일어나지 않는다 */
+/* 스테이지 좌표계(--stage-*, --card-* 등)는 useQuoteCollapse가 이 요소에 싣는다.
+   전환 진행률 --collapse(0~1)는 스크롤이 아니라 전환 애니메이션이 프레임마다 써 넣는다(#76) —
+   스크럽 방식은 관성 세기에 따라 전환이 통째로 건너뛰어지거나 어중간한 중간 상태에 걸렸다 */
 .scroller {
   --collapse: 0;
 
   overflow-x: hidden;
-  /* 전환 구간에서 손을 떼면 펼침(0)과 접힘(--stage-shift) 중 가까운 쪽으로 붙는다.
-     화면 높이나 흔적 개수와 무관하게 어중간한 중간 상태로 멈추지 않는다.
-     mandatory가 아니라 proximity인 이유: 전환 구간을 벗어난 목록 스크롤까지
-     스냅에 끌려다니면 안 된다 */
-  scroll-snap-type: y proximity;
+  overflow-y: auto;
+}
+
+/* 펼침 상태와 전환 중에는 목록 스크롤을 잠근다 — 첫 제스처는 스크롤이 아니라 접힘 전환 한 번이다 */
+.scrollerLocked {
+  overflow-y: hidden;
 }
 
 /* 높이 0짜리 sticky 앵커. 레이아웃 자리를 차지하지 않아 아래 spacer가 그대로 흘러가고,
-   덕분에 목록은 손가락과 1:1로 움직이면서 스테이지만 상단에 붙어 축소된다 */
+   덕분에 목록은 자유롭게 움직이면서 스테이지만 상단에 붙어 있는다 */
 .stageAnchor {
   position: sticky;
   top: 0;
@@ -20,23 +22,13 @@
   height: 0;
 }
 
-/* 펼친 상태 스테이지가 차지할 자리. 전환이 끝나는 지점(--stage-shift)에서 한 번 끊어
-   그 경계를 스냅 포인트로 쓴다 — 두 조각의 높이 합은 --stage-expanded 그대로다.
-   head의 상단은 스크롤 0, tail의 상단은 정확히 전환 거리 지점에 온다 */
-.stageSpacerHead {
-  height: var(--stage-shift);
-  scroll-snap-align: start;
+/* 스테이지가 차지할 자리 — 스테이지 높이와 같은 식으로 줄어들어
+   전환 중 목록 상단이 스테이지 하단과 같은 속도로 따라 올라온다 */
+.stageSpacer {
+  height: calc(var(--stage-expanded) - var(--stage-shift) * var(--collapse));
 }
 
-.stageSpacerTail {
-  height: calc(var(--stage-expanded) - var(--stage-shift));
-  scroll-snap-align: start;
-}
-
-/* 흔적이 적어도 전환을 끝까지 밀어낼 수 있도록 최소 스크롤 여유를 보장한다.
-   (--stage-expanded + 이 최소 높이) - 스크롤러 높이 = --stage-shift 가 되어
-   최대 스크롤량이 전환 거리 이상임이 화면 크기와 무관하게 성립한다.
-   이게 없으면 목록이 짧을 때 progress가 1에 도달하지 못해 반쯤 접힌 채 고정된다 */
+/* 접힘 상태에서 흔적이 적어도 목록 영역이 화면 아래까지 채워지게 한다 */
 .listArea {
   min-height: calc(100% - var(--stage-collapsed));
 }

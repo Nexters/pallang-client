@@ -28,9 +28,9 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   // use(params)는 서스펜드할 수 있어 페이지가 아니라 Suspense 안쪽인 여기서 언래핑한다
   const { id } = use(params)
   const bookId = Number(id)
-  const { stageStyle, isCollapsed, handleScroll } = useQuoteCollapse()
   const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
+  const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
   const traceLoadMoreRef = useRef<HTMLDivElement>(null)
   const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
   const pages = useMemo(
@@ -127,9 +127,12 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
     <>
       <div
         ref={scrollerRef}
-        onScroll={handleScroll}
         style={stageStyle}
-        className={cn('min-h-0 flex-1 overflow-y-auto', styles['scroller'])}
+        className={cn(
+          'min-h-0 flex-1',
+          styles['scroller'],
+          !isCollapsed && styles['scrollerLocked'],
+        )}
       >
         <div className={styles['stageAnchor']}>
           <QuoteStage
@@ -152,8 +155,7 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
             }}
           />
         </div>
-        <div aria-hidden className={styles['stageSpacerHead']} />
-        <div aria-hidden className={styles['stageSpacerTail']} />
+        <div aria-hidden className={styles['stageSpacer']} />
         {isTraceListError ? (
           <TraceListError className={styles['listArea']} onRetry={retryTraceList} />
         ) : (
