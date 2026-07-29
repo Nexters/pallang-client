@@ -6,6 +6,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 
 import { AuthProvider } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { QueryProvider } from '@/app/_global/_providers/QueryProvider/QueryProvider'
+import { SplashProvider } from '@/app/_global/_providers/SplashProvider/SplashProvider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -38,8 +39,8 @@ export default function RootLayout({
       <body className="flex min-h-dvh">
         <QueryProvider>
           <AuthProvider>
-            <main className="mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
-              {children}
+            <main className="relative mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
+              <SplashProvider>{children}</SplashProvider>
             </main>
           </AuthProvider>
         </QueryProvider>
