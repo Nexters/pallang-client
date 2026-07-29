@@ -14,6 +14,7 @@ import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.se
 import type { Trace } from '../../_types/readerHighlights.type'
 import { CommentBar } from '../CommentBar/CommentBar'
 import { CommentThread } from '../CommentThread/CommentThread'
+import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 import { QuotePanel } from '../QuotePanel/QuotePanel'
 
 type TraceDetailOverlayProps = {
@@ -23,7 +24,6 @@ type TraceDetailOverlayProps = {
   quote: string
   onNavigate: (index: number) => void
   onClose: () => void
-  runWithLogin: (action: () => void) => void
 }
 
 export function TraceDetailOverlay({
@@ -33,8 +33,8 @@ export function TraceDetailOverlay({
   quote,
   onNavigate,
   onClose,
-  runWithLogin,
 }: TraceDetailOverlayProps) {
+  const runWithLogin = useLoginGate()
   const { data: commentsData } = useQuery(commentQueries.listByOpinion(trace.opinionId))
   // 비로그인이면 me 조회가 실패해 myUserId가 없고, 수정·삭제 버튼이 숨겨진다
   const { data: meData } = useQuery(userQueries.me())

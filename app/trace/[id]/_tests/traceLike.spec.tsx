@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
 import ReaderHighlightsPage from '../page'
 
 const { pushMock, authState } = vi.hoisted(() => ({
@@ -99,9 +100,12 @@ async function renderPage({ shouldFail = false, holdLike = false }: RenderOption
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
+  // 로그인 게이트는 route layout이 제공하므로 페이지만 렌더하는 테스트에서는 직접 감싼다
   render(
     <QueryClientProvider client={client}>
-      <ReaderHighlightsPage params={stubParams('1')} />
+      <LoginGateProvider>
+        <ReaderHighlightsPage params={stubParams('1')} />
+      </LoginGateProvider>
     </QueryClientProvider>,
   )
   await screen.findByText('첫 번째 흔적')

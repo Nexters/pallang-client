@@ -15,7 +15,6 @@ type TraceListSectionProps = {
   onToggleSort: () => void
   onToggleComment: () => void
   onSelectTrace: (trace: Trace) => void
-  runWithLogin: (action: () => void) => void
 }
 
 export function TraceListSection({
@@ -26,7 +25,6 @@ export function TraceListSection({
   onToggleSort,
   onToggleComment,
   onSelectTrace,
-  runWithLogin,
 }: TraceListSectionProps) {
   return (
     <section className="flex flex-col">
@@ -64,7 +62,6 @@ export function TraceListSection({
               onSelect={() => {
                 onSelectTrace(trace)
               }}
-              runWithLogin={runWithLogin}
             />
           </li>
         ))}

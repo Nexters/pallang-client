@@ -7,17 +7,18 @@ import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
+import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 
 type TraceItemProps = {
   trace: Trace
   onSelect: () => void
-  runWithLogin: (action: () => void) => void
 }
 
 const noop = () => undefined
 const emptySubscribe = () => noop
 
-export function TraceItem({ trace, onSelect, runWithLogin }: TraceItemProps) {
+export function TraceItem({ trace, onSelect }: TraceItemProps) {
+  const runWithLogin = useLoginGate()
   const { isLiked, likeCount, toggle } = useOpinionLike(trace.opinionId, trace.likeCount)
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
   const isHydrated = useSyncExternalStore(
