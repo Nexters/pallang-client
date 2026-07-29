@@ -10,6 +10,13 @@ const meta = {
     layout: 'fullscreen',
     viewport: { defaultViewport: 'mobile2' },
   },
+  decorators: [
+    (Story) => (
+      <div className="flex h-dvh flex-col">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof MyPageView>
 
 export default meta

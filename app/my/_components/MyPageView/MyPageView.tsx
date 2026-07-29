@@ -1,9 +1,9 @@
 import { Button } from '@/app/_global/_components/Button/Button'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import SettingIcon from '@/app/_global/_components/Icon/assets/setting.svg'
+import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
 
 import type { MyUser } from '../../_types/myUser.type'
-import { BottomNav } from '../BottomNav/BottomNav'
 
 const loggedInSettings = [
   '공지사항',
@@ -17,13 +17,16 @@ const loggedOutSettings = ['공지사항', '개인정보 처리 방침', '서비
 
 export function MyPageView({ user }: { user: MyUser | null }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-bg-default pb-28">
-      <header className="px-5 pt-14 pb-6">
+    <TabScreenLayout
+      aria-label="마이페이지"
+      activeTab="my"
+      className="flex flex-col overflow-y-auto bg-bg-default pb-10"
+    >
+      <header className="px-5 pt-4 pb-6">
         <h1 className="text-title-24bd text-text-primary">마이페이지</h1>
       </header>
       {user ? <LoggedInContent user={user} /> : <LoggedOutContent />}
-      <BottomNav />
-    </div>
+    </TabScreenLayout>
   )
 }
 
