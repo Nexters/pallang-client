@@ -40,7 +40,8 @@ export function TraceDoneView() {
             variant="back"
             className="flex-1"
             onClick={() => {
-              // app/trace/new/layout의 Provider가 언마운트되므로 dispatch 불필요
+              // 홈으로 나가도 초안을 비운다. 남겨두면 다시 들어왔을 때 완료 화면으로 튕긴다.
+              dispatch({ type: 'reset' })
               router.push('/')
             }}
           >

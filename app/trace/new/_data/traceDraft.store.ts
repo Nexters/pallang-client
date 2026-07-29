@@ -23,7 +23,8 @@ function overlaps(a: DraftDecoration, b: DraftDecoration): boolean {
 export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): TraceDraft {
   switch (action.type) {
     case 'selectBook':
-      return { ...state, book: action.book }
+      // 책을 고르는 건 새 흔적의 시작이다. 직전에 저장한 흔적과의 연결을 끊는다.
+      return { ...state, book: action.book, passageId: null, result: null }
     case 'setSource':
       return { ...state, source: action.source }
     case 'setQuotedText':

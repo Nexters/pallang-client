@@ -77,6 +77,18 @@ describe('resolveGuardRedirect', () => {
     expect(resolveGuardRedirect('/trace/new/decorate', saved)).toBe('/trace/new/done')
     expect(resolveGuardRedirect('/trace/new/opinion', saved)).toBe('/trace/new/done')
     expect(resolveGuardRedirect('/trace/new/detail', saved)).toBe('/trace/new/done')
-    expect(resolveGuardRedirect('/trace/new', saved)).toBe('/trace/new/done')
+  })
+
+  it('결과가 있어도 첫 화면은 막지 않는다', () => {
+    // 막으면 흔적을 한 번 남긴 뒤로는 계속 done으로 튕겨 새 흔적을 시작할 수 없다.
+    const saved = draftWith({
+      book,
+      quotedText: '문장',
+      pageNumber: 87,
+      content: '의견',
+      result: { opinionId: 1, merged: false },
+    })
+
+    expect(resolveGuardRedirect('/trace/new', saved)).toBeNull()
   })
 })
