@@ -1,17 +1,5 @@
 @import 'tailwindcss';
 
-:root {
-  --background: #f0f0f0;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 /* ponytail: 디자인 토큰 — Figma(2026-07) 148:20563(팔레트) 148:20617(뉴트럴/화이트)
    148:20653(텍스트) 148:20695(배경) 148:20737(인터랙티브) 148:20771(보더/아이콘) 148:20447(타이포그래피)
    155:3658(Reader — border-book·pretendard·타이포 보정) */
@@ -200,15 +188,10 @@
   --text-caption-12rg--font-weight: 400;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 앱은 라이트/다크 테마를 나누지 않는다. 화면마다 배경을 직접 지정하므로 body는 기본값만 든다.
+   상속색을 토큰으로 고정해 두는 게 중요하다 — SVGR이 주입하는 text-icon-primary는 아이콘에
+   className을 넘기는 순간 {...props}에 덮이고, 그때 색이 이 상속값으로 떨어지기 때문이다. */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg-default);
+  color: var(--color-text-secondary);
 }
