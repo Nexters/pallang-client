@@ -87,9 +87,9 @@ export function BookPickList({ books, onRetry, onSelect, status }: BookPickListP
               author={book.author}
               coverImageUrl={book.coverImageUrl}
               opinionCount={book.opinionCount}
+              passageCount={book.passageCount}
               publisher={book.publisher}
               title={book.title}
-              traceCount={book.passageCount}
             />
           </button>
           {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}

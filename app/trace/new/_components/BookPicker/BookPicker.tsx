@@ -2,12 +2,13 @@
 
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
+import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
@@ -51,26 +52,16 @@ export function BookPicker() {
   })
 
   const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = searched
-  // 입력이 이어지는 동안에는 곧 버려질 키워드의 다음 페이지를 당겨오지 않는다
-  const canObserveLoadMore =
-    isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage
 
-  useEffect(() => {
-    const target = loadMoreRef.current
-    const scrollRoot = scrollRef.current
-    if (!target || !scrollRoot || !canObserveLoadMore) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) void fetchNextPage()
-      },
-      { root: scrollRoot, rootMargin: '160px 0px' },
-    )
-    observer.observe(target)
-    return () => {
-      observer.disconnect()
-    }
-  }, [canObserveLoadMore, fetchNextPage])
+  useLoadMoreOnVisible({
+    targetRef: loadMoreRef,
+    rootRef: scrollRef,
+    // 입력이 이어지는 동안에는 곧 버려질 키워드의 다음 페이지를 당겨오지 않는다
+    enabled: isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage,
+    onLoadMore: () => {
+      void fetchNextPage()
+    },
+  })
 
   const handleSelect = (book: SelectedBook) => {
     dispatch({ type: 'selectBook', book })
