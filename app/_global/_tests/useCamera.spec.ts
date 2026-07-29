@@ -16,7 +16,7 @@ vi.mock('@capacitor/core', () => ({
 }))
 vi.mock('@capacitor/camera', () => ({
   Camera: { getPhoto: vi.fn() },
-  CameraResultType: { Uri: 'uri' },
+  CameraResultType: { DataUrl: 'dataUrl', Uri: 'uri' },
   CameraSource: { Prompt: 'PROMPT' },
 }))
 
@@ -30,23 +30,31 @@ describe('useCamera', () => {
     vi.unstubAllGlobals()
   })
 
-  it('네이티브에서는 Camera.getPhoto를 CAMERA_OPTIONS로 호출하고 webPath와 blob을 반환한다', async () => {
+  // 원격 URL을 로드하는 앱이라 capacitor:// 경로는 교차 오리진이 되어 fetch가 막힌다.
+  // 그래서 Uri가 아니라 DataUrl로 받아 브릿지에서 바로 blob을 만든다.
+  it('네이티브에서는 dataUrl을 blob으로 바꾸고 blob URL을 webPath로 준다', async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
     vi.mocked(Camera.getPhoto).mockResolvedValue({
-      webPath: 'capacitor://photo/1',
+      dataUrl: 'data:image/jpeg;base64,AAAA',
     } as Awaited<ReturnType<typeof Camera.getPhoto>>)
     const mockBlob = new Blob(['photo'])
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ blob: () => Promise.resolve(mockBlob) }))
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock')
 
     const { takePhoto } = useCamera()
     const result = await takePhoto()
 
     expect(Camera.getPhoto).toHaveBeenCalledWith(CAMERA_OPTIONS)
-    expect(fetch).toHaveBeenCalledWith('capacitor://photo/1')
-    expect(result).toEqual({ webPath: 'capacitor://photo/1', blob: mockBlob })
+    expect(fetch).toHaveBeenCalledWith('data:image/jpeg;base64,AAAA')
+    expect(result).toEqual({ webPath: 'blob:mock', blob: mockBlob })
   })
 
-  it('네이티브에서 webPath가 없으면 null을 반환한다', async () => {
+  it('CAMERA_OPTIONS는 dataUrl로 받고 업로드 크기를 제한한다', () => {
+    expect(CAMERA_OPTIONS.resultType).toBe('dataUrl')
+    expect(CAMERA_OPTIONS.width).toBe(1600)
+  })
+
+  it('네이티브에서 dataUrl이 없으면 null을 반환한다', async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
     vi.mocked(Camera.getPhoto).mockResolvedValue({} as Awaited<ReturnType<typeof Camera.getPhoto>>)
 
