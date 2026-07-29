@@ -66,7 +66,7 @@ export function TraceCollapseView({
   const traces = opinionsData?.data?.opinions ?? []
   const traceCount = opinionsData?.data?.pageInfo.totalElements ?? 0
 
-  const selectedTraceIndex = traces.findIndex((trace) => trace.opinionId === selectedTraceId)
+  const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
 
   const openCommentBar = () => {
     gate.runWithLogin(() => {
@@ -117,11 +117,13 @@ export function TraceCollapseView({
           }}
         />
       </div>
+      {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
       {isCommentBarOpen && <CommentBar />}
-      {selectedTraceIndex >= 0 && (
+      {selectedTrace && (
         <TraceDetailOverlay
-          traces={traces}
-          index={selectedTraceIndex}
+          trace={selectedTrace}
+          index={traces.indexOf(selectedTrace)}
+          count={traces.length}
           quote={highlight.quotes[viewer.quoteIndex] ?? ''}
           onNavigate={(next) => {
             const target = traces[next]
@@ -130,6 +132,7 @@ export function TraceCollapseView({
           onClose={() => {
             setSelectedTraceId(null)
           }}
+          runWithLogin={gate.runWithLogin}
         />
       )}
       {gate.isGateOpen && <LoginGateModal onLogin={gate.login} onClose={gate.close} />}
