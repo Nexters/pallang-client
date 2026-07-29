@@ -301,6 +301,8 @@ describe('ReaderHighlightsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
     expect(pushMock).toHaveBeenCalledWith('/login')
+    // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 닫지 않으면 로그인 화면을 덮는다.
+    expect(screen.queryByText(LOGIN_GATE_MESSAGE.pageView)).not.toBeInTheDocument()
   })
 
   it('앞선 게이트의 문구가 다음 게이트에 남지 않는다', async () => {

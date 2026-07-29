@@ -23,6 +23,9 @@ export function useLoginGateState() {
   }
 
   const login = () => {
+    // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 여기서 닫지 않으면
+    // 로그인 화면 위에 모달이 그대로 덮인다.
+    setGateMessage(null)
     router.push(LOGIN_PATH)
   }
 
