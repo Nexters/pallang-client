@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ComponentPropsWithoutRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
@@ -8,11 +9,10 @@ type BookItemListItem = {
   author: string
   bookId: number
   coverImageUrl?: null | string
-  opinionCount?: number
-  passageCount?: number
+  opinionCount: number
+  passageCount: number
   publisher?: string
   title: string
-  traceCount?: number
 }
 
 type BookItemListProps = ComponentPropsWithoutRef<'section'> & {
@@ -29,14 +29,16 @@ export function BookItemList({ books, className, ...props }: BookItemListProps) 
       <div className="flex w-full flex-col gap-3">
         {books.map((book, index) => (
           <div key={book.bookId} className="flex flex-col gap-3">
-            <BookItem
-              author={book.author}
-              coverImageUrl={book.coverImageUrl}
-              opinionCount={book.opinionCount ?? 0}
-              publisher={book.publisher}
-              title={book.title}
-              traceCount={book.traceCount ?? book.passageCount ?? 0}
-            />
+            <Link href={`/trace/${String(book.bookId)}`} aria-label={`${book.title} 흔적 보기`}>
+              <BookItem
+                author={book.author}
+                coverImageUrl={book.coverImageUrl}
+                opinionCount={book.opinionCount}
+                passageCount={book.passageCount}
+                publisher={book.publisher}
+                title={book.title}
+              />
+            </Link>
             {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}
           </div>
         ))}
