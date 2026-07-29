@@ -70,29 +70,33 @@ export function TraceDecorateForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-alternative pb-6">
+      <div className="bg-bg-default">
         <TraceStepHeader step={2} title={'원하는 영역을 선택하고\n다양한 효과를 적용해보세요'} />
       </div>
-      <div className="-mt-4 px-8">
-        <TraceNote quotedText={draft.quotedText} decorations={draft.decorations}>
-          <div className="absolute inset-0 px-6 py-8">
-            <TextRangeSelector text={draft.quotedText} onSelect={setRange} />
-          </div>
-        </TraceNote>
+      {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
+      <div className="relative bg-bg-default px-8">
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+        <div className="relative">
+          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations}>
+            <div className="absolute inset-0 px-6 py-10">
+              <TextRangeSelector text={draft.quotedText} onSelect={setRange} />
+            </div>
+          </TraceNote>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-3 px-4 pt-8">
-        <span className="text-body-14md text-text-inverse">효과</span>
+      <div className="flex flex-col gap-3.5 px-4 py-6">
+        <span className="text-body-16md text-text-inverse opacity-80">효과</span>
         <EffectPicker onPick={handlePick} disabled={false} />
       </div>
 
       <div
-        className="mt-auto flex gap-2 px-4 pb-4"
+        className="mt-auto flex gap-2 p-4"
         style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       >
         <Button
           variant="back"
-          className="flex-1"
+          className="h-[54px] flex-1"
           onClick={() => {
             router.back()
           }}
@@ -101,7 +105,7 @@ export function TraceDecorateForm() {
         </Button>
         <Button
           variant="activated"
-          className="flex-1"
+          className="h-[54px] flex-1"
           disabled={draft.decorations.length === 0 || similarCheck.isPending}
           onClick={handleNext}
         >

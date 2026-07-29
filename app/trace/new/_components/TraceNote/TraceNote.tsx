@@ -17,8 +17,9 @@ const effectClassMap: Record<DraftEffectType, string> = {
 
 export function TraceNote({ quotedText, decorations, children }: TraceNoteProps) {
   return (
-    <div className="relative rounded-[4px] border border-border-book bg-bg-book-card px-6 py-8 drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]">
-      <p className="text-body-20md whitespace-pre-wrap text-text-secondary">
+    // 시안(2295:5843)의 TraceNote는 높이가 320px로 고정이라 인용문이 길면 잘린다
+    <div className="relative flex max-h-[320px] min-h-[320px] items-center justify-center overflow-hidden rounded-[4px] border border-border-book bg-bg-book-card px-6 py-10 drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]">
+      <p className="text-body-20md h-full min-w-px flex-1 overflow-hidden whitespace-pre-wrap text-text-secondary">
         {splitByDecorations(quotedText, decorations).map((segment, index) =>
           segment.decoration ? (
             <span

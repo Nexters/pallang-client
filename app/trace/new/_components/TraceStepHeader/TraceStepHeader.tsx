@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
+import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 
 type TraceStepHeaderProps = {
   step: 1 | 2 | 3
@@ -13,25 +14,27 @@ export function TraceStepHeader({ step, title }: TraceStepHeaderProps) {
   const router = useRouter()
 
   return (
-    <header
-      className="flex flex-col gap-6 px-4 pt-4"
-      // 노치/상태바 아래로 파고들지 않게 한다(layout에 viewportFit: 'cover'가 있어야 값이 잡힌다)
-      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-body-16md text-text-primary">{step}/3</span>
-        <button
-          type="button"
+    <div className="flex flex-col">
+      <TopBar.Root
+        // 노치/상태바 아래로 파고들지 않게 한다(layout에 viewportFit: 'cover'가 있어야 값이 잡힌다)
+        style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
+      >
+        <TopBar.Title>{step}/3</TopBar.Title>
+        <TopBar.Spacer />
+        <TopBar.Action
           aria-label="닫기"
           onClick={() => {
             router.push('/')
           }}
-          className="flex size-6 items-center justify-center text-icon-primary"
         >
-          <CloseIcon aria-hidden="true" className="size-6" />
-        </button>
+          <CloseIcon />
+        </TopBar.Action>
+      </TopBar.Root>
+      <div className="flex items-center px-4 py-2.5">
+        <h1 className="min-w-px flex-1 whitespace-pre-line text-title-20bd text-text-primary">
+          {title}
+        </h1>
       </div>
-      <h1 className="whitespace-pre-line text-title-20sb text-text-primary">{title}</h1>
-    </header>
+    </div>
   )
 }
