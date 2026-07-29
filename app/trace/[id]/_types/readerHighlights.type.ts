@@ -13,6 +13,8 @@ export type QuoteStageProps = {
   isRevealed: boolean
   isCollapsed: boolean
   onSelectPage: (page: number) => void
+  /** 더 불러올 대목 페이지가 있을 때만 전달된다 — 페이지 탭을 끝까지 스크롤하면 호출된다 */
+  onLoadMorePages?: () => void
   onClickQuote: () => void
 }
 

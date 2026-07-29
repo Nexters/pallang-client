@@ -1,10 +1,25 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RootCommentResponse } from '@/app/_global/_queries/comment.queries'
 
+import { LoginGateProvider } from '../_components/LoginGateProvider/LoginGateProvider'
 import { TraceDetailOverlay } from '../_components/TraceDetailOverlay/TraceDetailOverlay'
+
+const { authState } = vi.hoisted(() => ({ authState: { isAuthenticated: true } }))
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}))
+
+vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
+  useAuth: () => ({
+    status: authState.isAuthenticated ? 'authenticated' : 'unauthenticated',
+    isAuthenticated: authState.isAuthenticated,
+    signOut: vi.fn(),
+  }),
+}))
 
 const trace = {
   opinionId: 1,
@@ -127,29 +142,31 @@ function stubCommentApi() {
   )
 }
 
-function renderOverlay(
-  runWithLogin: (action: () => void) => void = (action) => {
-    action()
-  },
-) {
+function renderOverlay() {
   stubCommentApi()
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  // 로그인 게이트는 route layout이 제공하므로 오버레이만 렌더하는 테스트에서는 직접 감싼다
   render(
     <QueryClientProvider client={client}>
-      <TraceDetailOverlay
-        trace={trace}
-        index={0}
-        count={1}
-        quote="인용문"
-        onNavigate={() => undefined}
-        onClose={() => undefined}
-        runWithLogin={runWithLogin}
-      />
+      <LoginGateProvider>
+        <TraceDetailOverlay
+          trace={trace}
+          index={0}
+          count={1}
+          quote="인용문"
+          onNavigate={() => undefined}
+          onClose={() => undefined}
+        />
+      </LoginGateProvider>
     </QueryClientProvider>,
   )
 }
 
 describe('TraceDetailOverlay 댓글', () => {
+  beforeEach(() => {
+    authState.isAuthenticated = true
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -215,10 +232,9 @@ describe('TraceDetailOverlay 댓글', () => {
     expect(screen.queryByRole('button', { name: '답글 더보기' })).not.toBeInTheDocument()
   })
 
-  it('댓글 등록은 로그인 게이트를 거친다', async () => {
-    // 게이트가 액션을 실행하지 않으면(비로그인) POST가 나가지 않아야 한다
-    const runWithLogin = vi.fn()
-    renderOverlay(runWithLogin)
+  it('비로그인 상태에서 댓글을 등록하면 로그인 게이트가 막는다', async () => {
+    authState.isAuthenticated = false
+    renderOverlay()
     await screen.findByText('내가 쓴 댓글')
 
     fireEvent.change(screen.getByPlaceholderText('댓글을 입력해주세요'), {
@@ -226,7 +242,7 @@ describe('TraceDetailOverlay 댓글', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
 
-    expect(runWithLogin).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('해당 페이지부터는 로그인해야 확인할 수 있어요!')).toBeInTheDocument()
     const postCalls = vi
       .mocked(fetch)
       .mock.calls.filter(([, options]) => options?.method === 'POST')

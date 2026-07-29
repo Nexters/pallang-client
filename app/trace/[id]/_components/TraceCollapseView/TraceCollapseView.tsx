@@ -1,20 +1,21 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { use, useMemo, useState } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { use, useMemo, useRef, useState } from 'react'
 
+import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { bookTitle } from '../../_data/readerHighlights.constant'
 import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
-import { useLoginGate } from '../../_hooks/useLoginGate'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
-import { LoginGateModal } from '../LoginGateModal/LoginGateModal'
+import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
+import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
 import styles from './TraceCollapseView.module.css'
 
@@ -27,16 +28,25 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   const { id } = use(params)
   const bookId = Number(id)
   const { stageStyle, isCollapsed, handleScroll } = useQuoteCollapse()
-  const gate = useLoginGate()
-  const { data: pageNumbersData } = useQuery(passageQueries.pageNumbers(bookId))
-  const pages = useMemo(() => pageNumbersData?.data?.pageNumbers ?? [], [pageNumbersData])
-  const viewer = useHighlightViewer(gate.runWithLogin, pages[0])
-  const { data: passagesData } = useQuery({
+  const runWithLogin = useLoginGate()
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const traceLoadMoreRef = useRef<HTMLDivElement>(null)
+  const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
+  const pages = useMemo(
+    () => pageNumbersQuery.data?.pages.flatMap((page) => page.data?.pageNumbers ?? []) ?? [],
+    [pageNumbersQuery.data],
+  )
+  const canLoadMorePages =
+    pageNumbersQuery.hasNextPage &&
+    !pageNumbersQuery.isError &&
+    !pageNumbersQuery.isFetchingNextPage
+  const viewer = useHighlightViewer(runWithLogin, pages[0])
+  const passagesQuery = useQuery({
     ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
     enabled: viewer.activePage !== undefined,
   })
 
-  const passages = useMemo(() => passagesData?.data?.passages ?? [], [passagesData])
+  const passages = useMemo(() => passagesQuery.data?.data?.passages ?? [], [passagesQuery.data])
   const highlight = useMemo(
     () => ({
       page: viewer.activePage ?? 0,
@@ -51,13 +61,27 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   const [sortType, setSortType] = useState<OpinionSortType>('LATEST')
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
 
-  const { data: opinionsData } = useQuery(
+  const opinionsQuery = useInfiniteQuery(
     opinionQueries.listByPassage(activePassage?.passageId, sortType),
   )
-  const traces = opinionsData?.data?.opinions ?? []
-  const traceCount = opinionsData?.data?.pageInfo.totalElements ?? 0
+  const traces = useMemo(
+    () => opinionsQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
+    [opinionsQuery.data],
+  )
+  // 헤더 숫자는 서버가 알려준 전체 개수라, 목록을 끝까지 불러오면 둘이 맞는다
+  const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
 
   const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
+
+  // 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다
+  const failedTraceListQueries = [pageNumbersQuery, passagesQuery, opinionsQuery].filter(
+    (query) => query.isError,
+  )
+  const isTraceListError = failedTraceListQueries.length > 0
+
+  const retryTraceList = () => {
+    for (const query of failedTraceListQueries) void query.refetch()
+  }
 
   // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
   //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
@@ -65,8 +89,24 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
   const isTraceListMasked = Boolean(activePassage?.isSpoiler) && !viewer.isRevealed
 
+  // placeholderData로 이전 대목의 목록이 보이는 동안에는 다음 페이지를 당기지 않는다
+  const canFetchMoreTraces =
+    opinionsQuery.hasNextPage &&
+    !opinionsQuery.isError &&
+    !opinionsQuery.isFetchingNextPage &&
+    !opinionsQuery.isPlaceholderData
+
+  useLoadMoreOnVisible({
+    targetRef: traceLoadMoreRef,
+    rootRef: scrollerRef,
+    enabled: canFetchMoreTraces && !isTraceListMasked,
+    onLoadMore: () => {
+      void opinionsQuery.fetchNextPage()
+    },
+  })
+
   const openCommentBar = () => {
-    gate.runWithLogin(() => {
+    runWithLogin(() => {
       setIsCommentBarOpen(true)
     })
   }
@@ -82,6 +122,7 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
   return (
     <>
       <div
+        ref={scrollerRef}
         onScroll={handleScroll}
         style={stageStyle}
         className={cn('min-h-0 flex-1 overflow-y-auto', styles['scroller'])}
@@ -95,6 +136,13 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
             isRevealed={viewer.isRevealed}
             isCollapsed={isCollapsed}
             onSelectPage={viewer.select}
+            onLoadMorePages={
+              canLoadMorePages
+                ? () => {
+                    void pageNumbersQuery.fetchNextPage()
+                  }
+                : undefined
+            }
             onClickQuote={() => {
               viewer.clickCard(highlight)
             }}
@@ -102,20 +150,28 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
         </div>
         <div aria-hidden className={styles['stageSpacerHead']} />
         <div aria-hidden className={styles['stageSpacerTail']} />
-        <TraceListSection
-          className={styles['listArea']}
-          traces={traces}
-          traceCount={traceCount}
-          isMasked={isTraceListMasked}
-          sortType={sortType}
-          onToggleSort={() => {
-            setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
-          }}
-          onToggleComment={toggleCommentBar}
-          onSelectTrace={(trace) => {
-            setSelectedTraceId(trace.opinionId)
-          }}
-        />
+        {isTraceListError ? (
+          <TraceListError className={styles['listArea']} onRetry={retryTraceList} />
+        ) : (
+          <>
+            <TraceListSection
+              className={styles['listArea']}
+              traces={traces}
+              traceCount={traceCount}
+              isMasked={isTraceListMasked}
+              sortType={sortType}
+              onToggleSort={() => {
+                setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
+              }}
+              onToggleComment={toggleCommentBar}
+              onSelectTrace={(trace) => {
+                setSelectedTraceId(trace.opinionId)
+              }}
+            />
+            {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
+            <div ref={traceLoadMoreRef} aria-hidden className="h-px w-full" />
+          </>
+        )}
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
       {isCommentBarOpen && <CommentBar />}
@@ -128,14 +184,16 @@ export function TraceCollapseView({ params }: TraceCollapseViewProps) {
           onNavigate={(next) => {
             const target = traces[next]
             if (target) setSelectedTraceId(target.opinionId)
+            // 상세에서도 마지막 흔적에 닿으면 다음 페이지를 이어 붙인다
+            if (next >= traces.length - 1 && canFetchMoreTraces) {
+              void opinionsQuery.fetchNextPage()
+            }
           }}
           onClose={() => {
             setSelectedTraceId(null)
           }}
-          runWithLogin={gate.runWithLogin}
         />
       )}
-      {gate.isGateOpen && <LoginGateModal onLogin={gate.login} onClose={gate.close} />}
     </>
   )
 }

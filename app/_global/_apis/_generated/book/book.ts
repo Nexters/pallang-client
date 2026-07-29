@@ -9,6 +9,8 @@ import type { DataResponseBookListResponse } from '../models/dataResponseBookLis
 
 import type { DataResponseBookResponse } from '../models/dataResponseBookResponse'
 
+import type { DataResponseBookSearchListResponse } from '../models/dataResponseBookSearchListResponse'
+
 import type { DataResponseExternalBookListResponse } from '../models/dataResponseExternalBookListResponse'
 
 import type { GetHomeCarouselBooksParams } from '../models/getHomeCarouselBooksParams'
@@ -178,14 +180,14 @@ export const getSearchInternalBooksUrl = (params: SearchInternalBooksParams) => 
 }
 
 /**
- * 서비스 DB에 이미 등록된 도서를 제목으로 검색합니다.
+ * 서비스 DB에 이미 등록된 도서를 제목으로 검색하며, 도서별 대목/흔적 수를 함께 반환합니다. 제목과 검색어의 띄어쓰기 차이는 무시하고 매칭합니다. keyword에 빈 문자열을 넘기면 전체 목록을 반환합니다.
  * @summary 도서 내부 검색
  */
 export const searchInternalBooks = async (
   params: SearchInternalBooksParams,
   options?: Parameters<typeof customFetch>[1],
-): Promise<DataResponseBookListResponse> => {
-  return customFetch<DataResponseBookListResponse>(getSearchInternalBooksUrl(params), {
+): Promise<DataResponseBookSearchListResponse> => {
+  return customFetch<DataResponseBookSearchListResponse>(getSearchInternalBooksUrl(params), {
     ...options,
     method: 'GET',
   })

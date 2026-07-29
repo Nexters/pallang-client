@@ -1,11 +1,13 @@
-import { useState, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
 
 import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 
+import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
+import { useLoginGate } from '../LoginGateProvider/LoginGateProvider'
 
 type TraceItemProps = {
   trace: Trace
@@ -16,7 +18,8 @@ const noop = () => undefined
 const emptySubscribe = () => noop
 
 export function TraceItem({ trace, onSelect }: TraceItemProps) {
-  const [isLiked, setIsLiked] = useState(false)
+  const runWithLogin = useLoginGate()
+  const { isLiked, likeCount, toggle } = useOpinionLike(trace.opinionId, trace.likeCount)
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
   const isHydrated = useSyncExternalStore(
     emptySubscribe,
@@ -24,7 +27,6 @@ export function TraceItem({ trace, onSelect }: TraceItemProps) {
     () => false,
   )
   const dateLabel = isHydrated ? formatTraceDate(trace.createdAt) : trace.createdAt.slice(0, 10)
-  const likeCount = trace.likeCount + (isLiked ? 1 : 0)
 
   return (
     <article className="flex flex-col gap-3 py-4">
@@ -44,9 +46,10 @@ export function TraceItem({ trace, onSelect }: TraceItemProps) {
         <div className="flex items-center gap-4">
           <button
             type="button"
+            aria-label="좋아요"
             aria-pressed={isLiked}
             onClick={() => {
-              setIsLiked((prev) => !prev)
+              runWithLogin(toggle)
             }}
             className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >

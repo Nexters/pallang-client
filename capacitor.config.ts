@@ -17,7 +17,16 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     // http(LAN) 로드일 때만 cleartext 허용
     cleartext: serverUrl.startsWith('http://'),
-    allowNavigation: [],
+    // 카카오 OAuth를 웹뷰 안에서 진행시킨다. 목록에 없는 외부 도메인은 시스템 브라우저(Safari)로
+    // 열려서 로그인 세션이 앱 밖에 남는다.
+    allowNavigation: ['kauth.kakao.com', 'accounts.kakao.com'],
+  },
+  plugins: {
+    // 인증 상태(로그인/비로그인) 결정 전까지 비로그인 화면이 깜빡 보이는 것 방지.
+    // AuthProvider가 초기화 완료 후 SplashScreen.hide()를 호출한다.
+    SplashScreen: {
+      launchAutoHide: false,
+    },
   },
 }
 
