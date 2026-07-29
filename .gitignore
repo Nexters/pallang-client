@@ -46,3 +46,6 @@ storybook-static
 
 # superpowers sdd scratch
 .superpowers/
+
+# playwright mcp artifacts
+.playwright-mcp/
