@@ -14,7 +14,7 @@ export function useCamera(): { takePhoto: () => Promise<Photo | null> } {
       // getPhoto를 의도적으로 사용한다.
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const photo = await Camera.getPhoto(CAMERA_OPTIONS)
-      return photo.webPath ? await toPhoto(photo.webPath) : null
+      return photo.dataUrl ? await toPhoto(photo.dataUrl) : null
     }
     return takePhotoFromFileInput()
   }
@@ -22,12 +22,14 @@ export function useCamera(): { takePhoto: () => Promise<Photo | null> } {
   return { takePhoto }
 }
 
-async function toPhoto(webPath: string): Promise<Photo | null> {
+async function toPhoto(dataUrl: string): Promise<Photo | null> {
   try {
-    const res = await fetch(webPath)
-    return { webPath, blob: await res.blob() }
+    const blob = await (await fetch(dataUrl)).blob()
+    // 화면에 띄우는 이미지와 업로드하는 이미지가 같아야 OCR 좌표가 맞는다.
+    // data URL을 그대로 쓰면 문자열이 커서 blob URL로 바꿔 단다.
+    return { webPath: URL.createObjectURL(blob), blob }
   } catch (error) {
-    console.error('사진 웹뷰 경로를 blob으로 변환하는 데 실패했습니다.', error)
+    console.error('사진을 blob으로 변환하는 데 실패했습니다.', error)
     return null
   }
 }

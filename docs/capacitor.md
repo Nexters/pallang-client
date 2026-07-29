@@ -2,7 +2,7 @@
 
 이 앱은 **Capacitor 셸이 원격 URL(배포된 Next.js 웹)을 WebView로 로드**하고, 네이티브 기능은 **카메라만** 쓴다. 설계 배경은 [specs/2026-07-24-capacitor-camera-webview-design.md](./superpowers/specs/2026-07-24-capacitor-camera-webview-design.md).
 
-아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것. (함정 1은 iOS·Android 공통, 함정 2는 iOS 전용, Android는 아래 별도 섹션.)
+아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것. (함정 1·3은 iOS·Android 공통, 함정 2는 iOS 전용, Android는 아래 별도 섹션.)
 
 ## ⚠️ 함정 1 — Next.js `dev` 서버는 WKWebView에서 하이드레이션이 안 됨
 
@@ -26,6 +26,19 @@
   # 그리고 Info.plist 권한/ATS, DEVELOPMENT_TEAM 재적용(아래 참고)
   ```
   - 재생성 후 `ios/App/App.xcodeproj/project.pbxproj`의 Sources 페이즈에 `AppDelegate.swift`가 있는지 확인(정상이면 크기 ~14KB, 손상되면 ~10KB).
+
+## ⚠️ 함정 3 — 네이티브가 준 파일 경로(`capacitor://localhost/...`)는 `fetch`로 못 읽음
+
+- 증상: 카메라는 정상적으로 열리고 촬영도 되는데 **업로드가 안 됨**. 이미지 표시는 되는데 바이트를 읽으려 하면 실패. 기기 콘솔에 `fetch` 실패만 남는다.
+- 원인: 이 앱은 번들 에셋이 아니라 **원격 URL(`server.url`)을 로드**한다. 그래서 웹뷰 오리진은 배포 도메인인데, `convertFileSrc`가 만드는 경로는 항상 Capacitor의 `localURL` 기준이라 `capacitor://localhost/_capacitor_file_/...`가 된다. 둘이 **교차 오리진**이라 `fetch`/XHR이 차단된다.
+  - `window.WEBVIEW_SERVER_URL = <localURL>`이 문서 시작 시 주입되고(`JSExport.swift`), `convertFileSrc`는 이 값으로만 경로를 만든다(`native-bridge.js`). 페이지가 어디서 로드됐는지는 보지 않는다.
+  - Capacitor는 이 상태를 "라이브 리로드"로 간주한다(`WebViewAssetHandler.isUsingLiveReload` — `serverUrl`과 `localUrl`의 스킴이 다른 경우). 원래 개발용 임시 상태를 상정한 모드인데, **이 앱은 그걸 배포 아키텍처로 쓰므로 상시 해당된다.**
+  - **`<img src={webPath}>`는 잘 뜬다.** 이미지 렌더링은 CORS 대상이 아니다. Capacitor 공식 예제가 이 형태라 이 함정을 안 만나고 지나가기 쉽다. **바이트를 읽을 때만** 터진다.
+- **해결: 파일 경로를 받지 말고 브릿지로 데이터를 직접 받는다.** `resultType: CameraResultType.DataUrl` → `data:` URL이라 오리진 제약이 없다.
+  - 원본은 4032px까지 나온다. 브릿지 전송·업로드가 무거우므로 `width`로 줄인다(책 한 쪽 OCR엔 1600px면 충분).
+  - **화면에 띄우는 이미지와 업로드하는 이미지가 같아야 한다.** OCR 바운딩 박스 좌표가 업로드한 이미지 기준이라, 다른 이미지를 표시하면 선택 영역이 어긋난다. 같은 blob을 `URL.createObjectURL`로 달아 쓴다.
+- 같은 이유로 `@capacitor/filesystem` 등 **파일 경로를 돌려주는 다른 플러그인도 동일한 함정**을 갖는다. 원격 URL 로드를 유지하는 한 경로가 아니라 데이터로 받아야 한다.
+- 브라우저(`pnpm dev`)에서는 `<input type="file">` 경로를 타므로 **재현되지 않는다.** 실기기에서 끝까지 태워봐야 드러난다.
 
 ## dev 서버 URL 자동화 (`scripts/cap-dev.sh`)
 
