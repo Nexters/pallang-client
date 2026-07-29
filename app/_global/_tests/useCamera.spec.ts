@@ -17,7 +17,7 @@ vi.mock('@capacitor/core', () => ({
 vi.mock('@capacitor/camera', () => ({
   Camera: { getPhoto: vi.fn() },
   CameraResultType: { DataUrl: 'dataUrl', Uri: 'uri' },
-  CameraSource: { Prompt: 'PROMPT' },
+  CameraSource: { Camera: 'CAMERA', Photos: 'PHOTOS', Prompt: 'PROMPT' },
 }))
 
 describe('useCamera', () => {
@@ -49,9 +49,34 @@ describe('useCamera', () => {
     expect(result).toEqual({ webPath: 'blob:mock', blob: mockBlob })
   })
 
-  it('CAMERA_OPTIONS는 dataUrl로 받고 업로드 크기를 제한한다', () => {
+  it('CAMERA_OPTIONS는 프롬프트 없이 바로 촬영하고 업로드 크기를 제한한다', () => {
+    expect(CAMERA_OPTIONS.source).toBe('CAMERA')
     expect(CAMERA_OPTIONS.resultType).toBe('dataUrl')
     expect(CAMERA_OPTIONS.width).toBe(1600)
+  })
+
+  it('gallery를 넘기면 앨범에서 고른다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+    vi.mocked(Camera.getPhoto).mockResolvedValue({} as Awaited<ReturnType<typeof Camera.getPhoto>>)
+
+    await useCamera().takePhoto('gallery')
+
+    expect(Camera.getPhoto).toHaveBeenCalledWith(expect.objectContaining({ source: 'PHOTOS' }))
+  })
+
+  // 취소는 되돌아가고 실패는 대안을 안내해야 해서 호출부가 둘을 구분할 수 있어야 한다.
+  it('사용자가 취소하면 null을 반환한다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+    vi.mocked(Camera.getPhoto).mockRejectedValue(new Error('User cancelled photos app'))
+
+    expect(await useCamera().takePhoto()).toBeNull()
+  })
+
+  it('촬영이 실패하면 예외를 그대로 올린다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+    vi.mocked(Camera.getPhoto).mockRejectedValue(new Error('No camera available'))
+
+    await expect(useCamera().takePhoto()).rejects.toThrow('No camera available')
   })
 
   it('네이티브에서 dataUrl이 없으면 null을 반환한다', async () => {
