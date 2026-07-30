@@ -1,125 +1,47 @@
 'use client'
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
-import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
-import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
-import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { bookTitle, DEFAULT_OPINION_SORT_TYPE } from '../../_data/readerHighlights.constant'
-import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
+import { bookTitle } from '../../_data/readerHighlights.constant'
+import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
-import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
-import { TraceListError } from '../TraceListError/TraceListError'
-import { TraceListSection } from '../TraceListSection/TraceListSection'
+import { TraceListPanel } from '../TraceListPanel/TraceListPanel'
 import styles from './TraceCollapseView.module.css'
 
 type TraceCollapseViewProps = {
   bookId: number
 }
 
+/** 셸 — 인용문 무대 흐름(usePassageViewer)과 흔적 목록 흐름(TraceListPanel)을 연결하고,
+    두 흐름에 걸치는 것(접힘 제스처, 마스킹, 코멘트바)만 직접 든다 */
 export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
-  const traceLoadMoreRef = useRef<HTMLDivElement>(null)
-  const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
-  const pages = useMemo(
-    () => pageNumbersQuery.data?.pages.flatMap((page) => page.data?.pageNumbers ?? []) ?? [],
-    [pageNumbersQuery.data],
-  )
-  const canLoadMorePages =
-    pageNumbersQuery.hasNextPage &&
-    !pageNumbersQuery.isError &&
-    !pageNumbersQuery.isFetchingNextPage
-  // 기본 문구가 범용이라 페이지 탭 게이트는 전용 문구를 명시적으로 넘긴다
-  const viewer = useHighlightViewer((action) => {
-    runWithLogin(action, LOGIN_GATE_MESSAGE.pageView)
-  }, pages[0])
-  const passagesQuery = useQuery({
-    ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
-    enabled: viewer.activePage !== undefined,
-  })
-
-  const passages = useMemo(() => passagesQuery.data?.data?.passages ?? [], [passagesQuery.data])
-  const highlight = useMemo(
-    () => ({
-      page: viewer.activePage ?? 0,
-      quotes: passages.map((passage) => passage.quotedText),
-      isSpoiler: passages.some((passage) => passage.isSpoiler),
-    }),
-    [passages, viewer.activePage],
-  )
-  // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
-  const activePassage = passages[viewer.quoteIndex]
+  const stage = usePassageViewer(bookId)
   const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
-  // 서버 프리페치가 채운 queryKey와 맞아야 첫 렌더에서 캐시가 그대로 쓰인다
-  const [sortType, setSortType] = useState<OpinionSortType>(DEFAULT_OPINION_SORT_TYPE)
-  const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
-
-  const opinionsQuery = useInfiniteQuery(
-    opinionQueries.listByPassage(activePassage?.passageId, sortType),
-  )
-  const traces = useMemo(
-    () => opinionsQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
-    [opinionsQuery.data],
-  )
-  // 헤더 숫자는 서버가 알려준 전체 개수라, 목록을 끝까지 불러오면 둘이 맞는다
-  const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
-
-  const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
-
-  // 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다
-  const failedTraceListQueries = [pageNumbersQuery, passagesQuery, opinionsQuery].filter(
-    (query) => query.isError,
-  )
-  const isTraceListError = failedTraceListQueries.length > 0
-
-  const retryTraceList = () => {
-    for (const query of failedTraceListQueries) void query.refetch()
-  }
 
   // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
   //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
   // TODO(#49): 해제 상태 유지 범위 미확정 — 현재는 페이지 단위 유지라(useHighlightViewer.isRevealed)
   //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
-  const isTraceListMasked = Boolean(activePassage?.isSpoiler) && !viewer.isRevealed
-
-  // placeholderData로 이전 대목의 목록이 보이는 동안에는 다음 페이지를 당기지 않는다
-  const canFetchMoreTraces =
-    opinionsQuery.hasNextPage &&
-    !opinionsQuery.isError &&
-    !opinionsQuery.isFetchingNextPage &&
-    !opinionsQuery.isPlaceholderData
-
-  useLoadMoreOnVisible({
-    targetRef: traceLoadMoreRef,
-    rootRef: scrollerRef,
-    enabled: canFetchMoreTraces && !isTraceListMasked,
-    onLoadMore: () => {
-      void opinionsQuery.fetchNextPage()
-    },
-  })
-
-  const openCommentBar = () => {
-    runWithLogin(() => {
-      setIsCommentBarOpen(true)
-    }, LOGIN_GATE_MESSAGE.traceCreate)
-  }
+  const isTraceListMasked = Boolean(stage.activePassage?.isSpoiler) && !stage.isRevealed
 
   const toggleCommentBar = () => {
     if (isCommentBarOpen) {
       setIsCommentBarOpen(false)
       return
     }
-    openCommentBar()
+    runWithLogin(() => {
+      setIsCommentBarOpen(true)
+    }, LOGIN_GATE_MESSAGE.traceCreate)
   }
 
   return (
@@ -136,69 +58,29 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
         <div className={styles['stageAnchor']}>
           <QuoteStage
             title={bookTitle}
-            pages={pages}
-            highlight={highlight}
-            quoteIndex={viewer.quoteIndex}
-            isRevealed={viewer.isRevealed}
+            pages={stage.pages}
+            highlight={stage.highlight}
+            quoteIndex={stage.quoteIndex}
+            isRevealed={stage.isRevealed}
             isCollapsed={isCollapsed}
-            onSelectPage={viewer.select}
-            onLoadMorePages={
-              canLoadMorePages
-                ? () => {
-                    void pageNumbersQuery.fetchNextPage()
-                  }
-                : undefined
-            }
-            onClickQuote={() => {
-              viewer.clickCard(highlight)
-            }}
+            onSelectPage={stage.selectPage}
+            onLoadMorePages={stage.loadMorePages}
+            onClickQuote={stage.clickQuote}
           />
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
-        {isTraceListError ? (
-          <TraceListError className={styles['listArea']} onRetry={retryTraceList} />
-        ) : (
-          <>
-            <TraceListSection
-              className={styles['listArea']}
-              traces={traces}
-              traceCount={traceCount}
-              isMasked={isTraceListMasked}
-              sortType={sortType}
-              onToggleSort={() => {
-                setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
-              }}
-              onToggleComment={toggleCommentBar}
-              onSelectTrace={(trace) => {
-                setSelectedTraceId(trace.opinionId)
-              }}
-            />
-            {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
-            <div ref={traceLoadMoreRef} aria-hidden className="h-px w-full" />
-          </>
-        )}
+        <TraceListPanel
+          passageId={stage.activePassage?.passageId}
+          quote={stage.highlight.quotes[stage.quoteIndex] ?? ''}
+          isMasked={isTraceListMasked}
+          className={styles['listArea']}
+          scrollerRef={scrollerRef}
+          stageError={{ isError: stage.isError, retry: stage.retry }}
+          onToggleComment={toggleCommentBar}
+        />
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
       {isCommentBarOpen && <CommentBar />}
-      {selectedTrace && (
-        <TraceDetailOverlay
-          trace={selectedTrace}
-          index={traces.indexOf(selectedTrace)}
-          count={traces.length}
-          quote={highlight.quotes[viewer.quoteIndex] ?? ''}
-          onNavigate={(next) => {
-            const target = traces[next]
-            if (target) setSelectedTraceId(target.opinionId)
-            // 상세에서도 마지막 흔적에 닿으면 다음 페이지를 이어 붙인다
-            if (next >= traces.length - 1 && canFetchMoreTraces) {
-              void opinionsQuery.fetchNextPage()
-            }
-          }}
-          onClose={() => {
-            setSelectedTraceId(null)
-          }}
-        />
-      )}
     </>
   )
 }
