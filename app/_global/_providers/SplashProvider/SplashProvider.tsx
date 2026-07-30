@@ -2,6 +2,8 @@
 
 import { type ReactNode, useEffect, useState } from 'react'
 
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { cn } from '@/app/_global/_services/cn.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
@@ -24,15 +26,20 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const shouldShowSplash = status === 'loading' || !hasMinTimeElapsed
+  // 스플래시는 첫 프레임부터 떠 있어야 하므로 entering에는 스타일을 주지 않는다 — 퇴장만 전환한다
+  const splash = useExitTransition(shouldShowSplash, MOTION_DURATION.normal)
 
   return (
     <>
       {children}
-      {shouldShowSplash && (
+      {splash.shouldRender && (
         <div
           aria-hidden="true"
+          data-state={splash.state}
           className={cn(
             'absolute inset-0 z-50 flex items-center justify-center overflow-hidden',
+            'transition-opacity duration-normal ease-exit',
+            'data-[state=exiting]:opacity-0',
             GRID_BACKGROUND_CLASS_NAME,
           )}
         >

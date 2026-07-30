@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 
 import TrashIcon from '@/app/_global/_components/Icon/assets/trash.svg'
+import type { ExitTransitionState } from '@/app/_global/_hooks/useExitTransition'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { DECORATION_COLORS } from '../../_data/decorationColor.constant'
@@ -14,6 +15,8 @@ type DecorationEditPopoverProps = {
   onClose: () => void
   onRecolor: (color: string) => void
   onRemove: () => void
+  /** 전환 상태. 넘기지 않으면 애니메이션 없이 그대로 보인다 */
+  state?: ExitTransitionState
   top: number
 }
 
@@ -23,6 +26,7 @@ export function DecorationEditPopover({
   onClose,
   onRecolor,
   onRemove,
+  state,
   top,
 }: DecorationEditPopoverProps) {
   const rootRef = useRef<HTMLDivElement>(null)
@@ -53,7 +57,14 @@ export function DecorationEditPopover({
       ref={rootRef}
       role="dialog"
       aria-label="효과 편집"
-      className="absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-center"
+      data-state={state}
+      className={cn(
+        'absolute z-10 flex -translate-x-1/2 -translate-y-full flex-col items-center',
+        // 꼬리 끝(아래 가운데)이 제자리에 붙어 있도록 origin을 바닥으로 잡는다
+        'origin-bottom transition-[opacity,scale] duration-fast ease-enter',
+        'data-[state=entering]:scale-96 data-[state=entering]:opacity-0',
+        'data-[state=exiting]:scale-96 data-[state=exiting]:opacity-0 data-[state=exiting]:ease-exit',
+      )}
       style={{ left, top }}
     >
       {/* 블러는 알약 안쪽에만 건다 — 바깥 상자에 걸면 꼬리 아래로 사각형 자국이 남는다 */}
