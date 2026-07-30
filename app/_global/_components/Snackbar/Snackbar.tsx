@@ -2,6 +2,11 @@
 
 import { useEffect, useRef } from 'react'
 
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
+import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
+import { cn } from '@/app/_global/_services/cn.service'
+
 import CloseIcon from '../Icon/assets/close.svg'
 
 type SnackbarProps = {
@@ -30,14 +35,24 @@ export function Snackbar({ message, onClose }: SnackbarProps) {
     }
   }, [message])
 
-  if (!message) return null
+  const { shouldRender, state } = useExitTransition(Boolean(message), MOTION_DURATION.fast)
+  // 빈 문자열이 '닫힘'을 뜻하므로 null로 정규화해서 넘긴다 — 퇴장 중 문구가 비지 않게 한다
+  const shownMessage = useLastPresent(message || null)
+
+  if (!shouldRender || shownMessage === null) return null
 
   return (
     <div
       role="status"
-      className="absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-lg bg-bg-default px-4 py-3"
+      data-state={state}
+      className={cn(
+        'absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-lg bg-bg-default px-4 py-3',
+        'transition-[opacity,translate] duration-fast ease-enter',
+        'data-[state=entering]:translate-y-2 data-[state=entering]:opacity-0',
+        'data-[state=exiting]:translate-y-2 data-[state=exiting]:opacity-0 data-[state=exiting]:ease-exit',
+      )}
     >
-      <span className="text-body-14md text-text-accent">{message}</span>
+      <span className="text-body-14md text-text-accent">{shownMessage}</span>
       <button
         type="button"
         aria-label="닫기"
