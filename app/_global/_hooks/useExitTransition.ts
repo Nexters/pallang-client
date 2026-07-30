@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export type ExitTransitionState = 'entering' | 'open' | 'exiting'
 
@@ -22,23 +22,27 @@ type ExitTransition = {
  * 값은 _data/motion.constant.ts의 MOTION_DURATION에서 가져온다.
  */
 export function useExitTransition(open: boolean, durationMs: number): ExitTransition {
+  const [prevOpen, setPrevOpen] = useState(open)
   const [shouldRender, setShouldRender] = useState(open)
   // 처음부터 열린 채 마운트되면 등장 전환을 건너뛴다 — 화면 진입 때 깜빡이지 않게.
   const [state, setState] = useState<ExitTransitionState>(open ? 'open' : 'exiting')
-  const wasOpenRef = useRef(open)
 
-  useEffect(() => {
-    const wasOpen = wasOpenRef.current
-    wasOpenRef.current = open
-    // 마운트 직후이거나 open이 그대로면 할 일이 없다.
-    // StrictMode가 effect를 두 번 부를 때 등장 전환이 두 번 도는 것도 이 비교가 막는다.
-    if (wasOpen === open) return
-
+  // 렌더 도중의 setState — React가 권하는 "prop이 바뀔 때 상태 조정하기" 패턴이다.
+  // effect로 미루면 이전 state로 한 프레임이 그려진 뒤에야 바뀌어 깜빡인다.
+  // 마운트 시점에는 prevOpen === open이라 이 분기를 타지 않으므로 등장 전환을 건너뛴다.
+  if (prevOpen !== open) {
+    setPrevOpen(open)
     if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- open prop 변화를 entering/open/exiting 전환으로 바꾸는 의도된 동기 setState (rAF/setTimeout으로 다음 단계 예약)
       setShouldRender(true)
       // 마운트와 같은 프레임에 최종 스타일을 주면 브라우저가 전환 시작점을 잡지 못한다
       setState('entering')
+    } else {
+      setState('exiting')
+    }
+  }
+
+  useEffect(() => {
+    if (state === 'entering') {
       const frame = requestAnimationFrame(() => {
         setState('open')
       })
@@ -46,15 +50,18 @@ export function useExitTransition(open: boolean, durationMs: number): ExitTransi
         cancelAnimationFrame(frame)
       }
     }
-
-    setState('exiting')
-    const timer = setTimeout(() => {
-      setShouldRender(false)
-    }, durationMs)
-    return () => {
-      clearTimeout(timer)
+    if (state === 'exiting') {
+      const timer = setTimeout(() => {
+        setShouldRender(false)
+      }, durationMs)
+      return () => {
+        clearTimeout(timer)
+      }
     }
-  }, [open, durationMs])
+    // state === 'open'일 때는 예약할 다음 단계가 없다.
+    // noImplicitReturns 때문에 명시적으로 undefined를 반환한다.
+    return undefined
+  }, [state, durationMs])
 
   return { shouldRender, state }
 }

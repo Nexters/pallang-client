@@ -28,6 +28,7 @@ describe('useExitTransition', () => {
 
     rerender({ open: true })
     expect(result.current.shouldRender).toBe(true)
+    expect(result.current.state).toBe('entering')
 
     await waitFor(() => {
       expect(result.current.state).toBe('open')
