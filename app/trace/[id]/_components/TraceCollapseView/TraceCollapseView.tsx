@@ -55,8 +55,10 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   const highlight = useMemo(
     () => ({
       page: viewer.activePage ?? 0,
-      quotes: passages.map((passage) => passage.quotedText),
-      isSpoiler: passages.some((passage) => passage.isSpoiler),
+      quotes: passages.map((passage) => ({
+        text: passage.quotedText,
+        isSpoiler: passage.isSpoiler,
+      })),
     }),
     [passages, viewer.activePage],
   )
@@ -92,12 +94,6 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
     for (const query of failedTraceListQueries) void query.refetch()
   }
 
-  // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
-  //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
-  // TODO(#49): 해제 상태 유지 범위 미확정 — 현재는 페이지 단위 유지라(useHighlightViewer.isRevealed)
-  //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
-  const isTraceListMasked = Boolean(activePassage?.isSpoiler) && !viewer.isRevealed
-
   // placeholderData로 이전 대목의 목록이 보이는 동안에는 다음 페이지를 당기지 않는다
   const canFetchMoreTraces =
     opinionsQuery.hasNextPage &&
@@ -108,7 +104,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   useLoadMoreOnVisible({
     targetRef: traceLoadMoreRef,
     rootRef: scrollerRef,
-    enabled: canFetchMoreTraces && !isTraceListMasked,
+    enabled: canFetchMoreTraces,
     onLoadMore: () => {
       void opinionsQuery.fetchNextPage()
     },
@@ -169,7 +165,6 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
               className={styles['listArea']}
               traces={traces}
               traceCount={traceCount}
-              isMasked={isTraceListMasked}
               sortType={sortType}
               onToggleSort={() => {
                 setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
@@ -192,7 +187,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
           state={detail.state}
           index={traces.indexOf(shownTrace)}
           count={traces.length}
-          quote={highlight.quotes[viewer.quoteIndex] ?? ''}
+          quote={highlight.quotes[viewer.quoteIndex]?.text ?? ''}
           onNavigate={(next) => {
             const target = traces[next]
             if (target) setSelectedTraceId(target.opinionId)
