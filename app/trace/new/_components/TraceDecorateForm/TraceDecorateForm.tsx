@@ -35,7 +35,8 @@ export function TraceDecorateForm() {
   useOverlayBackGuard(candidate !== null, () => {
     setCandidate(null)
   })
-  const { handlers } = useTextRangeSelection(setRange)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { handlers } = useTextRangeSelection(setRange, scrollRef)
   const noteRef = useRef<HTMLDivElement>(null)
   const [editing, setEditing] = useState<{
     decoration: DraftDecoration
@@ -128,6 +129,7 @@ export function TraceDecorateForm() {
             decorations={draft.decorations}
             pendingRange={range}
             selectable
+            scrollRef={scrollRef}
             {...handlers}
             onPointerDown={handlePointerDown}
           />

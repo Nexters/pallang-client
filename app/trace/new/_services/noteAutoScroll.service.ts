@@ -27,3 +27,12 @@ export function autoScrollDelta({ height, pointerY, top }: AutoScrollInput): num
   }
   return 0
 }
+
+/**
+ * 스크롤 컨테이너를 delta만큼 세로로 이동한다.
+ * 훅 안에서 ref로 받은 DOM 노드를 직접 대입하면 react-hooks/immutability 룰이
+ * "훅 인자 변형"으로 오인하므로, 뮤테이션을 훅 바깥의 일반 함수로 분리한다.
+ */
+export function scrollByDelta(element: HTMLElement, delta: number): void {
+  element.scrollTop += delta
+}
