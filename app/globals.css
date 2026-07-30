@@ -191,6 +191,9 @@
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); /* 등장 — 빠르게 나와 부드럽게 안착 */
   --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* 퇴장 — 가속하며 사라짐 */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* 상태 전환 — 색·투명도·프레스 */
+
+  /* OCR 인식 중 스캔 라인 — app/trace/new/OcrScanningOverlay */
+  --animate-scan: scan 2.2s ease-in-out infinite;
 }
 
 /* Motion — duration.
@@ -265,4 +268,21 @@ body {
    노치 뒤까지 배경을 깔아야 하는 화면만 마이너스 마진으로 되돌린 뒤 직접 처리한다(예: 흔적 페이지) */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
 }
