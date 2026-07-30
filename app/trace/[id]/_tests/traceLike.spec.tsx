@@ -125,6 +125,14 @@ function likeButton() {
   return listLike
 }
 
+// 로그인 게이트가 뜨면 base-ui 모달이 배경을 접근성 트리에서 감춘다(modal 기본 동작).
+// 게이트가 열린 상태의 목록 버튼을 보려면 감춰진 요소까지 훑어야 한다.
+function likeButtonBehindGate() {
+  const [listLike] = screen.getAllByRole('button', { name: '좋아요', hidden: true })
+  if (!listLike) throw new Error('좋아요 버튼을 찾지 못했다')
+  return listLike
+}
+
 /** 좋아요 버튼의 상태(`aria-pressed`)와 표시 수가 기대값이 될 때까지 기다린다 */
 async function expectLike(pressed: boolean, count: string) {
   await waitFor(() => {
@@ -205,7 +213,7 @@ describe('흔적 좋아요', () => {
 
     expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()
     expect(postLikeCalls()).toHaveLength(0)
-    expect(likeButton()).toHaveAttribute('aria-pressed', 'false')
+    expect(likeButtonBehindGate()).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('상세 오버레이의 좋아요도 좋아요 문구로 막는다', async () => {

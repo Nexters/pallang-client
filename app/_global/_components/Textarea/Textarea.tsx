@@ -27,7 +27,7 @@ export function Textarea({
       data-slot="textarea"
       data-disabled={disabled ? '' : undefined}
       className={cn(
-        'text-body-16md flex h-[206px] w-full flex-col gap-2 p-4 transition-colors data-disabled:cursor-not-allowed data-disabled:opacity-50',
+        'text-body-16md flex h-[206px] w-full flex-col gap-2 p-4 transition-colors duration-instant ease-standard data-disabled:cursor-not-allowed data-disabled:opacity-50',
         isDark
           ? 'bg-bg-gray text-text-inverse rounded-2xl'
           : 'bg-bg-surface text-text-secondary rounded-lg',

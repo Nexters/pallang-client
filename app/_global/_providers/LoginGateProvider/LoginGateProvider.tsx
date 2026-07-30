@@ -20,9 +20,8 @@ export function LoginGateProvider({ children }: { children: ReactNode }) {
   return (
     <LoginGateContext.Provider value={gate.runWithLogin}>
       {children}
-      {gate.gateMessage !== null && (
-        <LoginGateModal message={gate.gateMessage} onLogin={gate.login} onClose={gate.close} />
-      )}
+      {/* 퇴장 전환을 보여주려면 닫힌 동안에도 마운트돼 있어야 한다 — 열림은 message가 표현한다 */}
+      <LoginGateModal message={gate.gateMessage} onLogin={gate.login} onClose={gate.close} />
     </LoginGateContext.Provider>
   )
 }
