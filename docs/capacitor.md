@@ -40,6 +40,13 @@
 - 같은 이유로 `@capacitor/filesystem` 등 **파일 경로를 돌려주는 다른 플러그인도 동일한 함정**을 갖는다. 원격 URL 로드를 유지하는 한 경로가 아니라 데이터로 받아야 한다.
 - 브라우저(`pnpm dev`)에서는 `<input type="file">` 경로를 타므로 **재현되지 않는다.** 실기기에서 끝까지 태워봐야 드러난다.
 
+## ⚠️ 함정 4 — `server.url`에 경로를 넣으면 full-page 내비게이션이 Safari로 튕김
+
+- 증상: 앱은 멀쩡히 도는데 **카카오 로그인을 누르면 시스템 브라우저(Safari)가 열리고**, 로그인해도 콜백이 Safari에 떨어져 앱으로 돌아오지 못한다.
+- 원인: Capacitor iOS는 내부/외부 내비게이션을 `serverURL` **절대 URL 문자열 prefix**로 판정한다(`WebViewDelegationHandler.swift`의 `isApplicationNavigation`). `server.url`이 `http://IP:3000/camera-check`처럼 경로를 포함하면, `/api/auth/kakao/login` 등 **그 경로로 시작하지 않는 같은 오리진 URL조차 외부로 판정**되어 `UIApplication.open`(Safari)으로 넘어간다.
+- Next의 클라이언트 라우팅(SPA 전환)은 이 판정을 타지 않아서 평소엔 정상으로 보인다. `window.location.assign` 같은 **full-page 내비게이션에서만** 터져서 발견이 늦는다.
+- **해결: `CAP_SERVER_URL`은 항상 origin까지만.** `scripts/cap-dev.sh`가 origin만 굽도록 되어 있다(경로 인자 제거됨).
+
 ## dev 서버 URL 자동화 (`scripts/cap-dev.sh`)
 
 로컬 dev 서버를 앱이 로드하려면 `CAP_SERVER_URL`에 맥의 **LAN IP**가 필요한데, 이 IP는 **와이파이/네트워크가 바뀌면 달라진다.** `capacitor.config.ts`는 `process.env.CAP_SERVER_URL`을 읽으므로, IP를 앱에 하드코딩하지 않고 스크립트가 매 실행마다 현재 IP를 감지해 sync 한다.
@@ -56,7 +63,7 @@ pnpm cap:dev:android
 pnpm cap:dev:sync
 ```
 
-- 경로 기본값은 `/camera-check`. 바꾸려면: `bash scripts/cap-dev.sh ios /` (루트).
+- ⚠️ **`CAP_SERVER_URL`에는 경로를 넣지 않는다(origin만).** 함정 4 참고. 특정 화면 확인은 앱 안에서 이동한다.
 
 ### IP가 바뀌면? 케이블은 언제 필요한가?
 
@@ -77,7 +84,7 @@ pnpm cap:dev:sync
 1. **웹 서버(prod)**를 LAN에 띄운다: `pnpm build && PORT=3000 pnpm start`
 2. **앱이 볼 URL**을 맥의 LAN IP로 동기화(폰은 localhost 못 씀) — `pnpm cap:dev:sync`가 자동으로 해준다. 수동이면:
    ```bash
-   CAP_SERVER_URL=http://<맥_LAN_IP>:3000/camera-check npx cap sync ios
+   CAP_SERVER_URL=http://<맥_LAN_IP>:3000 npx cap sync ios
    ```
 3. **ATS 예외**: `ios/App/App/Info.plist`에 `NSAppTransportSecurity > NSAllowsLocalNetworking = true` (사설 IP http 허용; 인터넷 전체 개방 아님). 프로덕션 https면 불필요.
 4. **카메라 권한 문구**: `Info.plist`에 `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`.
@@ -143,7 +150,7 @@ avdmanager create avd -n pallang_test -k "system-images;android-36;google_apis;a
 pnpm build && PORT=3000 pnpm start
 
 # 2. 앱이 볼 URL을 에뮬레이터 호스트(10.0.2.2)로 동기화
-CAP_SERVER_URL=http://10.0.2.2:3000/camera-check npx cap sync android
+CAP_SERVER_URL=http://10.0.2.2:3000 npx cap sync android
 
 # 3. APK 빌드 (JDK 21 필수)
 cd android

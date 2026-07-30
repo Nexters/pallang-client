@@ -4,6 +4,9 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
+import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
@@ -77,6 +80,9 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
 
   const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
+  // 닫히는 동안에도 내용이 남아 있어야 슬라이드 아웃이 빈 화면으로 보이지 않는다
+  const shownTrace = useLastPresent(selectedTrace ?? null)
+  const detail = useExitTransition(selectedTrace !== undefined, MOTION_DURATION.slow)
 
   // 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다
   const failedTraceListQueries = [pageNumbersQuery, passagesQuery, opinionsQuery].filter(
@@ -175,10 +181,11 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
       {isCommentBarOpen && <CommentBar />}
-      {selectedTrace && (
+      {detail.shouldRender && shownTrace && (
         <TraceDetailOverlay
-          trace={selectedTrace}
-          index={traces.indexOf(selectedTrace)}
+          trace={shownTrace}
+          state={detail.state}
+          index={traces.indexOf(shownTrace)}
           count={traces.length}
           quote={highlight.quotes[viewer.quoteIndex]?.text ?? ''}
           onNavigate={(next) => {

@@ -28,7 +28,7 @@ export function TraceListSection({
   return (
     <section className={cn('flex flex-col', className)}>
       {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
-      <div className="sticky top-[var(--stage-collapsed)] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
+      <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
           <p className="text-title-16sb text-text-inverse">{traceCount}개의 흔적</p>
           <button type="button" aria-label="흔적 남기기" onClick={onToggleComment}>

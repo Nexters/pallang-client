@@ -3,6 +3,7 @@ import { act } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 
 describe('Snackbar', () => {
   beforeEach(() => {
@@ -59,5 +60,20 @@ describe('Snackbar', () => {
     expect(onClose1).not.toHaveBeenCalled()
     expect(onClose2).not.toHaveBeenCalled()
     expect(onClose3).toHaveBeenCalledOnce()
+  })
+
+  it('message가 비면 곧바로 사라지지 않고 문구를 유지한 채 퇴장한다', () => {
+    const { rerender } = render(<Snackbar message="저장했어요" onClose={vi.fn()} />)
+
+    rerender(<Snackbar message="" onClose={vi.fn()} />)
+
+    // 퇴장 전환이 도는 동안에는 아직 붙어 있고, 문구도 비지 않는다
+    expect(screen.getByRole('status')).toHaveTextContent('저장했어요')
+
+    act(() => {
+      vi.advanceTimersByTime(MOTION_DURATION.fast)
+    })
+
+    expect(screen.queryByRole('status')).toBeNull()
   })
 })

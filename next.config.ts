@@ -2,13 +2,13 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  // 로컬 개발 전용 프록시. 개발 API 서버가 CORS 헤더를 내려주지 않아
-  // 브라우저 요청이 차단되므로, dev에서는 /api/*를 같은 origin으로 받아 서버가 대신 호출한다.
+  // API 프록시. 브라우저는 항상 /api/*를 같은 origin으로 부르고 Next 서버가 대신 백엔드를 호출한다.
+  // 백엔드가 localhost:3000 외 오리진에 CORS를 안 열어줘서, 웹뷰(오리진이 LAN IP나 배포 도메인)의
+  // 클라이언트 fetch가 전부 죽는 문제를 오리진 무관하게 없앤다(customFetch.getBaseUrl 참고).
   // (백엔드 API 경로는 모두 /api/*. 로컬 /api route handler(카카오 웹 로그인)는 filesystem 우선이라 rewrite보다 먼저 매칭된다.)
-  // 프로덕션은 NEXT_PUBLIC_API_URL로 직접 호출하며 백엔드 CORS 설정이 필요하다.
   rewrites() {
     const apiOrigin = process.env.NEXT_PUBLIC_API_URL
-    if (process.env.NODE_ENV !== 'development' || !apiOrigin) return Promise.resolve([])
+    if (!apiOrigin) return Promise.resolve([])
     return Promise.resolve([{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }])
   },
   images: {

@@ -27,19 +27,14 @@ export function QuoteStage({
       <div className="absolute inset-0 bg-bg-book-card" />
       {/* 펼친 상태 흰 배경 — 진행에 따라 걷힌다 */}
       <div className="absolute inset-0 bg-bg-default opacity-[var(--inv)]" />
-      <div
-        className={cn(
-          styles['banner'],
-          'absolute inset-x-0 top-0 h-(--banner-height) bg-orange-500',
-        )}
-      />
-      <TraceHeader title={title} className="absolute inset-x-0 top-0" />
+      <div className={cn(styles['banner'], 'absolute inset-x-0 top-0 bg-orange-500')} />
+      <TraceHeader title={title} className="absolute inset-x-0 top-(--safe-top)" />
       {/* 완전히 투명해진 뒤에도 초점이 남지 않도록 전환이 끝나면 언마운트한다 */}
       {!isCollapsed && (
         <div
           className={cn(
             styles['tabsClip'],
-            'absolute inset-x-0 top-(--header-height) overflow-hidden',
+            'absolute inset-x-0 top-[calc(var(--safe-top)+var(--header-height))] overflow-hidden',
           )}
         >
           <PageTabs
