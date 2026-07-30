@@ -7,8 +7,9 @@ import { cn } from '@/app/_global/_services/cn.service'
 type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   author: string
   coverImageUrl?: null | string
-  opinionCount: number
-  passageCount: number
+  /** 외부(알라딘) 검색 결과에는 없는 값이다. 없으면 배지를 그리지 않는다. */
+  opinionCount?: number
+  passageCount?: number
   publisher?: string
   title: string
 }
@@ -58,10 +59,12 @@ export function BookItem({
           <h2 className="w-full truncate text-title-18bd text-text-primary">{title}</h2>
           <p className="w-full truncate text-body-14md text-text-secondary/50">{description}</p>
         </div>
-        <div className="flex items-center gap-1">
-          <BookStat icon="content" value={passageCount} />
-          <BookStat icon="pencil" value={opinionCount} />
-        </div>
+        {passageCount !== undefined && opinionCount !== undefined && (
+          <div className="flex items-center gap-1">
+            <BookStat icon="content" value={passageCount} />
+            <BookStat icon="pencil" value={opinionCount} />
+          </div>
+        )}
       </div>
     </article>
   )
