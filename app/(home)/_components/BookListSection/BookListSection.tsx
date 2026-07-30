@@ -2,7 +2,6 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import type { UIEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -120,17 +119,8 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
   const pendingFirstBookIdRef = useRef<null | number>(null)
   const [activeBookIndex, setActiveBookIndex] = useState(0)
   const [layoutOffset, setLayoutOffset] = useState(0)
-  const searchParams = useSearchParams()
-  const forceHomeBookError = searchParams.has('forceHomeBookError')
   const homeCarouselOptions = bookQueries.homeCarousel({ size: PAGE_SIZE })
-  const booksQuery = useInfiniteQuery({
-    ...homeCarouselOptions,
-    queryFn: forceHomeBookError
-      ? () => {
-          throw new Error('Forced home book carousel error')
-        }
-      : homeCarouselOptions.queryFn,
-  })
+  const booksQuery = useInfiniteQuery(homeCarouselOptions)
   const {
     fetchNextPage,
     fetchPreviousPage,
