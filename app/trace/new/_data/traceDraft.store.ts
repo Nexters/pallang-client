@@ -29,6 +29,17 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
       return { ...state, source: action.source }
     case 'setQuotedText':
       return { ...state, quotedText: action.quotedText, decorations: [] }
+    case 'clearQuote':
+      // BookPicker는 book이 있고 quotedText가 비어 있을 때 방식 선택 시트를 연다.
+      // 페이지·효과·병합 대상은 모두 이 대목에 매인 값이라 함께 비운다.
+      return {
+        ...state,
+        quotedText: '',
+        decorations: [],
+        pageNumber: null,
+        isSpoiler: false,
+        passageId: null,
+      }
     case 'setPageDetail':
       return { ...state, pageNumber: action.pageNumber, isSpoiler: action.isSpoiler }
     case 'applyDecoration':

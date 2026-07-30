@@ -34,6 +34,8 @@ export type TraceDraftAction =
   | { type: 'selectBook'; book: SelectedBook }
   | { type: 'setSource'; source: 'manual' | 'photo' }
   | { type: 'setQuotedText'; quotedText: string }
+  /** 대목을 다시 고르러 첫 화면으로 되돌아갈 때. 책과 입력 방식은 남긴다. */
+  | { type: 'clearQuote' }
   | { type: 'setPageDetail'; pageNumber: number; isSpoiler: boolean }
   | { type: 'applyDecoration'; decoration: DraftDecoration }
   | { type: 'recolorDecoration'; startOffset: number; color: string }
