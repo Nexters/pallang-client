@@ -1,7 +1,6 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -13,12 +12,13 @@ import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGa
 import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
 export function TraceOpinionForm() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goBack, goTo } = useTraceNav()
   const [message, setMessage] = useState('')
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
@@ -50,7 +50,7 @@ export function TraceOpinionForm() {
             type: 'setResult',
             result: { opinionId: response.data.opinionId, merged: response.data.merged },
           })
-          router.replace('/trace/new/done')
+          goTo('done')
         },
         onError: (error) => {
           // draft는 그대로 둔다. 여기서 날리면 사용자가 입력한 전부가 사라진다.
@@ -108,7 +108,7 @@ export function TraceOpinionForm() {
           variant="back"
           className="flex-1"
           onClick={() => {
-            router.back()
+            goBack()
           }}
         >
           뒤로

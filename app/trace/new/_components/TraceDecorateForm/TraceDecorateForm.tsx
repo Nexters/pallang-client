@@ -1,7 +1,6 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { type PointerEvent, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -13,8 +12,10 @@ import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
 import { DEFAULT_DECORATION_COLOR } from '../../_data/decorationColor.constant'
 import type { EffectOption } from '../../_data/effect.constant'
+import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTextRangeSelection } from '../../_hooks/useTextRangeSelection'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { TextRange } from '../../_services/textRange.service'
 import type { DraftDecoration } from '../../_types/traceDraft.type'
 import { DecorationEditPopover } from '../DecorationEditPopover/DecorationEditPopover'
@@ -24,12 +25,16 @@ import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
 export function TraceDecorateForm() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goBack, goTo } = useTraceNav()
   const [range, setRange] = useState<TextRange | null>(null)
   const [message, setMessage] = useState('')
   const [candidate, setCandidate] = useState<{ passageId: number; quotedText: string } | null>(null)
   const similarCheck = useMutation(passageMutations.similarCheck())
+  // 병합 다이얼로그가 떠 있으면 뒤로가기가 다이얼로그만 닫는다
+  useOverlayBackGuard(candidate !== null, () => {
+    setCandidate(null)
+  })
   const { handlers } = useTextRangeSelection(setRange)
   const noteRef = useRef<HTMLDivElement>(null)
   const [editing, setEditing] = useState<{
@@ -70,7 +75,7 @@ export function TraceDecorateForm() {
   }
 
   const goToOpinion = () => {
-    router.push('/trace/new/opinion')
+    goTo('opinion')
   }
 
   const handleNext = () => {
@@ -168,7 +173,7 @@ export function TraceDecorateForm() {
           variant="back"
           className="h-[54px] flex-1"
           onClick={() => {
-            router.back()
+            goBack()
           }}
         >
           뒤로

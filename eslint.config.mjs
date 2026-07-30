@@ -200,6 +200,8 @@ const eslintConfig = defineConfig([
     // docs/capacitor.md의 기기 검증 절차가 만드는 Xcode 파생 데이터
     'build-ios/**',
     'build-sim/**',
+    // 에이전트 도구가 만드는 git worktree 사본 — 저장소 소스가 아니다
+    '.claude/**',
   ]),
 ])
 

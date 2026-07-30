@@ -1,6 +1,18 @@
 # Capacitor 운영/검증 노트 (iOS · Android Runbook)
 
-이 앱은 **Capacitor 셸이 원격 URL(배포된 Next.js 웹)을 WebView로 로드**하고, 네이티브 기능은 **카메라만** 쓴다. 설계 배경은 [specs/2026-07-24-capacitor-camera-webview-design.md](./superpowers/specs/2026-07-24-capacitor-camera-webview-design.md).
+이 앱은 **Capacitor 셸이 원격 URL(배포된 Next.js 웹)을 WebView로 로드**하고, 네이티브 기능은 **카메라**와 **Android 하드웨어 back 인터셉트**만 쓴다. 설계 배경은 [specs/2026-07-24-capacitor-camera-webview-design.md](./superpowers/specs/2026-07-24-capacitor-camera-webview-design.md).
+
+## 쓰는 플러그인
+
+| 플러그인                   | 용도                                                                             |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| `@capacitor/camera`        | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)                  |
+| `@capacitor/app`           | Android 하드웨어 back 인터셉트. 흔적 작성 중 이탈 확인에 쓴다(`useHardwareBack`) |
+| `@capacitor/preferences`   | 토큰 저장                                                                        |
+| `@capacitor/splash-screen` | 인증 판정 전 깜빡임 방지                                                         |
+
+- 플러그인을 추가하면 `npx cap sync` 후 **앱 재설치**가 필요하다(아래 표의 "네이티브 변경").
+- `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만** 붙는다. 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
 
 아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것. (함정 1·3은 iOS·Android 공통, 함정 2는 iOS 전용, Android는 아래 별도 섹션.)
 
