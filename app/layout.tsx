@@ -50,7 +50,7 @@ export default function RootLayout({
       <body className="flex min-h-dvh">
         <QueryProvider>
           <AuthProvider>
-            <main className="relative mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark">
+            <main className="relative mx-auto flex h-dvh w-full max-w-132.5 flex-col overflow-hidden bg-bg-dark pt-(--safe-top)">
               {/* 게이트가 로그인 상태를 읽어야 해서 AuthProvider 안쪽에 둔다 */}
               <LoginGateProvider>
                 <SplashProvider>{children}</SplashProvider>

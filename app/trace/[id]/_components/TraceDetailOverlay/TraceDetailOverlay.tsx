@@ -52,7 +52,8 @@ export function TraceDetailOverlay({
       aria-label="의견 상세"
       className="fixed inset-0 z-20 mx-auto flex h-dvh w-full max-w-[530px] flex-col bg-bg-dark"
     >
-      <TopBar.Root className="bg-bg-book-card">
+      {/* 오버레이는 fixed라 셸 패딩을 안 받는다 — 헤더 배경색을 유지한 채 인셋만큼 내린다. 10px = TopBar 기본 py-2.5 유지분 */}
+      <TopBar.Root className="bg-bg-book-card pt-[calc(var(--safe-top)+10px)]">
         <TopBar.Action
           aria-label="이전 의견"
           disabled={index === 0}
