@@ -40,7 +40,7 @@ function TermsRow({ checked, label, onCheckedChange }: TermsRowProps) {
   )
 }
 
-export default function TermsPage() {
+export default function TermsAgreePage() {
   const router = useRouter()
   const [termsChecked, setTermsChecked] = useState<TermsChecked>({
     privacy: false,
