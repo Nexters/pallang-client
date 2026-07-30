@@ -389,15 +389,14 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
   })
 
-  it('상세에서 다음 의견으로 이동할 수 있고, 첫 의견에서는 이전 버튼이 비활성화된다', async () => {
+  it('상세 오버레이에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록 스크롤로만 한다', async () => {
     await renderPage()
 
     fireEvent.click(await screen.findByText('첫 대목의 첫 번째 흔적'))
     const dialog = screen.getByRole('dialog', { name: '의견 상세' })
 
-    expect(within(dialog).getByLabelText('이전 의견')).toBeDisabled()
-    fireEvent.click(within(dialog).getByLabelText('다음 의견'))
-    expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
+    expect(within(dialog).queryByLabelText('이전 의견')).not.toBeInTheDocument()
+    expect(within(dialog).queryByLabelText('다음 의견')).not.toBeInTheDocument()
   })
 
   it('아래로 스크롤 제스처 한 번에 접힘 전환이 완료되고 페이지 탭이 사라진다', async () => {

@@ -23,6 +23,7 @@ import MyIcon from './assets/my.svg'
 import NextIcon from './assets/next.svg'
 import PencilIcon from './assets/pencil.svg'
 import PlusIcon from './assets/plus.svg'
+import ReplyIcon from './assets/reply.svg'
 import ResetIcon from './assets/reset.svg'
 import SearchIcon from './assets/search.svg'
 import SettingIcon from './assets/setting.svg'
@@ -42,6 +43,8 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'CautionIcon', Component: CautionIcon },
   { name: 'LikeIcon', Component: LikeIcon },
   { name: 'CommentIcon', Component: CommentIcon },
+  // 댓글 카드 앞의 답글 표시(16x16 원본) — 흔적에 달린 댓글임을 나타낸다
+  { name: 'ReplyIcon', Component: ReplyIcon },
   { name: 'HomeIcon', Component: HomeIcon },
   { name: 'MyIcon', Component: MyIcon },
   { name: 'SearchIcon', Component: SearchIcon },

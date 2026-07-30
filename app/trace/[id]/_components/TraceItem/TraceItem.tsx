@@ -12,13 +12,16 @@ import type { Trace } from '../../_types/readerHighlights.type'
 
 type TraceItemProps = {
   trace: Trace
+  /** 댓글이 이 흔적 아래로 펼쳐져 있는지 — 아코디언이라 한 번에 하나만 true다 */
+  isCommentOpen: boolean
   onSelect: () => void
+  onToggleComment: () => void
 }
 
 const noop = () => undefined
 const emptySubscribe = () => noop
 
-export function TraceItem({ trace, onSelect }: TraceItemProps) {
+export function TraceItem({ trace, isCommentOpen, onSelect, onToggleComment }: TraceItemProps) {
   const runWithLogin = useLoginGate()
   const { isLiked, likeCount, toggle } = useOpinionLike(trace.opinionId, trace.likeCount)
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
@@ -61,8 +64,14 @@ export function TraceItem({ trace, onSelect }: TraceItemProps) {
             />
             {formatLikeCount(likeCount)}
           </button>
-          {/* ponytail: 댓글 수는 API에 없어 아이콘만 노출 — commentCount 필드 추가 협의 후 표시 (#44) */}
-          <button type="button" onClick={onSelect} aria-label="댓글 보기">
+          {/* ponytail: 댓글 수는 API에 없어 아이콘만 노출 — 디자인은 아이콘 옆 개수 표기(2165:4212).
+              OpinionSummaryResponse에 commentCount 필드 추가 협의 후 표시 (#44) */}
+          <button
+            type="button"
+            onClick={onToggleComment}
+            aria-label="댓글 보기"
+            aria-expanded={isCommentOpen}
+          >
             <CommentIcon width={20} height={20} className="text-icon-active" />
           </button>
         </div>
