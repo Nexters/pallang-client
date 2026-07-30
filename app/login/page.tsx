@@ -17,7 +17,7 @@ export default function LoginPage() {
   return (
     <section
       aria-label="로그인"
-      className={`flex min-h-0 flex-1 flex-col justify-end overflow-hidden ${GRID_BACKGROUND_CLASS_NAME}`}
+      className={`-mt-(--safe-top) flex min-h-0 flex-1 flex-col justify-end overflow-hidden pt-(--safe-top) ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="h-11 shrink-0" />

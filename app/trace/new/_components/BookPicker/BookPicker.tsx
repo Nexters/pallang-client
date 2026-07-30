@@ -109,8 +109,8 @@ export function BookPicker() {
   const showPopular = popular.isPending || popularBooks.length > 0
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-bg-default">
-      {/* 노치 인셋은 레이아웃 셸이 이미 소비했다 — 여기서 다시 더하면 두 번 내려간다 */}
+    <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
       <TopBar.Root>
         <TopBar.Action
           aria-label="뒤로"

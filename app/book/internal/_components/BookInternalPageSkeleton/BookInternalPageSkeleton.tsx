@@ -2,7 +2,7 @@ const SKELETON_ITEMS = [0, 1, 2] as const
 
 export function BookInternalPageSkeleton() {
   return (
-    <main className="flex h-full min-h-0 flex-col bg-bg-default">
+    <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
       <div className="flex w-full shrink-0 items-center gap-3 px-4 py-3">
         <div className="size-8 shrink-0 rounded-full bg-neutral-200" />
         <div className="h-6 w-20 shrink-0 rounded bg-bg-surface" />

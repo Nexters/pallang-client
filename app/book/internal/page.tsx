@@ -48,7 +48,7 @@ export default function BookPage() {
   if (shouldShowPageSkeleton) return <BookInternalPageSkeleton />
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-bg-default">
+    <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
       <TopBar.Root>
         <TopBar.Title>
           도서 목록
