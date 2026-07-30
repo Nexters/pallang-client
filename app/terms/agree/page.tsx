@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
@@ -9,10 +10,12 @@ import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { SIGN_UP_WELCOME_PATH } from '@/app/_global/_data/auth.constant'
 import { agreeTerms } from '@/app/_global/_queries/auth.queries'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
+import { POLICY_META_BY_SLUG } from '@/app/_shared/terms/_data/policy.constant'
 import Logo from '@/public/images/logo.svg'
 
 type TermsRowProps = {
   checked: boolean
+  href: string
   label: string
   onCheckedChange: () => void
 }
@@ -22,25 +25,25 @@ type TermsChecked = {
   service: boolean
 }
 
-function TermsRow({ checked, label, onCheckedChange }: TermsRowProps) {
+function TermsRow({ checked, href, label, onCheckedChange }: TermsRowProps) {
   return (
     <div className="flex w-full items-center gap-1.5">
       <Checkbox checked={checked} aria-label={`${label} 선택`} onClick={onCheckedChange} />
 
       <span className="min-w-0 flex-1 text-body-16md text-text-primary">{label}</span>
 
-      <button
-        type="button"
+      <Link
+        href={href}
         aria-label={`${label} 보기`}
         className="flex size-6 shrink-0 items-center justify-center text-icon-primary opacity-50"
       >
         <NextIcon aria-hidden="true" className="size-6" />
-      </button>
+      </Link>
     </div>
   )
 }
 
-export default function SignUpTermsPage() {
+export default function TermsAgreePage() {
   const router = useRouter()
   const [termsChecked, setTermsChecked] = useState<TermsChecked>({
     privacy: false,
@@ -114,6 +117,7 @@ export default function SignUpTermsPage() {
           <div className="flex w-full flex-col gap-3">
             <TermsRow
               checked={termsChecked.service}
+              href={POLICY_META_BY_SLUG.service.path}
               label="이용약관 동의"
               onCheckedChange={() => {
                 handleTermClick('service')
@@ -121,6 +125,7 @@ export default function SignUpTermsPage() {
             />
             <TermsRow
               checked={termsChecked.privacy}
+              href={POLICY_META_BY_SLUG.privacy.path}
               label="개인정보 수집 및 이용동의"
               onCheckedChange={() => {
                 handleTermClick('privacy')
