@@ -18,7 +18,7 @@ export function Button({ variant = 'default', type = 'button', className, ...pro
     <button
       type={type}
       className={cn(
-        'flex items-center justify-center rounded-2xl p-4 text-center text-body-16bd text-text-inverse disabled:bg-interactive-btn-disabled',
+        'flex items-center justify-center rounded-2xl p-4 text-center text-body-16bd text-text-inverse press disabled:bg-interactive-btn-disabled',
         variantClassMap[variant],
         className,
       )}

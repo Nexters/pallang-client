@@ -18,7 +18,7 @@ function SourceOption({ description, icon: Icon, onClick, title }: SourceOptionP
     <button
       type="button"
       onClick={onClick}
-      className="flex h-[156px] min-w-px flex-1 cursor-pointer flex-col items-end justify-between overflow-hidden bg-bg-surface p-5 text-left"
+      className="press flex h-[156px] min-w-px flex-1 cursor-pointer flex-col items-end justify-between overflow-hidden bg-bg-surface p-5 text-left"
     >
       <span className="flex w-full flex-col gap-1.5">
         <span className="text-title-18bd text-text-secondary">{title}</span>

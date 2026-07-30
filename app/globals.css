@@ -239,6 +239,20 @@
   transition-duration: var(--duration-slow);
 }
 
+/* 누를 때 살짝 눌리는 표준 피드백. 탭 가능한 요소에 붙인다.
+   지금까지는 CameraCheck만 임시로 active:scale-95를 쓰고 나머지는 무반응이었다. */
+@utility press {
+  transition-property: transform, scale, opacity;
+  --tw-duration: var(--duration-instant);
+  transition-duration: var(--duration-instant);
+  --tw-ease: var(--ease-standard);
+  transition-timing-function: var(--ease-standard);
+
+  &:active {
+    scale: 0.97;
+  }
+}
+
 /* 앱은 라이트/다크 테마를 나누지 않는다. 화면마다 배경을 직접 지정하므로 body는 기본값만 든다.
    상속색을 토큰으로 고정해 두는 게 중요하다 — SVGR이 주입하는 text-icon-primary는 아이콘에
    className을 넘기는 순간 {...props}에 덮이고, 그때 색이 이 상속값으로 떨어지기 때문이다. */

@@ -30,7 +30,7 @@ export function SegmentedControl({ label, options, value, onChange }: SegmentedC
               onChange(option.value)
             }}
             className={cn(
-              'flex-1 rounded-full py-3 text-center transition-colors',
+              'press flex-1 rounded-full py-3 text-center transition-colors duration-instant ease-standard',
               isSelected ? 'bg-bg-default text-text-primary' : 'text-text-inverse opacity-50',
             )}
           >

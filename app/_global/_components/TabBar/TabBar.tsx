@@ -19,7 +19,7 @@ type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
 }
 
 const TRACE_BUTTON_CLASS =
-  'flex shrink-0 items-center justify-center gap-2 rounded-full bg-interactive-accent px-4 py-3 text-body-16md text-text-primary'
+  'press flex shrink-0 items-center justify-center gap-2 rounded-full bg-interactive-accent px-4 py-3 text-body-16md text-text-primary'
 
 type TabLinkProps = {
   href: string
@@ -34,7 +34,7 @@ function TabLink({ href, icon: Icon, isActive, label }: TabLinkProps) {
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex w-12 shrink-0 flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
+        'press flex w-12 shrink-0 flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
         !isActive && 'opacity-60',
       )}
     >
