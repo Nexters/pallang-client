@@ -30,7 +30,7 @@
     "cap:dev:sync": "bash scripts/cap-dev.sh sync-only"
   },
   "dependencies": {
-    "@base-ui-components/react": "1.0.0-rc.0",
+    "@base-ui/react": "1.6.0",
     "@capacitor/android": "^8.4.2",
     "@capacitor/camera": "^8.2.1",
     "@capacitor/core": "^8.4.2",
