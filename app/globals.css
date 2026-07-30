@@ -186,6 +186,57 @@
   --text-caption-12rg--line-height: 1.3;
   --text-caption-12rg--letter-spacing: -0.04em;
   --text-caption-12rg--font-weight: 400;
+
+  /* Motion — easing. --ease-*는 Tailwind v4 네이티브 네임스페이스라 유틸이 자동 생성된다 */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); /* 등장 — 빠르게 나와 부드럽게 안착 */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* 퇴장 — 가속하며 사라짐 */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* 상태 전환 — 색·투명도·프레스 */
+}
+
+/* Motion — duration.
+   --duration-*는 Tailwind 테마 네임스페이스가 아니라 @theme에 둬도 유틸이 생기지 않는다.
+   평범한 :root에 두어야 아래 움직임 축소 오버라이드가 소스 순서로 확실히 이긴다.
+   TS에서 쓰는 같은 값은 _data/motion.constant.ts에 있고 motionToken.spec.ts가 둘을 잠근다. */
+:root {
+  --duration-instant: 120ms;
+  --duration-fast: 180ms;
+  --duration-normal: 240ms;
+  --duration-slow: 350ms;
+}
+
+/* 움직임 축소 설정에서는 전환을 즉시 끝낸다.
+   0ms가 아니라 1ms인 이유는 base-ui가 퇴장 완료를 전환 종료로 판정하기 때문이다 — 0이면 판정이 걸리지 않는다.
+   이 정책이 성립하려면 등장/퇴장을 transition으로만 구현해야 한다. @keyframes는 duration이
+   애니메이션 선언에 박혀 있어 변수 하나로 무력화되지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 1ms;
+    --duration-fast: 1ms;
+    --duration-normal: 1ms;
+    --duration-slow: 1ms;
+  }
+}
+
+/* 빌트인 duration-200과 같은 형태로 컴파일된다 — --tw-duration까지 세워야
+   transition 유틸이 세운 fallback을 제대로 덮는다 */
+@utility duration-instant {
+  --tw-duration: var(--duration-instant);
+  transition-duration: var(--duration-instant);
+}
+
+@utility duration-fast {
+  --tw-duration: var(--duration-fast);
+  transition-duration: var(--duration-fast);
+}
+
+@utility duration-normal {
+  --tw-duration: var(--duration-normal);
+  transition-duration: var(--duration-normal);
+}
+
+@utility duration-slow {
+  --tw-duration: var(--duration-slow);
+  transition-duration: var(--duration-slow);
 }
 
 /* 앱은 라이트/다크 테마를 나누지 않는다. 화면마다 배경을 직접 지정하므로 body는 기본값만 든다.
