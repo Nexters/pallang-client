@@ -16,6 +16,7 @@ import type { BlockBox } from '../../_services/blockSelection.service'
 import { clampQuote, joinBlockTexts, type OcrBlock } from '../../_services/ocrText.service'
 import { OcrPhotoStage } from '../OcrPhotoStage/OcrPhotoStage'
 import { OcrQuoteSheet } from '../OcrQuoteSheet/OcrQuoteSheet'
+import { OcrScanningOverlay } from '../OcrScanningOverlay/OcrScanningOverlay'
 
 type PositionedBlock = BlockBox & OcrBlock
 
@@ -145,23 +146,27 @@ export function OcrSelector() {
           </Button>
         </div>
       ) : imageUrl ? (
-        <OcrPhotoStage
-          imageUrl={imageUrl}
-          blocks={blocks}
-          selected={selected}
-          onSelect={(indices) => {
-            // 절단은 파생값이라 effect에서 알리면 set-state-in-effect에 걸린다.
-            // 선택이 바뀌는 이 지점에서 직접 알린다.
-            if (
-              joinBlockTexts(indices.map((i) => blocks[i]).filter((b) => !!b)).length >
-              MAX_QUOTE_LENGTH
-            )
-              setMessage(QUOTE_LIMIT_MESSAGE)
-            setSelected(indices)
-            // 새로 끌면 손으로 고친 내용 대신 새 선택을 따른다
-            setEditedText(null)
-          }}
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <OcrPhotoStage
+            imageUrl={imageUrl}
+            blocks={blocks}
+            selected={selected}
+            onSelect={(indices) => {
+              // 절단은 파생값이라 effect에서 알리면 set-state-in-effect에 걸린다.
+              // 선택이 바뀌는 이 지점에서 직접 알린다.
+              if (
+                joinBlockTexts(indices.map((i) => blocks[i]).filter((b) => !!b)).length >
+                MAX_QUOTE_LENGTH
+              )
+                setMessage(QUOTE_LIMIT_MESSAGE)
+              setSelected(indices)
+              // 새로 끌면 손으로 고친 내용 대신 새 선택을 따른다
+              setEditedText(null)
+            }}
+          />
+          {/* 사진은 떴지만 아직 글자 인식 중인 구간 — 스테이지 위에 딤+스캔을 얹는다 */}
+          {ocr.isPending && <OcrScanningOverlay />}
+        </div>
       ) : (
         <p
           role="status"

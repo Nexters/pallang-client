@@ -21,7 +21,7 @@ export default function SignUpWelcomePage() {
   return (
     <section
       aria-label="가입 환영"
-      className={`flex min-h-0 flex-1 flex-col justify-end overflow-hidden ${GRID_BACKGROUND_CLASS_NAME}`}
+      className={`-mt-(--safe-top) flex min-h-0 flex-1 flex-col justify-end overflow-hidden pt-(--safe-top) ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="h-11 shrink-0" />
 

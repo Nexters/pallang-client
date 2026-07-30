@@ -9,7 +9,7 @@ export default function NotFound() {
   const router = useRouter()
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end bg-bg-default">
+    <div className="-mt-(--safe-top) flex min-h-0 flex-1 flex-col justify-end bg-bg-default pt-(--safe-top)">
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="h-11 shrink-0" />
 

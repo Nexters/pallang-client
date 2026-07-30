@@ -35,7 +35,8 @@ export function TraceDecorateForm() {
   useOverlayBackGuard(candidate !== null, () => {
     setCandidate(null)
   })
-  const { handlers } = useTextRangeSelection(setRange)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { handlers } = useTextRangeSelection(setRange, scrollRef)
   const noteRef = useRef<HTMLDivElement>(null)
   const [editing, setEditing] = useState<{
     decoration: DraftDecoration
@@ -116,7 +117,8 @@ export function TraceDecorateForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-default">
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
+      <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepHeader step={2} title={'원하는 영역을 선택하고\n다양한 효과를 적용해보세요'} />
       </div>
       {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
@@ -128,6 +130,7 @@ export function TraceDecorateForm() {
             decorations={draft.decorations}
             pendingRange={range}
             selectable
+            scrollRef={scrollRef}
             {...handlers}
             onPointerDown={handlePointerDown}
           />

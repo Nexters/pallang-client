@@ -84,7 +84,7 @@ export default function TermsAgreePage() {
   return (
     <section
       aria-label="약관 동의"
-      className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${GRID_BACKGROUND_CLASS_NAME}`}
+      className={`relative -mt-(--safe-top) flex min-h-0 flex-1 flex-col overflow-hidden pt-(--safe-top) ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-163.75 bg-linear-to-b from-transparent to-neutral-200" />
 
