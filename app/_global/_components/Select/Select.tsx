@@ -65,7 +65,7 @@ export function Select({
         {/* base-ui 기본 children이 '▼' 텍스트라 반드시 children을 넘겨 덮어써야 한다 */}
         <BaseSelect.Icon
           data-slot="select-icon"
-          className="flex size-5 shrink-0 items-center justify-center transition-transform duration-200 data-popup-open:rotate-180"
+          className="flex size-5 shrink-0 items-center justify-center transition-transform duration-fast ease-standard data-popup-open:rotate-180"
         >
           <ChevronDownIcon width={20} height={20} className="size-5 text-text-inverse" />
         </BaseSelect.Icon>
@@ -86,7 +86,8 @@ export function Select({
             className={cn(
               // Figma 열림 상태의 컨테이너는 radius 없는 각진 직사각형이다
               'min-w-(--anchor-width) bg-bg-overlay outline-none',
-              'transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0',
+              'transition-opacity duration-fast ease-enter data-ending-style:ease-exit',
+              'data-ending-style:opacity-0 data-starting-style:opacity-0',
               TEXT_CLASS,
             )}
           >
