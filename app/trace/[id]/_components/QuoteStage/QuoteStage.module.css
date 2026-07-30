@@ -13,21 +13,6 @@
   height: calc(var(--stage-expanded) - var(--stage-shift) * var(--collapse));
 }
 
-/* 축소 상태 배경 */
-.base {
-  position: absolute;
-  inset: 0;
-  background-color: var(--color-bg-book-card);
-}
-
-/* 펼친 상태 흰 배경 — 진행에 따라 걷힌다 */
-.sheet {
-  position: absolute;
-  inset: 0;
-  background-color: var(--color-bg-default);
-  opacity: var(--inv);
-}
-
 /* 오렌지 배너 — 반투명해지며 흐려지지 않도록, 채도를 유지한 채 자기 높이만큼 걷혀 올라간다 */
 .banner {
   position: absolute;
@@ -36,12 +21,6 @@
   height: var(--banner-height);
   background-color: var(--color-orange-500);
   transform: translateY(calc(-1 * var(--banner-height) * var(--collapse)));
-}
-
-.header {
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
 }
 
 /* 탭은 헤더 바로 아래에서 잘리며 헤더 밑으로 미끄러져 들어간다 — 흐려질 필요가 없다.
@@ -80,12 +59,6 @@
   box-shadow: 4px 10px 17.5px rgb(0 0 0 / calc(0.2 * var(--inv)));
 }
 
-.quote {
-  min-height: 0;
-  flex: 1;
-  overflow: hidden;
-}
-
 /* 카드 아래 → 패널 안쪽 하단으로 이동한다 */
 .indicator {
   position: absolute;
@@ -118,33 +91,8 @@
   opacity: var(--inv);
 }
 
-.coverText {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  text-align: center;
-}
-
 .coverTitle {
   font-size: calc(20px - 4px * var(--collapse));
-  font-weight: 700;
   line-height: 1.35;
   letter-spacing: -0.04em;
-}
-
-/* 가변 폰트가 아니라 굵기는 보간되지 않는다 — 전환이 끝난 시점에만 바꾼다 */
-.coverTitleCollapsed {
-  font-weight: 600;
-}
-
-.coverSubtitle {
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: -0.04em;
-  opacity: 0.7;
-}
-
-.coverSubtitleCollapsed {
-  font-weight: 400;
 }
