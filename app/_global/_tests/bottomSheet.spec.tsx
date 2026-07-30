@@ -46,4 +46,20 @@ describe('BottomSheet', () => {
     await userEvent.keyboard('{Escape}')
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  it('배경을 누르면 onClose를 호출한다', async () => {
+    const onClose = vi.fn()
+    render(
+      <BottomSheet open title="제목" onClose={onClose}>
+        <p>본문</p>
+      </BottomSheet>,
+    )
+
+    // 백드롭은 역할도 이름도 없는 장식 요소라 쿼리로만 잡을 수 있다
+    const backdrop = document.querySelector('[data-slot="bottom-sheet-backdrop"]')
+    if (backdrop === null) throw new Error('바텀시트 백드롭을 찾지 못했다')
+    await userEvent.click(backdrop)
+
+    expect(onClose).toHaveBeenCalledOnce()
+  })
 })
