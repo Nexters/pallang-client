@@ -18,8 +18,9 @@ export function QuoteStage({
   onLoadMorePages,
   onClickQuote,
 }: QuoteStageProps) {
-  const quote = highlight.quotes[quoteIndex] ?? ''
-  const isCovered = highlight.isSpoiler && !isRevealed
+  const activeQuote = highlight.quotes[quoteIndex]
+  // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
+  const isCovered = Boolean(activeQuote?.isSpoiler) && !isRevealed
 
   return (
     <div className={cn(styles['stage'], 'absolute inset-x-0 top-0')}>
@@ -55,7 +56,9 @@ export function QuoteStage({
         onClick={onClickQuote}
         className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
       >
-        <p className="min-h-0 flex-1 overflow-hidden text-body-20md text-text-secondary">{quote}</p>
+        <p className="min-h-0 flex-1 overflow-hidden text-body-20md text-text-secondary">
+          {activeQuote?.text ?? ''}
+        </p>
         {isCovered && (
           <span
             className={cn(

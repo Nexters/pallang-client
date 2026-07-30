@@ -1,7 +1,12 @@
+/** 대목 단위 인용문 — 스포일러 여부도 대목마다 다르다 */
+export type HighlightQuote = {
+  text: string
+  isSpoiler: boolean
+}
+
 export type Highlight = {
   page: number
-  quotes: string[]
-  isSpoiler: boolean
+  quotes: HighlightQuote[]
 }
 
 /** 상단 스테이지(QuoteStage)가 받는 props */

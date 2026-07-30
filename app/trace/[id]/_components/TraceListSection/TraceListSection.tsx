@@ -9,8 +9,6 @@ import { TraceItem } from '../TraceItem/TraceItem'
 type TraceListSectionProps = {
   traces: Trace[]
   traceCount: number
-  /** 스포일러 대목이 가림막 해제 전일 때 목록을 블러 처리한다 */
-  isMasked: boolean
   sortType: OpinionSortType
   onToggleSort: () => void
   onToggleComment: () => void
@@ -21,7 +19,6 @@ type TraceListSectionProps = {
 export function TraceListSection({
   traces,
   traceCount,
-  isMasked,
   sortType,
   onToggleSort,
   onToggleComment,
@@ -47,13 +44,7 @@ export function TraceListSection({
           <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
-      <ul
-        aria-hidden={isMasked || undefined}
-        className={cn(
-          'flex flex-col px-4 pb-10',
-          isMasked && 'pointer-events-none blur-md select-none',
-        )}
-      >
+      <ul className="flex flex-col px-4 pb-10">
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
