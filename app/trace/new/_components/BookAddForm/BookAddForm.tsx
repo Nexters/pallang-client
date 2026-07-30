@@ -91,9 +91,10 @@ export function BookAddForm({
         })
       },
       onError: (error) => {
-        // 같은 책이 이미 있으면 400이 온다. 여기서 다시 눌러도 결과가 같으니 검색으로 유도한다.
+        // 서버는 ISBN 중복을 막지 않는다(#110). 400은 값 형식이 맞지 않을 때라
+        // 다시 눌러도 결과가 같으니 입력을 고치도록 안내한다.
         if (error instanceof ApiError && error.status === 400) {
-          setMessage('이미 등록된 책일 수 있어요. 검색으로 찾아보세요.')
+          setMessage('입력한 정보를 다시 확인해주세요.')
           return
         }
         setMessage('책을 등록하지 못했어요. 잠시 후 다시 시도해주세요.')
