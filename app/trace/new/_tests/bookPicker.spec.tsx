@@ -96,7 +96,7 @@ describe('BookPicker 도서 추가', () => {
     apiState.externalBooks = [
       {
         title: '채식주의자',
-        author: '한강',
+        author: '한강 (지은이), 김완희 (옮긴이)',
         publisher: '창비',
         isbn: '9788936434120',
         coverImageUrl: null,
@@ -115,6 +115,8 @@ describe('BookPicker 도서 추가', () => {
 
     expect(screen.getByRole('heading', { name: '책 추가하기' })).toBeTruthy()
     expect(screen.getByLabelText(/제목/).getAttribute('value')).toBe('채식주의자')
+    // 알라딘의 역할 표기('(지은이)', '(옮긴이)')는 떼고 지은이만 채운다
+    expect(screen.getByLabelText(/지은이/).getAttribute('value')).toBe('한강')
     // 알라딘은 쪽수를 주지 않는다. 사용자가 직접 채워야 한다.
     expect(screen.getByLabelText(/페이지 수/).getAttribute('value')).toBe('')
   })

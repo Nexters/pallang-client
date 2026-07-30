@@ -5,7 +5,11 @@ import { useState } from 'react'
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
-import { type BookFormValues, emptyBookForm } from '../../_services/bookForm.service'
+import {
+  type BookFormValues,
+  emptyBookForm,
+  normalizeExternalAuthor,
+} from '../../_services/bookForm.service'
 import type { SelectedBook } from '../../_types/traceDraft.type'
 import { BookAddForm } from '../BookAddForm/BookAddForm'
 import { BookSearchView } from '../BookSearchView/BookSearchView'
@@ -65,7 +69,7 @@ export function BookPicker() {
               coverImageUrl: book.coverImageUrl,
               type: 'form',
               values: {
-                author: book.author,
+                author: normalizeExternalAuthor(book.author),
                 isbn: book.isbn,
                 pageCount: '',
                 publisher: book.publisher,

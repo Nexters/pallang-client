@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   emptyBookForm,
   isValidBookForm,
+  normalizeExternalAuthor,
   toCreateBookInput,
   validateBookForm,
 } from '../_services/bookForm.service'
@@ -47,6 +48,36 @@ describe('isValidBookForm', () => {
   it('필수 항목이 모두 채워지면 통과한다', () => {
     expect(isValidBookForm(filled)).toBe(true)
     expect(isValidBookForm(emptyBookForm)).toBe(false)
+  })
+})
+
+describe('normalizeExternalAuthor', () => {
+  // 알라딘은 '한강 (지은이), 김완희 (옮긴이)'처럼 역할 표기를 붙여서 준다.
+  it('역할 표기를 뗀다', () => {
+    expect(normalizeExternalAuthor('한강 (지은이)')).toBe('한강')
+  })
+
+  it('지은이가 있으면 지은이만 남긴다', () => {
+    expect(normalizeExternalAuthor('사이토 로쿠로 (지은이), ATLUS (원작), 김완희 (옮긴이)')).toBe(
+      '사이토 로쿠로',
+    )
+  })
+
+  it('지은이가 없으면 글을 쓴 사람을 남긴다', () => {
+    expect(normalizeExternalAuthor('멜로우TV (원작), 한바리 (글), 차차 (그림)')).toBe('한바리')
+  })
+
+  it('지은이도 글도 없으면 역할만 떼고 모두 남긴다', () => {
+    expect(normalizeExternalAuthor('말량 (원작), 박지영 (만화)')).toBe('말량, 박지영')
+  })
+
+  it('이름 안의 괄호는 역할로 보지 않는다', () => {
+    expect(normalizeExternalAuthor('홍유진 (지은이), 아세움(박교은) (그림)')).toBe('홍유진')
+  })
+
+  it('역할 표기가 없으면 그대로 둔다', () => {
+    expect(normalizeExternalAuthor('한강')).toBe('한강')
+    expect(normalizeExternalAuthor('')).toBe('')
   })
 })
 
