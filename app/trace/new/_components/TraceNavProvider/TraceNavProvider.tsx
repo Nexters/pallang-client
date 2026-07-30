@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 
 import { type TraceNav, TraceNavContext } from '../../_data/traceNav.store'
 import { useHardwareBack } from '../../_hooks/useHardwareBack'
@@ -9,6 +9,7 @@ import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceOverlay } from '../../_hooks/useTraceOverlay'
 import { resolveExitDecision } from '../../_services/traceExit.service'
 import {
+  nextStepPaths,
   resolveBackTarget,
   resolveStep,
   stepPath,
@@ -30,6 +31,13 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
 
   const step = resolveStep(pathname)
+
+  // 현재 단계에 들어서는 순간 다음 단계 route를 미리 받아둔다. 이 페이지들은 서버 데이터
+  // fetch가 없어 사실상 정적이라, 프리페치해두면 '다음' 전환이 네트워크 왕복 없이 즉시 된다.
+  useEffect(() => {
+    if (!step) return
+    for (const path of nextStepPaths(step)) router.prefetch(path)
+  }, [step, router])
 
   const leaveFlow = () => {
     setIsConfirmOpen(false)

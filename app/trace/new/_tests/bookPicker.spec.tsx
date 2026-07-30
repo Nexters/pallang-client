@@ -27,7 +27,7 @@ const { apiState } = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/trace/new',
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }))
 
 vi.mock('@/app/_global/_apis/_generated/book/book', () => ({

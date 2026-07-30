@@ -184,7 +184,8 @@ export function TraceDecorateForm() {
         <Button
           variant="activated"
           className="h-[54px] flex-1"
-          disabled={draft.decorations.length === 0 || similarCheck.isPending}
+          disabled={draft.decorations.length === 0}
+          loading={similarCheck.isPending}
           onClick={handleNext}
         >
           다음
