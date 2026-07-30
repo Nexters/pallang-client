@@ -21,6 +21,24 @@ export function stepPath(step: TraceStep): string {
   return STEP_PATH[step]
 }
 
+/**
+ * 각 단계에서 이어질 다음 단계(들). 미리 route를 프리페치해 '다음'을 눌렀을 때의
+ * RSC 왕복을 없앤다. 이 왕복이 웹뷰(원격 URL)에서 단계 전환마다 버벅이는 원인이다.
+ * search는 방식 선택에 따라 photo·detail 어느 쪽으로도 가므로 둘 다 미리 받는다.
+ */
+const NEXT_STEPS: Record<TraceStep, TraceStep[]> = {
+  search: ['photo', 'detail'],
+  photo: ['detail'],
+  detail: ['decorate'],
+  decorate: ['opinion'],
+  opinion: ['done'],
+  done: ['search'],
+}
+
+export function nextStepPaths(step: TraceStep): string[] {
+  return NEXT_STEPS[step].map(stepPath)
+}
+
 export function resolveStep(pathname: string): TraceStep | null {
   return STEPS.find((step) => STEP_PATH[step] === pathname) ?? null
 }

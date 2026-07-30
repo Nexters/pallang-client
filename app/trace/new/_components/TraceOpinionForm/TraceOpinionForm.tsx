@@ -121,7 +121,8 @@ export function TraceOpinionForm() {
         <Button
           variant="activated"
           className="flex-1"
-          disabled={draft.content.trim().length === 0 || createOpinion.isPending}
+          disabled={draft.content.trim().length === 0}
+          loading={createOpinion.isPending}
           onClick={handleSubmit}
         >
           흔적 남기기

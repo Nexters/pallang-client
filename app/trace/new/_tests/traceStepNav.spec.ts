@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveBackTarget, resolveStep, stepPath } from '../_services/traceStepNav.service'
+import {
+  nextStepPaths,
+  resolveBackTarget,
+  resolveStep,
+  stepPath,
+} from '../_services/traceStepNav.service'
 
 describe('resolveStep', () => {
   it('경로를 단계로 바꾼다', () => {
@@ -22,6 +27,20 @@ describe('stepPath', () => {
   it('단계를 경로로 바꾼다', () => {
     expect(stepPath('search')).toBe('/trace/new')
     expect(stepPath('done')).toBe('/trace/new/done')
+  })
+})
+
+describe('nextStepPaths', () => {
+  it('각 단계에서 이어질 다음 단계 경로를 준다 — 프리페치 대상', () => {
+    // 전환 왕복을 없애려면 '다음'으로 갈 route를 미리 받아둬야 한다.
+    expect(nextStepPaths('photo')).toEqual(['/trace/new/detail'])
+    expect(nextStepPaths('detail')).toEqual(['/trace/new/decorate'])
+    expect(nextStepPaths('decorate')).toEqual(['/trace/new/opinion'])
+    expect(nextStepPaths('opinion')).toEqual(['/trace/new/done'])
+  })
+
+  it('첫 화면은 방식 선택에 따라 사진·직접입력 어느 쪽으로도 가므로 둘 다 미리 받는다', () => {
+    expect(nextStepPaths('search')).toEqual(['/trace/new/photo', '/trace/new/detail'])
   })
 })
 

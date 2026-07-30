@@ -10,10 +10,11 @@ import { useTraceNav } from '../_hooks/useTraceNav'
 const { navState } = vi.hoisted(() => ({ navState: { pathname: '/trace/new' } }))
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
+const prefetchMock = vi.fn()
 
 vi.mock('next/navigation', () => ({
   usePathname: () => navState.pathname,
-  useRouter: () => ({ push: pushMock, replace: replaceMock }),
+  useRouter: () => ({ push: pushMock, replace: replaceMock, prefetch: prefetchMock }),
 }))
 
 // 대목이 담긴 draft에서 뒤로/이탈을 시도하는 최소 화면
@@ -68,6 +69,7 @@ describe('흔적 작성 단계 이동', () => {
   beforeEach(() => {
     pushMock.mockClear()
     replaceMock.mockClear()
+    prefetchMock.mockClear()
   })
 
   it('꾸미기에서 뒤로 가면 push 없이 상세로 replace한다', () => {
@@ -101,5 +103,11 @@ describe('흔적 작성 단계 이동', () => {
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     expect(replaceMock).toHaveBeenCalledWith('/')
+  })
+
+  it('단계에 들어서면 다음 단계 route를 미리 프리페치한다', () => {
+    // 이게 빠지면 전환마다 RSC 왕복이 생겨 웹뷰에서 버벅인다
+    renderAt('/trace/new/detail')
+    expect(prefetchMock).toHaveBeenCalledWith('/trace/new/decorate')
   })
 })
