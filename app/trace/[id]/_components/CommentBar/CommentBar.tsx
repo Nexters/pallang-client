@@ -19,8 +19,7 @@ export function CommentBar({ onSubmit }: CommentBarProps) {
         onSubmit?.(trimmed)
         setContent('')
       }}
-      // ponytail: border #464646은 디자인 변수 미연결 색이라 토큰 없음 — 토큰 추가 시 치환
-      className="sticky bottom-0 flex items-center gap-2 border-t border-[#464646] bg-bg-black p-4"
+      className="sticky bottom-0 flex items-center gap-2 border-t border-border-book bg-bg-black p-4"
     >
       <input
         type="text"
@@ -30,7 +29,7 @@ export function CommentBar({ onSubmit }: CommentBarProps) {
           setContent(event.target.value)
         }}
         placeholder="댓글을 입력해주세요"
-        className="min-w-0 flex-1 rounded-full bg-bg-dark px-4 py-[9px] text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
+        className="min-w-0 flex-1 rounded-full bg-bg-dark px-4 h-9 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
       />
       <button
         type="submit"
