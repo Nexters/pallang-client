@@ -121,22 +121,34 @@ function LoggedInContent({
         </section>
       )}
 
-      <SettingSection items={loggedInSettings} onLogout={onLogout} />
+      <SettingSection items={loggedInSettings} />
 
       <footer className="mt-auto flex items-center justify-center gap-2.5 p-2.5">
         <Link
-          href={POLICY_META_BY_SLUG.privacy.path}
-          className="text-body-14md font-semibold tracking-normal text-text-tertiary"
+          href={POLICY_META_BY_SLUG.service.path}
+          className="text-body-14sb tracking-normal text-text-tertiary"
         >
-          개인정보 처리 방침
+          이용약관
         </Link>
         <span aria-hidden className="h-3 w-px bg-border-default" />
         <Link
-          href={POLICY_META_BY_SLUG.service.path}
-          className="text-body-14md font-semibold tracking-normal text-text-tertiary"
+          href={POLICY_META_BY_SLUG.privacy.path}
+          className="text-body-14sb tracking-normal text-text-tertiary"
         >
-          서비스 이용약관
+          개인정보 처리방침
         </Link>
+        {onLogout && (
+          <>
+            <span aria-hidden className="h-3 w-px bg-border-default" />
+            <button
+              type="button"
+              onClick={onLogout}
+              className="text-body-14sb tracking-normal text-text-tertiary"
+            >
+              로그아웃
+            </button>
+          </>
+        )}
       </footer>
     </div>
   )
@@ -173,7 +185,7 @@ function LoggedOutContent({ onLoginClick }: { onLoginClick?: () => void }) {
   )
 }
 
-function SettingSection({ items, onLogout }: { items: string[]; onLogout?: () => void }) {
+function SettingSection({ items }: { items: string[] }) {
   return (
     <section className="flex flex-col gap-6 px-4">
       <h2 className="text-body-16bd text-text-primary">설정</h2>
@@ -205,13 +217,6 @@ function SettingSection({ items, onLogout }: { items: string[]; onLogout?: () =>
             </li>
           )
         })}
-        {onLogout && (
-          <li>
-            <button type="button" onClick={onLogout} className="text-body-14md text-text-secondary">
-              로그아웃
-            </button>
-          </li>
-        )}
       </ul>
     </section>
   )
