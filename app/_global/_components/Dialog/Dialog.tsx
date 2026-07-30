@@ -68,7 +68,9 @@ function Popup({ className, ...props }: ComponentProps<typeof BaseDialog.Popup>)
       className={cn(
         'relative flex w-full max-w-[343px] flex-col gap-6 rounded-[32px] bg-bg-default px-4 pt-[46px] pb-6',
         // 등장은 넉넉하게, 퇴장은 짧게 — 사라지는 걸 기다리게 하지 않는다
-        'transition-[opacity,transform] duration-normal ease-enter',
+        // Tailwind v4의 scale-*는 transform이 아니라 scale 속성으로 컴파일된다 —
+        // transition-property에 transform을 적으면 크기가 전환 없이 점프한다
+        'transition-[opacity,scale] duration-normal ease-enter',
         'data-starting-style:scale-95 data-starting-style:opacity-0',
         'data-ending-style:scale-95 data-ending-style:opacity-0',
         'data-ending-style:duration-fast data-ending-style:ease-exit',

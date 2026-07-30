@@ -40,6 +40,8 @@ export function SplashProvider({ children }: { children: ReactNode }) {
             'absolute inset-0 z-50 flex items-center justify-center overflow-hidden',
             'transition-opacity duration-normal ease-exit',
             'data-[state=exiting]:opacity-0',
+            // 페이드아웃 동안 z-50으로 덮고 있어 첫 탭을 삼킨다
+            'data-[state=exiting]:pointer-events-none',
             GRID_BACKGROUND_CLASS_NAME,
           )}
         >

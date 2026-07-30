@@ -62,6 +62,8 @@ export function TraceDetailOverlay({
         'transition-transform duration-slow ease-enter',
         'data-[state=entering]:translate-y-full',
         'data-[state=exiting]:translate-y-full data-[state=exiting]:ease-exit',
+        // 슬라이드 아웃 350ms 동안 이전/다음 버튼이 살아 있으면 방금 닫은 오버레이가 되열린다
+        'data-[state=exiting]:pointer-events-none',
       )}
     >
       {/* 오버레이는 fixed라 셸 패딩을 안 받는다 — 헤더 배경색을 유지한 채 인셋만큼 내린다. 10px = TopBar 기본 py-2.5 유지분 */}

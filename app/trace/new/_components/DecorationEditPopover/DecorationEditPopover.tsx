@@ -64,6 +64,8 @@ export function DecorationEditPopover({
         'origin-bottom transition-[opacity,scale] duration-fast ease-enter',
         'data-[state=entering]:scale-96 data-[state=entering]:opacity-0',
         'data-[state=exiting]:scale-96 data-[state=exiting]:opacity-0 data-[state=exiting]:ease-exit',
+        // 사라지는 동안에도 화면에 남아 있으므로 탭을 흘려보낸다
+        'data-[state=exiting]:pointer-events-none',
       )}
       style={{ left, top }}
     >
