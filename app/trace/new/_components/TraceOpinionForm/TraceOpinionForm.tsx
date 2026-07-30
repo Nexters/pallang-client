@@ -78,7 +78,8 @@ export function TraceOpinionForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-default">
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
+      <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepHeader
           step={3}
           title={'해당 대목에 남기고 싶은 흔적을\n자유롭게 작성해 주세요.'}
