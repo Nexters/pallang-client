@@ -105,10 +105,8 @@ export function BookPicker() {
 
   return (
     <main className="flex h-full min-h-0 flex-col bg-bg-default">
-      <TopBar.Root
-        // 노치/상태바 아래로 파고들지 않게 한다(layout에 viewportFit: 'cover'가 있어야 값이 잡힌다)
-        style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
-      >
+      {/* 노치 인셋은 레이아웃 셸이 이미 소비했다 — 여기서 다시 더하면 두 번 내려간다 */}
+      <TopBar.Root>
         <TopBar.Action
           aria-label="뒤로"
           onClick={() => {

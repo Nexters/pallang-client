@@ -9,8 +9,9 @@
   position: absolute;
   inset-inline: 0;
   top: 0;
-  /* 스테이지 하단이 정렬 바 상단과 정확히 같은 속도로 올라온다 */
-  height: calc(var(--stage-expanded) - var(--stage-shift) * var(--collapse));
+  /* 스테이지 하단이 정렬 바 상단과 정확히 같은 속도로 올라온다.
+     --safe-top(노치 인셋)은 두 상태에 똑같이 더해져 전환 거리에는 영향이 없다 */
+  height: calc(var(--safe-top) + var(--stage-expanded) - var(--stage-shift) * var(--collapse));
 }
 
 /* 축소 상태 배경 */
@@ -33,15 +34,16 @@
   position: absolute;
   inset-inline: 0;
   top: 0;
-  height: var(--banner-height);
+  /* 노치 뒤까지 오렌지가 이어지도록 배너만 인셋만큼 늘리고, 걷힐 때도 늘어난 높이만큼 올라간다 */
+  height: calc(var(--safe-top) + var(--banner-height));
   background-color: var(--color-orange-500);
-  transform: translateY(calc(-1 * var(--banner-height) * var(--collapse)));
+  transform: translateY(calc(-1 * (var(--safe-top) + var(--banner-height)) * var(--collapse)));
 }
 
 .header {
   position: absolute;
   inset-inline: 0;
-  top: 0;
+  top: var(--safe-top);
 }
 
 /* 탭은 헤더 바로 아래에서 잘리며 헤더 밑으로 미끄러져 들어간다 — 흐려질 필요가 없다.
@@ -51,7 +53,7 @@
 
   position: absolute;
   inset-inline: 0;
-  top: var(--header-height);
+  top: calc(var(--safe-top) + var(--header-height));
   height: calc(var(--tabs-height) * (1 - var(--tabs-progress)));
   overflow: hidden;
 }
@@ -64,7 +66,7 @@
    회전·위치·크기·테두리·그림자가 모두 같은 진행률을 따른다 */
 .card {
   position: absolute;
-  top: calc(var(--card-top-collapsed) + var(--card-rise) * var(--inv));
+  top: calc(var(--safe-top) + var(--card-top-collapsed) + var(--card-rise) * var(--inv));
   left: calc((100% - var(--card-width)) / 2 * var(--width-inv));
   right: calc((100% - var(--card-width)) / 2 * var(--width-inv));
   display: flex;
@@ -90,7 +92,9 @@
 .indicator {
   position: absolute;
   inset-inline: 0;
-  top: calc(var(--indicator-top-expanded) - var(--indicator-rise) * var(--collapse));
+  top: calc(
+    var(--safe-top) + var(--indicator-top-expanded) - var(--indicator-rise) * var(--collapse)
+  );
   padding-inline: calc(64px + 24px * var(--collapse));
 }
 

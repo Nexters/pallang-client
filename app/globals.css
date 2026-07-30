@@ -260,3 +260,9 @@ body {
   background: var(--color-bg-default);
   color: var(--color-text-secondary);
 }
+
+/* 노치(safe area) 인셋 — 레이아웃 셸(main)이 pt-(--safe-top)으로 일괄 소비한다.
+   노치 뒤까지 배경을 깔아야 하는 화면만 마이너스 마진으로 되돌린 뒤 직접 처리한다(예: 흔적 페이지) */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+}
