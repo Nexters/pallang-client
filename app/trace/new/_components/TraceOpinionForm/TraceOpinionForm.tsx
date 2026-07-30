@@ -78,14 +78,18 @@ export function TraceOpinionForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-alternative pb-6">
+      <div className="bg-bg-default">
         <TraceStepHeader
           step={3}
           title={'해당 대목에 남기고 싶은 흔적을\n자유롭게 작성해 주세요.'}
         />
       </div>
-      <div className="-mt-4 px-8">
-        <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+      {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
+      <div className="relative bg-bg-default px-8">
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+        <div className="relative">
+          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+        </div>
       </div>
 
       <div className="px-4 pt-6">

@@ -38,11 +38,15 @@ export function TraceDetailForm() {
 
   return (
     <div className="flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-alternative pb-6">
+      <div className="bg-bg-default">
         <TraceStepHeader step={1} title={'문장이 있는 페이지와\n스포일러 유무를 선택해주세요'} />
       </div>
-      <div className="-mt-4 px-8">
-        <TraceNote quotedText={draft.quotedText} decorations={[]} />
+      {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
+      <div className="relative bg-bg-default px-8">
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+        <div className="relative">
+          <TraceNote quotedText={draft.quotedText} decorations={[]} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 px-4 pt-8">
