@@ -12,6 +12,7 @@ type TabBarTab = 'home' | 'my'
 type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
   activeTab?: TabBarTab
   homeHref?: string
+  isLoading?: boolean
   /** 흔적 남기기는 로그인이 필요해 이동 전에 게이트를 거친다. 넘기지 않으면 traceHref로 바로 이동한다. */
   onTraceClick?: () => void
   traceHref?: string
@@ -44,10 +45,27 @@ function TabLink({ href, icon: Icon, isActive, label }: TabLinkProps) {
   )
 }
 
+function TabBarSkeleton() {
+  return (
+    <>
+      <div className="flex w-12 shrink-0 flex-col items-center gap-0.5">
+        <div className="size-6.5 rounded-full bg-white/50" />
+        <div className="h-2 w-8 rounded-[1px] bg-white/50" />
+      </div>
+      <div className="h-10 w-[118px] rounded-full bg-white/50" />
+      <div className="flex w-12 shrink-0 flex-col items-center gap-0.5">
+        <div className="size-6.5 rounded-full bg-white/10" />
+        <div className="h-2 w-8 rounded-[1px] bg-white/10" />
+      </div>
+    </>
+  )
+}
+
 export function TabBar({
   activeTab = 'home',
   className,
   homeHref = '/',
+  isLoading = false,
   onTraceClick,
   traceHref = '/trace/new',
   myHref = '/my',
@@ -62,25 +80,31 @@ export function TabBar({
       )}
       {...props}
     >
-      <div className="flex items-center gap-8">
-        <TabLink href={homeHref} icon={HomeIcon} isActive={activeTab === 'home'} label="home" />
-        {/* 흔적 저장은 로그인이 필요하다. 게이트를 받으면 링크 대신 버튼으로 그려 이동 전에 확인한다. */}
-        {onTraceClick ? (
-          <button
-            type="button"
-            onClick={onTraceClick}
-            className={cn(TRACE_BUTTON_CLASS, 'cursor-pointer')}
-          >
-            <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
-            <span>흔적 남기기</span>
-          </button>
+      <div className="flex items-center gap-8" aria-hidden={isLoading ? 'true' : undefined}>
+        {isLoading ? (
+          <TabBarSkeleton />
         ) : (
-          <Link href={traceHref} className={TRACE_BUTTON_CLASS}>
-            <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
-            <span>흔적 남기기</span>
-          </Link>
+          <>
+            <TabLink href={homeHref} icon={HomeIcon} isActive={activeTab === 'home'} label="home" />
+            {/* 흔적 저장은 로그인이 필요하다. 게이트를 받으면 링크 대신 버튼으로 그려 이동 전에 확인한다. */}
+            {onTraceClick ? (
+              <button
+                type="button"
+                onClick={onTraceClick}
+                className={cn(TRACE_BUTTON_CLASS, 'cursor-pointer')}
+              >
+                <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
+                <span>흔적 남기기</span>
+              </button>
+            ) : (
+              <Link href={traceHref} className={TRACE_BUTTON_CLASS}>
+                <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
+                <span>흔적 남기기</span>
+              </Link>
+            )}
+            <TabLink href={myHref} icon={MyIcon} isActive={activeTab === 'my'} label="MY" />
+          </>
         )}
-        <TabLink href={myHref} icon={MyIcon} isActive={activeTab === 'my'} label="MY" />
       </div>
     </nav>
   )
