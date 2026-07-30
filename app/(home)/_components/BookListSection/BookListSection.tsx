@@ -1,99 +1,47 @@
 'use client'
 
+import { useInfiniteQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import type { UIEvent } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import ContentIcon from '@/app/_global/_components/Icon/assets/content.svg'
+import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
+
+type BookListSectionProps = {
+  onLoadingChange?: (isLoading: boolean) => void
+}
 
 type Book = {
   author: string
   bookId: number
-  coverImageUrl: string
+  coverImageUrl?: null | string
   opinionCount: number
   passageCount: number
   title: string
 }
 
-const BOOKS = [
-  {
-    bookId: 1,
-    title: '채식주의자',
-    author: '한강',
-    coverImageUrl: 'https://image.aladin.co.kr/product/123/45/cover/8936434120_1.jpg',
-    passageCount: 12,
-    opinionCount: 34,
-  },
-  {
-    bookId: 2,
-    title: '프로젝트 헤일메리',
-    author: '앤디 위어',
-    coverImageUrl: '',
-    passageCount: 6,
-    opinionCount: 17,
-  },
-  {
-    bookId: 3,
-    title: '급류',
-    author: '정대건',
-    coverImageUrl: '',
-    passageCount: 9,
-    opinionCount: 21,
-  },
-  {
-    bookId: 4,
-    title: '모순',
-    author: '양귀자',
-    coverImageUrl: '',
-    passageCount: 5,
-    opinionCount: 13,
-  },
-  {
-    bookId: 5,
-    title: '밝은 밤',
-    author: '최은영',
-    coverImageUrl: '',
-    passageCount: 8,
-    opinionCount: 19,
-  },
-] satisfies [Book, ...Book[]]
-
-const FALLBACK_BOOK = BOOKS[0]
-
-type PlaceholderBook = {
-  centerX: number
+type BookLayout = {
   className: string
   rotationClassName: string
 }
 
-const PLACEHOLDER_BOOKS = [
-  { centerX: 122, className: 'left-[122px] top-1.5 h-77.5 w-60.5', rotationClassName: 'rotate-15' },
-  {
-    centerX: 301,
-    className: 'left-[301px] top-0 h-72.5 w-51',
-    rotationClassName: '-rotate-[5.75deg]',
-  },
-  { centerX: 493, className: 'left-[493px] top-2 h-75 w-55.5', rotationClassName: 'rotate-10' },
-  {
-    centerX: 677,
-    className: 'left-[677px] top-1.5 h-76 w-57.25',
-    rotationClassName: '-rotate-[11.75deg]',
-  },
-  {
-    centerX: 861,
-    className: 'left-[861px] top-4 h-71.25 w-48.75',
-    rotationClassName: 'rotate-[3.8deg]',
-  },
-] satisfies [PlaceholderBook, ...PlaceholderBook[]]
-
-const BOOK_LAYOUTS = PLACEHOLDER_BOOKS.slice(0, BOOKS.length)
-const INITIAL_BOOK_INDEX = Math.floor((BOOK_LAYOUTS.length - 1) / 2)
-const FIRST_BOOK_LAYOUT = BOOK_LAYOUTS[0] ?? PLACEHOLDER_BOOKS[0]
-const FIRST_BOOK_CENTER_X = FIRST_BOOK_LAYOUT.centerX
-const LAST_BOOK_CENTER_X = BOOK_LAYOUTS.at(-1)?.centerX ?? FIRST_BOOK_CENTER_X
+const PAGE_SIZE = 5
+const FIRST_BOOK_CENTER_X = 122
+const BOOK_GAP = 184
 const BOOK_TRACK_START_PADDING = `calc(50% - ${String(FIRST_BOOK_CENTER_X)}px)`
-const BOOK_TRACK_WIDTH = `${String(LAST_BOOK_CENTER_X)}px`
+
+const BOOK_LAYOUTS = [
+  { className: 'top-1.5 h-77.5 w-60.5', rotationClassName: 'rotate-15' },
+  { className: 'top-0 h-72.5 w-51', rotationClassName: '-rotate-[5.75deg]' },
+  { className: 'top-2 h-75 w-55.5', rotationClassName: 'rotate-10' },
+  { className: 'top-1.5 h-76 w-57.25', rotationClassName: '-rotate-[11.75deg]' },
+  { className: 'top-4 h-71.25 w-48.75', rotationClassName: 'rotate-[3.8deg]' },
+] satisfies [BookLayout, ...BookLayout[]]
 
 type BookStatisticLinkProps = {
   count: number
@@ -116,39 +64,215 @@ function BookStatisticLink({ count, href, icon: Icon, label }: BookStatisticLink
   )
 }
 
-export function BookListSection() {
+function BookListSectionSkeleton() {
+  return (
+    <section aria-label="기록 중인 책 목록" className="mt-9 flex flex-col gap-[50px]">
+      <div className="flex flex-col gap-1 px-4">
+        <div className="h-[26px] w-[180px] rounded bg-bg-surface" />
+        <div className="h-[21px] w-[120px] rounded-[3px] bg-bg-surface" />
+      </div>
+      <div className="flex w-full flex-col items-center">
+        <div className="flex w-full justify-center gap-3 overflow-hidden">
+          <div className="h-[274px] w-[177px] shrink-0 rounded-2xl border border-[#e6e6e6] bg-bg-surface" />
+          <div className="h-[274px] w-[177px] shrink-0 rounded-2xl border border-[#e6e6e6] bg-bg-surface" />
+          <div className="h-[274px] w-[177px] shrink-0 rounded-2xl border border-[#e6e6e6] bg-bg-surface" />
+        </div>
+      </div>
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex w-full flex-col items-center gap-2">
+          <div className="h-[29px] w-[180px] rounded bg-bg-surface" />
+          <div className="h-5 w-[120px] rounded-[3px] bg-bg-surface" />
+        </div>
+        <div className="flex w-full justify-center gap-2">
+          <div className="h-9 w-[120px] rounded-[44px] bg-bg-surface" />
+          <div className="h-9 w-[120px] rounded-[44px] bg-bg-surface" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function getBookCenterX(index: number): number {
+  return FIRST_BOOK_CENTER_X + index * BOOK_GAP
+}
+
+function getInitialBookIndex(bookCount: number): number {
+  return Math.max(0, Math.floor((bookCount - 1) / 2))
+}
+
+function getTrackWidth(bookCount: number): string {
+  return `${String(getBookCenterX(Math.max(0, bookCount - 1)))}px`
+}
+
+function dedupeBooks(books: Book[]): Book[] {
+  const seen = new Set<number>()
+
+  return books.filter((book) => {
+    if (seen.has(book.bookId)) return false
+    seen.add(book.bookId)
+    return true
+  })
+}
+
+export function BookListSection({ onLoadingChange }: BookListSectionProps) {
   const bookListRef = useRef<HTMLDivElement>(null)
-  const [activeBookIndex, setActiveBookIndex] = useState(INITIAL_BOOK_INDEX)
-  const activeBook = BOOKS[activeBookIndex] ?? FALLBACK_BOOK
-  const { author, bookId, opinionCount, passageCount, title } = activeBook
+  const hasCenteredInitialBookRef = useRef(false)
+  const pendingFirstBookIdRef = useRef<null | number>(null)
+  const [activeBookIndex, setActiveBookIndex] = useState(0)
+  const [layoutOffset, setLayoutOffset] = useState(0)
+  const searchParams = useSearchParams()
+  const forceHomeBookError = searchParams.has('forceHomeBookError')
+  const homeCarouselOptions = bookQueries.homeCarousel({ size: PAGE_SIZE })
+  const booksQuery = useInfiniteQuery({
+    ...homeCarouselOptions,
+    queryFn: forceHomeBookError
+      ? () => {
+          throw new Error('Forced home book carousel error')
+        }
+      : homeCarouselOptions.queryFn,
+  })
+  const {
+    fetchNextPage,
+    fetchPreviousPage,
+    hasNextPage,
+    hasPreviousPage,
+    isError,
+    isFetchingNextPage,
+    isFetchingPreviousPage,
+  } = booksQuery
+  const pages = booksQuery.data?.pages
+  const books = useMemo(
+    () =>
+      dedupeBooks(
+        pages?.flatMap(
+          (page) =>
+            page.data?.books.map((book) => ({
+              author: book.author,
+              bookId: book.bookId,
+              coverImageUrl: book.coverImageUrl ?? null,
+              opinionCount: book.opinionCount,
+              passageCount: book.passageCount,
+              title: book.title,
+            })) ?? [],
+        ) ?? [],
+      ),
+    [pages],
+  )
+  const totalCount = pages?.[0]?.data?.pageInfo.totalElements ?? 0
+  const activeBook = books[activeBookIndex] ?? books[getInitialBookIndex(books.length)] ?? books[0]
+
+  useEffect(() => {
+    onLoadingChange?.(booksQuery.isPending)
+  }, [booksQuery.isPending, onLoadingChange])
 
   useEffect(() => {
     const scrollContainer = bookListRef.current
-    const initialBook = BOOK_LAYOUTS[INITIAL_BOOK_INDEX]
+    if (!scrollContainer || books.length === 0 || hasCenteredInitialBookRef.current) return
 
-    if (!scrollContainer || !initialBook) {
+    const initialBookIndex = getInitialBookIndex(books.length)
+    scrollContainer.scrollLeft = getBookCenterX(initialBookIndex) - FIRST_BOOK_CENTER_X
+    setActiveBookIndex(initialBookIndex)
+    setLayoutOffset((BOOK_LAYOUTS.length - initialBookIndex) % BOOK_LAYOUTS.length)
+    hasCenteredInitialBookRef.current = true
+  }, [books.length])
+
+  useEffect(() => {
+    const scrollContainer = bookListRef.current
+    const pendingFirstBookId = pendingFirstBookIdRef.current
+
+    if (!scrollContainer || pendingFirstBookId === null) return
+
+    const preservedBookIndex = books.findIndex((book) => book.bookId === pendingFirstBookId)
+    if (preservedBookIndex <= 0) {
+      pendingFirstBookIdRef.current = null
       return
     }
 
-    scrollContainer.scrollLeft = initialBook.centerX - FIRST_BOOK_CENTER_X
-  }, [])
+    scrollContainer.scrollLeft += preservedBookIndex * BOOK_GAP
+    setActiveBookIndex((index) => index + preservedBookIndex)
+    setLayoutOffset(
+      (offset) =>
+        (offset - (preservedBookIndex % BOOK_LAYOUTS.length) + BOOK_LAYOUTS.length) %
+        BOOK_LAYOUTS.length,
+    )
+    pendingFirstBookIdRef.current = null
+  }, [books])
 
   const handleBookListScroll = (event: UIEvent<HTMLDivElement>) => {
     const scrollContainer = event.currentTarget
     const viewportCenterX = scrollContainer.scrollLeft + FIRST_BOOK_CENTER_X
-    const nextActiveIndex = BOOK_LAYOUTS.reduce((closestIndex, book, index) => {
-      const closestBook = BOOK_LAYOUTS[closestIndex] ?? FIRST_BOOK_LAYOUT
-      const closestDistance = Math.abs(closestBook.centerX - viewportCenterX)
-      const distance = Math.abs(book.centerX - viewportCenterX)
+    const nextActiveIndex = books.reduce((closestIndex, _book, index) => {
+      const closestDistance = Math.abs(getBookCenterX(closestIndex) - viewportCenterX)
+      const distance = Math.abs(getBookCenterX(index) - viewportCenterX)
 
       return distance < closestDistance ? index : closestIndex
     }, 0)
 
     setActiveBookIndex(nextActiveIndex)
+
+    if (nextActiveIndex <= 1 && hasPreviousPage && !isFetchingPreviousPage && !isFetchingNextPage) {
+      pendingFirstBookIdRef.current = books[0]?.bookId ?? null
+      void fetchPreviousPage()
+      return
+    }
+
+    if (
+      nextActiveIndex >= books.length - 2 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      !isFetchingPreviousPage
+    ) {
+      void fetchNextPage()
+    }
   }
 
+  if (booksQuery.isPending) return <BookListSectionSkeleton />
+
+  if (isError && books.length === 0) {
+    return (
+      <section
+        aria-label="기록 중인 책 목록"
+        className="mt-9 flex min-h-[calc(100dvh-220px)] flex-col gap-4"
+      >
+        <div className="flex flex-col gap-1 px-4">
+          <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
+        </div>
+        <FeedbackState
+          aria-label="홈 도서 목록 오류"
+          className="pb-20"
+          message={
+            <>
+              책을 불러오지 못했어요.
+              <br />
+              다시 시도해주세요!
+            </>
+          }
+          actionLabel="다시 시도"
+          onAction={() => {
+            void booksQuery.refetch()
+          }}
+        />
+      </section>
+    )
+  }
+
+  if (!activeBook) return null
+
+  const { author, bookId, opinionCount, passageCount, title } = activeBook
+
   return (
-    <section aria-label="기록 중인 책 목록" className="mt-10 flex flex-col items-center gap-4">
+    <section aria-label="기록 중인 책 목록" className="mt-9 flex flex-col gap-4">
+      <div className="flex flex-col gap-1 px-4">
+        <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
+        <Link
+          href="/book/internal"
+          className="flex items-center gap-0.5 self-start text-title-16sb text-text-primary opacity-60"
+        >
+          <span>{totalCount}권 모두 보기</span>
+          <NextIcon aria-hidden="true" className="size-4" />
+        </Link>
+      </div>
+
       <div className="relative h-82.25 w-full overflow-visible">
         <div
           ref={bookListRef}
@@ -162,17 +286,34 @@ export function BookListSection() {
               paddingRight: '50%',
             }}
           >
-            <div className="relative h-82.25" style={{ width: BOOK_TRACK_WIDTH }}>
-              {BOOK_LAYOUTS.map(({ className, rotationClassName }, index) => (
-                <div
-                  key={BOOKS[index]?.bookId ?? index}
-                  className={`absolute flex -translate-x-1/2 items-center justify-center ${className}`}
-                >
+            <div className="relative h-82.25" style={{ width: getTrackWidth(books.length) }}>
+              {books.map((book, index) => {
+                const { className, rotationClassName } =
+                  BOOK_LAYOUTS[(index + layoutOffset) % BOOK_LAYOUTS.length] ?? BOOK_LAYOUTS[0]
+
+                return (
                   <div
-                    className={`h-68.5 w-44.25 rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)] ${rotationClassName}`}
-                  />
-                </div>
-              ))}
+                    key={book.bookId}
+                    className={`absolute flex -translate-x-1/2 items-center justify-center ${className}`}
+                    style={{ left: `${String(getBookCenterX(index))}px` }}
+                  >
+                    <div
+                      className={`relative h-68.5 w-44.25 overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)] ${rotationClassName}`}
+                      style={
+                        book.coverImageUrl
+                          ? {
+                              backgroundImage: `url(${book.coverImageUrl})`,
+                              backgroundPosition: 'center',
+                              backgroundSize: 'cover',
+                            }
+                          : undefined
+                      }
+                    >
+                      <span className="sr-only">{book.title} 표지</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -180,7 +321,7 @@ export function BookListSection() {
 
       <div className="flex w-full flex-col items-center gap-4">
         <div className="flex w-full flex-col items-center gap-2 text-center">
-          <h2 className="w-full text-title-24bd text-text-primary">{title}</h2>
+          <h2 className="line-clamp-2 w-full px-6 text-title-24bd text-text-primary">{title}</h2>
           <p className="w-full text-body-16md text-text-secondary">{author}</p>
         </div>
 
