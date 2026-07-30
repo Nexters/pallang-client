@@ -83,6 +83,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
 
+## Safe area (노치 인셋)
+
+- 상단 인셋 토큰은 `globals.css`의 `:root { --safe-top: env(safe-area-inset-top, 0px) }` 하나뿐이다. 화면 코드에서 `env(safe-area-inset-top)`을 직접 쓰지 않는다 — 셸 패딩과 겹쳐 두 번 내려간다.
+- 레이아웃 셸(`app/layout.tsx`의 `main`)이 `pt-(--safe-top)`으로 일괄 소비한다 — **새 페이지는 노치 처리를 하지 않는다.**
+- 노치 뒤까지 배경을 깔아야 하는 풀블리드 화면만 `-mt-(--safe-top)`(CSS는 `margin-top: calc(-1 * var(--safe-top))`)으로 셸 패딩을 되돌린 뒤 내부에서 직접 오프셋한다. 예: 탭 화면(`TabScreenLayout` — 시트가 되돌리고 `pt-(--safe-top)`으로 다시 더한다), 흔적 페이지(`TraceCollapseView`/`QuoteStage`).
+- `fixed` 오버레이는 셸 패딩을 받지 않는다 — 상단에 콘텐츠가 붙는 오버레이만 `var(--safe-top)`만큼 패딩한다. 예: `TraceDetailOverlay`. 중앙 정렬 모달·바텀시트는 처리 불필요.
+- 하단 인셋은 아직 토큰이 없다. 필요한 화면이 `max(<기본값>, env(safe-area-inset-bottom))`을 직접 쓴다. 셸에서 일괄 처리하게 되면 같은 패턴으로 `--safe-bottom`을 추가하고 직접 사용처를 함께 정리한다.
+
 ## Capacitor (웹뷰 앱, iOS · Android)
 
 이 웹은 Capacitor로 iOS/Android 웹뷰 앱화되어 있다(원격 URL 로드, 카메라). **네이티브 빌드/기기 검증 전 반드시 [docs/capacitor.md](docs/capacitor.md)를 읽을 것.** 특히 함정:

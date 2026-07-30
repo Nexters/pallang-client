@@ -15,9 +15,9 @@ export function CameraCheck() {
 
   return (
     <main
-      className="flex min-h-dvh flex-col items-center justify-center gap-8"
+      className="flex min-h-full flex-col items-center justify-center gap-8 p-8"
+      // 상단 인셋은 레이아웃 셸이 소비한다 — 좌우·하단만 직접 피한다
       style={{
-        paddingTop: 'max(2rem, env(safe-area-inset-top))',
         paddingRight: 'max(2rem, env(safe-area-inset-right))',
         paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
         paddingLeft: 'max(2rem, env(safe-area-inset-left))',
