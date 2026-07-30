@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { type ReactNode, useState } from 'react'
 
 import { type TraceNav, TraceNavContext } from '../../_data/traceNav.store'
+import { useHardwareBack } from '../../_hooks/useHardwareBack'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceOverlay } from '../../_hooks/useTraceOverlay'
 import { resolveExitDecision } from '../../_services/traceExit.service'
@@ -48,6 +49,9 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
     }
     leaveFlow()
   }
+
+  // 하드웨어 back도 닫기 버튼과 같은 판정을 거친다
+  useHardwareBack(requestExit)
 
   const value: TraceNav = {
     goBack: () => {
