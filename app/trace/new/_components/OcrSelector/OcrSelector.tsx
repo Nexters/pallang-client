@@ -1,7 +1,6 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -12,6 +11,7 @@ import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
 import { MAX_QUOTE_LENGTH } from '../../_data/quote.constant'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { BlockBox } from '../../_services/blockSelection.service'
 import { clampQuote, joinBlockTexts, type OcrBlock } from '../../_services/ocrText.service'
 import { OcrPhotoStage } from '../OcrPhotoStage/OcrPhotoStage'
@@ -24,7 +24,7 @@ const OCR_FAILURE_MESSAGE = '사진에서 글자를 읽지 못했어요.\n다시
 const QUOTE_LIMIT_MESSAGE = `${String(MAX_QUOTE_LENGTH)}자까지만 담을 수 있어요.`
 
 export function OcrSelector() {
-  const router = useRouter()
+  const { goBack, goTo } = useTraceNav()
   const { dispatch } = useTraceDraft()
   const { takePhoto } = useCamera()
   const ocr = useMutation(passageMutations.ocr())
@@ -41,9 +41,9 @@ export function OcrSelector() {
   const ocrMutateAsync = ocr.mutateAsync
   // 매 렌더마다 최신 값을 ref에 반영 (exhaustive-deps 규칙을 만족시키면서도
   // runCapture를 안정된 참조로 유지하기 위함 — Snackbar.tsx의 onCloseRef와 동일한 패턴)
-  const latestRef = useRef({ ocrMutateAsync, router, takePhoto })
+  const latestRef = useRef({ goBack, ocrMutateAsync, takePhoto })
   useEffect(() => {
-    latestRef.current = { ocrMutateAsync, router, takePhoto }
+    latestRef.current = { goBack, ocrMutateAsync, takePhoto }
   })
 
   // 웹에서는 takePhoto가 blob URL을 만든다. 다시 찍을 때마다 쌓이므로 이전 것을 해제한다.
@@ -71,7 +71,7 @@ export function OcrSelector() {
 
     if (!photo) {
       // 첫 진입에서 촬영을 취소하면 보여줄 사진이 없다. 다시 찍기 취소는 기존 사진을 유지한다.
-      if (isInitial) latestRef.current.router.back()
+      if (isInitial) latestRef.current.goBack()
       return
     }
 
@@ -175,14 +175,14 @@ export function OcrSelector() {
         quotedText={quotedText}
         onChange={setEditedText}
         onClose={() => {
-          router.back()
+          goBack()
         }}
         onRetake={() => {
           void runCapture(false)
         }}
         onSubmit={() => {
           dispatch({ type: 'setQuotedText', quotedText })
-          router.push('/trace/new/detail')
+          goTo('detail')
         }}
       />
 

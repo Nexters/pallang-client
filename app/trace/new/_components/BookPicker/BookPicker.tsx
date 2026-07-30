@@ -1,7 +1,6 @@
 'use client'
 
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
@@ -13,7 +12,9 @@ import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
 
+import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { SelectedBook } from '../../_types/traceDraft.type'
 import { BookCoverCarousel } from '../BookCoverCarousel/BookCoverCarousel'
 import { BookPickList } from '../BookPickList/BookPickList'
@@ -23,8 +24,8 @@ import { TraceSourceSheet } from '../TraceSourceSheet/TraceSourceSheet'
 const PAGE_SIZE = 20
 
 export function BookPicker() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goTo, requestExit } = useTraceNav()
   const [keyword, setKeyword] = useState('')
   // 완료 화면에서 '흔적 남기기'로 돌아오면 책이 유지된 채 이 화면으로 다시 진입한다(리마운트).
   // 마운트 시점에 draft.book은 있고 quotedText가 비어 있으면 방식 선택 시트를 바로 연다.
@@ -33,6 +34,10 @@ export function BookPicker() {
   )
   const scrollRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  // 시트가 열려 있으면 뒤로가기가 화면을 떠나는 대신 시트만 닫는다
+  useOverlayBackGuard(sheet !== 'none', () => {
+    setSheet('none')
+  })
   // 한 글자마다 요청이 나가지 않도록 입력이 멎은 뒤에 검색한다
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
   const isSearching = debouncedKeyword.length > 0
@@ -110,7 +115,7 @@ export function BookPicker() {
         <TopBar.Action
           aria-label="뒤로"
           onClick={() => {
-            router.back()
+            requestExit()
           }}
         >
           <BackIcon />
@@ -179,7 +184,7 @@ export function BookPicker() {
         onSelectPhoto={() => {
           dispatch({ type: 'setSource', source: 'photo' })
           setSheet('none')
-          router.push('/trace/new/photo')
+          goTo('photo')
         }}
         onSelectManual={() => {
           dispatch({ type: 'setSource', source: 'manual' })
@@ -194,7 +199,7 @@ export function BookPicker() {
         onSubmit={(quotedText) => {
           dispatch({ type: 'setQuotedText', quotedText })
           setSheet('none')
-          router.push('/trace/new/detail')
+          goTo('detail')
         }}
       />
     </main>
