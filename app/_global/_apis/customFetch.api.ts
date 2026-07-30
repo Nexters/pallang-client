@@ -44,11 +44,12 @@ function isAuthPath(url: string): boolean {
   return url.startsWith('/api/auth/')
 }
 
-// dev 브라우저에서만 same-origin(next.config.ts의 /api/* rewrite 프록시)으로 호출한다.
-// 개발 API 서버에 CORS 헤더가 없기 때문이다. 서버 사이드 fetch는 CORS 제약이 없고
-// 절대 URL이 필요하므로 환경과 무관하게 API origin을 직접 호출한다.
+// 브라우저는 항상 same-origin(next.config.ts의 /api/* rewrite 프록시)으로 호출한다.
+// 백엔드 CORS가 localhost:3000만 허용해서, 웹뷰(오리진 = LAN IP·배포 도메인)의 직접 호출은
+// 전부 차단되기 때문이다. 서버 사이드 fetch는 CORS 제약이 없고 절대 URL이 필요하므로
+// API origin을 직접 호출한다.
 function getBaseUrl() {
-  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') return ''
+  if (typeof window !== 'undefined') return ''
   return process.env.NEXT_PUBLIC_API_URL ?? ''
 }
 
