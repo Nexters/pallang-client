@@ -83,6 +83,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
 
+## 모션 (애니메이션 토큰)
+
+- duration·easing은 `globals.css`의 토큰만 쓴다. `duration-200`, `ease-[cubic-bezier(...)]` 같은 임의값은 금지다 — `motionConvention.spec.ts`가 저장소 전체를 검사한다.
+  - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달·바텀시트) · `duration-slow`(350ms 전체화면 전환)
+  - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환)
+- **`@keyframes` / `animate-*`를 새로 만들지 않는다.** 움직임 축소 대응이 `@media (prefers-reduced-motion) { :root { --duration-*: 1ms } }` 로 동작하므로, duration이 선언에 박히는 keyframes는 이 정책을 빠져나간다. 등장/퇴장은 전부 `transition`으로 만든다.
+- JS에서 duration이 필요하면 `app/_global/_data/motion.constant.ts`의 `MOTION_DURATION`을 쓴다. CSS와 값이 어긋나면 `motionToken.spec.ts`가 잡는다.
+- **모달·바텀시트는 새로 만들지 않는다.** `_components/Dialog`(중앙 모달)와 `_components/BottomSheet`(하단 시트)를 쓴다. 둘 다 base-ui 위에 있어 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘이 딸려 온다. `fixed inset-0`으로 직접 오버레이를 만들지 말 것.
+- base-ui를 쓰지 않는 오버레이(전체화면 상세, 팝오버, 스플래시)의 등장/퇴장은 `useExitTransition(open, MOTION_DURATION.x)`으로 수명을 관리하고 `data-state`로 스타일을 건다. 닫히는 동안 내용이 비지 않아야 하면 `useLastPresent`를 같이 쓴다.
+- 탭 가능한 요소에는 `press` 유틸을 붙여 누르는 피드백을 통일한다.
+
 ## Capacitor (웹뷰 앱, iOS · Android)
 
 이 웹은 Capacitor로 iOS/Android 웹뷰 앱화되어 있다(원격 URL 로드, 카메라). **네이티브 빌드/기기 검증 전 반드시 [docs/capacitor.md](docs/capacitor.md)를 읽을 것.** 특히 함정:
