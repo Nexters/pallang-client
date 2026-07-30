@@ -8,16 +8,18 @@
 # (IP를 앱에 하드코딩하지 않는다.)
 #
 # 사용법:
-#   scripts/cap-dev.sh ios [경로]        # iOS 실기기/시뮬레이터
-#   scripts/cap-dev.sh android [경로]    # Android 에뮬레이터/기기
-#   scripts/cap-dev.sh sync-only [경로]  # 빌드/실행 없이 sync만
+#   scripts/cap-dev.sh ios        # iOS 실기기/시뮬레이터
+#   scripts/cap-dev.sh android    # Android 에뮬레이터/기기
+#   scripts/cap-dev.sh sync-only  # 빌드/실행 없이 sync만
 #
-# [경로] 생략 시 "/" (홈). 예: scripts/cap-dev.sh ios /camera-check
+# ⚠️ server.url에는 경로를 넣지 않는다(origin만). Capacitor iOS가 내부/외부 내비게이션을
+#    serverURL "문자열 prefix"로 판정해서(WebViewDelegationHandler.isApplicationNavigation),
+#    경로가 붙으면 그 밖의 full-page 내비게이션(카카오 로그인 등)이 전부 Safari로 튕긴다.
+#    특정 화면은 앱 안에서 이동해서 확인할 것.
 #
 set -euo pipefail
 
 PLATFORM="${1:-ios}"
-ROUTE="${2:-/}"
 PORT="${PORT:-3000}"
 
 # --- 1. 현재 LAN IP 감지 (en0=Wi-Fi 우선, en1 폴백) ---
@@ -34,7 +36,7 @@ else
   HOST="$LAN_IP"
 fi
 
-export CAP_SERVER_URL="http://${HOST}:${PORT}${ROUTE}"
+export CAP_SERVER_URL="http://${HOST}:${PORT}"
 echo "🌐 CAP_SERVER_URL = ${CAP_SERVER_URL}   (감지된 LAN IP: ${LAN_IP})"
 
 # --- 2. dev 서버가 안 떠 있으면 안내 (수동 기동 권장) ---
