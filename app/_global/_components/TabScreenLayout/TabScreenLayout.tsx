@@ -11,6 +11,7 @@ import { TabBar } from '../TabBar/TabBar'
 
 type TabScreenLayoutProps = ComponentPropsWithoutRef<'section'> & {
   activeTab?: 'home' | 'my'
+  isTabBarLoading?: boolean
 }
 
 const TRACE_CREATE_PATH = '/trace/new'
@@ -20,6 +21,7 @@ export function TabScreenLayout({
   activeTab,
   className,
   children,
+  isTabBarLoading = false,
   ...props
 }: TabScreenLayoutProps) {
   const router = useRouter()
@@ -38,6 +40,7 @@ export function TabScreenLayout({
       <TabBar
         activeTab={activeTab}
         className="-mt-7 shrink-0"
+        isLoading={isTabBarLoading}
         // 흔적 저장은 로그인이 필요하다. 그냥 들여보내면 다 작성한 뒤 저장에서 401로 막힌다.
         onTraceClick={() => {
           runWithLogin(() => {

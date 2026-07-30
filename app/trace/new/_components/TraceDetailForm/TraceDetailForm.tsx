@@ -1,12 +1,12 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { SegmentedControl } from '@/app/_global/_components/SegmentedControl/SegmentedControl'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
@@ -20,8 +20,8 @@ const SPOILER_OPTIONS = [
 const MAX_PAGE_DIGITS = 5
 
 export function TraceDetailForm() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goBack, goTo } = useTraceNav()
   // 뒤로 가기로 이 화면에 다시 오면 leaf page가 리마운트된다.
   // draft에서 시드하지 않으면 입력이 비고, 그대로 '다음'을 누를 때 스포일러 여부가
   // 사용자 의사와 무관하게 false로 덮인다.
@@ -84,7 +84,7 @@ export function TraceDetailForm() {
           variant="back"
           className="flex-1"
           onClick={() => {
-            router.back()
+            goBack()
           }}
         >
           뒤로
@@ -95,7 +95,7 @@ export function TraceDetailForm() {
           disabled={!isValidPage}
           onClick={() => {
             dispatch({ type: 'setPageDetail', pageNumber, isSpoiler: spoiler === 'yes' })
-            router.push('/trace/new/decorate')
+            goTo('decorate')
           }}
         >
           다음
