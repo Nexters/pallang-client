@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/_global/_components/Button/Button'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
-import { useTraceNav } from '../../_hooks/useTraceNav'
 
 export function TraceDoneView() {
   const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
-  const { goTo } = useTraceNav()
+  const bookId = draft.book?.bookId
 
   return (
     <div className="flex flex-1 flex-col bg-bg-overlay">
@@ -33,9 +32,9 @@ export function TraceDoneView() {
       >
         <h1 className="text-title-20sb text-text-primary">흔적을 책에 끼워두었어요!</h1>
         <p className="text-center text-body-14md text-text-tertiary">
-          또 남기고 싶은 문장이 있다면
+          남긴 흔적이 어떻게 보이는지
           <br />
-          아래 버튼을 눌러 더 남겨보세요.
+          아래 버튼을 눌러 확인해 보세요.
         </p>
         <div className="mt-6 flex w-full gap-2">
           <Button
@@ -53,11 +52,12 @@ export function TraceDoneView() {
             variant="activated"
             className="flex-1"
             onClick={() => {
-              dispatch({ type: 'resetKeepingBook' })
-              goTo('search')
+              // 방금 남긴 흔적이 붙은 책으로 간다. 초안을 비우지 않으면 다시 완료 화면으로 튕긴다.
+              dispatch({ type: 'reset' })
+              router.replace(bookId === undefined ? '/' : `/trace/${String(bookId)}`)
             }}
           >
-            흔적 남기기
+            흔적 확인하러 가기
           </Button>
         </div>
       </div>
