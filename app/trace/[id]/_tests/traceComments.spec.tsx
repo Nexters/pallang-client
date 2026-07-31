@@ -31,6 +31,25 @@ const NEXT_PASSAGE_ID = 72
 /** 다음 요청부터 실패시킬 횟수. 오류 처리·재시도 경로를 확인하는 데 쓴다 */
 const apiFailures = { commentList: 0, commentCreate: 0, replies: 0 }
 
+/** 첫 번째 대목을 스포일러로 내려 가림막 경로를 확인한다 */
+const stageState = { isSpoiler: false }
+
+/** 응답을 붙잡아 두는 손잡이 — 요청이 도는 동안의 화면 상태를 확인할 때 쓴다 */
+function createGate() {
+  // executor는 동기로 실행돼 이 시점 이후 open은 항상 채워져 있다
+  let open!: () => void
+  const opened = new Promise<void>((resolve) => {
+    open = resolve
+  })
+  return { open, opened }
+}
+
+/** 값이 있으면 그 요청은 손잡이를 열 때까지 응답하지 않는다 */
+const apiGates: Record<'commentCreate' | 'commentRemove', ReturnType<typeof createGate> | null> = {
+  commentCreate: null,
+  commentRemove: null,
+}
+
 const opinionSeed = [
   {
     opinionId: 1,
@@ -103,10 +122,33 @@ function seedComments() {
   ]
 }
 
+/**
+ * 2번 흔적: replyCount(5)와 미리보기 개수(5)는 같은데 서버는 답글이 더 있다고(hasMoreReplies) 말한다.
+ * 개수로 추론하면 더보기가 사라져 남은 답글에 닿을 수 없는 조합이다.
+ */
+function seedMismatchComment() {
+  return {
+    ...commentBase,
+    commentId: 50,
+    userId: 2,
+    nickname: '다른사람',
+    content: '개수와 어긋나는 댓글',
+    replies: Array.from({ length: REPLY_PREVIEW_SIZE }, (_, index) => ({
+      ...commentBase,
+      commentId: 60 + index,
+      userId: 2,
+      nickname: '다른사람',
+      content: `미리보기 답글 ${String(index + 1)}`,
+    })),
+    replyCount: REPLY_PREVIEW_SIZE,
+    hasMoreReplies: true,
+  }
+}
+
 /** 흔적 화면 API와 댓글 목록/작성/수정/삭제/답글 API를 상태를 가진 목으로 흉내낸다 */
 function stubApi() {
   let comments: SeededComment[] = seedComments()
-  const commentsByOpinion = new Map<number, SeededComment[]>([[2, []]])
+  const commentsByOpinion = new Map<number, SeededComment[]>([[2, [seedMismatchComment()]]])
   let nextId = 100
 
   const paged = <T,>(items: T[], url: string, key: 'comments') => {
@@ -168,21 +210,25 @@ function stubApi() {
             return serverError()
           }
           const { content } = JSON.parse(options?.body as string) as { content: string }
-          const created = {
-            ...commentBase,
-            commentId: nextId++,
-            userId: 10,
-            nickname: '나',
-            content,
-            replies: [],
-            replyCount: 0,
-            hasMoreReplies: false,
+          const respond = () => {
+            const created = {
+              ...commentBase,
+              commentId: nextId++,
+              userId: 10,
+              nickname: '나',
+              content,
+              replies: [],
+              replyCount: 0,
+              hasMoreReplies: false,
+            }
+            // ponytail: 새 댓글을 앞에 붙이는(최신순) 가정이다 — 서버 정렬이 오래된 순이면 새 댓글은
+            // 아직 불러오지 않은 마지막 페이지에 놓여 화면에 나타나지 않는다(useCommentActions 참고).
+            if (opinionId === 1) comments = [created, ...comments]
+            else commentsByOpinion.set(opinionId, [created, ...list])
+            return json({ data: created })
           }
-          // ponytail: 새 댓글을 앞에 붙이는(최신순) 가정이다 — 서버 정렬이 오래된 순이면 새 댓글은
-          // 아직 불러오지 않은 마지막 페이지에 놓여 화면에 나타나지 않는다(useCommentActions 참고).
-          if (opinionId === 1) comments = [created, ...comments]
-          else commentsByOpinion.set(opinionId, [created, ...list])
-          return json({ data: created })
+          const gate = apiGates.commentCreate
+          return gate ? gate.opened.then(respond) : respond()
         }
         if (apiFailures.commentList > 0) {
           apiFailures.commentList -= 1
@@ -214,10 +260,14 @@ function stubApi() {
           comments = comments.map((c) => (c.commentId === commentId ? { ...c, content } : c))
         }
         if (method === 'DELETE') {
-          comments = comments.map((c) =>
-            c.commentId === commentId ? { ...c, isDeleted: true } : c,
-          )
-          return Promise.resolve(new Response(null, { status: 204 }))
+          const respond = () => {
+            comments = comments.map((c) =>
+              c.commentId === commentId ? { ...c, isDeleted: true } : c,
+            )
+            return Promise.resolve(new Response(null, { status: 204 }))
+          }
+          const gate = apiGates.commentRemove
+          return gate ? gate.opened.then(respond) : respond()
         }
         return json({ data: comments.find((c) => c.commentId === commentId) })
       }
@@ -227,7 +277,11 @@ function stubApi() {
         return json({
           data: {
             passages: [
-              { passageId: PASSAGE_ID, quotedText: '첫 번째 대목 인용문', isSpoiler: false },
+              {
+                passageId: PASSAGE_ID,
+                quotedText: '첫 번째 대목 인용문',
+                isSpoiler: stageState.isSpoiler,
+              },
               { passageId: NEXT_PASSAGE_ID, quotedText: '두 번째 대목 인용문', isSpoiler: false },
             ],
           },
@@ -282,6 +336,9 @@ describe('흔적 댓글 인라인 펼침', () => {
     apiFailures.commentList = 0
     apiFailures.commentCreate = 0
     apiFailures.replies = 0
+    apiGates.commentCreate = null
+    apiGates.commentRemove = null
+    stageState.isSpoiler = false
   })
 
   afterEach(() => {
@@ -550,5 +607,148 @@ describe('흔적 댓글 인라인 펼침', () => {
 
     expect(await screen.findByRole('dialog', { name: '의견 상세' })).toBeInTheDocument()
     expect(bar).toHaveAttribute('inert')
+  })
+
+  it('댓글 더보기가 실패해도 이미 보이던 댓글은 남는다', async () => {
+    await openFirstTraceComments()
+
+    apiFailures.commentList = 1
+    fireEvent.click(screen.getByRole('button', { name: '댓글 더보기' }))
+
+    const retry = await screen.findByRole('button', {
+      name: '댓글을 더 불러오지 못했어요. 다시 시도',
+    })
+    // isError를 "데이터 없음"으로 다루면 보이던 첫 페이지가 오류 화면으로 통째로 갈린다
+    expect(screen.getByText('내가 쓴 댓글')).toBeInTheDocument()
+    expect(screen.queryByText('댓글을 불러오지 못했어요.')).not.toBeInTheDocument()
+
+    fireEvent.click(retry)
+    expect(await screen.findByText('여섯째 이후 댓글 5')).toBeInTheDocument()
+  })
+
+  it('등록 뒤 목록 갱신이 실패해도 보이던 댓글은 남는다', async () => {
+    await openFirstTraceComments()
+
+    // 등록은 성공하고 뒤따르는 무효화 리페치만 실패한다
+    apiFailures.commentList = 1
+    fireEvent.change(screen.getByPlaceholderText('댓글을 입력해주세요'), {
+      target: { value: '새 댓글' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
+
+    const retry = await screen.findByRole('button', { name: '댓글을 갱신하지 못했어요. 다시 시도' })
+    // 등록은 됐는데 화면이 "댓글을 불러오지 못했어요"로 바뀌면 안 된다
+    expect(screen.getByText('내가 쓴 댓글')).toBeInTheDocument()
+    expect(screen.queryByText('댓글을 불러오지 못했어요.')).not.toBeInTheDocument()
+
+    fireEvent.click(retry)
+    expect(await screen.findByText('새 댓글')).toBeInTheDocument()
+  })
+
+  it('전송 중에는 다시 제출해도 댓글이 두 번 등록되지 않는다', async () => {
+    const gate = createGate()
+    apiGates.commentCreate = gate
+    await openFirstTraceComments()
+
+    const input = screen.getByPlaceholderText('댓글을 입력해주세요')
+    fireEvent.change(input, { target: { value: '한 번만 등록될 댓글' } })
+    const submit = screen.getByRole('button', { name: '댓글 등록' })
+    fireEvent.click(submit)
+
+    // 전송 중 아무 표시가 없으면 실패한 줄 알고 다시 누르게 된다
+    await waitFor(() => {
+      expect(submit).toHaveAttribute('aria-busy', 'true')
+    })
+    expect(submit).toBeDisabled()
+
+    // 버튼이 막혀도 폼 제출(입력창 Enter)은 남아 있다
+    const form = input.closest('form')
+    if (!form) throw new Error('댓글 입력바의 form을 찾지 못했다')
+    fireEvent.submit(form)
+    gate.open()
+
+    expect(await screen.findByText('한 번만 등록될 댓글')).toBeInTheDocument()
+    const postCalls = vi
+      .mocked(fetch)
+      .mock.calls.filter(([, options]) => options?.method === 'POST')
+    expect(postCalls).toHaveLength(1)
+  })
+
+  it('전송 중에 이어 쓴 내용은 등록이 끝나도 지워지지 않는다', async () => {
+    const gate = createGate()
+    apiGates.commentCreate = gate
+    await openFirstTraceComments()
+
+    const input = screen.getByPlaceholderText('댓글을 입력해주세요')
+    fireEvent.change(input, { target: { value: '보낸 댓글' } })
+    fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
+    // 응답을 기다리는 동안 다음 댓글을 이어 쓴다
+    fireEvent.change(input, { target: { value: '아직 안 보낸 댓글' } })
+    gate.open()
+
+    expect(await screen.findByText('보낸 댓글')).toBeInTheDocument()
+    // 성공했다고 무조건 비우면 등록되지도 않은 입력이 통째로 사라진다
+    expect(input).toHaveValue('아직 안 보낸 댓글')
+  })
+
+  it('답글 더보기 여부는 서버의 hasMoreReplies를 따른다', async () => {
+    await renderView()
+    fireEvent.click(commentToggle(1))
+    await screen.findByText('개수와 어긋나는 댓글')
+
+    fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+    expect(
+      await screen.findByText(`미리보기 답글 ${String(REPLY_PREVIEW_SIZE)}`),
+    ).toBeInTheDocument()
+
+    // replyCount와 미리보기 개수로 추론하면 버튼이 사라져 남은 답글에 닿을 수 없다
+    fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+    expect(await screen.findByText('6번째 답글')).toBeInTheDocument()
+  })
+
+  it('답글을 펼친 채 삭제하고 곧바로 접어도 답글 캐시가 낡은 채로 남지 않는다', async () => {
+    const gate = createGate()
+    apiGates.commentRemove = gate
+    const client = await openFirstTraceComments()
+    await revealAllReplies()
+
+    const repliesKey = commentQueries.replies(2).queryKey
+    const countRepliesCalls = () =>
+      vi
+        .mocked(fetch)
+        .mock.calls.filter(([url]) => typeof url === 'string' && url.includes('/replies')).length
+    const repliesCallsBeforeRemove = countRepliesCalls()
+
+    fireEvent.click(screen.getByRole('button', { name: '삭제' }))
+    // 삭제가 끝나기 전에 아코디언을 접으면 답글 쿼리의 관찰자가 사라진다
+    fireEvent.click(commentToggle(0))
+    gate.open()
+
+    // 관찰자로 좁힌 무효화는 이 순간을 놓쳐 삭제 전 답글이 그대로 남는다
+    await waitFor(() => {
+      expect(client.getQueryState(repliesKey)?.isInvalidated).toBe(true)
+    })
+    // 키 전체를 무효화해도 비싸지 않다 — 기본 refetchType이 'active'라 관찰자 없는 쿼리는 재조회되지 않는다
+    expect(countRepliesCalls()).toBe(repliesCallsBeforeRemove)
+  })
+
+  it('가림막이 다시 씌워지면 펼친 댓글과 하단 입력바가 함께 닫힌다', async () => {
+    stageState.isSpoiler = true
+    await renderView()
+
+    // 가림막을 해제해야 목록을 읽을 수 있다
+    fireEvent.click(screen.getByRole('button', { name: /첫 번째 대목 인용문/ }))
+    fireEvent.click(commentToggle(0))
+    await screen.findByText('내가 쓴 댓글')
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+
+    // 같은 페이지 탭을 다시 누르면 해제가 풀린다 — passageId는 그대로라 대목 전환 리셋에 걸리지 않는다
+    fireEvent.click(screen.getByRole('button', { name: `${String(PAGE)}p` }))
+
+    // 목록만 흐려지고 입력바가 남으면 더는 읽을 수 없는 흔적에 댓글을 쓸 수 있다
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+    })
+    expect(screen.queryByLabelText('댓글 목록')).not.toBeInTheDocument()
   })
 })

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { Button } from '@/app/_global/_components/Button/Button'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 
 type CommentBarProps = {
@@ -14,6 +15,7 @@ type CommentBarProps = {
 
 export function CommentBar({ onSubmit, isInert }: CommentBarProps) {
   const [content, setContent] = useState('')
+  const [isSending, setIsSending] = useState(false)
   const isEmpty = content.trim().length === 0
 
   return (
@@ -21,12 +23,18 @@ export function CommentBar({ onSubmit, isInert }: CommentBarProps) {
       inert={isInert}
       onSubmit={(event) => {
         event.preventDefault()
+        // 응답 전에 한 번 더 누르면 같은 댓글이 두 번 등록된다 — 전송이 도는 동안은 제출을 흘린다
+        if (isSending) return
         const trimmed = content.trim()
         if (!trimmed) return
+        setIsSending(true)
         // 로그인 게이트가 막았거나 전송이 실패하면 등록이 안 된 것이라 입력을 남긴다 —
         // 지워버리면 로그인 후 처음부터 다시 써야 한다
         void Promise.resolve(onSubmit?.(trimmed)).then((isRegistered) => {
-          if (isRegistered) setContent('')
+          setIsSending(false)
+          if (!isRegistered) return
+          // 전송이 도는 동안 이어 쓴 내용은 아직 등록되지 않았다 — 보낸 것과 같을 때만 비운다
+          setContent((current) => (current.trim() === trimmed ? '' : current))
         })
       }}
       /* 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
@@ -46,14 +54,18 @@ export function CommentBar({ onSubmit, isInert }: CommentBarProps) {
           placeholder="댓글을 입력해주세요"
           className="h-9 min-w-0 flex-1 rounded-full bg-bg-dark px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
         />
-        <button
+        {/* 전송 중 표시는 Button의 loading에 맡긴다(스피너 + aria-busy + 클릭 차단).
+            비활성 색은 이 바의 기존 처리를 유지한다 — Button 기본값(회색)은 아이콘까지 묻힌다 */}
+        <Button
           type="submit"
+          variant="activated"
           aria-label="댓글 등록"
+          loading={isSending}
           disabled={isEmpty}
-          className="flex size-9.5 shrink-0 items-center justify-center rounded-full bg-interactive-accent disabled:opacity-40"
+          className="size-9.5 shrink-0 rounded-full p-0 disabled:bg-interactive-accent disabled:opacity-40"
         >
           <PencilIcon width={20} height={20} className="text-icon-active" />
-        </button>
+        </Button>
       </div>
     </form>
   )
