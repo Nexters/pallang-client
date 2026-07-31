@@ -53,6 +53,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **컴포넌트 구조** — 컴포넌트 폴더 내부에 `_hooks/`, `_services/` 같은 프라이빗 폴더를 중첩하지 않는다.
 - **컴포넌트 네이밍** — 컴포넌트 파일명과 폴더명은 `PascalCase`로 맞춘다.
 
+## 로딩 화면
+
+**데이터를 기다리는 동안 화면을 비우지 않는다.** 비면 루트 배경(`bg-bg-dark`)이 드러나 전환할 때마다 번쩍인다.
+
+- **셸은 로딩 분기 바깥에 둔다** — 레이아웃·탭바·헤더는 데이터를 기다릴 이유가 없다. `if (isPending) return null`로 화면 전체를 지우지 말고, 셸은 그대로 두고 데이터가 필요한 안쪽만 골격으로 채운다. 셸을 분기 안쪽에 두면 탭바까지 사라진다(`myPageShell.spec.tsx`가 이 회귀를 잠근다).
+- **골격 조각은 `_components/Skeleton`을 쓴다** — 크기·모양은 `className`으로 정하고, 어두운 면에 얹을 때만 `tone="dark"`를 준다. 색을 직접 고르면 같은 배경에서 세기가 갈린다.
+- **`<Suspense>`에 fallback을 반드시 준다** — 비워두면 PPR 셸이 빈 채로 나가, 직접 진입에서는 빈 화면이 뜨고 링크 이동에서는 이전 화면이 멈춘 것처럼 보인다(`tracePageFallback.spec.tsx`).
+- 골격은 실제 화면과 **같은 좌표**를 쓴다. 수치가 상수로 있으면 그 상수를 가져다 쓴다(`TracePageSkeleton`이 `quoteCollapse.service`의 값을 그대로 쓰는 식) — 도착했을 때 자리가 튀지 않는다.
+- 골격은 움직이지 않는다. 반복 애니메이션이 필요하면 모션 섹션의 `animate-pulse`만 쓴다.
+
 ## 이슈 / 브랜치 / PR 컨벤션
 
 - 사용자가 이슈 생성을 요청하면 반드시 `.agents/issue-workflow.md`를 읽고 이슈 작성, 담당자 지정 및 브랜치 생성 절차를 따른다.
