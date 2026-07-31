@@ -11,12 +11,20 @@ import CloseIcon from '../Icon/assets/close.svg'
 
 type SnackbarProps = {
   message: string
+  /** message 앞머리에서 강조할 부분. 시안(2469:13096)의 오렌지 볼드 대목이다. */
+  highlight?: string
   onClose: () => void
 }
 
 const AUTO_DISMISS_MS = 3000
 
-export function Snackbar({ message, onClose }: SnackbarProps) {
+/** 강조 대목과 나머지로 가른다. highlight가 앞머리가 아니면 통째로 본문으로 둔다. */
+function splitHighlight(message: string, highlight?: string) {
+  if (!highlight || !message.startsWith(highlight)) return { head: '', tail: message }
+  return { head: highlight, tail: message.slice(highlight.length) }
+}
+
+export function Snackbar({ highlight, message, onClose }: SnackbarProps) {
   const onCloseRef = useRef(onClose)
 
   // 매 렌더마다 ref 갱신 (exhaustive-deps 규칙 만족)
@@ -41,12 +49,14 @@ export function Snackbar({ message, onClose }: SnackbarProps) {
 
   if (!shouldRender || shownMessage === null) return null
 
+  const { head, tail } = splitHighlight(shownMessage, highlight)
+
   return (
     <div
       role="status"
       data-state={state}
       className={cn(
-        'absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-lg bg-bg-default px-4 py-3',
+        'absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-2xl bg-bg-default px-4 py-3',
         'transition-[opacity,translate] duration-fast ease-enter',
         'data-[state=entering]:translate-y-2 data-[state=entering]:opacity-0',
         'data-[state=exiting]:translate-y-2 data-[state=exiting]:opacity-0 data-[state=exiting]:ease-exit',
@@ -54,7 +64,10 @@ export function Snackbar({ message, onClose }: SnackbarProps) {
         'data-[state=exiting]:pointer-events-none',
       )}
     >
-      <span className="text-body-14md text-text-accent">{shownMessage}</span>
+      <p className="text-body-14md text-text-secondary">
+        {head && <span className="text-title-14bd text-text-accent">{head}</span>}
+        {tail}
+      </p>
       <button
         type="button"
         aria-label="닫기"

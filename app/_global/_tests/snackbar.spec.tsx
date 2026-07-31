@@ -1,9 +1,32 @@
-import { render, screen } from '@testing-library/react'
-import { act } from 'react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { act, StrictMode, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+
+function SnackbarHarness() {
+  const [message, setMessage] = useState('')
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setMessage('영역 선택 후 효과를 입력해주세요!')
+        }}
+      >
+        효과
+      </button>
+      <Snackbar
+        message={message}
+        onClose={() => {
+          setMessage('')
+        }}
+      />
+    </>
+  )
+}
 
 describe('Snackbar', () => {
   beforeEach(() => {
@@ -75,5 +98,26 @@ describe('Snackbar', () => {
     })
 
     expect(screen.queryByRole('status')).toBeNull()
+  })
+})
+
+// 실제 화면은 토스트를 빈 문구로 계속 붙여 둔다. 그 사이 useExitTransition의 퇴장 타이머가
+// 발화하면서 남기던 잔여 상태 업데이트가 첫 열림을 덮어써, 꾸미기 화면에 들어와 아무것도
+// 선택하지 않고 효과를 누른 '첫' 토스트만 뜨지 않았다.
+describe('Snackbar - 마운트 후 시간이 지나 처음 열릴 때', () => {
+  it('빈 상태로 머물렀다가 처음 띄워도 보인다', async () => {
+    render(
+      <StrictMode>
+        <SnackbarHarness />
+      </StrictMode>,
+    )
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, MOTION_DURATION.fast * 2))
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '효과' }))
+
+    expect(screen.getByRole('status')).toHaveTextContent('영역 선택 후 효과를 입력해주세요!')
   })
 })

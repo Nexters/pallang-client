@@ -240,9 +240,11 @@
 }
 
 /* 누를 때 살짝 눌리는 표준 피드백. 탭 가능한 요소에 붙인다.
-   지금까지는 CameraCheck만 임시로 active:scale-95를 쓰고 나머지는 무반응이었다. */
+   지금까지는 CameraCheck만 임시로 active:scale-95를 쓰고 나머지는 무반응이었다.
+   색까지 이 유틸이 함께 전환한다 — transition-colors를 덧붙이면 transition-property가
+   서로를 덮어 눌림 스케일이 죽는다(duration-instant가 곧 '프레스·색' 토큰이다). */
 @utility press {
-  transition-property: transform, scale, opacity;
+  transition-property: transform, scale, opacity, color, background-color, border-color;
   --tw-duration: var(--duration-instant);
   transition-duration: var(--duration-instant);
   --tw-ease: var(--ease-standard);

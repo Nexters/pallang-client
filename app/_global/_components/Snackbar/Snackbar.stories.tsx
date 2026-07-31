@@ -26,7 +26,10 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
+// 시안(2469:13096)의 기본형 — 앞머리만 오렌지 볼드로 강조한다
+export const Default: Story = {
+  args: { highlight: '영역 선택 후' },
+}
 
 export const SaveFailed: Story = {
   args: { message: '흔적을 남기지 못했어요. 잠시 후 다시 시도해주세요.' },
