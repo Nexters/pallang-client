@@ -96,7 +96,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
         <div aria-hidden className={styles['stageSpacer']} />
         <TraceListPanel
           passageId={stage.activePassage?.passageId}
-          quote={stage.highlight.quotes[stage.quoteIndex]?.text ?? ''}
+          quote={stage.highlight.quotes[stage.quoteIndex]}
           className={styles['listArea']}
           scrollerRef={scrollerRef}
           stageError={{ isError: stage.isError, retry: stage.retry }}

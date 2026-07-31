@@ -1,3 +1,5 @@
+import type { Decoration, EffectType } from '@/app/_shared/trace/_data/decoration.model'
+
 export type SelectedBook = {
   bookId: number
   title: string
@@ -6,17 +8,9 @@ export type SelectedBook = {
   pageCount: number | null
 }
 
-/** 생성 타입 DecorationRequestEffectType과 값이 같다. _apis import 금지 규칙 때문에 로컬로 둔다. */
-export type DraftEffectType =
-  'CIRCLE' | 'DOTTED' | 'DOUBLE_LINE' | 'HIGHLIGHT' | 'UNDERLINE' | 'WAVY'
-
-export type DraftDecoration = {
-  startOffset: number
-  /** exclusive — quotedText.slice(startOffset, endOffset) */
-  endOffset: number
-  effectType: DraftEffectType
-  color: string
-}
+/** 작성 중인 초안의 효과도 흔적 보기와 같은 모양이다 — 렌더 코드를 공유하려고 _shared 타입을 그대로 쓴다. */
+export type DraftEffectType = EffectType
+export type DraftDecoration = Decoration
 
 export type TraceDraft = {
   book: SelectedBook | null

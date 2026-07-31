@@ -1,5 +1,6 @@
 import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
 import { cn } from '@/app/_global/_services/cn.service'
+import { DecoratedQuote } from '@/app/_shared/trace/_components/DecoratedQuote/DecoratedQuote'
 
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { PageTabs } from '../PageTabs/PageTabs'
@@ -56,9 +57,14 @@ export function QuoteStage({
         onClick={onClickQuote}
         className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
       >
-        <p className="min-h-0 flex-1 overflow-hidden text-body-20md text-text-secondary">
-          {activeQuote?.text ?? ''}
-        </p>
+        {/* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
+            반각 여백은 5px뿐이라 첫 줄·끝 줄이 잘린다). 음수 마진과 같은 크기의 패딩으로
+            글자 위치와 차지하는 자리는 그대로 두고 overflow에 잘리는 경계만 넓힌다 */}
+        <DecoratedQuote
+          quotedText={activeQuote?.text ?? ''}
+          decorations={activeQuote?.decorations ?? []}
+          className="text-body-20md -m-4 min-h-0 flex-1 overflow-hidden p-4 text-text-secondary"
+        />
         {isCovered && (
           <span
             className={cn(

@@ -8,14 +8,15 @@ import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 
 import { useTraceList } from '../../_hooks/useTraceList'
+import type { HighlightQuote } from '../../_types/readerHighlights.type'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
 import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
 
 type TraceListPanelProps = {
   passageId: number | undefined
-  /** 상세 오버레이 상단에 보여줄 현재 인용문 */
-  quote: string
+  /** 상세 오버레이 상단에 보여줄 현재 인용문 — 꾸미기 효과까지 그려야 해서 통째로 받는다 */
+  quote: HighlightQuote | undefined
   className?: string
   /** 무한스크롤 루트 — 접힘 전환을 소유한 셸의 스크롤러 */
   scrollerRef: RefObject<HTMLDivElement | null>

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import type { Decoration } from '../_data/decoration.model'
 import { splitByDecorations } from '../_services/decoration.service'
-import type { DraftDecoration } from '../_types/traceDraft.type'
 
-const deco = (startOffset: number, endOffset: number): DraftDecoration => ({
+const deco = (startOffset: number, endOffset: number): Decoration => ({
   startOffset,
   endOffset,
   effectType: 'HIGHLIGHT',
@@ -62,6 +62,19 @@ describe('splitByDecorations', () => {
     expect(splitByDecorations('안녕하세요', [deco(0, 3), deco(2, 5)])).toEqual([
       { decoration: deco(0, 3), startOffset: 0, text: '안녕하' },
       { decoration: null, startOffset: 3, text: '세요' },
+    ])
+  })
+
+  // 조회 화면은 서버가 준 오프셋을 그대로 받는다 — 뒤집히거나 빈 범위에 글자가 겹쳐 그려지면 안 된다
+  it('뒤집힌 범위는 건너뛰고 글자를 겹쳐 그리지 않는다', () => {
+    expect(splitByDecorations('안녕하세요', [deco(5, 2)])).toEqual([
+      { decoration: null, startOffset: 0, text: '안녕하세요' },
+    ])
+  })
+
+  it('길이가 0인 범위는 건너뛴다', () => {
+    expect(splitByDecorations('안녕하세요', [deco(2, 2)])).toEqual([
+      { decoration: null, startOffset: 0, text: '안녕하세요' },
     ])
   })
 })

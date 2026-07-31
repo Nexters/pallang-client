@@ -63,7 +63,7 @@ function OverlayHarness() {
         <TraceDetailOverlay
           trace={shownTrace}
           state={detail.state}
-          quote="인용문"
+          quote={{ text: '인용문', isSpoiler: false, decorations: [] }}
           onClose={() => {
             setOpen(false)
           }}
