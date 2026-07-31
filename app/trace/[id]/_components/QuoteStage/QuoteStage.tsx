@@ -1,7 +1,10 @@
+import { useRef } from 'react'
+
 import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 import { DecoratedQuote } from '@/app/_shared/trace/_components/DecoratedQuote/DecoratedQuote'
 
+import { useQuoteSwipe } from '../../_hooks/useQuoteSwipe'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { PageTabs } from '../PageTabs/PageTabs'
 import { QuoteIndicator } from '../QuoteIndicator/QuoteIndicator'
@@ -18,8 +21,11 @@ export function QuoteStage({
   onSelectPage,
   onLoadMorePages,
   onClickQuote,
+  onSwipeQuote,
   onAddTrace,
 }: QuoteStageProps) {
+  const cardRef = useRef<HTMLButtonElement>(null)
+  useQuoteSwipe(cardRef, onSwipeQuote)
   const activeQuote = highlight.quotes[quoteIndex]
   // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
   const isCovered = Boolean(activeQuote?.isSpoiler) && !isRevealed
@@ -52,9 +58,17 @@ export function QuoteStage({
           />
         </div>
       )}
+      {/* 대목 이동은 카드 위 좌우 스와이프가 맡는다.
+          터치가 없는 환경에는 제스처를 대신할 입구가 없으므로 좌우 방향키를 함께 받는다 */}
       <button
+        ref={cardRef}
         type="button"
         onClick={onClickQuote}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+          event.preventDefault()
+          onSwipeQuote(event.key === 'ArrowRight' ? 'next' : 'prev')
+        }}
         className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
       >
         {/* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
