@@ -50,7 +50,12 @@ export function useExitTransition(open: boolean, durationMs: number): ExitTransi
         cancelAnimationFrame(frame)
       }
     }
-    if (state === 'exiting') {
+    // shouldRender 조건이 핵심이다. 닫힌 채 마운트되면 state가 'exiting'이라 이 타이머가
+    // 곧바로 걸리는데, 떼어낼 것이 없는데도 setShouldRender(false)를 부르게 된다. 값이 같아
+    // 리렌더는 없지만 React는 그 업데이트를 큐에 남겨두고(eager bailout), 나중에 처음 열릴 때
+    // 렌더 도중 세운 setShouldRender(true)를 그 잔여 업데이트가 덮어쓴다 — 첫 열림이 통째로
+    // 씹힌다. 붙어 있을 때만 예약하면 애초에 잔여 업데이트가 생기지 않는다.
+    if (state === 'exiting' && shouldRender) {
       const timer = setTimeout(() => {
         setShouldRender(false)
       }, durationMs)
@@ -61,7 +66,7 @@ export function useExitTransition(open: boolean, durationMs: number): ExitTransi
     // state === 'open'일 때는 예약할 다음 단계가 없다.
     // noImplicitReturns 때문에 명시적으로 undefined를 반환한다.
     return undefined
-  }, [state, durationMs])
+  }, [state, durationMs, shouldRender])
 
   return { shouldRender, state }
 }
