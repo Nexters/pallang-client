@@ -34,3 +34,8 @@ export const Activated: Story = {
 export const Disabled: Story = {
   args: { disabled: true },
 }
+
+// 라벨이 invisible로 자리만 지켜서 Default와 폭이 같아야 한다 — 나란히 두고 확인한다
+export const Loading: Story = {
+  args: { variant: 'activated', loading: true },
+}

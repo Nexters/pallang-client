@@ -2,10 +2,12 @@ import type { ComponentPropsWithoutRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
+import { Spinner } from '../Spinner/Spinner'
+
 // ponytail: base-ui 미설치 — 네이티브 button으로 충분. 상호작용 로직 필요해지면 base-ui 도입 검토
 type ButtonProps = ComponentPropsWithoutRef<'button'> & {
   variant?: 'default' | 'back' | 'activated'
-  /** 처리 중 상태. 클릭을 막고, 회색(disabled)으로 죽는 대신 색을 유지한 채 pulse로 알린다. */
+  /** 처리 중 상태. 클릭을 막고, 회색(disabled)으로 죽는 대신 색을 유지한 채 스피너로 알린다. */
   loading?: boolean
 }
 
@@ -31,7 +33,7 @@ export function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        'flex items-center justify-center rounded-2xl p-4 text-center text-body-16bd text-text-inverse press',
+        'relative flex items-center justify-center rounded-2xl p-4 text-center text-body-16bd text-text-inverse press',
         variantClassMap[variant],
         // 로딩이 아닐 때만 회색 처리 — 로딩은 색을 유지해 '처리 중'이 '비활성'으로 안 읽히게 한다
         loading ? '' : 'disabled:bg-interactive-btn-disabled',
@@ -39,7 +41,9 @@ export function Button({
       )}
       {...props}
     >
-      {loading ? <span className="animate-pulse">{children}</span> : children}
+      {/* 라벨을 지우지 않고 invisible로 자리만 남긴다 — 로딩이 켜질 때 버튼 폭이 흔들리지 않는다 */}
+      {loading ? <span className="invisible">{children}</span> : children}
+      {loading && <Spinner className="absolute size-6" />}
     </button>
   )
 }

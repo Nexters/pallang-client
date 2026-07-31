@@ -93,10 +93,10 @@ export function OcrSelector() {
           const ys = block.boundingBox.vertices.map((point) => point.y)
           const left = Math.min(...xs)
           const top = Math.min(...ys)
+          // lineBreak는 인쇄된 줄의 끝을 뜻할 뿐이라 발췌문에 옮기지 않는다(ocrText.service 참고)
           return {
             height: Math.max(...ys) - top,
             left,
-            lineBreak: block.lineBreak,
             text: block.text,
             top,
             width: Math.max(...xs) - left,

@@ -34,6 +34,18 @@ it('트리거를 누르면 열리고 제목·설명이 다이얼로그에 연결
   expect(dialog).toHaveAccessibleDescription('팔랑과 함께하고 더 많은 흔적을 확인해보세요.')
 })
 
+it('열려도 첫 버튼이 아니라 다이얼로그 자신이 포커스를 갖는다', async () => {
+  render(<LoginDialog />)
+
+  fireEvent.click(screen.getByRole('button', { name: '다이얼로그 열기' }))
+  const dialog = await screen.findByRole('dialog')
+
+  // 첫 tabbable(닫기 버튼)에 포커스가 가면 열자마자 링이 보인다
+  await waitFor(() => {
+    expect(dialog).toHaveFocus()
+  })
+})
+
 it('Close 파트를 누르면 닫힌다', async () => {
   render(<LoginDialog />)
 

@@ -7,35 +7,23 @@ describe('joinBlockTexts', () => {
     expect(joinBlockTexts([])).toBe('')
   })
 
-  it('lineBreak가 false면 공백으로 잇는다', () => {
-    expect(
-      joinBlockTexts([
-        { text: '우리는', lineBreak: false },
-        { text: '모두', lineBreak: false },
-      ]),
-    ).toBe('우리는 모두')
+  it('블록을 공백으로 잇는다', () => {
+    expect(joinBlockTexts([{ text: '우리는' }, { text: '모두' }])).toBe('우리는 모두')
   })
 
-  it('lineBreak가 true면 줄바꿈으로 잇는다', () => {
-    expect(
-      joinBlockTexts([
-        { text: '우리는 모두', lineBreak: true },
-        { text: '이야기를 찾아 헤맨다.', lineBreak: false },
-      ]),
-    ).toBe('우리는 모두\n이야기를 찾아 헤맨다.')
+  it('인쇄된 줄이 바뀌어도 줄바꿈 없이 한 문단으로 잇는다', () => {
+    // 책 판형 때문에 생긴 줄나눔이라 발췌문에 옮기지 않는다
+    expect(joinBlockTexts([{ text: '우리는 모두' }, { text: '이야기를 찾아 헤맨다.' }])).toBe(
+      '우리는 모두 이야기를 찾아 헤맨다.',
+    )
   })
 
   it('마지막 블록 뒤에는 구분자를 붙이지 않는다', () => {
-    expect(joinBlockTexts([{ text: '끝', lineBreak: true }])).toBe('끝')
+    expect(joinBlockTexts([{ text: '끝' }])).toBe('끝')
   })
 
-  it('마지막 블록의 text가 비어 있어도 꼬리 구분자가 남지 않는다', () => {
-    expect(
-      joinBlockTexts([
-        { text: 'A', lineBreak: true },
-        { text: '', lineBreak: false },
-      ]),
-    ).toBe('A')
+  it('빈 텍스트 블록이 껴도 공백이 겹치지 않는다', () => {
+    expect(joinBlockTexts([{ text: 'A' }, { text: '' }, { text: 'B' }])).toBe('A B')
   })
 })
 
