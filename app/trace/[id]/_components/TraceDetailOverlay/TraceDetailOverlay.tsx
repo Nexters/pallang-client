@@ -8,12 +8,12 @@ import { cn } from '@/app/_global/_services/cn.service'
 
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
-import type { Trace } from '../../_types/readerHighlights.type'
+import type { HighlightQuote, Trace } from '../../_types/readerHighlights.type'
 import { QuotePanel } from '../QuotePanel/QuotePanel'
 
 type TraceDetailOverlayProps = {
   trace: Trace
-  quote: string
+  quote: HighlightQuote | undefined
   /** 전환 상태. 넘기지 않으면 애니메이션 없이 그대로 보인다 */
   state?: ExitTransitionState
   onClose: () => void
