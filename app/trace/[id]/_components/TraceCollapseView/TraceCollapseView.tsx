@@ -6,7 +6,6 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { bookTitle } from '../../_data/readerHighlights.constant'
 import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
@@ -64,7 +63,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
       >
         <div className={styles['stageAnchor']}>
           <QuoteStage
-            title={bookTitle}
+            title={stage.bookTitle}
             pages={stage.pages}
             highlight={stage.highlight}
             quoteIndex={stage.quoteIndex}

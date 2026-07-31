@@ -9,4 +9,6 @@ export interface OpinionSummaryResponse {
   content: string
   likeCount: number
   createdAt: string
+  liked: boolean
+  commentCount: number
 }
