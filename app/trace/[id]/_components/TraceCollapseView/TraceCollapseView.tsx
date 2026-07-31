@@ -30,6 +30,8 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   const stage = usePassageViewer(bookId)
   // 댓글은 아코디언 — id를 하나만 들고 있으므로 다른 흔적을 열면 앞의 것은 자동으로 닫힌다
   const [openCommentOpinionId, setOpenCommentOpinionId] = useState<number | null>(null)
+  // 스포일러는 대목 단위다(#49) — 스테이지 가림막과 같은 조건으로 목록도 가리고, 해제하면 함께 열린다
+  const isTraceListMasked = Boolean(stage.activePassage?.isSpoiler) && !stage.isRevealed
 
   /**
    * 흔적 작성은 꾸밈을 반드시 하나 이상 요구해서(createOpinion) 이 화면에서 바로 등록할 수 없다.
@@ -97,6 +99,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
         <TraceListPanel
           passageId={stage.activePassage?.passageId}
           quote={stage.highlight.quotes[stage.quoteIndex]}
+          isMasked={isTraceListMasked}
           className={styles['listArea']}
           scrollerRef={scrollerRef}
           stageError={{ isError: stage.isError, retry: stage.retry }}

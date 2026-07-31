@@ -353,14 +353,29 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('스포일러 대목 인용문')).toBeInTheDocument()
   })
 
-  it('스포일러 대목이어도 흔적 목록은 가리지 않는다', async () => {
+  it('스포일러 대목의 흔적 목록은 가려지고, 가림막을 해제하면 함께 노출된다', async () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
     const trace = await screen.findByText('스포일러 대목의 흔적')
     expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
-    expect(trace.closest('ul')).not.toHaveAttribute('aria-hidden')
+    expect(trace.closest('ul')).toHaveAttribute('inert')
+    expect(trace.closest('ul')?.className).toContain('blur')
+
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+    expect(trace.closest('ul')).not.toHaveAttribute('inert')
     expect(trace.closest('ul')?.className).not.toContain('blur')
+  })
+
+  // 가림막을 우회해 스포일러 원문을 보던 경로 — 목록이 inert라 흔적을 열 수 없어야 한다
+  it('가림막 해제 전에는 흔적을 눌러 상세 오버레이를 열 수 없다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    const trace = await screen.findByText('스포일러 대목의 흔적')
+
+    fireEvent.click(trace)
+    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
   })
 
   it('스포일러 대목이 섞인 페이지에서도 일반 대목을 보는 동안에는 가림막이 없다', async () => {
