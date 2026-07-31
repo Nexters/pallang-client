@@ -24,6 +24,10 @@ import { MergeDialog } from '../MergeDialog/MergeDialog'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
+// 시안(2469:13096)의 토스트는 앞머리만 오렌지 볼드로 둔다 — 둘을 붙여 써 어긋나지 않게 한다.
+const SELECT_HINT = '영역 선택 후'
+const SELECT_HINT_MESSAGE = `${SELECT_HINT} 효과를 입력해주세요!`
+
 export function TraceDecorateForm() {
   const { draft, dispatch } = useTraceDraft()
   const { goBack, goTo } = useTraceNav()
@@ -104,7 +108,7 @@ export function TraceDecorateForm() {
 
   const handlePick = (option: EffectOption) => {
     if (!range) {
-      setMessage('영역 선택 후 효과를 입력해주세요!')
+      setMessage(SELECT_HINT_MESSAGE)
       return
     }
     dispatch({
@@ -194,6 +198,7 @@ export function TraceDecorateForm() {
 
       <Snackbar
         message={message}
+        highlight={SELECT_HINT}
         onClose={() => {
           setMessage('')
         }}
