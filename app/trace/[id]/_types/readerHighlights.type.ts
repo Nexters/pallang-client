@@ -1,7 +1,10 @@
-/** 대목 단위 인용문 — 스포일러 여부도 대목마다 다르다 */
+import type { Decoration } from '@/app/_shared/trace/_data/decoration.model'
+
+/** 대목 단위 인용문 — 스포일러 여부도, 작성자가 남긴 꾸미기 효과도 대목마다 다르다 */
 export type HighlightQuote = {
   text: string
   isSpoiler: boolean
+  decorations: Decoration[]
 }
 
 export type Highlight = {

@@ -1,13 +1,13 @@
 import type { CSSProperties } from 'react'
 
+import type { Decoration, EffectType } from '../_data/decoration.model'
 import { DECORATION_COLORS, DEFAULT_DECORATION_COLOR } from '../_data/decorationColor.constant'
-import type { DraftDecoration, DraftEffectType } from '../_types/traceDraft.type'
 
 /**
  * 효과 자국은 시안 아이콘에서 뽑은 붓 벡터를 글자 뒤에 배경으로 깐다.
  * mask로 칠하면 글자까지 같이 잘려서, 팔레트 색마다 미리 만든 파일을 쓴다.
  */
-const BRUSH_BY_EFFECT: Record<Exclude<DraftEffectType, 'HIGHLIGHT'>, string> = {
+const BRUSH_BY_EFFECT: Record<Exclude<EffectType, 'HIGHLIGHT'>, string> = {
   CIRCLE: 'circle',
   DOTTED: 'dots',
   DOUBLE_LINE: 'underline',
@@ -17,7 +17,7 @@ const BRUSH_BY_EFFECT: Record<Exclude<DraftEffectType, 'HIGHLIGHT'>, string> = {
 
 /** 글자를 감싸는 효과는 칸 전체로 늘이고, 밑줄 계열은 아랫단에 정해진 높이로 깐다. */
 const LAYOUT_BY_EFFECT: Record<
-  Exclude<DraftEffectType, 'HIGHLIGHT'>,
+  Exclude<EffectType, 'HIGHLIGHT'>,
   Pick<
     CSSProperties,
     | 'backgroundPosition'
@@ -70,7 +70,7 @@ function toPaletteColor(color: string): string {
   return (match ?? DEFAULT_DECORATION_COLOR).slice(1).toLowerCase()
 }
 
-export function decorationBrushStyle({ color, effectType }: DraftDecoration): CSSProperties {
+export function decorationBrushStyle({ color, effectType }: Decoration): CSSProperties {
   // 형광펜은 붓 자국이 아니라 형광펜으로 그은 띠다. 글자가 읽히도록 반투명하게 깐다.
   if (effectType === 'HIGHLIGHT') {
     return { backgroundColor: `color-mix(in srgb, ${color} 40%, transparent)` }

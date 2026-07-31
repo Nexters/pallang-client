@@ -8,7 +8,7 @@ import { useTraceDraft } from '../../_hooks/useTraceDraft'
 
 export function TraceDoneView() {
   const router = useRouter()
-  const { draft, dispatch } = useTraceDraft()
+  const { draft } = useTraceDraft()
   const bookId = draft.book?.bookId
 
   return (
@@ -41,8 +41,6 @@ export function TraceDoneView() {
             variant="back"
             className="flex-1"
             onClick={() => {
-              // 홈으로 나가도 초안을 비운다. 남겨두면 다시 들어왔을 때 완료 화면으로 튕긴다.
-              dispatch({ type: 'reset' })
               router.replace('/')
             }}
           >
@@ -52,8 +50,7 @@ export function TraceDoneView() {
             variant="activated"
             className="flex-1"
             onClick={() => {
-              // 방금 남긴 흔적이 붙은 책으로 간다. 초안을 비우지 않으면 다시 완료 화면으로 튕긴다.
-              dispatch({ type: 'reset' })
+              // 방금 남긴 흔적이 붙은 책으로 간다
               router.replace(bookId === undefined ? '/' : `/trace/${String(bookId)}`)
             }}
           >

@@ -41,6 +41,7 @@ export function usePassageViewer(bookId: number) {
       quotes: passages.map((passage) => ({
         text: passage.quotedText,
         isSpoiler: passage.isSpoiler,
+        decorations: passage.decorations,
       })),
     }),
     [passages, viewer.activePage],
