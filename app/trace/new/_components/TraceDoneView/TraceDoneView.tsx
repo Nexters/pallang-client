@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/app/_global/_components/Button/Button'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 
 export function TraceDoneView() {
   const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goTo } = useTraceNav()
 
   return (
     <div className="flex flex-1 flex-col bg-bg-overlay">
@@ -42,7 +44,7 @@ export function TraceDoneView() {
             onClick={() => {
               // 홈으로 나가도 초안을 비운다. 남겨두면 다시 들어왔을 때 완료 화면으로 튕긴다.
               dispatch({ type: 'reset' })
-              router.push('/')
+              router.replace('/')
             }}
           >
             뒤로
@@ -52,7 +54,7 @@ export function TraceDoneView() {
             className="flex-1"
             onClick={() => {
               dispatch({ type: 'resetKeepingBook' })
-              router.push('/trace/new')
+              goTo('search')
             }}
           >
             흔적 남기기

@@ -27,6 +27,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
+        // WKWebView는 엣지 스와이프 뒤로/앞으로 가기가 기본 비활성이다.
+        // didFinishLaunching 시점에는 웹뷰가 아직 준비되지 않아 여기서 설정한다(반복 호출 무해).
+        (window?.rootViewController as? CAPBridgeViewController)?.webView?.allowsBackForwardNavigationGestures = true
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

@@ -23,7 +23,7 @@ export function CommentBar({ onSubmit }: CommentBarProps) {
       /* 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
          fixed는 셸 패딩을 받지 않으므로 하단 인셋을 직접 소비하고, 셸과 같은 최대 폭으로 가운데 정렬한다.
          가려지는 만큼의 여백은 목록 쪽에서 스페이서로 확보한다(TraceCollapseView.module.css) */
-      className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-132.5 border-t border-border-strong bg-bg-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-132.5 border-t border-border-book bg-bg-black px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
     >
       <div className="flex items-center gap-2">
         <input
@@ -34,7 +34,7 @@ export function CommentBar({ onSubmit }: CommentBarProps) {
             setContent(event.target.value)
           }}
           placeholder="댓글을 입력해주세요"
-          className="min-w-0 flex-1 rounded-full bg-bg-dark px-4 py-[9px] text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
+          className="h-9 min-w-0 flex-1 rounded-full bg-bg-dark px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
         />
         <button
           type="submit"

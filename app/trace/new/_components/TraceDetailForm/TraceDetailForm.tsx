@@ -1,12 +1,12 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { SegmentedControl } from '@/app/_global/_components/SegmentedControl/SegmentedControl'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
@@ -20,8 +20,8 @@ const SPOILER_OPTIONS = [
 const MAX_PAGE_DIGITS = 5
 
 export function TraceDetailForm() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goBack, goTo } = useTraceNav()
   // 뒤로 가기로 이 화면에 다시 오면 leaf page가 리마운트된다.
   // draft에서 시드하지 않으면 입력이 비고, 그대로 '다음'을 누를 때 스포일러 여부가
   // 사용자 의사와 무관하게 false로 덮인다.
@@ -38,11 +38,16 @@ export function TraceDetailForm() {
 
   return (
     <div className="flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-alternative pb-6">
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
+      <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepHeader step={1} title={'문장이 있는 페이지와\n스포일러 유무를 선택해주세요'} />
       </div>
-      <div className="-mt-4 px-8">
-        <TraceNote quotedText={draft.quotedText} decorations={[]} />
+      {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
+      <div className="relative bg-bg-default px-8">
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+        <div className="relative">
+          <TraceNote quotedText={draft.quotedText} decorations={[]} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-6 px-4 pt-8">
@@ -84,7 +89,7 @@ export function TraceDetailForm() {
           variant="back"
           className="flex-1"
           onClick={() => {
-            router.back()
+            goBack()
           }}
         >
           뒤로
@@ -95,7 +100,7 @@ export function TraceDetailForm() {
           disabled={!isValidPage}
           onClick={() => {
             dispatch({ type: 'setPageDetail', pageNumber, isSpoiler: spoiler === 'yes' })
-            router.push('/trace/new/decorate')
+            goTo('decorate')
           }}
         >
           다음

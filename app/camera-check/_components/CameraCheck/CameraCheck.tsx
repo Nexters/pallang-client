@@ -26,7 +26,7 @@ export function CameraCheck() {
       <button
         type="button"
         onClick={() => void onCapture()}
-        className="rounded-full bg-foreground px-10 py-4 text-lg font-semibold text-background shadow-lg transition active:scale-95"
+        className="press rounded-full bg-foreground px-10 py-4 text-lg font-semibold text-background shadow-lg"
       >
         사진 촬영
       </button>

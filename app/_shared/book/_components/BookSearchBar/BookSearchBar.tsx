@@ -5,7 +5,7 @@ import { SearchTextfield } from '@/app/_global/_components/SearchTextfield/Searc
 import { cn } from '@/app/_global/_services/cn.service'
 
 type BookSearchBarProps = ComponentPropsWithoutRef<'div'> & {
-  /** 도서 직접 등록 화면이 아직 없어 미지정이면 버튼이 비활성으로 남는다. */
+  /** 도서 직접 등록 화면을 연다. 넘기지 않으면 버튼이 비활성으로 남는다(도서 목록 화면). */
   onAddBook?: () => void
   onKeywordChange?: (keyword: string) => void
   placeholder?: string

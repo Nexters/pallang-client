@@ -91,6 +91,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - `fixed` 오버레이는 셸 패딩을 받지 않는다 — 상단에 콘텐츠가 붙는 오버레이만 `var(--safe-top)`만큼 패딩한다. 예: `TraceDetailOverlay`. 중앙 정렬 모달·바텀시트는 처리 불필요.
 - 하단 인셋은 아직 토큰이 없다. 필요한 화면이 `max(<기본값>, env(safe-area-inset-bottom))`을 직접 쓴다. 셸에서 일괄 처리하게 되면 같은 패턴으로 `--safe-bottom`을 추가하고 직접 사용처를 함께 정리한다.
 
+## 모션 (애니메이션 토큰)
+
+- duration·easing은 `globals.css`의 토큰만 쓴다. `duration-200`, `ease-[cubic-bezier(...)]` 같은 임의값은 금지다 — `motionConvention.spec.ts`가 `app/**/*.tsx`를 훑어 막는다.
+  - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달·바텀시트) · `duration-slow`(350ms 전체화면 전환)
+  - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환)
+- **`@keyframes` / `animate-*`를 새로 만들지 않는다.** 움직임 축소 대응이 `@media (prefers-reduced-motion) { :root { --duration-*: 1ms } }` 로 동작하므로, duration이 선언에 박히는 keyframes는 이 정책을 빠져나간다. 등장/퇴장은 전부 `transition`으로 만든다.
+- **Tailwind v4에서 `scale-*` / `translate-*`는 `transform`이 아니라 `scale` / `translate` 속성으로 컴파일된다.** `transition-[opacity,transform]`으로는 크기·이동이 전혀 전환되지 않는다. `transition-[opacity,scale]`처럼 실제 속성 이름을 쓰거나 `transition-transform`(네 속성을 모두 포함)을 쓴다.
+- JS에서 duration이 필요하면 `app/_global/_data/motion.constant.ts`의 `MOTION_DURATION`을 쓴다. CSS와 값이 어긋나면 `motionToken.spec.ts`가 잡는다.
+- **모달·바텀시트는 새로 만들지 않는다.** `_components/Dialog`(중앙 모달)와 `_components/BottomSheet`(하단 시트)를 쓴다. 둘 다 base-ui 위에 있어 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘이 딸려 온다. `fixed inset-0`으로 직접 오버레이를 만들지 말 것.
+- base-ui를 쓰지 않는 오버레이(전체화면 상세, 팝오버, 스플래시)의 등장/퇴장은 `useExitTransition(open, MOTION_DURATION.x)`으로 수명을 관리하고 `data-state`로 스타일을 건다. 닫히는 동안 내용이 비지 않아야 하면 `useLastPresent`를 같이 쓴다. 퇴장 중에도 오버레이는 화면에 남으므로 `data-[state=exiting]:pointer-events-none`으로 클릭을 흘려보낸다.
+- 탭 가능한 요소에는 `press` 유틸을 붙여 누르는 피드백을 통일한다. `transition-colors`와 같이 쓰면 `transition-property`가 서로를 덮으니 한쪽으로 합친다.
+- 파일을 읽어 검사하는 spec은 첫 줄에 `// @vitest-environment node`를 단다. 기본 `happy-dom` 환경에서는 vite가 `import.meta.url`을 재작성해 `fileURLToPath`가 깨진다.
+
 ## Capacitor (웹뷰 앱, iOS · Android)
 
 이 웹은 Capacitor로 iOS/Android 웹뷰 앱화되어 있다(원격 URL 로드, 카메라). **네이티브 빌드/기기 검증 전 반드시 [docs/capacitor.md](docs/capacitor.md)를 읽을 것.** 특히 함정:

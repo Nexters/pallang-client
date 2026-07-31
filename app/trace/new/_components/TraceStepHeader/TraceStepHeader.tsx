@@ -1,9 +1,9 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
+
+import { useTraceNav } from '../../_hooks/useTraceNav'
 
 type TraceStepHeaderProps = {
   step: 1 | 2 | 3
@@ -11,7 +11,7 @@ type TraceStepHeaderProps = {
 }
 
 export function TraceStepHeader({ step, title }: TraceStepHeaderProps) {
-  const router = useRouter()
+  const { requestExit } = useTraceNav()
 
   return (
     <div className="flex flex-col">
@@ -22,7 +22,7 @@ export function TraceStepHeader({ step, title }: TraceStepHeaderProps) {
         <TopBar.Action
           aria-label="닫기"
           onClick={() => {
-            router.push('/')
+            requestExit()
           }}
         >
           <CloseIcon />

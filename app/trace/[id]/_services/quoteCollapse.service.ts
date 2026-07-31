@@ -2,6 +2,8 @@
    CSS와 값이 어긋나면 전환이 정렬 바와 어긋나므로, 수치는 여기에만 두고
    useQuoteCollapse가 CSS 커스텀 프로퍼티로 내려보낸다. */
 
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+
 /** TraceHeader: py-2.5(20) + 아이콘 24 */
 export const HEADER_HEIGHT = 44
 /** PageTabs: py-3(24) + h-8(32) */
@@ -56,8 +58,9 @@ export const INDICATOR_RISE =
    스크럽은 관성 세기에 따라 전환이 통째로 건너뛰어지거나(플릭 한 번에 목록 바닥까지)
    어중간한 중간 상태에 걸렸다. 점프 방식은 제스처 의도만 읽고 시간 기반 애니메이션으로 전환한다. */
 
-/** 접힘 전환 애니메이션 길이(ms) — 포스트잇 접히는 손맛과 목록 대기 시간 사이 절충 */
-export const COLLAPSE_ANIMATION_MS = 350
+/** 접힘 전환 애니메이션 길이(ms) — 포스트잇 접히는 손맛과 목록 대기 시간 사이 절충.
+    이 화면에서 고른 350ms가 디자인 시스템의 slow 토큰이 됐다(globals.css의 --duration-slow). */
+export const COLLAPSE_ANIMATION_MS = MOTION_DURATION.slow
 
 /** 빠르게 시작해 부드럽게 멎는 감속 이징 */
 export function easeOutCubic(t: number) {

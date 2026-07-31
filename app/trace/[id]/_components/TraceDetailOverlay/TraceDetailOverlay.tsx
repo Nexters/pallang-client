@@ -2,7 +2,9 @@ import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import type { ExitTransitionState } from '@/app/_global/_hooks/useExitTransition'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { cn } from '@/app/_global/_services/cn.service'
 
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
@@ -12,6 +14,8 @@ import { QuotePanel } from '../QuotePanel/QuotePanel'
 type TraceDetailOverlayProps = {
   trace: Trace
   quote: string
+  /** 전환 상태. 넘기지 않으면 애니메이션 없이 그대로 보인다 */
+  state?: ExitTransitionState
   onClose: () => void
 }
 
@@ -19,7 +23,7 @@ type TraceDetailOverlayProps = {
  * 3줄로 잘린 흔적 본문을 전체로 펼쳐 보는 오버레이(기획서 3-a).
  * 댓글은 목록에서 인라인으로 펼치므로 여기서 다루지 않는다.
  */
-export function TraceDetailOverlay({ trace, quote, onClose }: TraceDetailOverlayProps) {
+export function TraceDetailOverlay({ trace, quote, state, onClose }: TraceDetailOverlayProps) {
   const runWithLogin = useLoginGate()
   const like = useOpinionLike(trace.opinionId, trace.likeCount)
 
@@ -28,7 +32,16 @@ export function TraceDetailOverlay({ trace, quote, onClose }: TraceDetailOverlay
       role="dialog"
       aria-modal="true"
       aria-label="의견 상세"
-      className="fixed inset-0 z-20 mx-auto flex h-dvh w-full max-w-[530px] flex-col bg-bg-dark"
+      data-state={state}
+      className={cn(
+        'fixed inset-0 z-20 mx-auto flex h-dvh w-full max-w-[530px] flex-col bg-bg-dark',
+        // 목록 위로 올라와 덮는 모달 프레젠테이션 — 좌우는 이전/다음 의견 이동이라 세로로 움직인다
+        'transition-transform duration-slow ease-enter',
+        'data-[state=entering]:translate-y-full',
+        'data-[state=exiting]:translate-y-full data-[state=exiting]:ease-exit',
+        // 슬라이드 아웃 350ms 동안 이전/다음 버튼이 살아 있으면 방금 닫은 오버레이가 되열린다
+        'data-[state=exiting]:pointer-events-none',
+      )}
     >
       {/* 오버레이는 fixed라 셸 패딩을 안 받는다 — 헤더 배경색을 유지한 채 인셋만큼 내린다. 10px = TopBar 기본 py-2.5 유지분 */}
       <TopBar.Root className="bg-bg-book-card pt-[calc(var(--safe-top)+10px)]">

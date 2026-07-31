@@ -4,6 +4,9 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
+import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
@@ -53,8 +56,10 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   const highlight = useMemo(
     () => ({
       page: viewer.activePage ?? 0,
-      quotes: passages.map((passage) => passage.quotedText),
-      isSpoiler: passages.some((passage) => passage.isSpoiler),
+      quotes: passages.map((passage) => ({
+        text: passage.quotedText,
+        isSpoiler: passage.isSpoiler,
+      })),
     }),
     [passages, viewer.activePage],
   )
@@ -78,6 +83,9 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
 
   const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
+  // 닫히는 동안에도 내용이 남아 있어야 슬라이드 아웃이 빈 화면으로 보이지 않는다
+  const shownTrace = useLastPresent(selectedTrace ?? null)
+  const detail = useExitTransition(selectedTrace !== undefined, MOTION_DURATION.slow)
 
   // 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다
   const failedTraceListQueries = [pageNumbersQuery, passagesQuery, opinionsQuery].filter(
@@ -89,12 +97,6 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
     for (const query of failedTraceListQueries) void query.refetch()
   }
 
-  // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
-  //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
-  // TODO(#49): 해제 상태 유지 범위 미확정 — 현재는 페이지 단위 유지라(useHighlightViewer.isRevealed)
-  //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
-  const isTraceListMasked = Boolean(activePassage?.isSpoiler) && !viewer.isRevealed
-
   // placeholderData로 이전 대목의 목록이 보이는 동안에는 다음 페이지를 당기지 않는다
   const canFetchMoreTraces =
     opinionsQuery.hasNextPage &&
@@ -105,7 +107,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   useLoadMoreOnVisible({
     targetRef: traceLoadMoreRef,
     rootRef: scrollerRef,
-    enabled: canFetchMoreTraces && !isTraceListMasked,
+    enabled: canFetchMoreTraces,
     onLoadMore: () => {
       void opinionsQuery.fetchNextPage()
     },
@@ -172,7 +174,6 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
               className={styles['listArea']}
               traces={traces}
               traceCount={traceCount}
-              isMasked={isTraceListMasked}
               sortType={sortType}
               openCommentOpinionId={openCommentOpinionId}
               onToggleSort={() => {
@@ -197,10 +198,11 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
       {isTraceBarOpen && <CommentBar />}
       {/* 댓글을 펼친 흔적에만 하단 입력바가 붙는다(디자인 2183:10060 주석) */}
       {openCommentOpinionId !== null && <TraceCommentComposer opinionId={openCommentOpinionId} />}
-      {selectedTrace && (
+      {detail.shouldRender && shownTrace && (
         <TraceDetailOverlay
-          trace={selectedTrace}
-          quote={highlight.quotes[viewer.quoteIndex] ?? ''}
+          trace={shownTrace}
+          state={detail.state}
+          quote={highlight.quotes[viewer.quoteIndex]?.text ?? ''}
           onClose={() => {
             setSelectedTraceId(null)
           }}

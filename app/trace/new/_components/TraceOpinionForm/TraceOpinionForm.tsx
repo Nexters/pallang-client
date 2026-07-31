@@ -1,7 +1,6 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -13,12 +12,13 @@ import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGa
 import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
 export function TraceOpinionForm() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goBack, goTo } = useTraceNav()
   const [message, setMessage] = useState('')
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
@@ -50,7 +50,7 @@ export function TraceOpinionForm() {
             type: 'setResult',
             result: { opinionId: response.data.opinionId, merged: response.data.merged },
           })
-          router.replace('/trace/new/done')
+          goTo('done')
         },
         onError: (error) => {
           // draft는 그대로 둔다. 여기서 날리면 사용자가 입력한 전부가 사라진다.
@@ -78,14 +78,19 @@ export function TraceOpinionForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-alternative pb-6">
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
+      <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepHeader
           step={3}
           title={'해당 대목에 남기고 싶은 흔적을\n자유롭게 작성해 주세요.'}
         />
       </div>
-      <div className="-mt-4 px-8">
-        <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+      {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
+      <div className="relative bg-bg-default px-8">
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+        <div className="relative">
+          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+        </div>
       </div>
 
       <div className="px-4 pt-6">
@@ -108,7 +113,7 @@ export function TraceOpinionForm() {
           variant="back"
           className="flex-1"
           onClick={() => {
-            router.back()
+            goBack()
           }}
         >
           뒤로
@@ -116,7 +121,8 @@ export function TraceOpinionForm() {
         <Button
           variant="activated"
           className="flex-1"
-          disabled={draft.content.trim().length === 0 || createOpinion.isPending}
+          disabled={draft.content.trim().length === 0}
+          loading={createOpinion.isPending}
           onClick={handleSubmit}
         >
           흔적 남기기

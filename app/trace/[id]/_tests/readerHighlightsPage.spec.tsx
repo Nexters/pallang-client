@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
@@ -38,6 +38,11 @@ const passageSeedByPage: Record<
     { passageId: 72, quotedText: '두 번째 대목 인용문', isSpoiler: false },
   ],
   9: [{ passageId: 91, quotedText: '스포일러 대목 인용문', isSpoiler: true }],
+  // 스포일러가 대목 단위임을 확인하기 위한 혼재 페이지
+  12: [
+    { passageId: 121, quotedText: '혼재 페이지의 일반 대목 인용문', isSpoiler: false },
+    { passageId: 122, quotedText: '혼재 페이지의 스포일러 대목 인용문', isSpoiler: true },
+  ],
   15: [{ passageId: 151, quotedText: '흔적이 많은 대목 인용문', isSpoiler: false }],
 }
 
@@ -98,6 +103,16 @@ const opinionSeedByPassage: Record<
       content: '스포일러 대목의 흔적',
       likeCount: 1,
       createdAt: '2026-07-19T09:00:00.000Z',
+    },
+  ],
+  121: [
+    {
+      opinionId: 5,
+      userId: 5,
+      nickname: '느긋한독자',
+      content: '혼재 페이지 일반 대목의 흔적',
+      likeCount: 2,
+      createdAt: '2026-07-18T09:00:00.000Z',
     },
   ],
   151: manyOpinionSeed,
@@ -335,15 +350,26 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('스포일러 대목 인용문')).toBeInTheDocument()
   })
 
-  it('스포일러 대목의 흔적 목록은 가려지고, 가림막을 해제하면 함께 노출된다', async () => {
+  it('스포일러 대목이어도 흔적 목록은 가리지 않는다', async () => {
     await renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    const maskedTrace = await screen.findByText('스포일러 대목의 흔적')
-    expect(maskedTrace.closest('ul')).toHaveAttribute('aria-hidden', 'true')
+    const trace = await screen.findByText('스포일러 대목의 흔적')
+    expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    expect(trace.closest('ul')).not.toHaveAttribute('aria-hidden')
+    expect(trace.closest('ul')?.className).not.toContain('blur')
+  })
 
-    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
-    expect(maskedTrace.closest('ul')).not.toHaveAttribute('aria-hidden')
+  it('스포일러 대목이 섞인 페이지에서도 일반 대목을 보는 동안에는 가림막이 없다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '12p' }))
+    const normalQuote = await screen.findByText('혼재 페이지의 일반 대목 인용문')
+    expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
+
+    fireEvent.click(normalQuote)
+    expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
   })
 
   it('로그인 상태에서 댓글 입력이 바로 열린다', async () => {
@@ -386,7 +412,10 @@ describe('ReaderHighlightsPage', () => {
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
 
     fireEvent.click(within(dialog).getByLabelText('닫기'))
-    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+    // 슬라이드 아웃 전환(MOTION_DURATION.slow) 동안은 내용을 유지한 채 남아 있다가 사라진다
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+    })
   })
 
   it('상세 오버레이에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록 스크롤로만 한다', async () => {

@@ -8,6 +8,7 @@ export function useHighlightViewer(
 ) {
   const [selectedPage, setSelectedPage] = useState<number | null>(null)
   const [quoteIndex, setQuoteIndex] = useState(0)
+  // 해제 상태는 페이지 단위로 유지된다 — 같은 페이지의 다른 스포일러 대목으로 넘어가도 다시 가리지 않는다
   const [isRevealed, setIsRevealed] = useState(false)
   const activePage = selectedPage ?? firstPage
 
@@ -26,7 +27,8 @@ export function useHighlightViewer(
   }
 
   const clickCard = (highlight: Highlight) => {
-    if (highlight.isSpoiler && !isRevealed) {
+    // 스포일러는 대목 단위라 지금 보고 있는 대목만 보고 가림막 해제 여부를 정한다
+    if (highlight.quotes[quoteIndex]?.isSpoiler && !isRevealed) {
       setIsRevealed(true)
       return
     }

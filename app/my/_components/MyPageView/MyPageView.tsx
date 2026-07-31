@@ -1,9 +1,11 @@
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import SettingIcon from '@/app/_global/_components/Icon/assets/setting.svg'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
+import { POLICY_META_BY_SLUG } from '@/app/_shared/terms/_data/policy.constant'
 
 import type { MyTrace, MyUser } from '../../_types/myUser.type'
 
@@ -16,6 +18,17 @@ const loggedInSettings = [
   '알림 설정',
 ]
 const loggedOutSettings = ['공지사항', '개인정보 처리 방침', '서비스 이용약관']
+
+function getPolicyPath(label: string): null | string {
+  switch (label) {
+    case '개인정보 처리 방침':
+      return POLICY_META_BY_SLUG.privacy.path
+    case '서비스 이용약관':
+      return POLICY_META_BY_SLUG.service.path
+    default:
+      return null
+  }
+}
 
 type MyPageViewProps = {
   user: MyUser | null
@@ -108,22 +121,34 @@ function LoggedInContent({
         </section>
       )}
 
-      <SettingSection items={loggedInSettings} onLogout={onLogout} />
+      <SettingSection items={loggedInSettings} />
 
       <footer className="mt-auto flex items-center justify-center gap-2.5 p-2.5">
-        <button
-          type="button"
-          className="text-body-14md font-semibold tracking-normal text-text-tertiary"
+        <Link
+          href={POLICY_META_BY_SLUG.service.path}
+          className="text-body-14sb tracking-normal text-text-tertiary"
         >
-          개인정보 처리 방침
-        </button>
+          이용약관
+        </Link>
         <span aria-hidden className="h-3 w-px bg-border-default" />
-        <button
-          type="button"
-          className="text-body-14md font-semibold tracking-normal text-text-tertiary"
+        <Link
+          href={POLICY_META_BY_SLUG.privacy.path}
+          className="text-body-14sb tracking-normal text-text-tertiary"
         >
-          서비스 이용약관
-        </button>
+          개인정보 처리방침
+        </Link>
+        {onLogout && (
+          <>
+            <span aria-hidden className="h-3 w-px bg-border-default" />
+            <button
+              type="button"
+              onClick={onLogout}
+              className="text-body-14sb tracking-normal text-text-tertiary"
+            >
+              로그아웃
+            </button>
+          </>
+        )}
       </footer>
     </div>
   )
@@ -160,29 +185,38 @@ function LoggedOutContent({ onLoginClick }: { onLoginClick?: () => void }) {
   )
 }
 
-function SettingSection({ items, onLogout }: { items: string[]; onLogout?: () => void }) {
+function SettingSection({ items }: { items: string[] }) {
   return (
     <section className="flex flex-col gap-6 px-4">
       <h2 className="text-body-16bd text-text-primary">설정</h2>
       <ul className="flex w-full flex-col gap-4">
-        {items.map((label) => (
-          <li key={label}>
-            <button type="button" className="flex w-full items-center gap-2">
+        {items.map((label) => {
+          const policyPath = getPolicyPath(label)
+          const className = 'flex w-full items-center gap-2'
+          const content = (
+            <>
               <span className="flex-1 text-left text-body-14md text-text-secondary">{label}</span>
               <NextIcon
                 aria-hidden="true"
                 className="size-5 shrink-0 text-icon-primary opacity-30"
               />
-            </button>
-          </li>
-        ))}
-        {onLogout && (
-          <li>
-            <button type="button" onClick={onLogout} className="text-body-14md text-text-secondary">
-              로그아웃
-            </button>
-          </li>
-        )}
+            </>
+          )
+
+          return (
+            <li key={label}>
+              {policyPath ? (
+                <Link href={policyPath} className={className}>
+                  {content}
+                </Link>
+              ) : (
+                <button type="button" className={className}>
+                  {content}
+                </button>
+              )}
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
