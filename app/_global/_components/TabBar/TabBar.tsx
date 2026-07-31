@@ -13,6 +13,8 @@ type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
   activeTab?: TabBarTab
   homeHref?: string
   isLoading?: boolean
+  /** 흔적 남기기 이동이 진행 중. Button과 같은 규칙으로 색은 유지한 채 pulse로 알리고 중복 탭을 막는다. */
+  isTracePending?: boolean
   /** 흔적 남기기는 로그인이 필요해 이동 전에 게이트를 거친다. 넘기지 않으면 traceHref로 바로 이동한다. */
   onTraceClick?: () => void
   traceHref?: string
@@ -66,6 +68,7 @@ export function TabBar({
   className,
   homeHref = '/',
   isLoading = false,
+  isTracePending = false,
   onTraceClick,
   traceHref = '/trace/new',
   myHref = '/my',
@@ -91,7 +94,14 @@ export function TabBar({
               <button
                 type="button"
                 onClick={onTraceClick}
-                className={cn(TRACE_BUTTON_CLASS, 'cursor-pointer')}
+                // 이동이 끝나기 전에 또 누르면 같은 화면으로 두 번 밀어 넣는다
+                disabled={isTracePending}
+                aria-busy={isTracePending || undefined}
+                className={cn(
+                  TRACE_BUTTON_CLASS,
+                  'cursor-pointer',
+                  isTracePending && 'animate-pulse',
+                )}
               >
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
                 <span>흔적 남기기</span>
