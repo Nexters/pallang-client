@@ -1,6 +1,6 @@
 'use client'
 
-import { type RefObject, useRef } from 'react'
+import { type RefObject, useEffect, useRef } from 'react'
 
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
@@ -28,6 +28,8 @@ type TraceListPanelProps = {
   openCommentOpinionId: number | null
   onToggleTraceCreate: () => void
   onToggleTraceComment: (opinionId: number) => void
+  /** 상세 오버레이(aria-modal) 노출 여부. 셸이 형제로 든 하단 입력바를 포커스에서 빼는 데 쓴다 */
+  onDetailOpenChange: (isOpen: boolean) => void
 }
 
 /** 흔적 목록 흐름의 컴포넌트 경계 — 목록·무한스크롤·에러·상세 오버레이를 소유한다 */
@@ -41,12 +43,19 @@ export function TraceListPanel({
   openCommentOpinionId,
   onToggleTraceCreate,
   onToggleTraceComment,
+  onDetailOpenChange,
 }: TraceListPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const list = useTraceList(passageId)
   // 닫히는 동안에도 내용이 남아 있어야 슬라이드 아웃이 빈 화면으로 보이지 않는다
   const shownTrace = useLastPresent(list.selectedTrace ?? null)
   const detail = useExitTransition(list.selectedTrace !== undefined, MOTION_DURATION.slow)
+  // 퇴장 전환 중에도 오버레이는 aria-modal인 채로 화면에 남아 있어, 언마운트될 때까지 열린 것으로 본다
+  const isDetailOpen = detail.shouldRender && shownTrace !== null
+
+  useEffect(() => {
+    onDetailOpenChange(isDetailOpen)
+  }, [isDetailOpen, onDetailOpenChange])
 
   const isListError = stageError.isError || list.isError
   const retry = () => {
@@ -91,7 +100,7 @@ export function TraceListPanel({
           <div ref={loadMoreRef} aria-hidden className="h-px w-full" />
         </>
       )}
-      {detail.shouldRender && shownTrace && (
+      {isDetailOpen && (
         <TraceDetailOverlay
           trace={shownTrace}
           state={detail.state}
