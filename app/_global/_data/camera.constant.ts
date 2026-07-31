@@ -8,10 +8,14 @@ const SHARED_OPTIONS = {
   // Uri로 받으면 webPath가 capacitor://localhost/... 인데, 이 앱은 원격 URL을 로드하므로
   // 웹뷰 오리진과 교차 오리진이 되어 fetch가 막힌다. 브릿지로 바로 데이터를 받는다.
   resultType: CameraResultType.DataUrl,
+  // 축소를 끈 만큼 dataUrl이 커진다. 품질은 플러그인 기본값으로 두어 브릿지 부담을 묶는다
+  // (뒤에서 2400px로 줄이며 재인코딩하므로 여기서 더 올려도 OCR에 남는 이득이 거의 없다).
   quality: 90,
-  // 원본은 4032px까지 나온다. 브릿지로 실어 나르고 업로드까지 해야 하니 줄인다.
-  // 책 한 쪽 기준 1600px면 OCR 인식에 충분하다.
-  width: 1600,
+  // width/height를 주지 않는다 = 네이티브 축소를 끈다.
+  // Capacitor Android는 Bitmap.createScaledBitmap(..., filter=false)로 줄여서(ImageUtils.java)
+  // 보간 없이 픽셀을 솎아낸다 — 본문 글자 획이 끊겨 인식률이 크게 떨어진다.
+  // 대신 원본을 받아 웹에서 보간을 켜고 줄인다(photoResize.service).
+  // 그 대가로 브릿지에 원본 크기 dataUrl이 실린다(12MP 기준 수 MB).
 } satisfies ImageOptions
 
 /** 사진으로 입력을 고르면 곧바로 촬영으로 간다 — 카메라/앨범을 한 번 더 묻지 않는다. */

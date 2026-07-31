@@ -154,7 +154,7 @@ export function BookAddForm({
 
       <div
         className="mt-auto flex shrink-0 p-4"
-        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
       >
         <Button className="h-[54px] flex-1" disabled={createBook.isPending} onClick={handleSubmit}>
           저장하기

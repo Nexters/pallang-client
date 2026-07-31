@@ -43,7 +43,7 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
               'data-ending-style:duration-fast data-ending-style:ease-exit',
             )}
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
-            style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+            style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
           >
             <div className="flex items-center gap-2.5 px-4 py-2.5">
               <BaseDialog.Title className="min-w-px flex-1 text-title-18bd text-text-secondary">

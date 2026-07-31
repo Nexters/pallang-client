@@ -52,7 +52,7 @@ export function OcrQuoteSheet({
         <div
           className="flex gap-2 p-4"
           // 홈 인디케이터에 버튼이 가리지 않게 한다
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+          style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
         >
           <button
             type="button"

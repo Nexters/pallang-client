@@ -83,7 +83,7 @@ export function TraceDetailForm() {
 
       <div
         className="mt-auto flex gap-2 px-4 pb-4"
-        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
       >
         <Button
           variant="back"

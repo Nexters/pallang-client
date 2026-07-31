@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+
 import { BookPicker } from '../_components/BookPicker/BookPicker'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
@@ -50,13 +52,15 @@ function renderPicker() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <TraceDraftProvider>
-        <TraceOverlayProvider>
-          <TraceNavProvider>
-            <BookPicker />
-          </TraceNavProvider>
-        </TraceOverlayProvider>
-      </TraceDraftProvider>
+      <HardwareBackProvider>
+        <TraceDraftProvider>
+          <TraceOverlayProvider>
+            <TraceNavProvider>
+              <BookPicker />
+            </TraceNavProvider>
+          </TraceOverlayProvider>
+        </TraceDraftProvider>
+      </HardwareBackProvider>
     </QueryClientProvider>,
   )
 }

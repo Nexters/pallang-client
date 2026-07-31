@@ -75,7 +75,9 @@ export function TabBar({
     <nav
       aria-label="주요 메뉴"
       className={cn(
-        'relative flex h-30.5 w-full items-start justify-center overflow-hidden bg-nav-bg px-4 pt-12.5 text-text-inverse',
+        // 하단 인셋만큼 바닥을 늘려 제스처 바/내비게이션 바가 메뉴를 덮지 않게 한다.
+        // 높이를 min-h로 두는 이유: 인셋이 없는 기기(브라우저·구형 안드로이드)에서는 기존 높이 그대로 유지된다.
+        'relative flex min-h-30.5 w-full items-start justify-center overflow-hidden bg-nav-bg px-4 pt-12.5 pb-(--safe-bottom) text-text-inverse',
         className,
       )}
       {...props}

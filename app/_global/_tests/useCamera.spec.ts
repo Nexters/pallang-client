@@ -49,10 +49,13 @@ describe('useCamera', () => {
     expect(result).toEqual({ webPath: 'blob:mock', blob: mockBlob })
   })
 
-  it('CAMERA_OPTIONS는 프롬프트 없이 바로 촬영하고 업로드 크기를 제한한다', () => {
+  // 네이티브 축소(Android)는 보간을 끄고 픽셀을 솎아내 글자 획을 끊는다.
+  // 크기 조절은 보간을 켤 수 있는 웹(photoResize.service)에서 한다.
+  it('CAMERA_OPTIONS는 프롬프트 없이 바로 촬영하고, 네이티브 축소를 끈다', () => {
     expect(CAMERA_OPTIONS.source).toBe('CAMERA')
     expect(CAMERA_OPTIONS.resultType).toBe('dataUrl')
-    expect(CAMERA_OPTIONS.width).toBe(1600)
+    expect(CAMERA_OPTIONS.width).toBeUndefined()
+    expect(CAMERA_OPTIONS.height).toBeUndefined()
   })
 
   it('gallery를 넘기면 앨범에서 고른다', async () => {

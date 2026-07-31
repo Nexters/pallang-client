@@ -3,8 +3,9 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { type ReactNode, useEffect, useState } from 'react'
 
+import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
+
 import { type TraceNav, TraceNavContext } from '../../_data/traceNav.store'
-import { useHardwareBack } from '../../_hooks/useHardwareBack'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceOverlay } from '../../_hooks/useTraceOverlay'
 import { resolveExitDecision } from '../../_services/traceExit.service'

@@ -262,7 +262,12 @@ body {
 }
 
 /* 노치(safe area) 인셋 — 레이아웃 셸(main)이 pt-(--safe-top)으로 일괄 소비한다.
-   노치 뒤까지 배경을 깔아야 하는 화면만 마이너스 마진으로 되돌린 뒤 직접 처리한다(예: 흔적 페이지) */
+   노치 뒤까지 배경을 깔아야 하는 화면만 마이너스 마진으로 되돌린 뒤 직접 처리한다(예: 흔적 페이지)
+
+   --safe-bottom은 셸이 소비하지 않는다 — 하단에 붙는 요소(탭바·고정 CTA·바텀시트)가 각자 더한다.
+   env()를 직접 쓰지 않고 토큰을 거치는 이유: Android는 시스템 바 인셋을 env()로 주지 않는
+   웹뷰가 있어서(Chromium < 140) MainActivity가 실제 인셋을 이 변수에 덮어쓴다. */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
