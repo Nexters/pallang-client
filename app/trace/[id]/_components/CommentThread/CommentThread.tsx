@@ -43,8 +43,9 @@ export function CommentThread({ comment, myUserId, onUpdate, onRemove }: Comment
     revealStep === 0
       ? comment.replyCount > 0
       : revealStep === 1
-        ? // hasMoreReplies 대신 개수로 따진다 — 미리보기로 받은 만큼을 빼야 서버 미리보기 개수가 바뀌어도 어긋나지 않는다
-          comment.replyCount > comment.replies.length
+        ? // 미리보기 뒤에 답글이 더 있는지는 서버가 hasMoreReplies로 알려준다. replyCount와 미리보기
+          // 개수로 추론하면 서버 값과 어긋날 때 버튼이 안 떠(남은 답글에 닿을 수 없다) 문제가 된다
+          comment.hasMoreReplies
         : // 아직 못 받았거나(로딩) 실패한 동안에도 버튼을 남긴다 — 사라지면 다시 시도할 길이 없다
           repliesQuery.hasNextPage || repliesQuery.isPending || hasRepliesError
 

@@ -5,7 +5,7 @@ import { commentMutations, commentQueries } from '@/app/_global/_queries/comment
 /**
  * 댓글 작성·수정·삭제 후 댓글 목록/답글 쿼리를 함께 갱신하는 mutation 묶음.
  *
- * 무효화는 이 흔적(opinionId)의 목록과 지금 화면에 붙어 있는 답글 묶음까지만 건드린다.
+ * 무효화는 이 흔적(opinionId)의 댓글 목록과 답글 캐시까지만 건드린다.
  * ['comment'] 전체를 무효화하면 다른 흔적의 댓글 캐시까지 낡은 것으로 표시돼, 그 흔적을 다시 열 때
  * 필요 없는 재조회가 따라온다.
  *
@@ -22,12 +22,12 @@ export function useCommentActions(opinionId: number) {
       queryClient.invalidateQueries({
         queryKey: commentQueries.listByOpinion(opinionId).queryKey,
       }),
-      // 답글 캐시는 원댓글 id로만 나뉘어 흔적으로 걸러낼 수 없다. 댓글은 아코디언이라 화면에 붙어 있는
-      // 답글 묶음은 지금 펼친 흔적의 것뿐이므로, 관찰자가 있는 답글 쿼리만 갱신한다.
-      queryClient.invalidateQueries({
-        queryKey: commentQueries.repliesAll(),
-        predicate: (query) => query.getObserversCount() > 0,
-      }),
+      // 답글 캐시는 원댓글 id로만 나뉘어 흔적으로 걸러낼 수 없으므로 답글 키 전체를 무효화한다.
+      // "관찰자가 있는 것만"으로 좁히면 뮤테이션이 끝나기 전에 아코디언을 접은 답글 묶음을 놓쳐,
+      // 다시 펼쳤을 때 삭제 전 답글이 그대로 나온다(staleTime 안).
+      // 전체 무효화라도 비싸지 않다 — invalidateQueries의 기본 refetchType은 'active'라
+      // 관찰자 없는 쿼리는 stale로 표시만 되고 재조회는 다음에 다시 볼 때 일어난다.
+      queryClient.invalidateQueries({ queryKey: commentQueries.repliesAll() }),
     ])
 
   const create = useMutation({ ...commentMutations.create(opinionId), onSuccess: invalidate })
