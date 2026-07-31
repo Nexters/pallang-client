@@ -57,6 +57,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - 사용자가 이슈 생성을 요청하면 반드시 `.agents/issue-workflow.md`를 읽고 이슈 작성, 담당자 지정 및 브랜치 생성 절차를 따른다.
 - 사용자가 PR 생성을 요청하면 반드시 `.agents/pr-workflow.md`를 읽고 변경 검토, 검증, 초안 승인 및 PR 생성 절차를 따른다.
+- 사용자가 운영 배포/릴리스를 요청하면 **반드시 `deploy-release` 스킬(`.claude/skills/deploy-release/SKILL.md`)을 읽고 그 절차대로만 배포한다.** `release` 브랜치가 Vercel Production, `develop`이 dev 환경이다. `release`로 가는 push·머지를 스킬 절차 없이 임의로 실행하지 않는다.
 
 ## Git hook (Husky)
 
