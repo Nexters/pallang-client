@@ -21,6 +21,8 @@ export type QuoteStageProps = {
   /** 더 불러올 대목 페이지가 있을 때만 전달된다 — 페이지 탭을 끝까지 스크롤하면 호출된다 */
   onLoadMorePages?: () => void
   onClickQuote: () => void
+  /** 헤더의 + — 이 책에 새 대목을 남기러 간다 */
+  onAddTrace: () => void
 }
 
 /** 서버 OpinionSummaryResponse 중 목록 UI가 쓰는 필드만 추린 뷰 타입 */

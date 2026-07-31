@@ -17,6 +17,7 @@ export function QuoteStage({
   onSelectPage,
   onLoadMorePages,
   onClickQuote,
+  onAddTrace,
 }: QuoteStageProps) {
   const activeQuote = highlight.quotes[quoteIndex]
   // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
@@ -28,7 +29,11 @@ export function QuoteStage({
       {/* 펼친 상태 흰 배경 — 진행에 따라 걷힌다 */}
       <div className="absolute inset-0 bg-bg-default opacity-[var(--inv)]" />
       <div className={cn(styles['banner'], 'absolute inset-x-0 top-0 bg-orange-500')} />
-      <TraceHeader title={title} className="absolute inset-x-0 top-(--safe-top)" />
+      <TraceHeader
+        title={title}
+        onAddTrace={onAddTrace}
+        className="absolute inset-x-0 top-(--safe-top)"
+      />
       {/* 완전히 투명해진 뒤에도 초점이 남지 않도록 전환이 끝나면 언마운트한다 */}
       {!isCollapsed && (
         <div

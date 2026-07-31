@@ -211,7 +211,10 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' 
         )
       }
 
-      return Promise.resolve(new Response(JSON.stringify({ data: { pageNumbers: pages } })))
+      // 책 제목·표지는 대목 페이지 목록 응답에 함께 실려 온다
+      return Promise.resolve(
+        new Response(JSON.stringify({ data: { bookTitle: '모순', pageNumbers: pages } })),
+      )
     }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -372,20 +375,31 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
   })
 
-  it('로그인 상태에서 댓글 입력이 바로 열린다', async () => {
+  it('로그인 상태에서 흔적 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
     await renderPage()
+    // 대목이 도착해야 붙일 대상이 정해진다
+    await screen.findByText('첫 번째 대목 인용문')
 
     fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
-    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+
+    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
+    expect(url.pathname).toBe('/trace/new')
+    // 이 대목에 병합되도록 대목 정보가 함께 실린다
+    expect(url.searchParams.get('passageId')).toBe('71')
+    expect(url.searchParams.get('page')).toBe('7')
+    expect(url.searchParams.get('quote')).toBe('첫 번째 대목 인용문')
+    expect(url.searchParams.get('bookTitle')).toBe('모순')
   })
 
-  it('비로그인 시 댓글 입력은 흔적 남기기 문구의 로그인 유도 팝업을 띄운다', async () => {
+  it('비로그인 시 흔적 남기기는 로그인 유도 팝업을 띄우고 이동하지 않는다', async () => {
     authState.isAuthenticated = false
     await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
 
     fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
-    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
+    expect(pushMock).not.toHaveBeenCalled()
   })
 
   it('정렬 버튼을 누르면 라벨이 토글되고 서버 정렬(sortType)로 다시 조회한다', async () => {
