@@ -20,8 +20,10 @@ export function usePassageViewer(bookId: number) {
     pageNumbersQuery.hasNextPage &&
     !pageNumbersQuery.isError &&
     !pageNumbersQuery.isFetchingNextPage
-  // 책 제목은 대목 페이지 목록 응답에 함께 실려 온다 — 도착 전에는 빈 문자열로 자리만 지킨다
-  const bookTitle = pageNumbersQuery.data?.pages[0]?.data?.bookTitle ?? ''
+  // 책 제목·표지는 대목 페이지 목록 응답에 함께 실려 온다 — 도착 전에는 빈 값으로 자리만 지킨다
+  const bookInfo = pageNumbersQuery.data?.pages[0]?.data
+  const bookTitle = bookInfo?.bookTitle ?? ''
+  const bookCoverImageUrl = bookInfo?.coverImageUrl ?? null
 
   // 기본 문구가 범용이라 페이지 탭 게이트는 전용 문구를 명시적으로 넘긴다
   const viewer = useHighlightViewer((action) => {
@@ -50,6 +52,7 @@ export function usePassageViewer(bookId: number) {
 
   return {
     bookTitle,
+    bookCoverImageUrl,
     pages,
     highlight,
     quoteIndex: viewer.quoteIndex,
