@@ -93,6 +93,8 @@ export function TraceListPanel({
               list.selectTrace(trace.opinionId)
             }}
             onToggleTraceComment={(trace) => {
+              // 댓글을 펼치면 blur 바깥의 하단 입력바가 함께 뜬다 — 상세 오버레이와 같은 이유로 막는다
+              if (isMasked) return
               onToggleTraceComment(trace.opinionId)
             }}
           />

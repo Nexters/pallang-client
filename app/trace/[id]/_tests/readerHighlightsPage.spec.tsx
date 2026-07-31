@@ -314,6 +314,36 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByRole('button', { name: '7p' })).toHaveClass('bg-bg-dark')
   })
 
+  it('대목을 넘기면 열려 있던 댓글 입력바가 함께 닫힌다', async () => {
+    await renderPage()
+    await screen.findByText('첫 대목의 첫 번째 흔적')
+
+    const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
+    if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
+    fireEvent.click(toggle)
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+
+    swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
+
+    // 입력바는 blur 바깥의 fixed라, 남으면 목록에 없는 흔적에 댓글을 달 수 있다
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+  })
+
+  it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    // 가림막 문구는 즉시 뜨지만 흔적 목록은 조회가 끝나야 그려진다
+    await screen.findByText('스포일러 대목의 흔적')
+
+    const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
+    if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
+    fireEvent.click(toggle)
+
+    // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+  })
+
   it('책의 첫 대목에서 뒤로 넘겨도 끝으로 돌아가지 않는다', async () => {
     await renderPage()
 
