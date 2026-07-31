@@ -8,8 +8,9 @@ import { useLoginGateState } from '@/app/_global/_hooks/useLoginGateState'
 /**
  * 로그인 상태면 action을 실행하고, 비로그인이면 로그인 유도 팝업을 띄운다.
  * message를 넘기면 그 액션에 맞는 안내 문구로, 생략하면 기본 문구로 뜬다.
+ * 반환값은 action을 실행했는지 여부 — 막힌 액션을 되돌려야 하는 호출부만 보면 된다.
  */
-type RunWithLogin = (action: () => void, message?: string) => void
+type RunWithLogin = (action: () => void, message?: string) => boolean
 
 const LoginGateContext = createContext<RunWithLogin | null>(null)
 

@@ -30,6 +30,20 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   const stage = usePassageViewer(bookId)
   // 댓글은 아코디언 — id를 하나만 들고 있으므로 다른 흔적을 열면 앞의 것은 자동으로 닫힌다
   const [openCommentOpinionId, setOpenCommentOpinionId] = useState<number | null>(null)
+  // 상세 오버레이(aria-modal)가 떠 있는 동안 하단 입력바를 포커스·접근성 트리에서 뺀다.
+  // 오버레이는 목록 흐름 안에, 입력바는 셸에 있어 형제로 공존하므로 열림 여부만 셸이 받아 든다
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
+
+  // 대목·페이지가 바뀌면 목록이 통째로 갈리므로 펼쳐둔 댓글과 하단 입력바를 함께 닫는다.
+  // 남겨두면 화면에 보이지도 않는 이전 흔적에 댓글이 등록된다(#128).
+  // 렌더 도중의 setState — React가 권하는 "prop이 바뀔 때 상태 조정하기" 패턴이다.
+  // 마운트 시점에는 prev === 현재라 이 분기를 타지 않는다.
+  const activePassageId = stage.activePassage?.passageId
+  const [prevPassageId, setPrevPassageId] = useState(activePassageId)
+  if (prevPassageId !== activePassageId) {
+    setPrevPassageId(activePassageId)
+    setOpenCommentOpinionId(null)
+  }
 
   /**
    * 흔적 작성은 꾸밈을 반드시 하나 이상 요구해서(createOpinion) 이 화면에서 바로 등록할 수 없다.
@@ -95,7 +109,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
         <TraceListPanel
-          passageId={stage.activePassage?.passageId}
+          passageId={activePassageId}
           quote={stage.highlight.quotes[stage.quoteIndex]?.text ?? ''}
           className={styles['listArea']}
           scrollerRef={scrollerRef}
@@ -103,12 +117,15 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
           openCommentOpinionId={openCommentOpinionId}
           onToggleTraceCreate={addTraceToCurrentPassage}
           onToggleTraceComment={toggleTraceComment}
+          onDetailOpenChange={setIsDetailOpen}
         />
         {/* fixed 입력바가 마지막 콘텐츠를 가리지 않도록 바 높이만큼 자리를 비운다 */}
         {openCommentOpinionId !== null && <div aria-hidden className={styles['bottomBarSpacer']} />}
       </div>
       {/* 댓글을 펼친 흔적에만 하단 입력바가 붙는다(디자인 2183:10060 주석) */}
-      {openCommentOpinionId !== null && <TraceCommentComposer opinionId={openCommentOpinionId} />}
+      {openCommentOpinionId !== null && (
+        <TraceCommentComposer opinionId={openCommentOpinionId} isInert={isDetailOpen} />
+      )}
     </>
   )
 }

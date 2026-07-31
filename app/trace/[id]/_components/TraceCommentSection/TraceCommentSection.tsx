@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import PlusIcon from '@/app/_global/_components/Icon/assets/plus.svg'
+import { Spinner } from '@/app/_global/_components/Spinner/Spinner'
 import { commentQueries } from '@/app/_global/_queries/comment.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 
@@ -27,6 +28,39 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
     [commentsQuery.data],
   )
   const myUserId = meData?.data?.userId
+
+  if (commentsQuery.isPending) {
+    return (
+      <section
+        aria-label="댓글 목록"
+        aria-busy="true"
+        className="flex justify-center bg-bg-overlay p-4"
+      >
+        <Spinner className="text-text-inverse/50" />
+      </section>
+    )
+  }
+
+  // 실패를 그냥 두면 빈 상자만 남아 "댓글 없음"과 구분되지 않는다
+  if (commentsQuery.isError) {
+    return (
+      <section
+        aria-label="댓글 목록"
+        className="flex flex-col items-center gap-2 bg-bg-overlay p-4 text-body-14rg text-text-inverse/50"
+      >
+        <p>댓글을 불러오지 못했어요.</p>
+        <button
+          type="button"
+          onClick={() => {
+            void commentsQuery.refetch()
+          }}
+          className="text-body-14sb text-text-inverse underline"
+        >
+          댓글 다시 불러오기
+        </button>
+      </section>
+    )
+  }
 
   return (
     <section aria-label="댓글 목록" className="flex flex-col gap-0.5 pb-4">

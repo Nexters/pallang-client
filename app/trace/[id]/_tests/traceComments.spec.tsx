@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { commentQueries, REPLY_PREVIEW_SIZE } from '@/app/_global/_queries/comment.queries'
 
 import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
 
@@ -24,6 +25,11 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
 const BOOK_ID = 1
 const PAGE = 7
 const PASSAGE_ID = 71
+/** 같은 페이지의 두 번째 대목 — 인용문 카드를 누르면 여기로 넘어간다 */
+const NEXT_PASSAGE_ID = 72
+
+/** 다음 요청부터 실패시킬 횟수. 오류 처리·재시도 경로를 확인하는 데 쓴다 */
+const apiFailures = { commentList: 0, commentCreate: 0, replies: 0 }
 
 const opinionSeed = [
   {
@@ -127,6 +133,7 @@ function stubApi() {
     vi.fn().mockImplementation((url: string, options?: RequestInit) => {
       const method = options?.method ?? 'GET'
       const json = (body: unknown) => Promise.resolve(new Response(JSON.stringify(body)))
+      const serverError = () => Promise.resolve(new Response('{}', { status: 500 }))
 
       if (url.includes('/users/me')) {
         if (!authState.isAuthenticated) {
@@ -156,6 +163,10 @@ function stubApi() {
         const opinionId = Number(commentsMatch[1])
         const list = opinionId === 1 ? comments : (commentsByOpinion.get(opinionId) ?? [])
         if (method === 'POST') {
+          if (apiFailures.commentCreate > 0) {
+            apiFailures.commentCreate -= 1
+            return serverError()
+          }
           const { content } = JSON.parse(options?.body as string) as { content: string }
           const created = {
             ...commentBase,
@@ -167,14 +178,24 @@ function stubApi() {
             replyCount: 0,
             hasMoreReplies: false,
           }
+          // ponytail: 새 댓글을 앞에 붙이는(최신순) 가정이다 — 서버 정렬이 오래된 순이면 새 댓글은
+          // 아직 불러오지 않은 마지막 페이지에 놓여 화면에 나타나지 않는다(useCommentActions 참고).
           if (opinionId === 1) comments = [created, ...comments]
           else commentsByOpinion.set(opinionId, [created, ...list])
           return json({ data: created })
+        }
+        if (apiFailures.commentList > 0) {
+          apiFailures.commentList -= 1
+          return serverError()
         }
         return json(paged(opinionId === 1 ? comments : list, url, 'comments'))
       }
 
       if (/\/comments\/\d+\/replies/.test(url)) {
+        if (apiFailures.replies > 0) {
+          apiFailures.replies -= 1
+          return serverError()
+        }
         const replies = Array.from({ length: 6 }, (_, index) => ({
           ...commentBase,
           commentId: 30 + index,
@@ -202,10 +223,12 @@ function stubApi() {
       }
 
       if (/\/pages\/\d+\/passages/.test(url)) {
+        // 대목 전환(인용문 카드 클릭)으로 passageId가 바뀌는 경로를 만들려고 두 개를 준다
         return json({
           data: {
             passages: [
               { passageId: PASSAGE_ID, quotedText: '첫 번째 대목 인용문', isSpoiler: false },
+              { passageId: NEXT_PASSAGE_ID, quotedText: '두 번째 대목 인용문', isSpoiler: false },
             ],
           },
         })
@@ -228,6 +251,7 @@ async function renderView() {
     </QueryClientProvider>,
   )
   await screen.findByText('첫 번째 흔적')
+  return client
 }
 
 /** index번째 흔적의 댓글 아이콘 */
@@ -238,14 +262,26 @@ function commentToggle(index: number) {
 }
 
 async function openFirstTraceComments() {
-  await renderView()
+  const client = await renderView()
   fireEvent.click(commentToggle(0))
   await screen.findByText('내가 쓴 댓글')
+  return client
+}
+
+/** 답글을 두 단계까지 펼친다 — 미리보기 5개 → 서버에서 받은 6번째 */
+async function revealAllReplies() {
+  fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+  await screen.findByText('5번째 답글')
+  fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+  await screen.findByText('6번째 답글')
 }
 
 describe('흔적 댓글 인라인 펼침', () => {
   beforeEach(() => {
     authState.isAuthenticated = true
+    apiFailures.commentList = 0
+    apiFailures.commentCreate = 0
+    apiFailures.replies = 0
   })
 
   afterEach(() => {
@@ -327,7 +363,10 @@ describe('흔적 댓글 인라인 펼침', () => {
     fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
 
     expect(await screen.findByText('새 댓글')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toHaveValue('')
+    // 입력창은 등록이 끝난 뒤에 비워진다
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toHaveValue('')
+    })
   })
 
   it('빈 댓글은 등록 버튼이 비활성화된다', async () => {
@@ -384,5 +423,132 @@ describe('흔적 댓글 인라인 펼침', () => {
       .mocked(fetch)
       .mock.calls.filter(([, options]) => options?.method === 'POST')
     expect(postCalls).toHaveLength(0)
+  })
+
+  it('대목이 바뀌면 펼친 댓글과 하단 입력바가 함께 닫힌다', async () => {
+    await openFirstTraceComments()
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+
+    // 인용문 카드를 누르면 다음 대목으로 넘어가 목록이 통째로 갈린다
+    fireEvent.click(screen.getByRole('button', { name: '첫 번째 대목 인용문' }))
+
+    // 입력바만 남으면 화면에 보이지도 않는 이전 대목의 흔적에 댓글이 등록된다
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+    })
+    expect(screen.queryByLabelText('댓글 목록')).not.toBeInTheDocument()
+  })
+
+  it('답글을 접었다 다시 펴도 한 번에 5개씩만 늘어난다', async () => {
+    await openFirstTraceComments()
+    await revealAllReplies()
+
+    // 접으면 revealStep은 0으로 돌아가지만 답글 캐시는 남는다
+    fireEvent.click(commentToggle(0))
+    fireEvent.click(commentToggle(0))
+    await screen.findByText('내가 쓴 댓글')
+
+    fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+
+    expect(await screen.findByText('5번째 답글')).toBeInTheDocument()
+    // 남아 있던 캐시가 새면 미리보기 5개와 함께 10개가 한꺼번에 나온다
+    expect(screen.queryByText('6번째 답글')).not.toBeInTheDocument()
+  })
+
+  it('답글 로드가 실패해도 다시 시도할 수 있다', async () => {
+    apiFailures.replies = 1
+    await openFirstTraceComments()
+
+    fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+    await screen.findByText('5번째 답글')
+    fireEvent.click(screen.getByRole('button', { name: '답글 더보기' }))
+
+    // 버튼이 사라지면 재시도할 길이 없다
+    fireEvent.click(await screen.findByRole('button', { name: '답글 다시 불러오기' }))
+
+    expect(await screen.findByText('6번째 답글')).toBeInTheDocument()
+  })
+
+  it('답글 요청은 서버가 고정으로 준 미리보기 구간 바로 뒤에서 시작한다', async () => {
+    await openFirstTraceComments()
+    await revealAllReplies()
+
+    const repliesUrl = vi
+      .mocked(fetch)
+      .mock.calls.map(([url]) => url)
+      .find((url): url is string => typeof url === 'string' && url.includes('/replies'))
+    const query = new URLSearchParams(repliesUrl?.split('?')[1] ?? '')
+
+    // page * size가 미리보기 개수와 어긋나면 그 사이의 답글이 조용히 사라진다
+    expect(Number(query.get('page')) * Number(query.get('size'))).toBe(REPLY_PREVIEW_SIZE)
+  })
+
+  it('댓글 조회가 실패하면 오류가 드러나고 다시 시도할 수 있다', async () => {
+    apiFailures.commentList = 1
+    await renderView()
+
+    fireEvent.click(commentToggle(0))
+
+    // 실패가 빈 목록("댓글 없음")과 같아 보이면 안 된다
+    expect(await screen.findByText('댓글을 불러오지 못했어요.')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '댓글 다시 불러오기' }))
+
+    expect(await screen.findByText('내가 쓴 댓글')).toBeInTheDocument()
+  })
+
+  it('로그인 게이트가 막으면 입력한 댓글이 그대로 남는다', async () => {
+    authState.isAuthenticated = false
+    await openFirstTraceComments()
+
+    const input = screen.getByPlaceholderText('댓글을 입력해주세요')
+    fireEvent.change(input, { target: { value: '남아야 하는 댓글' } })
+    fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
+
+    expect(await screen.findByText(LOGIN_GATE_MESSAGE.commentCreate)).toBeInTheDocument()
+    // 지워버리면 로그인한 뒤 처음부터 다시 써야 한다
+    expect(input).toHaveValue('남아야 하는 댓글')
+  })
+
+  it('등록에 실패하면 입력한 댓글이 그대로 남는다', async () => {
+    apiFailures.commentCreate = 1
+    await openFirstTraceComments()
+
+    const input = screen.getByPlaceholderText('댓글을 입력해주세요')
+    fireEvent.change(input, { target: { value: '실패한 댓글' } })
+    fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
+
+    await waitFor(() => {
+      const postCalls = vi
+        .mocked(fetch)
+        .mock.calls.filter(([, options]) => options?.method === 'POST')
+      expect(postCalls).toHaveLength(1)
+    })
+    expect(input).toHaveValue('실패한 댓글')
+  })
+
+  it('댓글 등록 무효화는 다른 흔적의 댓글 캐시를 건드리지 않는다', async () => {
+    const client = await openFirstTraceComments()
+    const otherKey = commentQueries.listByOpinion(2).queryKey
+    client.setQueryData(otherKey, { pages: [], pageParams: [] })
+
+    fireEvent.change(screen.getByPlaceholderText('댓글을 입력해주세요'), {
+      target: { value: '새 댓글' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '댓글 등록' }))
+    await screen.findByText('새 댓글')
+
+    // ['comment'] 전체를 무효화하면 열지도 않은 흔적의 캐시까지 낡은 것이 된다
+    expect(client.getQueryState(otherKey)?.isInvalidated).toBe(false)
+  })
+
+  it('상세 오버레이가 열려 있는 동안 하단 입력바는 포커스 대상에서 빠진다', async () => {
+    await openFirstTraceComments()
+    const bar = screen.getByPlaceholderText('댓글을 입력해주세요').closest('form')
+    expect(bar).not.toHaveAttribute('inert')
+
+    fireEvent.click(screen.getByRole('button', { name: '첫 번째 흔적' }))
+
+    expect(await screen.findByRole('dialog', { name: '의견 상세' })).toBeInTheDocument()
+    expect(bar).toHaveAttribute('inert')
   })
 })
