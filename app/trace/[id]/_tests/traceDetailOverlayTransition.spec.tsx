@@ -63,10 +63,7 @@ function OverlayHarness() {
         <TraceDetailOverlay
           trace={shownTrace}
           state={detail.state}
-          index={0}
-          count={1}
           quote="인용문"
-          onNavigate={() => undefined}
           onClose={() => {
             setOpen(false)
           }}

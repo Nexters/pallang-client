@@ -18,6 +18,7 @@ import { useHighlightViewer } from '../../_hooks/useHighlightViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
+import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentComposer'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
 import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
@@ -64,10 +65,12 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   )
   // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
   const activePassage = passages[viewer.quoteIndex]
-  const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
+  const [isTraceBarOpen, setIsTraceBarOpen] = useState(false)
   // 서버 프리페치가 채운 queryKey와 맞아야 첫 렌더에서 캐시가 그대로 쓰인다
   const [sortType, setSortType] = useState<OpinionSortType>(DEFAULT_OPINION_SORT_TYPE)
   const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null)
+  // 댓글은 아코디언 — id를 하나만 들고 있으므로 다른 흔적을 열면 앞의 것은 자동으로 닫힌다
+  const [openCommentOpinionId, setOpenCommentOpinionId] = useState<number | null>(null)
 
   const opinionsQuery = useInfiniteQuery(
     opinionQueries.listByPassage(activePassage?.passageId, sortType),
@@ -110,19 +113,25 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
     },
   })
 
-  const openCommentBar = () => {
+  const toggleTraceBar = () => {
+    if (isTraceBarOpen) {
+      setIsTraceBarOpen(false)
+      return
+    }
     runWithLogin(() => {
-      setIsCommentBarOpen(true)
+      // 하단 입력바는 한 번에 하나만 — 흔적 남기기를 열면 펼쳐둔 댓글은 접는다
+      setOpenCommentOpinionId(null)
+      setIsTraceBarOpen(true)
     }, LOGIN_GATE_MESSAGE.traceCreate)
   }
 
-  const toggleCommentBar = () => {
-    if (isCommentBarOpen) {
-      setIsCommentBarOpen(false)
-      return
-    }
-    openCommentBar()
+  // 댓글 열람은 로그인 없이도 된다(기획서 2-a) — 작성만 게이트로 막는다
+  const toggleTraceComment = (opinionId: number) => {
+    setIsTraceBarOpen(false)
+    setOpenCommentOpinionId((prev) => (prev === opinionId ? null : opinionId))
   }
+
+  const isBottomBarOpen = isTraceBarOpen || openCommentOpinionId !== null
 
   return (
     <>
@@ -166,36 +175,34 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
               traces={traces}
               traceCount={traceCount}
               sortType={sortType}
+              openCommentOpinionId={openCommentOpinionId}
               onToggleSort={() => {
                 setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
               }}
-              onToggleComment={toggleCommentBar}
+              onToggleTraceCreate={toggleTraceBar}
               onSelectTrace={(trace) => {
                 setSelectedTraceId(trace.opinionId)
+              }}
+              onToggleTraceComment={(trace) => {
+                toggleTraceComment(trace.opinionId)
               }}
             />
             {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
             <div ref={traceLoadMoreRef} aria-hidden className="h-px w-full" />
           </>
         )}
+        {/* fixed 입력바가 마지막 콘텐츠를 가리지 않도록 바 높이만큼 자리를 비운다 */}
+        {isBottomBarOpen && <div aria-hidden className={styles['bottomBarSpacer']} />}
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
-      {isCommentBarOpen && <CommentBar />}
+      {isTraceBarOpen && <CommentBar />}
+      {/* 댓글을 펼친 흔적에만 하단 입력바가 붙는다(디자인 2183:10060 주석) */}
+      {openCommentOpinionId !== null && <TraceCommentComposer opinionId={openCommentOpinionId} />}
       {detail.shouldRender && shownTrace && (
         <TraceDetailOverlay
           trace={shownTrace}
           state={detail.state}
-          index={traces.indexOf(shownTrace)}
-          count={traces.length}
           quote={highlight.quotes[viewer.quoteIndex]?.text ?? ''}
-          onNavigate={(next) => {
-            const target = traces[next]
-            if (target) setSelectedTraceId(target.opinionId)
-            // 상세에서도 마지막 흔적에 닿으면 다음 페이지를 이어 붙인다
-            if (next >= traces.length - 1 && canFetchMoreTraces) {
-              void opinionsQuery.fetchNextPage()
-            }
-          }}
           onClose={() => {
             setSelectedTraceId(null)
           }}

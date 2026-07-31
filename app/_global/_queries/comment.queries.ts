@@ -1,4 +1,4 @@
-import { mutationOptions, queryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, mutationOptions } from '@tanstack/react-query'
 
 import {
   createComment,
@@ -14,28 +14,46 @@ import type { RootCommentResponse as GeneratedRootCommentResponse } from '../_ap
 export type CommentResponse = GeneratedCommentResponse
 export type RootCommentResponse = GeneratedRootCommentResponse
 
+/** 디자인 확정치 — 댓글·답글 모두 5개까지 보이고 더보기를 누를 때마다 5개씩 늘어난다 */
+export const COMMENT_PAGE_SIZE = 5
+
 export const commentQueries = {
   all: () => ['comment'] as const,
   listByOpinion: (opinionId: number) =>
-    queryOptions({
+    infiniteQueryOptions({
       queryKey: [...commentQueries.all(), 'by-opinion', opinionId],
-      // ponytail: size 100 고정 — 댓글이 100개를 넘으면 페이지네이션 필요
-      queryFn: () => getComments(opinionId, { size: 100 }),
+      queryFn: ({ pageParam }) =>
+        getComments(opinionId, { page: pageParam, size: COMMENT_PAGE_SIZE }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+      },
     }),
+  /**
+   * 답글 더보기. 0페이지(최대 5개)는 원댓글 응답의 `replies` 미리보기와 같은 구간이므로
+   * 1페이지부터 이어 받는다 — 더보기를 한 번 누르면 미리보기 5개 뒤로 5개가 더 붙는다.
+   */
   replies: (commentId: number) =>
-    queryOptions({
+    infiniteQueryOptions({
       queryKey: [...commentQueries.all(), 'replies', commentId],
-      // ponytail: size 100 고정 — 답글이 100개를 넘으면 페이지네이션 필요
-      queryFn: () => getReplies(commentId, { size: 100 }),
+      queryFn: ({ pageParam }) =>
+        getReplies(commentId, { page: pageParam, size: COMMENT_PAGE_SIZE }),
+      initialPageParam: 1,
+      getNextPageParam: (lastPage) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+      },
     }),
 }
 
 export const commentMutations = {
-  /** 원댓글 작성 — 답글 작성(parentCommentId)은 필요해질 때 확장한다 */
+  /** parentCommentId를 넘기면 답글, 없으면 원댓글로 생성된다(1-depth) */
   create: (opinionId: number) =>
     mutationOptions({
       mutationKey: [...commentQueries.all(), 'create'],
-      mutationFn: (content: string) => createComment(opinionId, { content }),
+      mutationFn: ({ content, parentCommentId }: { content: string; parentCommentId?: number }) =>
+        createComment(opinionId, { content, parentCommentId }),
     }),
   update: () =>
     mutationOptions({
