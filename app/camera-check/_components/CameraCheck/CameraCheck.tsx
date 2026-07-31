@@ -19,7 +19,7 @@ export function CameraCheck() {
       // 상단 인셋은 레이아웃 셸이 소비한다 — 좌우·하단만 직접 피한다
       style={{
         paddingRight: 'max(2rem, env(safe-area-inset-right))',
-        paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
+        paddingBottom: 'max(2rem, var(--safe-bottom))',
         paddingLeft: 'max(2rem, env(safe-area-inset-left))',
       }}
     >
