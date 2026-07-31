@@ -89,7 +89,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 레이아웃 셸(`app/layout.tsx`의 `main`)이 `pt-(--safe-top)`으로 일괄 소비한다 — **새 페이지는 노치 처리를 하지 않는다.**
 - 노치 뒤까지 배경을 깔아야 하는 풀블리드 화면만 `-mt-(--safe-top)`(CSS는 `margin-top: calc(-1 * var(--safe-top))`)으로 셸 패딩을 되돌린 뒤 내부에서 직접 오프셋한다. 예: 탭 화면(`TabScreenLayout` — 시트가 되돌리고 `pt-(--safe-top)`으로 다시 더한다), 흔적 페이지(`TraceCollapseView`/`QuoteStage`).
 - `fixed` 오버레이는 셸 패딩을 받지 않는다 — 상단에 콘텐츠가 붙는 오버레이만 `var(--safe-top)`만큼 패딩한다. 예: `TraceDetailOverlay`. 중앙 정렬 모달·바텀시트는 처리 불필요.
-- 하단 인셋은 아직 토큰이 없다. 필요한 화면이 `max(<기본값>, env(safe-area-inset-bottom))`을 직접 쓴다. 셸에서 일괄 처리하게 되면 같은 패턴으로 `--safe-bottom`을 추가하고 직접 사용처를 함께 정리한다.
+- 하단 인셋 토큰은 `--safe-bottom`이다. 상단과 달리 **셸이 소비하지 않는다** — 하단에 붙는 요소(탭바·고정 CTA·바텀시트)가 각자 `max(<기본값>, var(--safe-bottom))`으로 더한다. `env(safe-area-inset-bottom)`을 직접 쓰지 않는다.
+- **두 토큰 모두 값을 env()에서만 받지 않는다.** Android는 시스템 바 인셋을 `env(safe-area-inset-*)`로 주지 않는 웹뷰(Chromium < 140)가 있어 `MainActivity`가 실제 인셋을 두 토큰에 덮어쓴다(API 35+에서만 — 그 아래는 창이 시스템 바를 침범하지 않아 넣으면 두 번 밀린다). 그래서 인셋은 언제나 토큰을 거쳐 읽는다.
 
 ## 모션 (애니메이션 토큰)
 

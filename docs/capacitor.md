@@ -4,15 +4,15 @@
 
 ## 쓰는 플러그인
 
-| 플러그인                   | 용도                                                                             |
-| -------------------------- | -------------------------------------------------------------------------------- |
-| `@capacitor/camera`        | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)                  |
-| `@capacitor/app`           | Android 하드웨어 back 인터셉트. 흔적 작성 중 이탈 확인에 쓴다(`useHardwareBack`) |
-| `@capacitor/preferences`   | 토큰 저장                                                                        |
-| `@capacitor/splash-screen` | 인증 판정 전 깜빡임 방지                                                         |
+| 플러그인                   | 용도                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `@capacitor/camera`        | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)              |
+| `@capacitor/app`           | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
+| `@capacitor/preferences`   | 토큰 저장                                                                    |
+| `@capacitor/splash-screen` | 인증 판정 전 깜빡임 방지                                                     |
 
 - 플러그인을 추가하면 `npx cap sync` 후 **앱 재설치**가 필요하다(아래 표의 "네이티브 변경").
-- `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만** 붙는다. 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
+- `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만**, 그리고 **앱 전체에서 하나만** 붙인다(`HardwareBackProvider`). 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
 
 아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것. (함정 1·3은 iOS·Android 공통, 함정 2는 iOS 전용, Android는 아래 별도 섹션.)
 
@@ -47,7 +47,7 @@
   - Capacitor는 이 상태를 "라이브 리로드"로 간주한다(`WebViewAssetHandler.isUsingLiveReload` — `serverUrl`과 `localUrl`의 스킴이 다른 경우). 원래 개발용 임시 상태를 상정한 모드인데, **이 앱은 그걸 배포 아키텍처로 쓰므로 상시 해당된다.**
   - **`<img src={webPath}>`는 잘 뜬다.** 이미지 렌더링은 CORS 대상이 아니다. Capacitor 공식 예제가 이 형태라 이 함정을 안 만나고 지나가기 쉽다. **바이트를 읽을 때만** 터진다.
 - **해결: 파일 경로를 받지 말고 브릿지로 데이터를 직접 받는다.** `resultType: CameraResultType.DataUrl` → `data:` URL이라 오리진 제약이 없다.
-  - 원본은 4032px까지 나온다. 브릿지 전송·업로드가 무거우므로 `width`로 줄인다(책 한 쪽 OCR엔 1600px면 충분).
+  - 원본은 4032px까지 나오지만 **`width`/`height`로 네이티브 축소를 걸지 않는다**(함정 5 참고). 대신 웹에서 줄인다.
   - **화면에 띄우는 이미지와 업로드하는 이미지가 같아야 한다.** OCR 바운딩 박스 좌표가 업로드한 이미지 기준이라, 다른 이미지를 표시하면 선택 영역이 어긋난다. 같은 blob을 `URL.createObjectURL`로 달아 쓴다.
 - 같은 이유로 `@capacitor/filesystem` 등 **파일 경로를 돌려주는 다른 플러그인도 동일한 함정**을 갖는다. 원격 URL 로드를 유지하는 한 경로가 아니라 데이터로 받아야 한다.
 - 브라우저(`pnpm dev`)에서는 `<input type="file">` 경로를 타므로 **재현되지 않는다.** 실기기에서 끝까지 태워봐야 드러난다.
@@ -58,6 +58,24 @@
 - 원인: Capacitor iOS는 내부/외부 내비게이션을 `serverURL` **절대 URL 문자열 prefix**로 판정한다(`WebViewDelegationHandler.swift`의 `isApplicationNavigation`). `server.url`이 `http://IP:3000/camera-check`처럼 경로를 포함하면, `/api/auth/kakao/login` 등 **그 경로로 시작하지 않는 같은 오리진 URL조차 외부로 판정**되어 `UIApplication.open`(Safari)으로 넘어간다.
 - Next의 클라이언트 라우팅(SPA 전환)은 이 판정을 타지 않아서 평소엔 정상으로 보인다. `window.location.assign` 같은 **full-page 내비게이션에서만** 터져서 발견이 늦는다.
 - **해결: `CAP_SERVER_URL`은 항상 origin까지만.** `scripts/cap-dev.sh`가 origin만 굽도록 되어 있다(경로 인자 제거됨).
+
+## ⚠️ 함정 5 — `Camera.getPhoto`의 `width` 축소가 글자를 뭉갠다 (OCR 인식률 저하)
+
+- 증상: 앱 카메라로 찍은 사진의 OCR 정확도가 **갤러리에서 고른 사진보다 눈에 띄게 낮다.** 사진은 멀쩡해 보이는데 인식만 안 된다.
+- 원인: Capacitor Android는 `ImageOptions.width`가 있으면 `Bitmap.createScaledBitmap(bitmap, w, h, false)`로 줄인다(`ImageUtils.java:53`). **마지막 인자가 필터 플래그이고 `false`** — 보간 없이 픽셀을 솎아내는 축소라, 4032 → 1600처럼 절반 이하로 줄이면 본문 글자의 얇은 획이 통째로 사라지거나 계단이 진다. iOS는 CoreGraphics 보간을 쓰므로 덜하지만 손실은 마찬가지다.
+  - 촬영·갤러리 **양쪽 다 같은 축소를 거치는데도** 차이가 나는 건 원본 화질이 달라서다. 갤러리 사진은 기본 카메라 앱이 다중 프레임 합성·샤프닝까지 끝낸 결과이고, 앱 안 촬영은 `UIImagePickerController`/`ACTION_IMAGE_CAPTURE`의 기본 촬영이라 더 무르다. 무른 원본일수록 축소 손실에 먼저 무너진다.
+- **해결: 네이티브 축소를 끄고(width/height 미지정) 웹에서 줄인다.** `photoResize.service.ts`가 `imageSmoothingQuality: 'high'`로 긴 변 2400px까지 줄이고(2배 넘게 줄일 땐 반씩 나눠 내림) JPEG 0.92로 다시 굽는다. 촬영·갤러리·브라우저 파일선택이 전부 같은 경로를 타서 OCR 입력이 하나로 묶인다.
+- **대가: 브릿지에 원본 크기 dataUrl이 실린다**(12MP 기준 수 MB). 촬영 직후 한 번뿐이고 스캔 오버레이가 떠 있는 구간이라 감수한다. 더 줄여야 하면 `OCR_MAX_EDGE`를 낮추지 말고(인식률 직결) 촬영 UI 자체를 문서 스캐너(iOS VisionKit / Android ML Kit)로 바꾸는 쪽이 이득이 크다.
+
+## ⚠️ 함정 6 — (Android) 엣지 스와이프 뒤로가기가 완전히 무반응
+
+- 증상: iOS는 스와이프 백이 되는데 **Android만 아무 반응이 없다.** 앱이 닫히지도, 뒤로 가지도 않는다.
+- 원인: 두 플랫폼의 처리 경로가 아예 다르다.
+  - iOS는 `allowsBackForwardNavigationGestures`(WKWebView 자체 기능)라 웹뷰가 제스처를 직접 받아 자기 히스토리를 걷는다. Capacitor도 JS도 개입하지 않는다.
+  - Android의 엣지 스와이프는 **시스템 back**이라 액티비티로 간다. 그런데 Capacitor 8의 `BridgeActivity`/`Bridge`에는 back 처리가 없고, `@capacitor/app` 플러그인만 `OnBackPressedCallback`을 **`enabled=true`로** 등록해 back을 먹는다(`AppPlugin.java:46`). 그 핸들러는 `canGoBack()`이 참일 때만 되감고 **거짓이면 아무 것도 하지 않는다** — 시스템 기본 동작(액티비티 종료)까지 막혀서 무반응이 된다.
+  - 게다가 JS가 `backButton` 리스너를 하나라도 붙이면 네이티브 되감기는 통째로 꺼지고 JS 통보만 간다.
+- **해결: 앱 전체에서 리스너를 하나만 붙이고 되감기·종료까지 직접 처리한다.** `HardwareBackProvider`가 그 하나를 맡고, 화면은 `useHardwareBack`으로 스택에 핸들러를 등록한다(나중에 등록한 층이 우선). 아무도 안 가져가면 `canGoBack`이면 `history.back()`, 아니면 `App.exitApp()`.
+- 브라우저에서는 리스너를 붙이지 않는다 — 브라우저 back이 그대로 동작해야 한다.
 
 ## dev 서버 URL 자동화 (`scripts/cap-dev.sh`)
 
@@ -130,7 +148,11 @@ xcrun simctl io booted screenshot out.png   # 화면 확인
 ## 세이프에어리어(노치/상태바) 대응
 
 - `app/layout.tsx`에 `export const viewport = { viewportFit: 'cover', ... }` (이게 있어야 iOS에서 `env(safe-area-inset-*)`가 실제 값을 가짐).
-- 화면 컨테이너에 `padding: max(<기본값>, env(safe-area-inset-*))` 적용.
+- 값은 `globals.css`의 `--safe-top`/`--safe-bottom` 토큰으로만 읽는다. 화면에서 `env(safe-area-inset-*)`를 직접 쓰지 않는다(배치 규칙은 `AGENTS.md`의 Safe area 절).
+- **⚠️ Android는 env()만 믿으면 안 된다.** Android 15(API 35)부터 targetSdk 35+ 앱은 창이 시스템 바 뒤까지 그려지는데(edge-to-edge 강제), **Chromium 140 미만 웹뷰는 시스템 바 인셋을 `env(safe-area-inset-*)`로 노출하지 않는다.** 하단 제스처 바가 탭바·고정 버튼을 덮어도 값이 0으로 나온다. Capacitor 8은 이 보정을 해주지 않는다(`CapacitorWebView`가 `WindowInsetsCompat`를 import만 하고 쓰지 않음).
+  - 그래서 `MainActivity`가 `ViewCompat.setOnApplyWindowInsetsListener`로 실제 인셋(`systemBars | displayCutout`)을 읽어 두 CSS 변수에 덮어쓴다. 페이지가 새로 로드되면 인라인 스타일이 날아가므로 `WebViewListener.onPageLoaded`에서 다시 넣는다.
+  - **API 35 미만에서는 넣지 않는다.** 창이 시스템 바를 침범하지 않아 웹뷰가 이미 인셋 안쪽이라, 값을 넣으면 두 번 밀린다.
+  - 인셋은 물리 픽셀이라 `density`로 나눠 CSS px(dp)로 바꾼다. `String.format`은 `Locale.US` 고정 — 지역에 따라 소수점이 쉼표로 찍히면 CSS 값이 깨진다.
 
 ## Android 노트
 
