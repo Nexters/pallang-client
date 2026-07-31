@@ -8,6 +8,7 @@ import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabSc
 import { POLICY_META_BY_SLUG } from '@/app/_shared/terms/_data/policy.constant'
 
 import type { MyTrace, MyUser } from '../../_types/myUser.type'
+import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 
 const loggedInSettings = [
   '공지사항',
@@ -32,13 +33,23 @@ function getPolicyPath(label: string): null | string {
 
 type MyPageViewProps = {
   user: MyUser | null
+  /** 로그인 여부가 아직 정해지지 않은 구간. 셸은 그대로 두고 본문만 골격으로 채운다. */
+  isPending?: boolean
   recentTraces?: MyTrace[]
   onLoginClick?: () => void
   onLogout?: () => void
 }
 
-export function MyPageView({ user, recentTraces = [], onLoginClick, onLogout }: MyPageViewProps) {
+export function MyPageView({
+  user,
+  isPending = false,
+  recentTraces = [],
+  onLoginClick,
+  onLogout,
+}: MyPageViewProps) {
   return (
+    // 셸과 헤더는 데이터를 기다리지 않는다 — 로딩 분기 안쪽에 두면 탭바까지 사라져
+    // 루트 배경(bg-bg-dark)이 드러나면서 화면이 번쩍인다
     <TabScreenLayout
       aria-label="마이페이지"
       activeTab="my"
@@ -47,13 +58,23 @@ export function MyPageView({ user, recentTraces = [], onLoginClick, onLogout }: 
       <header className="flex h-11 shrink-0 items-center px-4">
         <h1 className="text-title-18sb font-bold text-text-secondary">마이페이지</h1>
       </header>
-      {user ? (
-        <LoggedInContent user={user} recentTraces={recentTraces} onLogout={onLogout} />
-      ) : (
-        <LoggedOutContent onLoginClick={onLoginClick} />
-      )}
+      {renderBody({ isPending, user, recentTraces, onLoginClick, onLogout })}
     </TabScreenLayout>
   )
+}
+
+/** 분기가 셋이라 삼항을 겹치지 않고 guard로 가른다 */
+function renderBody({
+  isPending,
+  user,
+  recentTraces,
+  onLoginClick,
+  onLogout,
+}: Required<Pick<MyPageViewProps, 'isPending' | 'recentTraces' | 'user'>> &
+  Pick<MyPageViewProps, 'onLoginClick' | 'onLogout'>) {
+  if (isPending) return <MyPageSkeleton />
+  if (user) return <LoggedInContent user={user} recentTraces={recentTraces} onLogout={onLogout} />
+  return <LoggedOutContent onLoginClick={onLoginClick} />
 }
 
 function LoggedInContent({
