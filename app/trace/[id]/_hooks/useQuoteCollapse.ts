@@ -114,8 +114,12 @@ export function useQuoteCollapse(scrollerRef: RefObject<HTMLDivElement | null>) 
 
     const isListAtTop = () => scroller.scrollTop <= 0
 
+    // 상세 오버레이는 fixed지만 스크롤러의 자손이라, 그 안의 스크롤이 여기까지 버블링돼 접힘/펼침을 일으킨다
+    const isFromOverlay = (event: Event) =>
+      event.target instanceof Element && event.target.closest('[role="dialog"]') !== null
+
     const handleWheel = (event: WheelEvent) => {
-      if (isAnimatingRef.current) return
+      if (isAnimatingRef.current || isFromOverlay(event)) return
       const intent = getTransitionIntent({
         isCollapsed: isCollapsedRef.current,
         scrollIntent: event.deltaY,
@@ -127,6 +131,11 @@ export function useQuoteCollapse(scrollerRef: RefObject<HTMLDivElement | null>) 
     }
 
     const handleTouchStart = (event: TouchEvent) => {
+      if (isFromOverlay(event)) {
+        // 오버레이에서 시작한 드래그는 이 제스처 내내 무시한다
+        touchHandledRef.current = true
+        return
+      }
       touchStartYRef.current = event.touches[0]?.clientY ?? 0
       // 목록 중간에서 시작한 드래그가 최상단에 닿아도 펼치지 않도록 시작 위치를 함께 본다
       touchStartedAtTopRef.current = isListAtTop()

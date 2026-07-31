@@ -434,4 +434,17 @@ describe('ReaderHighlightsPage', () => {
     expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
   })
+
+  it('상세 오버레이 안의 스크롤은 접힘 전환을 일으키지 않는다', async () => {
+    const scroller = await renderPage()
+
+    fireEvent.click(await screen.findByText('첫 대목의 첫 번째 흔적'))
+    // 오버레이는 fixed지만 스크롤러의 자손이라 wheel이 스크롤러까지 버블링된다
+    fireEvent.wheel(screen.getByRole('dialog', { name: '의견 상세' }), { deltaY: 120 })
+    await waitForCollapseAnimation()
+
+    // 전환이 아예 일어나지 않아야 한다 — --collapse는 전환이 시작돼야 세팅된다
+    expect(scroller.style.getPropertyValue('--collapse')).not.toBe('1')
+    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
+  })
 })
