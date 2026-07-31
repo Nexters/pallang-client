@@ -11,6 +11,7 @@ import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { CommentBar } from '../CommentBar/CommentBar'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
+import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentComposer'
 import { TraceListPanel } from '../TraceListPanel/TraceListPanel'
 import styles from './TraceCollapseView.module.css'
 
@@ -19,30 +20,36 @@ type TraceCollapseViewProps = {
 }
 
 /** 셸 — 인용문 무대 흐름(usePassageViewer)과 흔적 목록 흐름(TraceListPanel)을 연결하고,
-    두 흐름에 걸치는 것(접힘 제스처, 마스킹, 코멘트바)만 직접 든다 */
+    두 흐름에 걸치는 것(접힘 제스처, 하단 입력바)만 직접 든다 */
 export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
   const stage = usePassageViewer(bookId)
-  const [isCommentBarOpen, setIsCommentBarOpen] = useState(false)
+  const [isTraceBarOpen, setIsTraceBarOpen] = useState(false)
+  // 댓글은 아코디언 — id를 하나만 들고 있으므로 다른 흔적을 열면 앞의 것은 자동으로 닫힌다.
+  // 흔적 남기기 바와 한 번에 하나만 떠야 해서 두 상태 모두 셸이 든다
+  const [openCommentOpinionId, setOpenCommentOpinionId] = useState<number | null>(null)
 
-  // TODO(#49): 명세 충돌 — 2번은 "가림막 해제 시 대목+흔적 함께 노출", 3번은 "흔적마다 개별 '흔적 보기' 버튼으로 해제".
-  //  우선 대목 해제 시 흔적도 함께 노출로 구현. 개별 해제로 확정되면 의견 단위 isSpoiler가 API에 없어 백엔드 협의 필요.
-  // TODO(#49): 해제 상태 유지 범위 미확정 — 현재는 페이지 단위 유지라(useHighlightViewer.isRevealed)
-  //  같은 페이지의 다른 스포일러 대목으로 전환해도 다시 가리지 않는다. 대목 단위 재가림으로 확정되면 quoteIndex 전환 시 리셋.
-  const isTraceListMasked = Boolean(stage.activePassage?.isSpoiler) && !stage.isRevealed
-
-  const toggleCommentBar = () => {
-    if (isCommentBarOpen) {
-      setIsCommentBarOpen(false)
+  const toggleTraceBar = () => {
+    if (isTraceBarOpen) {
+      setIsTraceBarOpen(false)
       return
     }
     runWithLogin(() => {
-      setIsCommentBarOpen(true)
+      setOpenCommentOpinionId(null)
+      setIsTraceBarOpen(true)
     }, LOGIN_GATE_MESSAGE.traceCreate)
   }
+
+  // 댓글 열람은 로그인 없이도 된다(기획서 2-a) — 작성만 게이트로 막는다
+  const toggleTraceComment = (opinionId: number) => {
+    setIsTraceBarOpen(false)
+    setOpenCommentOpinionId((prev) => (prev === opinionId ? null : opinionId))
+  }
+
+  const isBottomBarOpen = isTraceBarOpen || openCommentOpinionId !== null
 
   return (
     <>
@@ -71,16 +78,21 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
         <div aria-hidden className={styles['stageSpacer']} />
         <TraceListPanel
           passageId={stage.activePassage?.passageId}
-          quote={stage.highlight.quotes[stage.quoteIndex] ?? ''}
-          isMasked={isTraceListMasked}
+          quote={stage.highlight.quotes[stage.quoteIndex]?.text ?? ''}
           className={styles['listArea']}
           scrollerRef={scrollerRef}
           stageError={{ isError: stage.isError, retry: stage.retry }}
-          onToggleComment={toggleCommentBar}
+          openCommentOpinionId={openCommentOpinionId}
+          onToggleTraceCreate={toggleTraceBar}
+          onToggleTraceComment={toggleTraceComment}
         />
+        {/* fixed 입력바가 마지막 콘텐츠를 가리지 않도록 바 높이만큼 자리를 비운다 */}
+        {isBottomBarOpen && <div aria-hidden className={styles['bottomBarSpacer']} />}
       </div>
       {/* ponytail: 흔적 작성 API 연결은 별도 이슈 — 입력 UI만 열린다 */}
-      {isCommentBarOpen && <CommentBar />}
+      {isTraceBarOpen && <CommentBar />}
+      {/* 댓글을 펼친 흔적에만 하단 입력바가 붙는다(디자인 2183:10060 주석) */}
+      {openCommentOpinionId !== null && <TraceCommentComposer opinionId={openCommentOpinionId} />}
     </>
   )
 }

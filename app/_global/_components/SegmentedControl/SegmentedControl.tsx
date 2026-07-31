@@ -30,7 +30,9 @@ export function SegmentedControl({ label, options, value, onChange }: SegmentedC
               onChange(option.value)
             }}
             className={cn(
-              'flex-1 rounded-full py-3 text-center transition-colors',
+              // press와 transition-colors를 함께 두면 transition-property가 서로를 덮는다.
+              // 색과 눌림을 한 목록으로 합쳐 둘 다 살린다.
+              'press flex-1 rounded-full py-3 text-center transition-[color,background-color,scale] duration-instant ease-standard',
               isSelected ? 'bg-bg-default text-text-primary' : 'text-text-inverse opacity-50',
             )}
           >

@@ -1,9 +1,9 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
+
+import { useTraceNav } from '../../_hooks/useTraceNav'
 
 type TraceStepHeaderProps = {
   step: 1 | 2 | 3
@@ -11,20 +11,18 @@ type TraceStepHeaderProps = {
 }
 
 export function TraceStepHeader({ step, title }: TraceStepHeaderProps) {
-  const router = useRouter()
+  const { requestExit } = useTraceNav()
 
   return (
     <div className="flex flex-col">
-      <TopBar.Root
-        // 노치/상태바 아래로 파고들지 않게 한다(layout에 viewportFit: 'cover'가 있어야 값이 잡힌다)
-        style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
-      >
+      {/* 노치 인셋은 레이아웃 셸이 이미 소비했다 — 여기서 다시 더하면 두 번 내려간다 */}
+      <TopBar.Root>
         <TopBar.Title>{step}/3</TopBar.Title>
         <TopBar.Spacer />
         <TopBar.Action
           aria-label="닫기"
           onClick={() => {
-            router.push('/')
+            requestExit()
           }}
         >
           <CloseIcon />

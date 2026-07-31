@@ -26,7 +26,9 @@ export default function KakaoCallbackPage() {
       const code = params.get('code')
       const state = params.get('state')
       if (params.get('error') || !code) {
-        setError('카카오 로그인이 취소되었어요.')
+        // 웹뷰에선 콘솔을 볼 수 없어 카카오가 돌려준 에러를 화면에 그대로 남긴다
+        const detail = params.get('error_description') ?? params.get('error')
+        setError(detail ? `카카오 로그인 실패: ${detail}` : '카카오 로그인이 취소되었어요.')
         return
       }
 
@@ -56,7 +58,9 @@ export default function KakaoCallbackPage() {
 
     run().catch((e: unknown) => {
       console.error('카카오 로그인 콜백 처리 실패', e)
-      setError('로그인 처리 중 문제가 발생했어요.')
+      // 웹뷰에선 콘솔을 볼 수 없어 실패 원인을 화면에 함께 남긴다
+      const detail = e instanceof Error && e.message ? ` (${e.message})` : ''
+      setError(`로그인 처리 중 문제가 발생했어요.${detail}`)
     })
   }, [router])
 
@@ -64,7 +68,7 @@ export default function KakaoCallbackPage() {
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
       {error ? (
         <>
-          <p className="text-title-16sb text-text-secondary">{error}</p>
+          <p className="text-title-16sb text-text-inverse">{error}</p>
           <a
             href={LOGIN_PATH}
             className="rounded-full bg-interactive-accent px-6 py-3 text-body-14sb text-text-inverse"
@@ -73,7 +77,7 @@ export default function KakaoCallbackPage() {
           </a>
         </>
       ) : (
-        <p className="text-title-16sb text-text-secondary">로그인 중이에요…</p>
+        <p className="text-title-16sb text-text-inverse">로그인 중이에요…</p>
       )}
     </div>
   )

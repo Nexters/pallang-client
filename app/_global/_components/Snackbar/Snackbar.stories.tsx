@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import { useState } from 'react'
 
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 
@@ -29,4 +30,30 @@ export const Default: Story = {}
 
 export const SaveFailed: Story = {
   args: { message: '흔적을 남기지 못했어요. 잠시 후 다시 시도해주세요.' },
+}
+
+// 등장·퇴장 전환은 정지 화면으로는 볼 수 없다
+export const Toggle: Story = {
+  render: (args) => {
+    const [message, setMessage] = useState('')
+    return (
+      <>
+        <button
+          type="button"
+          className="m-4 rounded-2xl bg-interactive-btn-primary px-4 py-3 text-text-inverse"
+          onClick={() => {
+            setMessage(message ? '' : args.message)
+          }}
+        >
+          토스트 토글
+        </button>
+        <Snackbar
+          message={message}
+          onClose={() => {
+            setMessage('')
+          }}
+        />
+      </>
+    )
+  },
 }

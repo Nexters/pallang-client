@@ -34,8 +34,10 @@ export function usePassageViewer(bookId: number) {
   const highlight = useMemo(
     () => ({
       page: viewer.activePage ?? 0,
-      quotes: passages.map((passage) => passage.quotedText),
-      isSpoiler: passages.some((passage) => passage.isSpoiler),
+      quotes: passages.map((passage) => ({
+        text: passage.quotedText,
+        isSpoiler: passage.isSpoiler,
+      })),
     }),
     [passages, viewer.activePage],
   )

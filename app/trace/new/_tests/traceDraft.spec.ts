@@ -122,6 +122,37 @@ describe('traceDraftReducer', () => {
     expect(next.result).toBeNull()
   })
 
+  it('clearQuote는 책과 입력 방식만 남기고 대목을 비운다', () => {
+    const filled = [
+      { type: 'selectBook', book } as const,
+      { type: 'setSource', source: 'photo' } as const,
+      { type: 'setQuotedText', quotedText: '어떤 문장' } as const,
+      { type: 'setPageDetail', pageNumber: 87, isSpoiler: true } as const,
+      { type: 'applyDecoration', decoration: decoration(0, 5) } as const,
+      { type: 'setMergeTarget', passageId: 9 } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    const next = traceDraftReducer(filled, { type: 'clearQuote' })
+
+    expect(next.book).toEqual(book)
+    expect(next.source).toBe('photo')
+    expect(next.quotedText).toBe('')
+    expect(next.decorations).toEqual([])
+    expect(next.pageNumber).toBeNull()
+    expect(next.isSpoiler).toBe(false)
+    expect(next.passageId).toBeNull()
+  })
+
+  it('clearQuote는 의견 본문을 지우지 않는다', () => {
+    // 대목을 다시 고르러 나갔다 돌아오는 흐름이라, 이미 쓴 의견을 날릴 이유가 없다.
+    const filled = [
+      { type: 'selectBook', book } as const,
+      { type: 'setContent', content: '내 의견' } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    expect(traceDraftReducer(filled, { type: 'clearQuote' }).content).toBe('내 의견')
+  })
+
   it('reset은 전부 비운다', () => {
     const filled = traceDraftReducer(initialTraceDraft, { type: 'selectBook', book })
     expect(traceDraftReducer(filled, { type: 'reset' })).toEqual(initialTraceDraft)

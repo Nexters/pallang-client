@@ -1,85 +1,92 @@
 import { useState } from 'react'
 
+import ReplyIcon from '@/app/_global/_components/Icon/assets/reply.svg'
 import type { CommentResponse } from '@/app/_global/_queries/comment.queries'
+import { cn } from '@/app/_global/_services/cn.service'
 
 import { formatTraceDate } from '../../_services/traceFormat.service'
 
 type CommentItemProps = {
   comment: CommentResponse
   isMine: boolean
+  /** 답글은 원댓글 아래로 한 단 들여쓴다 — 디자인에는 원댓글 카드만 있어 들여쓰기만 더한다 */
+  isReply?: boolean
   onUpdate: (commentId: number, content: string) => void
   onRemove: (commentId: number) => void
 }
 
-export function CommentItem({ comment, isMine, onUpdate, onRemove }: CommentItemProps) {
+export function CommentItem({ comment, isMine, isReply, onUpdate, onRemove }: CommentItemProps) {
   // null이면 보기 모드, 문자열이면 그 값을 편집 중
   const [draft, setDraft] = useState<string | null>(null)
 
-  if (comment.isDeleted) {
-    return <p className="text-body-14rg text-text-inverse opacity-50">삭제된 댓글입니다</p>
-  }
-
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2 text-body-14rg">
-        <span className="text-body-14sb text-text-inverse">{comment.nickname}</span>
-        <span className="text-text-inverse opacity-50">{formatTraceDate(comment.createdAt)}</span>
-        {isMine && draft === null && (
-          <span className="ml-auto flex gap-2 text-text-inverse opacity-50">
-            <button
-              type="button"
-              onClick={() => {
-                setDraft(comment.content)
-              }}
-            >
-              수정
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onRemove(comment.commentId)
-              }}
-            >
-              삭제
-            </button>
-          </span>
-        )}
-      </div>
-      {draft === null ? (
-        <p className="text-body-14rg text-text-inverse">{comment.content}</p>
+    <div className={cn('flex items-start gap-0.5 bg-bg-overlay p-4', isReply && 'pl-8')}>
+      <ReplyIcon width={16} height={16} className="shrink-0 text-text-inverse/50" />
+      {comment.isDeleted ? (
+        <p className="text-body-16md text-text-inverse/50">삭제된 댓글입니다</p>
       ) : (
-        <form
-          className="flex items-center gap-2"
-          onSubmit={(event) => {
-            event.preventDefault()
-            const trimmed = draft.trim()
-            if (trimmed && trimmed !== comment.content) onUpdate(comment.commentId, trimmed)
-            setDraft(null)
-          }}
-        >
-          <input
-            type="text"
-            aria-label="댓글 수정 입력"
-            value={draft}
-            maxLength={500}
-            onChange={(event) => {
-              setDraft(event.target.value)
-            }}
-            className="min-w-0 flex-1 rounded-full bg-bg-dark px-4 py-1.5 text-body-14rg text-text-inverse outline-none"
-          />
-          <button type="submit" className="shrink-0 text-body-14rg text-text-inverse">
-            저장
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setDraft(null)
-            }}
-            className="shrink-0 text-body-14rg text-text-inverse opacity-50"
-          >
-            취소
-          </button>
-        </form>
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <span className="text-body-14sb text-text-inverse/50">{comment.nickname}</span>
+          {draft === null ? (
+            <p className="break-words text-body-16md text-text-inverse">{comment.content}</p>
+          ) : (
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault()
+                const trimmed = draft.trim()
+                if (trimmed && trimmed !== comment.content) onUpdate(comment.commentId, trimmed)
+                setDraft(null)
+              }}
+            >
+              <input
+                type="text"
+                aria-label="댓글 수정 입력"
+                value={draft}
+                maxLength={500}
+                onChange={(event) => {
+                  setDraft(event.target.value)
+                }}
+                className="min-w-0 flex-1 rounded-full bg-bg-dark px-4 py-1.5 text-body-14rg text-text-inverse outline-none"
+              />
+              <button type="submit" className="shrink-0 text-body-14rg text-text-inverse">
+                저장
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft(null)
+                }}
+                className="shrink-0 text-body-14rg text-text-inverse opacity-50"
+              >
+                취소
+              </button>
+            </form>
+          )}
+          <div className="flex items-center gap-3 text-body-14rg text-text-inverse/50">
+            <span>{formatTraceDate(comment.createdAt)}</span>
+            {isMine && draft === null && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraft(comment.content)
+                  }}
+                >
+                  수정
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRemove(comment.commentId)
+                  }}
+                >
+                  삭제
+                </button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

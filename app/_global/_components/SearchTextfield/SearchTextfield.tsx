@@ -44,7 +44,7 @@ export function SearchTextfield({
       data-slot="search-textfield"
       data-disabled={disabled ? '' : undefined}
       className={cn(
-        'flex h-14 w-full items-center gap-2 overflow-hidden rounded-2xl bg-bg-surface p-4 transition-opacity data-disabled:cursor-not-allowed data-disabled:opacity-50',
+        'flex h-14 w-full items-center gap-2 overflow-hidden rounded-2xl bg-bg-surface p-4 transition-opacity duration-instant ease-standard data-disabled:cursor-not-allowed data-disabled:opacity-50',
         className,
       )}
     >

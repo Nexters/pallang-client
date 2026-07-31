@@ -1,17 +1,21 @@
 'use client'
 
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
 import { type PointerEvent, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
+import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
 import { DEFAULT_DECORATION_COLOR } from '../../_data/decorationColor.constant'
 import type { EffectOption } from '../../_data/effect.constant'
+import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTextRangeSelection } from '../../_hooks/useTextRangeSelection'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { TextRange } from '../../_services/textRange.service'
 import type { DraftDecoration } from '../../_types/traceDraft.type'
 import { DecorationEditPopover } from '../DecorationEditPopover/DecorationEditPopover'
@@ -21,19 +25,27 @@ import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
 
 export function TraceDecorateForm() {
-  const router = useRouter()
   const { draft, dispatch } = useTraceDraft()
+  const { goBack, goTo } = useTraceNav()
   const [range, setRange] = useState<TextRange | null>(null)
   const [message, setMessage] = useState('')
   const [candidate, setCandidate] = useState<{ passageId: number; quotedText: string } | null>(null)
   const similarCheck = useMutation(passageMutations.similarCheck())
-  const { handlers } = useTextRangeSelection(setRange)
+  // 병합 다이얼로그가 떠 있으면 뒤로가기가 다이얼로그만 닫는다
+  useOverlayBackGuard(candidate !== null, () => {
+    setCandidate(null)
+  })
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { handlers } = useTextRangeSelection(setRange, scrollRef)
   const noteRef = useRef<HTMLDivElement>(null)
   const [editing, setEditing] = useState<{
     decoration: DraftDecoration
     left: number
     top: number
   } | null>(null)
+  // 닫히는 동안 좌표·색이 남아 있어야 팝오버가 제자리에서 줄어들며 사라진다
+  const shownEditing = useLastPresent(editing)
+  const popover = useExitTransition(editing !== null, MOTION_DURATION.fast)
 
   // 이미 효과가 들어간 자리를 누르면 새 범위를 잡는 대신 색·삭제 팝오버를 연다.
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
@@ -64,7 +76,7 @@ export function TraceDecorateForm() {
   }
 
   const goToOpinion = () => {
-    router.push('/trace/new/opinion')
+    goTo('opinion')
   }
 
   const handleNext = () => {
@@ -105,7 +117,8 @@ export function TraceDecorateForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      <div className="bg-bg-default">
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
+      <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepHeader step={2} title={'원하는 영역을 선택하고\n다양한 효과를 적용해보세요'} />
       </div>
       {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
@@ -117,27 +130,32 @@ export function TraceDecorateForm() {
             decorations={draft.decorations}
             pendingRange={range}
             selectable
+            scrollRef={scrollRef}
             {...handlers}
             onPointerDown={handlePointerDown}
           />
-          {editing && (
+          {popover.shouldRender && shownEditing && (
             <DecorationEditPopover
-              color={editing.decoration.color}
-              left={editing.left}
-              top={editing.top}
+              color={shownEditing.decoration.color}
+              left={shownEditing.left}
+              top={shownEditing.top}
+              state={popover.state}
               onClose={() => {
                 setEditing(null)
               }}
               onRecolor={(color) => {
                 dispatch({
                   type: 'recolorDecoration',
-                  startOffset: editing.decoration.startOffset,
+                  startOffset: shownEditing.decoration.startOffset,
                   color,
                 })
-                setEditing({ ...editing, decoration: { ...editing.decoration, color } })
+                setEditing({ ...shownEditing, decoration: { ...shownEditing.decoration, color } })
               }}
               onRemove={() => {
-                dispatch({ type: 'removeDecoration', startOffset: editing.decoration.startOffset })
+                dispatch({
+                  type: 'removeDecoration',
+                  startOffset: shownEditing.decoration.startOffset,
+                })
                 setEditing(null)
               }}
             />
@@ -158,7 +176,7 @@ export function TraceDecorateForm() {
           variant="back"
           className="h-[54px] flex-1"
           onClick={() => {
-            router.back()
+            goBack()
           }}
         >
           뒤로
@@ -166,7 +184,8 @@ export function TraceDecorateForm() {
         <Button
           variant="activated"
           className="h-[54px] flex-1"
-          disabled={draft.decorations.length === 0 || similarCheck.isPending}
+          disabled={draft.decorations.length === 0}
+          loading={similarCheck.isPending}
           onClick={handleNext}
         >
           다음
