@@ -429,8 +429,11 @@ describe('흔적 댓글 인라인 펼침', () => {
     await openFirstTraceComments()
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
 
-    // 인용문 카드를 누르면 다음 대목으로 넘어가 목록이 통째로 갈린다
-    fireEvent.click(screen.getByRole('button', { name: '첫 번째 대목 인용문' }))
+    // 인용문 카드를 옆으로 넘기면 다음 대목으로 이동해 목록이 통째로 갈린다(#131)
+    const card = screen.getByRole('button', { name: '첫 번째 대목 인용문' })
+    fireEvent.touchStart(card, { touches: [{ clientX: 200, clientY: 200 }] })
+    fireEvent.touchMove(card, { touches: [{ clientX: 140, clientY: 200 }] })
+    fireEvent.touchEnd(card, { touches: [] })
 
     // 입력바만 남으면 화면에 보이지도 않는 이전 대목의 흔적에 댓글이 등록된다
     await waitFor(() => {
