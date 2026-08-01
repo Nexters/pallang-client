@@ -2,8 +2,9 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { UIEvent } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import ContentIcon from '@/app/_global/_components/Icon/assets/content.svg'
@@ -95,8 +96,28 @@ function getBookCenterX(index: number): number {
   return FIRST_BOOK_CENTER_X + index * BOOK_GAP
 }
 
+function getBookScrollLeft(index: number): number {
+  return getBookCenterX(index) - FIRST_BOOK_CENTER_X
+}
+
 function getInitialBookIndex(bookCount: number): number {
   return Math.max(0, Math.floor((bookCount - 1) / 2))
+}
+
+function getNearestBookIndex(scrollLeft: number, bookCount: number): number {
+  if (bookCount <= 0) return 0
+
+  const viewportCenterX = scrollLeft + FIRST_BOOK_CENTER_X
+  let closestIndex = 0
+
+  for (let index = 1; index < bookCount; index += 1) {
+    const closestDistance = Math.abs(getBookCenterX(closestIndex) - viewportCenterX)
+    const distance = Math.abs(getBookCenterX(index) - viewportCenterX)
+
+    if (distance < closestDistance) closestIndex = index
+  }
+
+  return closestIndex
 }
 
 function getTrackWidth(bookCount: number): string {
@@ -114,10 +135,10 @@ function dedupeBooks(books: Book[]): Book[] {
 }
 
 export function BookListSection({ onLoadingChange }: BookListSectionProps) {
+  const pathname = usePathname()
   const bookListRef = useRef<HTMLDivElement>(null)
-  const hasCenteredInitialBookRef = useRef(false)
   const pendingFirstBookIdRef = useRef<null | number>(null)
-  const [activeBookIndex, setActiveBookIndex] = useState(0)
+  const [activeBookId, setActiveBookId] = useState<null | number>(null)
   const [layoutOffset, setLayoutOffset] = useState(0)
   const homeCarouselOptions = bookQueries.homeCarousel({ size: PAGE_SIZE })
   const booksQuery = useInfiniteQuery(homeCarouselOptions)
@@ -149,24 +170,63 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
     [pages],
   )
   const totalCount = pages?.[0]?.data?.pageInfo.totalElements ?? 0
+  const activeBookIndex =
+    activeBookId === null ? -1 : books.findIndex((book) => book.bookId === activeBookId)
+  const activeBookIdRef = useRef<null | number>(null)
   const activeBook = books[activeBookIndex] ?? books[getInitialBookIndex(books.length)] ?? books[0]
+
+  useEffect(() => {
+    activeBookIdRef.current = activeBookId
+  }, [activeBookId])
+
+  const syncScrollToBookId = useCallback(
+    (bookId: null | number) => {
+      const scrollContainer = bookListRef.current
+      if (!scrollContainer || bookId === null) return
+
+      const bookIndex = books.findIndex((book) => book.bookId === bookId)
+      if (bookIndex < 0) return
+
+      scrollContainer.scrollLeft = getBookScrollLeft(bookIndex)
+    },
+    [books],
+  )
+
+  const scheduleScrollSyncToActiveBook = useCallback(() => {
+    const syncActiveBookScroll = () => {
+      syncScrollToBookId(activeBookIdRef.current)
+    }
+    const firstFrame = window.requestAnimationFrame(() => {
+      syncActiveBookScroll()
+
+      window.requestAnimationFrame(syncActiveBookScroll)
+    })
+    const timeoutId = window.setTimeout(syncActiveBookScroll, 0)
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame)
+      window.clearTimeout(timeoutId)
+    }
+  }, [syncScrollToBookId])
 
   useEffect(() => {
     onLoadingChange?.(booksQuery.isPending)
   }, [booksQuery.isPending, onLoadingChange])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const scrollContainer = bookListRef.current
-    if (!scrollContainer || books.length === 0 || hasCenteredInitialBookRef.current) return
+    if (!scrollContainer || books.length === 0 || activeBookId !== null) return
 
     const initialBookIndex = getInitialBookIndex(books.length)
-    scrollContainer.scrollLeft = getBookCenterX(initialBookIndex) - FIRST_BOOK_CENTER_X
-    setActiveBookIndex(initialBookIndex)
-    setLayoutOffset((BOOK_LAYOUTS.length - initialBookIndex) % BOOK_LAYOUTS.length)
-    hasCenteredInitialBookRef.current = true
-  }, [books.length])
+    const initialBookId = books[initialBookIndex]?.bookId ?? null
 
-  useEffect(() => {
+    scrollContainer.scrollLeft = getBookScrollLeft(initialBookIndex)
+    activeBookIdRef.current = initialBookId
+    setActiveBookId(initialBookId)
+    setLayoutOffset((BOOK_LAYOUTS.length - initialBookIndex) % BOOK_LAYOUTS.length)
+  }, [activeBookId, books])
+
+  useLayoutEffect(() => {
     const scrollContainer = bookListRef.current
     const pendingFirstBookId = pendingFirstBookIdRef.current
 
@@ -179,7 +239,6 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
     }
 
     scrollContainer.scrollLeft += preservedBookIndex * BOOK_GAP
-    setActiveBookIndex((index) => index + preservedBookIndex)
     setLayoutOffset(
       (offset) =>
         (offset - (preservedBookIndex % BOOK_LAYOUTS.length) + BOOK_LAYOUTS.length) %
@@ -188,17 +247,19 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
     pendingFirstBookIdRef.current = null
   }, [books])
 
+  useEffect(() => {
+    if (pathname !== '/') return undefined
+
+    return scheduleScrollSyncToActiveBook()
+  }, [pathname, scheduleScrollSyncToActiveBook])
+
   const handleBookListScroll = (event: UIEvent<HTMLDivElement>) => {
     const scrollContainer = event.currentTarget
-    const viewportCenterX = scrollContainer.scrollLeft + FIRST_BOOK_CENTER_X
-    const nextActiveIndex = books.reduce((closestIndex, _book, index) => {
-      const closestDistance = Math.abs(getBookCenterX(closestIndex) - viewportCenterX)
-      const distance = Math.abs(getBookCenterX(index) - viewportCenterX)
+    const nextActiveIndex = getNearestBookIndex(scrollContainer.scrollLeft, books.length)
+    const nextActiveBookId = books[nextActiveIndex]?.bookId ?? null
 
-      return distance < closestDistance ? index : closestIndex
-    }, 0)
-
-    setActiveBookIndex(nextActiveIndex)
+    activeBookIdRef.current = nextActiveBookId
+    setActiveBookId(nextActiveBookId)
 
     if (nextActiveIndex <= 1 && hasPreviousPage && !isFetchingPreviousPage && !isFetchingNextPage) {
       pendingFirstBookIdRef.current = books[0]?.bookId ?? null
