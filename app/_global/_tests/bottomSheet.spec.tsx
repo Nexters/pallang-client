@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -61,5 +61,18 @@ describe('BottomSheet', () => {
     await userEvent.click(backdrop)
 
     expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('열려도 닫기 버튼이 아니라 시트 자신이 포커스를 갖는다', async () => {
+    render(
+      <BottomSheet open title="제목" onClose={vi.fn()}>
+        <p>본문</p>
+      </BottomSheet>,
+    )
+
+    // 첫 tabbable(닫기 버튼)에 포커스가 가면 열자마자 링이 보인다
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toHaveFocus()
+    })
   })
 })

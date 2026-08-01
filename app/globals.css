@@ -191,6 +191,14 @@
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); /* 등장 — 빠르게 나와 부드럽게 안착 */
   --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* 퇴장 — 가속하며 사라짐 */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* 상태 전환 — 색·투명도·프레스 */
+
+  /* Motion — 반복(loop). --animate-*도 Tailwind v4 테마 네임스페이스라 빌트인 값을 덮을 수 있다.
+     빌트인은 duration이 선언에 박혀 있어(spin 1s) 움직임 축소 정책이 닿지 않는다 —
+     아래 --loop-duration-* 를 태워서 반복도 토큰을 거치게 만든다.
+     easing은 회전이 등속이어야 하고(linear) 펄스는 빌트인 곡선이 그 파형에 맞춰져 있어
+     --ease-* 토큰으로 갈아끼우지 않는다. 이 둘은 등장/퇴장이 아니라 파형의 일부다. */
+  --animate-spin: spin var(--loop-duration-spin) linear infinite;
+  --animate-pulse: pulse var(--loop-duration-pulse) cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Motion — duration.
@@ -204,16 +212,30 @@
   --duration-slow: 350ms;
 }
 
+/* Motion — 반복(loop) duration. 위 --duration-* 와 이름을 나눈 이유는 움직임 축소에서 갈 곳이 다르기 때문이다.
+   유한한 전환에 1ms는 "즉시 끝"이지만, 무한 반복에 1ms를 주면 멈추는 게 아니라 초당 1000바퀴 스트로브가 된다.
+   반복을 쓰는 곳은 스피너(처리 중)와 스켈레톤(불러오는 중) 둘뿐이고 둘 다 상태 정보라, 값만 다르게 준다. */
+:root {
+  --loop-duration-spin: 800ms;
+  --loop-duration-pulse: 2000ms;
+}
+
 /* 움직임 축소 설정에서는 전환을 즉시 끝낸다.
    0ms가 아니라 1ms인 이유는 base-ui가 퇴장 완료를 전환 종료로 판정하기 때문이다 — 0이면 판정이 걸리지 않는다.
    이 정책이 성립하려면 등장/퇴장을 transition으로만 구현해야 한다. @keyframes는 duration이
-   애니메이션 선언에 박혀 있어 변수 하나로 무력화되지 않는다. */
+   애니메이션 선언에 박혀 있어 변수 하나로 무력화되지 않는다 — 그래서 반복은 빌트인 두 개(spin·pulse)로
+   묶고 그 duration을 위 --loop-duration-* 로 빼두었다. */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-instant: 1ms;
     --duration-fast: 1ms;
     --duration-normal: 1ms;
     --duration-slow: 1ms;
+
+    /* 반복은 끄지 않고 늦춘다 — 멈추면 "처리 중"이라는 정보가 사라져 앱이 멎은 것으로 읽힌다.
+       어지럼증을 부르는 건 반복 자체가 아니라 빠른 회전이라, 속도만 떨어뜨려도 목적은 달성된다. */
+    --loop-duration-spin: 2400ms;
+    --loop-duration-pulse: 4000ms;
   }
 }
 

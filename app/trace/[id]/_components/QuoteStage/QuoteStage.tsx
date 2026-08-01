@@ -1,6 +1,10 @@
+import { useRef } from 'react'
+
 import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
 import { cn } from '@/app/_global/_services/cn.service'
+import { DecoratedQuote } from '@/app/_shared/trace/_components/DecoratedQuote/DecoratedQuote'
 
+import { useQuoteSwipe } from '../../_hooks/useQuoteSwipe'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { PageTabs } from '../PageTabs/PageTabs'
 import { QuoteIndicator } from '../QuoteIndicator/QuoteIndicator'
@@ -17,7 +21,11 @@ export function QuoteStage({
   onSelectPage,
   onLoadMorePages,
   onClickQuote,
+  onSwipeQuote,
+  onAddTrace,
 }: QuoteStageProps) {
+  const cardRef = useRef<HTMLButtonElement>(null)
+  useQuoteSwipe(cardRef, onSwipeQuote)
   const activeQuote = highlight.quotes[quoteIndex]
   // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
   const isCovered = Boolean(activeQuote?.isSpoiler) && !isRevealed
@@ -28,7 +36,11 @@ export function QuoteStage({
       {/* 펼친 상태 흰 배경 — 진행에 따라 걷힌다 */}
       <div className="absolute inset-0 bg-bg-default opacity-[var(--inv)]" />
       <div className={cn(styles['banner'], 'absolute inset-x-0 top-0 bg-orange-500')} />
-      <TraceHeader title={title} className="absolute inset-x-0 top-(--safe-top)" />
+      <TraceHeader
+        title={title}
+        onAddTrace={onAddTrace}
+        className="absolute inset-x-0 top-(--safe-top)"
+      />
       {/* 완전히 투명해진 뒤에도 초점이 남지 않도록 전환이 끝나면 언마운트한다 */}
       {!isCollapsed && (
         <div
@@ -46,14 +58,27 @@ export function QuoteStage({
           />
         </div>
       )}
+      {/* 대목 이동은 카드 위 좌우 스와이프가 맡는다.
+          터치가 없는 환경에는 제스처를 대신할 입구가 없으므로 좌우 방향키를 함께 받는다 */}
       <button
+        ref={cardRef}
         type="button"
         onClick={onClickQuote}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+          event.preventDefault()
+          onSwipeQuote(event.key === 'ArrowRight' ? 'next' : 'prev')
+        }}
         className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
       >
-        <p className="min-h-0 flex-1 overflow-hidden text-body-20md text-text-secondary">
-          {activeQuote?.text ?? ''}
-        </p>
+        {/* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
+            반각 여백은 5px뿐이라 첫 줄·끝 줄이 잘린다). 음수 마진과 같은 크기의 패딩으로
+            글자 위치와 차지하는 자리는 그대로 두고 overflow에 잘리는 경계만 넓힌다 */}
+        <DecoratedQuote
+          quotedText={activeQuote?.text ?? ''}
+          decorations={activeQuote?.decorations ?? []}
+          className="text-body-20md -m-4 min-h-0 flex-1 overflow-hidden p-4 text-text-secondary"
+        />
         {isCovered && (
           <span
             className={cn(

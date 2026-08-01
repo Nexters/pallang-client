@@ -10,6 +10,8 @@ import { TraceItem } from '../TraceItem/TraceItem'
 type TraceListSectionProps = {
   traces: Trace[]
   traceCount: number
+  /** 스포일러 대목이 가림막 해제 전일 때 목록을 블러 처리한다 */
+  isMasked: boolean
   sortType: OpinionSortType
   /** 댓글이 펼쳐진 흔적 — 아코디언이라 한 번에 하나만 열린다 */
   openCommentOpinionId: number | null
@@ -23,6 +25,7 @@ type TraceListSectionProps = {
 export function TraceListSection({
   traces,
   traceCount,
+  isMasked,
   sortType,
   openCommentOpinionId,
   onToggleSort,
@@ -50,12 +53,18 @@ export function TraceListSection({
           <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
+      {/* 로딩 골격(TracePageSkeleton)과 구분되도록 빈 목록임을 말로 알린다 */}
       {traces.length === 0 && (
         <p className="flex flex-1 items-center justify-center px-4 pb-10 text-center text-title-18md text-text-inverse/70">
           아직 남겨진 흔적이 없어요!
         </p>
       )}
-      <ul className="flex flex-col px-4 pb-10">
+      {/* inert: 블러는 그림일 뿐이라 키보드·보조기기로는 가려진 흔적에 그대로 닿는다.
+          pointer-events-none과 달리 포커스까지 막아 상세 오버레이로 새는 길을 함께 끊는다. */}
+      <ul
+        inert={isMasked}
+        className={cn('flex flex-col px-4 pb-10', isMasked && 'blur-md select-none')}
+      >
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}

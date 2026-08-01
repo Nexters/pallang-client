@@ -4,6 +4,8 @@
 import type { PageInfo } from './pageInfo'
 
 export interface PageNumbers {
+  bookTitle: string
+  coverImageUrl?: string
   pageNumbers: number[]
   pageInfo: PageInfo
 }

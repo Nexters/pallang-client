@@ -21,7 +21,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## 디렉토리 규칙
 
 - `app/_global/` — 앱 전역 코드. 하위 폴더: `_providers/ _components/ _hooks/ _services/ _queries/ _apis/ _data/ _styles/`.
-- `app/_shared/<domain>/` — 2개 이상 route에서 실제 재사용하는 도메인 공용 코드. 하위 폴더: `_components/ _hooks/ _data/`.
+- `app/_shared/<domain>/` — 2개 이상 route에서 실제 재사용하는 도메인 공용 코드. 하위 폴더: `_components/ _hooks/ _services/ _data/ _tests/`.
 - `app/<kebab-route>/` — 특정 route 전용 코드. 하위 폴더: `_components/ _hooks/ _services/ _data/ _actions/ _types/ _tests/`.
 - 기본 배치: route-local 우선. 실제 재사용 시 `_shared`, 앱 전역 인프라는 `_global`.
 - 공용 코드 배치: route 트리의 최소 공통 부모가 아니라 `app/_shared/<domain>/`로 이동.
@@ -52,6 +52,16 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **테스트 금지 패턴** — `describe.only`/`it.only`/`.skip`/주석 처리한 테스트를 커밋하지 않는다.
 - **컴포넌트 구조** — 컴포넌트 폴더 내부에 `_hooks/`, `_services/` 같은 프라이빗 폴더를 중첩하지 않는다.
 - **컴포넌트 네이밍** — 컴포넌트 파일명과 폴더명은 `PascalCase`로 맞춘다.
+
+## 로딩 화면
+
+**데이터를 기다리는 동안 화면을 비우지 않는다.** 비면 루트 배경(`bg-bg-dark`)이 드러나 전환할 때마다 번쩍인다.
+
+- **셸은 로딩 분기 바깥에 둔다** — 레이아웃·탭바·헤더는 데이터를 기다릴 이유가 없다. `if (isPending) return null`로 화면 전체를 지우지 말고, 셸은 그대로 두고 데이터가 필요한 안쪽만 골격으로 채운다. 셸을 분기 안쪽에 두면 탭바까지 사라진다(`myPageShell.spec.tsx`가 이 회귀를 잠근다).
+- **골격 조각은 `_components/Skeleton`을 쓴다** — 크기·모양은 `className`으로 정하고, 어두운 면에 얹을 때만 `tone="dark"`를 준다. 색을 직접 고르면 같은 배경에서 세기가 갈린다.
+- **`<Suspense>`에 fallback을 반드시 준다** — 비워두면 PPR 셸이 빈 채로 나가, 직접 진입에서는 빈 화면이 뜨고 링크 이동에서는 이전 화면이 멈춘 것처럼 보인다(`tracePageFallback.spec.tsx`).
+- 골격은 실제 화면과 **같은 좌표**를 쓴다. 수치가 상수로 있으면 그 상수를 가져다 쓴다(`TracePageSkeleton`이 `quoteCollapse.service`의 값을 그대로 쓰는 식) — 도착했을 때 자리가 튀지 않는다.
+- 골격은 움직이지 않는다. 반복 애니메이션이 필요하면 모션 섹션의 `animate-pulse`만 쓴다.
 
 ## 이슈 / 브랜치 / PR 컨벤션
 
@@ -95,10 +105,21 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 모션 (애니메이션 토큰)
 
+**원칙은 하나다 — 모든 움직임의 duration은 토큰을 거친다.** 움직임 축소 대응(`@media (prefers-reduced-motion)`)이 토큰을 덮어쓰는 것만으로 동작하기 때문이다. 토큰을 안 거치는 움직임은 그 설정을 켠 사용자에게 그대로 남는다. 그래서 움직임을 두 종류로 나눠 관리한다.
+
+**① 유한한 전환 (등장·퇴장·색·프레스)** — `transition`으로 만든다.
+
 - duration·easing은 `globals.css`의 토큰만 쓴다. `duration-200`, `ease-[cubic-bezier(...)]` 같은 임의값은 금지다 — `motionConvention.spec.ts`가 `app/**/*.tsx`를 훑어 막는다.
   - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달·바텀시트) · `duration-slow`(350ms 전체화면 전환)
   - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환)
-- **`@keyframes` / `animate-*`를 새로 만들지 않는다.** 움직임 축소 대응이 `@media (prefers-reduced-motion) { :root { --duration-*: 1ms } }` 로 동작하므로, duration이 선언에 박히는 keyframes는 이 정책을 빠져나간다. 등장/퇴장은 전부 `transition`으로 만든다.
+- 움직임 축소에서 이 토큰들은 **1ms로 떨어진다** = 즉시 끝.
+
+**② 무한 반복 (처리 중·불러오는 중)** — `animate-spin`(스피너) · `animate-pulse`(스켈레톤) **둘만** 쓴다.
+
+- 반복은 `transition`으로 표현할 수 없어 keyframes가 유일한 수단이다. 그래서 금지하는 대신 빌트인 둘로 묶고, `globals.css`가 `--animate-spin`/`--animate-pulse`를 덮어 duration을 `--loop-duration-spin`(800ms) / `--loop-duration-pulse`(2000ms)로 빼두었다(Tailwind v4에서 `--animate-*`가 테마 네임스페이스라 가능하다).
+- 움직임 축소에서 반복 토큰은 1ms가 아니라 **느려진다**(2400ms / 4000ms). 무한 반복에 1ms를 주면 멈추는 게 아니라 스트로브가 되고, 아예 멈추면 "처리 중"이라는 상태 정보가 사라져 앱이 멎은 것으로 읽히기 때문이다.
+- **셋째 반복 애니메이션을 만들지 않는다.** `@keyframes`를 새로 정의하는 것도, `animate-[...]` 임의값도 막혀 있다 — 토큰 연결이 없는 움직임이 생긴다. `motionConvention.spec.ts`가 이름과 **토큰 연결 여부**를 함께 검사하고, `motionToken.spec.ts`가 움직임 축소에서 느려지는지를 잠근다.
+- 버튼 안 로딩 표시는 직접 만들지 말고 `Button`의 `loading` prop을 쓴다(`_components/Spinner`를 라벨 자리에 겹친다).
 - **Tailwind v4에서 `scale-*` / `translate-*`는 `transform`이 아니라 `scale` / `translate` 속성으로 컴파일된다.** `transition-[opacity,transform]`으로는 크기·이동이 전혀 전환되지 않는다. `transition-[opacity,scale]`처럼 실제 속성 이름을 쓰거나 `transition-transform`(네 속성을 모두 포함)을 쓴다.
 - JS에서 duration이 필요하면 `app/_global/_data/motion.constant.ts`의 `MOTION_DURATION`을 쓴다. CSS와 값이 어긋나면 `motionToken.spec.ts`가 잡는다.
 - **모달·바텀시트는 새로 만들지 않는다.** `_components/Dialog`(중앙 모달)와 `_components/BottomSheet`(하단 시트)를 쓴다. 둘 다 base-ui 위에 있어 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘이 딸려 온다. `fixed inset-0`으로 직접 오버레이를 만들지 말 것.

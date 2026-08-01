@@ -5,8 +5,7 @@ import { useEffect, useRef } from 'react'
 import TrashIcon from '@/app/_global/_components/Icon/assets/trash.svg'
 import type { ExitTransitionState } from '@/app/_global/_hooks/useExitTransition'
 import { cn } from '@/app/_global/_services/cn.service'
-
-import { DECORATION_COLORS } from '../../_data/decorationColor.constant'
+import { DECORATION_COLORS } from '@/app/_shared/trace/_data/decorationColor.constant'
 
 type DecorationEditPopoverProps = {
   color: string

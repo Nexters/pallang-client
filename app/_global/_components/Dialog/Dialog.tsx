@@ -2,7 +2,7 @@
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
 import Image from 'next/image'
-import type { ComponentProps } from 'react'
+import { type ComponentProps, useRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -61,12 +61,33 @@ function Viewport({ className, ...props }: ComponentProps<typeof BaseDialog.View
 }
 
 // 카드 본체. 일러스트가 위로 삐져나오므로 relative만 두고 overflow는 자르지 않는다.
-function Popup({ className, ...props }: ComponentProps<typeof BaseDialog.Popup>) {
+function Popup({
+  className,
+  initialFocus,
+  ref,
+  ...props
+}: ComponentProps<typeof BaseDialog.Popup>) {
+  // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 팝업 안 첫 tabbable 요소를
+  // 잡는다 — 열자마자 첫 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡아 링을 없앤다.
+  // `false`(포커스 이동 안 함)는 쓰지 않는다 — 모달이 바깥을 aria-hidden 처리하므로
+  // 포커스가 숨겨진 영역에 남아 스크린리더·탭 순서가 깨진다.
+  const popupRef = useRef<HTMLDivElement>(null)
+
   return (
     <BaseDialog.Popup
       data-slot="dialog-popup"
+      ref={(node) => {
+        popupRef.current = node
+        // 조합형이라 바깥에서 ref를 받을 수 있다. 콜백 ref는 정리 함수를 돌려줄 수 있어 그대로 넘긴다.
+        if (typeof ref === 'function') return ref(node)
+        if (ref) ref.current = node
+        return undefined
+      }}
+      initialFocus={initialFocus ?? popupRef}
       className={cn(
         'relative flex w-full max-w-[343px] flex-col gap-6 rounded-[32px] bg-bg-default px-4 pt-[46px] pb-6',
+        // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
+        'outline-none',
         // 등장은 넉넉하게, 퇴장은 짧게 — 사라지는 걸 기다리게 하지 않는다
         // Tailwind v4의 scale-*는 transform이 아니라 scale 속성으로 컴파일된다 —
         // transition-property에 transform을 적으면 크기가 전환 없이 점프한다

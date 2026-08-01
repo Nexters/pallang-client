@@ -20,9 +20,10 @@ export function MyPageContent() {
 
   const me = data?.data
 
-  // 인증 상태 판별 전/프로필 로딩 중에는 화면 전환 깜빡임을 막기 위해 렌더하지 않는다.
-  // 조회 실패(서버 미기동 등) 시에는 빈 화면 대신 비로그인 화면으로 폴백한다.
-  if (status === 'loading' || (isAuthenticated && !me && !isError)) return null
+  // 인증 판별 전이거나 프로필을 기다리는 구간. 예전에는 여기서 null을 반환했는데,
+  // 그러면 화면 셸(TabScreenLayout·탭바)까지 사라져 루트 배경이 드러나며 번쩍였다.
+  // 조회 실패(서버 미기동 등) 시에는 기다리지 않고 비로그인 화면으로 폴백한다.
+  const isPending = status === 'loading' || (isAuthenticated && !me && !isError)
 
   const user =
     isAuthenticated && me
@@ -39,6 +40,7 @@ export function MyPageContent() {
   return (
     <MyPageView
       user={user}
+      isPending={isPending}
       recentTraces={recentTraces}
       onLoginClick={() => {
         router.push(LOGIN_PATH)

@@ -14,12 +14,15 @@ export function useLoginGateState() {
   const { isAuthenticated } = useAuth()
   const [gateMessage, setGateMessage] = useState<string | null>(null)
 
+  // 실행 여부를 돌려준다 — 게이트에 막힌 액션(예: 댓글 등록)이 입력한 내용을 지우지 않으려면
+  // "아무 일도 없었다"를 호출부가 알아야 한다
   const runWithLogin = (action: () => void, message?: string) => {
     if (isAuthenticated) {
       action()
-      return
+      return true
     }
     setGateMessage(message ?? DEFAULT_LOGIN_GATE_MESSAGE)
+    return false
   }
 
   const login = () => {

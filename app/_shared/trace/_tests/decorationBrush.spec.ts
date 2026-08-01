@@ -2,20 +2,14 @@ import { readdirSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
+import type { EffectType } from '../_data/decoration.model'
 import { DECORATION_COLORS } from '../_data/decorationColor.constant'
 import { decorationBrushStyle } from '../_services/decorationBrush.service'
-import type { DraftEffectType } from '../_types/traceDraft.type'
 
 // 형광펜은 붓 자국이 아니라 반투명 띠라 파일을 쓰지 않는다
-const BRUSH_EFFECT_TYPES: DraftEffectType[] = [
-  'CIRCLE',
-  'DOTTED',
-  'DOUBLE_LINE',
-  'UNDERLINE',
-  'WAVY',
-]
+const BRUSH_EFFECT_TYPES: EffectType[] = ['CIRCLE', 'DOTTED', 'DOUBLE_LINE', 'UNDERLINE', 'WAVY']
 
-const decoration = (effectType: DraftEffectType, color: string) => ({
+const decoration = (effectType: EffectType, color: string) => ({
   color,
   effectType,
   endOffset: 5,

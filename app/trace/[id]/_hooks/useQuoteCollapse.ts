@@ -118,6 +118,11 @@ export function useQuoteCollapse(scrollerRef: RefObject<HTMLDivElement | null>) 
     const isFromOverlay = (event: Event) =>
       event.target instanceof Element && event.target.closest('[role="dialog"]') !== null
 
+    // 카드에서 가로로 축이 잡힌 제스처는 대목 스와이프(useQuoteSwipe)의 것이다.
+    // 대각선 드래그 한 번이 접힘과 대목 이동을 동시에 일으키지 않도록 양보한다
+    const isFromCardSwipe = (event: Event) =>
+      event.target instanceof Element && event.target.closest('[data-swiping="true"]') !== null
+
     const handleWheel = (event: WheelEvent) => {
       if (isAnimatingRef.current || isFromOverlay(event)) return
       const intent = getTransitionIntent({
@@ -143,7 +148,7 @@ export function useQuoteCollapse(scrollerRef: RefObject<HTMLDivElement | null>) 
     }
 
     const handleTouchMove = (event: TouchEvent) => {
-      if (isAnimatingRef.current || touchHandledRef.current) return
+      if (isAnimatingRef.current || touchHandledRef.current || isFromCardSwipe(event)) return
       const y = event.touches[0]?.clientY
       if (y === undefined) return
       const intent = getTransitionIntent({
