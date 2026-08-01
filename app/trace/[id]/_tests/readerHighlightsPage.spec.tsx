@@ -162,6 +162,15 @@ async function waitForCollapseAnimation() {
   })
 }
 
+/** 카드 위 좌우 스와이프 — 축이 가로로 잡히고 이동 임계를 넘길 만큼 끈다.
+    리스너는 카드 버튼에 네이티브로 달려 있어 안쪽 인용문에서 시작해도 버블링으로 전달된다 */
+function swipeCard(element: Element, direction: 'next' | 'prev') {
+  const endX = direction === 'next' ? 140 : 260
+  fireEvent.touchStart(element, { touches: [{ clientX: 200, clientY: 200 }] })
+  fireEvent.touchMove(element, { touches: [{ clientX: endX, clientY: 200 }] })
+  fireEvent.touchEnd(element, { touches: [] })
+}
+
 /** 관찰 중인 sentinel이 모두 화면에 들어온 것처럼 만든다 */
 function scrollSentinelsIntoView() {
   act(() => {
@@ -249,11 +258,110 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
   })
 
-  it('카드 인용문은 페이지별 대목 조회 API로 채우고, 클릭하면 다음 인용문으로 넘어간다', async () => {
+  it('카드 인용문은 페이지별 대목 조회 API로 채우고, 좌우로 스와이프하면 다음 인용문으로 넘어간다', async () => {
+    await renderPage()
+
+    const firstQuote = await screen.findByText('첫 번째 대목 인용문')
+    swipeCard(firstQuote, 'next')
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+
+    swipeCard(screen.getByText('두 번째 대목 인용문'), 'prev')
+    expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('카드를 누르는 것만으로는 대목이 넘어가지 않는다 — 탭은 가림막 해제 몫이다', async () => {
     await renderPage()
 
     const firstQuote = await screen.findByText('첫 번째 대목 인용문')
     fireEvent.click(firstQuote)
+
+    expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
+    expect(screen.queryByText('두 번째 대목 인용문')).not.toBeInTheDocument()
+  })
+
+  it('터치가 없는 환경을 위해 좌우 방향키로도 대목을 옮긴다', async () => {
+    await renderPage()
+
+    const firstQuote = await screen.findByText('첫 번째 대목 인용문')
+    fireEvent.keyDown(firstQuote, { key: 'ArrowRight' })
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+
+    fireEvent.keyDown(screen.getByText('두 번째 대목 인용문'), { key: 'ArrowLeft' })
+    expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('페이지의 마지막 대목에서 넘기면 다음 페이지의 첫 대목으로 이어진다', async () => {
+    await renderPage()
+
+    swipeCard(await screen.findByText('첫 번째 대목 인용문'), 'next')
+    swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
+
+    // 9p의 유일한 대목은 스포일러라 가림막부터 나온다
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '9p' })).toHaveClass('bg-bg-dark')
+  })
+
+  it('페이지의 첫 대목에서 뒤로 넘기면 이전 페이지의 마지막 대목으로 이어진다', async () => {
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    const spoilerCover = await screen.findByText('스포일러가 포함되어있어요!')
+
+    swipeCard(spoilerCover, 'prev')
+
+    expect(await screen.findByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '7p' })).toHaveClass('bg-bg-dark')
+  })
+
+  it('대목을 넘기면 열려 있던 댓글 입력바가 함께 닫힌다', async () => {
+    await renderPage()
+    await screen.findByText('첫 대목의 첫 번째 흔적')
+
+    const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
+    if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
+    fireEvent.click(toggle)
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+
+    swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
+
+    // 입력바는 blur 바깥의 fixed라, 남으면 목록에 없는 흔적에 댓글을 달 수 있다
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+  })
+
+  it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
+    await renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    // 가림막 문구는 즉시 뜨지만 흔적 목록은 조회가 끝나야 그려진다
+    await screen.findByText('스포일러 대목의 흔적')
+
+    const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
+    if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
+    fireEvent.click(toggle)
+
+    // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+  })
+
+  it('책의 첫 대목에서 뒤로 넘겨도 끝으로 돌아가지 않는다', async () => {
+    await renderPage()
+
+    const firstQuote = await screen.findByText('첫 번째 대목 인용문')
+    swipeCard(firstQuote, 'prev')
+
+    expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '7p' })).toHaveClass('bg-bg-dark')
+  })
+
+  it('비로그인 시 스와이프로 페이지를 넘으려 해도 로그인 유도 팝업이 뜬다', async () => {
+    authState.isAuthenticated = false
+    await renderPage()
+
+    swipeCard(await screen.findByText('첫 번째 대목 인용문'), 'next')
+    swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
+
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
     expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
   })
 
@@ -305,7 +413,7 @@ describe('ReaderHighlightsPage', () => {
   it('인용문을 전환하면 해당 대목의 흔적 목록으로 갱신된다', async () => {
     await renderPage()
 
-    fireEvent.click(await screen.findByText('첫 번째 대목 인용문'))
+    swipeCard(await screen.findByText('첫 번째 대목 인용문'), 'next')
     expect(await screen.findByText('두 번째 대목의 흔적')).toBeInTheDocument()
     expect(screen.queryByText('첫 대목의 첫 번째 흔적')).not.toBeInTheDocument()
   })
@@ -385,7 +493,7 @@ describe('ReaderHighlightsPage', () => {
     const normalQuote = await screen.findByText('혼재 페이지의 일반 대목 인용문')
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
 
-    fireEvent.click(normalQuote)
+    swipeCard(normalQuote, 'next')
     expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
     expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
   })
@@ -465,6 +573,38 @@ describe('ReaderHighlightsPage', () => {
 
     expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
     expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
+  })
+
+  it('접힌 상태에서도 좌우 스와이프로 대목을 넘긴다 — 흔적 목록이 함께 갱신된다', async () => {
+    const scroller = await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    fireEvent.wheel(scroller, { deltaY: 120 })
+    await waitForCollapseAnimation()
+
+    swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
+
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(await screen.findByText('두 번째 대목의 흔적')).toBeInTheDocument()
+    // 접힘 상태는 유지된다 — 대목만 바뀐다
+    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
+  })
+
+  it('접힌 상태에서 페이지를 넘기면 다시 펼쳤을 때 탭이 그 페이지에 맞춰져 있다', async () => {
+    const scroller = await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    fireEvent.wheel(scroller, { deltaY: 120 })
+    await waitForCollapseAnimation()
+
+    swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
+    swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+
+    fireEvent.wheel(scroller, { deltaY: -120 })
+    await waitForCollapseAnimation()
+
+    expect(screen.getByRole('button', { name: '9p' })).toHaveClass('bg-bg-dark')
   })
 
   it('목록 최상단에서 위로 스크롤하면 펼침으로 돌아와 페이지 탭이 다시 보인다', async () => {

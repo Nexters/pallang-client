@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -15,6 +15,26 @@ type PageTabsProps = {
 export function PageTabs({ pages, activePage, onSelect, onLoadMore, className }: PageTabsProps) {
   const scrollRef = useRef<HTMLElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const activeRef = useRef<HTMLButtonElement>(null)
+
+  // 스와이프로 페이지가 바뀌면 활성 탭이 화면 밖에 있을 수 있다.
+  // scrollIntoView는 조상까지 스크롤해 접힘 전환을 건드리므로 이 탭 스크롤러만 직접 움직인다
+  useEffect(() => {
+    const scroller = scrollRef.current
+    const button = activeRef.current
+    if (!scroller || !button) return
+    const scrollerBox = scroller.getBoundingClientRect()
+    const buttonBox = button.getBoundingClientRect()
+    const offset = buttonBox.left - scrollerBox.left - (scrollerBox.width - buttonBox.width) / 2
+    // smooth의 duration은 브라우저 소유라 모션 토큰을 거치지 못한다 — 축소 설정에서는 즉시 이동시킨다
+    const prefersReducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    scroller.scrollTo({
+      left: scroller.scrollLeft + offset,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    })
+  }, [activePage])
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
@@ -37,6 +57,7 @@ export function PageTabs({ pages, activePage, onSelect, onLoadMore, className }:
       {pages.map((page) => (
         <button
           key={page}
+          ref={page === activePage ? activeRef : undefined}
           type="button"
           onClick={() => {
             onSelect(page)

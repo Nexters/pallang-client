@@ -104,6 +104,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
             onSelectPage={stage.selectPage}
             onLoadMorePages={stage.loadMorePages}
             onClickQuote={stage.clickQuote}
+            onSwipeQuote={stage.swipeQuote}
             onAddTrace={() => {
               // 헤더의 +는 이 책에 '새 대목'을 남기는 자리라 대목을 물리지 않는다
               goCreateTrace(null)
