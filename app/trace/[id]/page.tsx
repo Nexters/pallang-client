@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 
 import { TracePrefetchBoundary } from './_components/TracePrefetchBoundary/TracePrefetchBoundary'
+import { TraceScreenSkeleton } from './_components/TraceScreenSkeleton/TraceScreenSkeleton'
 
 type ReaderHighlightsPageProps = {
   params: Promise<{ id: string }>
@@ -11,7 +12,7 @@ type ReaderHighlightsPageProps = {
 export default function ReaderHighlightsPage({ params }: ReaderHighlightsPageProps) {
   // params/쿠키 접근은 Suspense 안쪽(TracePrefetchBoundary)으로 미룬다 — 셸은 프리렌더되고 데이터만 스트리밍된다
   return (
-    <Suspense>
+    <Suspense fallback={<TraceScreenSkeleton />}>
       <TracePrefetchBoundary params={params} />
     </Suspense>
   )

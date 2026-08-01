@@ -50,6 +50,11 @@ export function TraceListSection({
           <ChevronDownIcon width={20} height={20} className="text-icon-active" />
         </button>
       </div>
+      {traces.length === 0 && (
+        <p className="flex flex-1 items-center justify-center px-4 pb-10 text-center text-title-18md text-text-inverse/70">
+          아직 남겨진 흔적이 없어요!
+        </p>
+      )}
       <ul className="flex flex-col px-4 pb-10">
         {traces.map((trace, index) => (
           <li
