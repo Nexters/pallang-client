@@ -48,6 +48,13 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
   // 스포일러는 대목 단위다(#49) — 스테이지 가림막과 같은 조건으로 목록도 가리고, 해제하면 함께 열린다
   const isTraceListMasked = Boolean(stage.activePassage?.isSpoiler) && !stage.isRevealed
 
+  // 가림막이 다시 씌워지면(같은 페이지 탭을 다시 눌러 해제가 풀리는 경우) passageId는 그대로라
+  // 위의 대목 전환 리셋에 걸리지 않는다. 목록만 흐려지고 입력바가 남으면 더는 읽을 수 없는 흔적에
+  // 댓글을 쓸 수 있으므로, 가려지는 순간 펼친 댓글과 입력바를 함께 닫는다.
+  if (isTraceListMasked && openCommentOpinionId !== null) {
+    setOpenCommentOpinionId(null)
+  }
+
   /**
    * 흔적 작성은 꾸밈을 반드시 하나 이상 요구해서(createOpinion) 이 화면에서 바로 등록할 수 없다.
    * 작성 플로우로 보내되, 초안은 그 route 안에서만 사는 Context라 씨앗을 URL로 넘긴다.
