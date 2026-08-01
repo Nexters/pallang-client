@@ -287,7 +287,9 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
                     className={`absolute flex -translate-x-1/2 items-center justify-center ${className}`}
                     style={{ left: `${String(getBookCenterX(index))}px` }}
                   >
-                    <div
+                    <Link
+                      href={`/trace/${String(book.bookId)}`}
+                      aria-label={`${book.title} 흔적 보기`}
                       className={`relative h-68.5 w-44.25 overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)] ${rotationClassName}`}
                       style={
                         book.coverImageUrl
@@ -300,7 +302,7 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
                       }
                     >
                       <span className="sr-only">{book.title} 표지</span>
-                    </div>
+                    </Link>
                   </div>
                 )
               })}
@@ -312,7 +314,7 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
       <div className="flex w-full flex-col items-center gap-4">
         <div className="flex w-full flex-col items-center gap-2 text-center">
           <h2 className="line-clamp-2 w-full px-6 text-title-24bd text-text-primary">{title}</h2>
-          <p className="w-full text-body-16md text-text-secondary">{author}</p>
+          <p className="w-full truncate px-6 text-body-16md text-text-secondary">{author}</p>
         </div>
 
         <div className="flex items-center justify-center gap-2">
