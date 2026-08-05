@@ -13,10 +13,11 @@ import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 const loggedInSettings = [
   '공지사항',
   '배경 변경',
-  '스포일러 관리',
+  // 백엔드 API가 아직 없는 기능 — 스펙이 생기면 다시 노출한다
+  // '스포일러 관리',
   '내가 남긴 흔적',
   '좋아요 누른 흔적',
-  '알림 설정',
+  // '알림 설정',
   '차단 관리',
 ]
 const loggedOutSettings = ['공지사항', '개인정보 처리 방침', '서비스 이용약관']
