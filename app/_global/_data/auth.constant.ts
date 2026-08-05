@@ -1,4 +1,4 @@
-// 카카오 로그인 / 인증 관련 상수.
+// 카카오·애플 로그인 / 인증 관련 상수.
 
 // 웹 카카오 로그인 콜백 경로. authorize의 redirect_uri와 토큰 교환의 redirect_uri가 반드시 일치해야 한다.
 export const KAKAO_CALLBACK_PATH = '/auth/kakao/callback'
@@ -15,6 +15,10 @@ export const KAKAO_TOKEN_URL = 'https://kauth.kakao.com/oauth/token'
 
 // state(CSRF) 검증용 쿠키 이름.
 export const KAKAO_STATE_COOKIE = 'kakao_oauth_state'
+
+// 애플 로그인 요청 스코프. 이름은 애플이 최초 로그인 시에만 내려준다(백엔드 givenName/familyName 저장용).
+// iOS 앱은 네이티브 Sign in with Apple 시트, 그 외(브라우저)는 Apple JS SDK 팝업을 쓴다.
+export const APPLE_AUTH_SCOPES = 'name email'
 
 // 토큰 저장소 키(@capacitor/preferences, 웹은 localStorage 폴백).
 export const ACCESS_TOKEN_KEY = 'pallang.accessToken'

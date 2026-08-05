@@ -4,12 +4,13 @@
 
 ## 쓰는 플러그인
 
-| 플러그인                   | 용도                                                                         |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| `@capacitor/camera`        | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)              |
-| `@capacitor/app`           | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
-| `@capacitor/preferences`   | 토큰 저장                                                                    |
-| `@capacitor/splash-screen` | 인증 판정 전 깜빡임 방지                                                     |
+| 플러그인                             | 용도                                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `@capacitor/camera`                  | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)              |
+| `@capacitor/app`                     | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
+| `@capacitor/preferences`             | 토큰 저장                                                                    |
+| `@capacitor/splash-screen`           | 인증 판정 전 깜빡임 방지                                                     |
+| `@capacitor-community/apple-sign-in` | 애플 로그인 (iOS 네이티브 시트, 웹은 Apple JS SDK 폴백)                      |
 
 - 플러그인을 추가하면 `npx cap sync` 후 **앱 재설치**가 필요하다(아래 표의 "네이티브 변경").
 - `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만**, 그리고 **앱 전체에서 하나만** 붙인다(`HardwareBackProvider`). 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
@@ -202,6 +203,13 @@ adb shell am start -n kr.pallang.app/.MainActivity
 - **디스크 주의**: 에뮬레이터가 userdata에 ~7GB 요구. 부족하면 `Not enough space to create userdata partition`으로 부팅 실패 → 공간 확보 후 재시도. `config.ini`의 `disk.dataPartition.size` 축소로도 완화.
 - **에뮬레이터 카메라**: `-camera-back webcam0`(맥 웹캠, 가장 현실적) / `virtualscene`(3D 가상방) / `emulated`(패턴). iOS 시뮬레이터와 달리 Android 에뮬레이터는 **카메라 촬영까지 테스트 가능**.
 - 검증된 왕복: 버튼 탭 → `Camera.getPhoto {"source":"PROMPT",...}` → "Take Picture" → 웹캠 촬영 → `webPath`로 사진 반환 → `<img>` 미리보기.
+
+## 애플 로그인 (Sign in with Apple) 네이티브 검증
+
+- **엔티틀먼트는 파일로 관리한다** (Xcode GUI 금지 — 함정 2): `ios/App/App/App.entitlements`에 `com.apple.developer.applesignin = [Default]`가 있고, `project.pbxproj`의 App 타겟 Debug/Release `CODE_SIGN_ENTITLEMENTS = App/App.entitlements`가 이를 가리킨다. `ios/`를 재생성하면 이 두 가지를 다시 적용할 것.
+- **Apple Developer 콘솔 선행 작업**: App ID(`kr.pallang.app`)에 "Sign In with Apple" capability 활성화. 활성화 전에는 실기기에서 자동 서명이 프로비저닝 프로파일 생성에 실패한다(`-allowProvisioningUpdates`로 빌드 시 에러 메시지에 드러남).
+- **검증은 실기기 권장**: 네이티브 authorize 시트는 기기에 Apple ID가 로그인돼 있어야 뜬다. 시뮬레이터는 설정에서 Apple ID 로그인 후 가능하지만 불안정한 사례가 많다. 플로우: 로그인 화면 → "Apple로 계속하기" → 시트 → Face ID/암호 → 홈(또는 약관 동의) 진입 확인.
+- **웹 팝업 경로는 별개 설정**: Service ID(`NEXT_PUBLIC_APPLE_CLIENT_ID`)와 콘솔에 등록된 Return URL(`NEXT_PUBLIC_APPLE_REDIRECT_URI`)이 필요하다. env가 없으면 버튼은 스낵바 안내로 안전하게 실패한다. Android 웹뷰는 팝업 차단 가능성이 있어 미검증 상태다.
 
 ## 미확정 / 배포 전 할 일
 
