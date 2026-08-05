@@ -65,13 +65,17 @@ export const bookQueries = {
     }),
 }
 
+type CreateBookVariables = {
+  book: CreateBookRequest
+  /** 표지 파일(jpeg/png). 알라딘 표지는 /api/book-cover 프록시로 받아 Blob으로 넘긴다. */
+  coverImage?: Blob
+}
+
 export const bookMutations = {
   all: () => ['book'] as const,
-  // ponytail: 서버가 multipart(book + coverImage 파일)로 바뀌면서 표지 URL 전달 경로가 사라졌다.
-  // 표지 파일 업로드(coverImage 파트)는 정책 확정 후 배선한다(웹뷰 교차 오리진 fetch 제약 확인 필요).
   create: () =>
     mutationOptions({
       mutationKey: [...bookMutations.all(), 'create'],
-      mutationFn: (data: CreateBookRequest) => createBook({ book: data }),
+      mutationFn: (data: CreateBookVariables) => createBook(data),
     }),
 }

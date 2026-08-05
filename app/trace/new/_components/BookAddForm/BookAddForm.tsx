@@ -18,10 +18,11 @@ import {
   toCreateBookInput,
   validateBookForm,
 } from '../../_services/bookForm.service'
+import { fetchCoverImageBlob } from '../../_services/coverImage.service'
 import type { SelectedBook } from '../../_types/traceDraft.type'
 
 type BookAddFormProps = {
-  /** 알라딘에서 고른 책의 표지. 업로드 API가 없어 표시 전용이다. */
+  /** 알라딘에서 고른 책의 표지. 미리보기로 쓰고, 등록 시 프록시로 받아 coverImage 파일로 함께 올린다. */
   coverImageUrl: null | string
   initialValues: BookFormValues
   onClose: () => void
@@ -67,39 +68,49 @@ export function BookAddForm({
   // 처음부터 빨간 글씨를 띄우지 않는다. 저장을 눌러 막힌 뒤부터 보여준다.
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [message, setMessage] = useState('')
+  // 표지 Blob을 받아오는 동안에도 저장 버튼이 잠겨야 한다 — mutation isPending보다 먼저 시작된다.
+  const [isPreparingCover, setIsPreparingCover] = useState(false)
   const createBook = useMutation(bookMutations.create())
 
   const errors = isSubmitted ? validateBookForm(values) : {}
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitted(true)
     if (!isValidBookForm(values)) return
 
-    createBook.mutate(toCreateBookInput(values), {
-      onSuccess: (response) => {
-        const created = response.data
-        if (!created) {
+    // 표지는 부가 정보 — 못 받아오면(차단·형식 불일치 등) 표지 없이 등록을 계속한다.
+    setIsPreparingCover(true)
+    const coverImage = coverImageUrl ? await fetchCoverImageBlob(coverImageUrl) : null
+    setIsPreparingCover(false)
+
+    createBook.mutate(
+      { book: toCreateBookInput(values), ...(coverImage ? { coverImage } : {}) },
+      {
+        onSuccess: (response) => {
+          const created = response.data
+          if (!created) {
+            setMessage('책을 등록하지 못했어요. 잠시 후 다시 시도해주세요.')
+            return
+          }
+          onCreated({
+            bookId: created.bookId,
+            title: created.title,
+            author: created.author,
+            coverImageUrl: created.coverImageUrl ?? null,
+            pageCount: created.pageCount,
+          })
+        },
+        onError: (error) => {
+          // 서버는 ISBN 중복을 막지 않는다(#110). 400은 값 형식이 맞지 않을 때라
+          // 다시 눌러도 결과가 같으니 입력을 고치도록 안내한다.
+          if (error instanceof ApiError && error.status === 400) {
+            setMessage('입력한 정보를 다시 확인해주세요.')
+            return
+          }
           setMessage('책을 등록하지 못했어요. 잠시 후 다시 시도해주세요.')
-          return
-        }
-        onCreated({
-          bookId: created.bookId,
-          title: created.title,
-          author: created.author,
-          coverImageUrl: created.coverImageUrl ?? null,
-          pageCount: created.pageCount,
-        })
+        },
       },
-      onError: (error) => {
-        // 서버는 ISBN 중복을 막지 않는다(#110). 400은 값 형식이 맞지 않을 때라
-        // 다시 눌러도 결과가 같으니 입력을 고치도록 안내한다.
-        if (error instanceof ApiError && error.status === 400) {
-          setMessage('입력한 정보를 다시 확인해주세요.')
-          return
-        }
-        setMessage('책을 등록하지 못했어요. 잠시 후 다시 시도해주세요.')
-      },
-    })
+    )
   }
 
   return (
@@ -114,7 +125,7 @@ export function BookAddForm({
       </TopBar.Root>
 
       <div className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden">
-        {/* Figma 2260:9671 — 표지 자리. 업로드 API가 없어 알라딘 표지가 있을 때만 채워진다. */}
+        {/* Figma 2260:9671 — 표지 자리. 알라딘 표지가 있을 때만 채워지고, 등록 시 파일로 함께 올라간다. */}
         <div className="flex shrink-0 items-center justify-center px-4 py-3.5">
           <div className="h-[120px] w-20 shrink-0 overflow-hidden rounded-[2px] border border-border-book bg-bg-surface shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]">
             {coverImageUrl ? (
@@ -156,7 +167,11 @@ export function BookAddForm({
         className="mt-auto flex shrink-0 p-4"
         style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
       >
-        <Button className="h-[54px] flex-1" disabled={createBook.isPending} onClick={handleSubmit}>
+        <Button
+          className="h-[54px] flex-1"
+          disabled={isPreparingCover || createBook.isPending}
+          onClick={() => void handleSubmit()}
+        >
           저장하기
         </Button>
       </div>
