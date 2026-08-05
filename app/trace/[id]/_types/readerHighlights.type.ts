@@ -41,8 +41,11 @@ export type QuoteStageProps = {
 /** 서버 OpinionSummaryResponse 중 목록 UI가 쓰는 필드만 추린 뷰 타입 */
 export type Trace = {
   opinionId: number
+  /** 작성자 id — 신고·차단 메뉴가 내 글인지 가리는 데 쓴다 */
+  userId: number
   nickname: string
   content: string
   createdAt: string
   likeCount: number
+  commentCount: number
 }

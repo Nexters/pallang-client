@@ -53,6 +53,7 @@ const manyOpinionSeed = Array.from({ length: 25 }, (_, index) => ({
   nickname: '기록광',
   content: `많은 흔적 ${String(index + 1)}`,
   likeCount: 0,
+  commentCount: 0,
   createdAt: '2026-07-18T09:00:00.000Z',
 }))
 
@@ -64,6 +65,7 @@ const opinionSeedByPassage: Record<
     nickname: string
     content: string
     likeCount: number
+    commentCount: number
     createdAt: string
   }[]
 > = {
@@ -74,6 +76,7 @@ const opinionSeedByPassage: Record<
       nickname: '책책책을읽자',
       content: '첫 대목의 첫 번째 흔적',
       likeCount: 4,
+      commentCount: 0,
       createdAt: '2026-07-23T02:00:00.000Z',
     },
     {
@@ -82,6 +85,7 @@ const opinionSeedByPassage: Record<
       nickname: '밤의독서가',
       content: '첫 대목의 두 번째 흔적',
       likeCount: 120,
+      commentCount: 0,
       createdAt: '2026-07-21T09:00:00.000Z',
     },
   ],
@@ -92,6 +96,7 @@ const opinionSeedByPassage: Record<
       nickname: '모순덩어리',
       content: '두 번째 대목의 흔적',
       likeCount: 8,
+      commentCount: 0,
       createdAt: '2026-07-20T09:00:00.000Z',
     },
   ],
@@ -102,6 +107,7 @@ const opinionSeedByPassage: Record<
       nickname: '결말을아는자',
       content: '스포일러 대목의 흔적',
       likeCount: 1,
+      commentCount: 0,
       createdAt: '2026-07-19T09:00:00.000Z',
     },
   ],
@@ -112,6 +118,7 @@ const opinionSeedByPassage: Record<
       nickname: '느긋한독자',
       content: '혼재 페이지 일반 대목의 흔적',
       likeCount: 2,
+      commentCount: 0,
       createdAt: '2026-07-18T09:00:00.000Z',
     },
   ],

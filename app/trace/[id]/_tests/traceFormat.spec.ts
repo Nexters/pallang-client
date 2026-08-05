@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatLikeCount, formatTraceDate } from '../_services/traceFormat.service'
+import { formatCount, formatTraceDate } from '../_services/traceFormat.service'
 
 const now = new Date('2026-07-23T12:00:00.000Z')
 
@@ -19,10 +19,10 @@ describe('formatTraceDate', () => {
   })
 })
 
-describe('formatLikeCount', () => {
+describe('formatCount', () => {
   it('100개 이상이면 99+로 고정한다', () => {
-    expect(formatLikeCount(99)).toBe('99')
-    expect(formatLikeCount(100)).toBe('99+')
-    expect(formatLikeCount(120)).toBe('99+')
+    expect(formatCount(99)).toBe('99')
+    expect(formatCount(100)).toBe('99+')
+    expect(formatCount(120)).toBe('99+')
   })
 })

@@ -20,6 +20,7 @@ import EffectWaveIcon from './assets/effect-wave.svg'
 import HomeIcon from './assets/home.svg'
 import KakaoIcon from './assets/kakao.svg'
 import LikeIcon from './assets/like.svg'
+import MeatballsMenuIcon from './assets/meatballs-menu.svg'
 import MyIcon from './assets/my.svg'
 import NextIcon from './assets/next.svg'
 import PencilIcon from './assets/pencil.svg'
@@ -46,6 +47,8 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'CommentIcon', Component: CommentIcon },
   // 댓글 카드 앞의 답글 표시(16x16 원본) — 흔적에 달린 댓글임을 나타낸다
   { name: 'ReplyIcon', Component: ReplyIcon },
+  // 흔적·댓글의 ⋯ 메뉴(신고·차단) 트리거
+  { name: 'MeatballsMenuIcon', Component: MeatballsMenuIcon },
   { name: 'HomeIcon', Component: HomeIcon },
   { name: 'MyIcon', Component: MyIcon },
   { name: 'SearchIcon', Component: SearchIcon },

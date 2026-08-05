@@ -33,6 +33,7 @@ const opinion = {
   nickname: '책책책을읽자',
   content: '첫 번째 흔적',
   likeCount: 4,
+  commentCount: 0,
   createdAt: '2026-07-23T02:00:00.000Z',
 }
 

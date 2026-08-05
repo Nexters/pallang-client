@@ -21,10 +21,12 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
 
 const trace: Trace = {
   opinionId: 1,
+  userId: 2,
   nickname: '밤의독서가',
   content: '흔적 본문',
   createdAt: '2026-07-27T00:00:00.000Z',
   likeCount: 3,
+  commentCount: 0,
 }
 
 // TraceDetailOverlay가 쓰는 조회(댓글 목록, 내 정보)만 최소로 흉내낸다 — 전환 자체와는 무관하다.
