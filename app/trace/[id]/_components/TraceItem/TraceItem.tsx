@@ -7,8 +7,9 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
-import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
+import { formatCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
+import { ModerationMenu } from '../ModerationMenu/ModerationMenu'
 
 type TraceItemProps = {
   trace: Trace
@@ -34,10 +35,17 @@ export function TraceItem({ trace, isCommentOpen, onSelect, onToggleComment }: T
 
   return (
     <article className="flex flex-col gap-3 py-4">
-      <button type="button" className="flex items-center gap-0.5 self-start opacity-40">
-        <span className="text-body-14sb text-text-inverse">{trace.nickname}</span>
-        <NextIcon width={16} height={16} className="text-icon-active" />
-      </button>
+      <div className="flex items-center justify-between">
+        <button type="button" className="flex items-center gap-0.5 opacity-40">
+          <span className="text-body-14sb text-text-inverse">{trace.nickname}</span>
+          <NextIcon width={16} height={16} className="text-icon-active" />
+        </button>
+        <ModerationMenu
+          target={{ type: 'opinion', id: trace.opinionId }}
+          authorUserId={trace.userId}
+          authorNickname={trace.nickname}
+        />
+      </div>
       <button
         type="button"
         onClick={onSelect}
@@ -62,17 +70,17 @@ export function TraceItem({ trace, isCommentOpen, onSelect, onToggleComment }: T
               height={20}
               className={isLiked ? 'text-icon-accent' : 'text-icon-active'}
             />
-            {formatLikeCount(likeCount)}
+            {formatCount(likeCount)}
           </button>
-          {/* ponytail: 댓글 수는 API에 없어 아이콘만 노출 — 디자인은 아이콘 옆 개수 표기(2165:4212).
-              OpinionSummaryResponse에 commentCount 필드 추가 협의 후 표시 (#44) */}
           <button
             type="button"
             onClick={onToggleComment}
             aria-label="댓글 보기"
             aria-expanded={isCommentOpen}
+            className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
           >
             <CommentIcon width={20} height={20} className="text-icon-active" />
+            {formatCount(trace.commentCount)}
           </button>
         </div>
       </div>

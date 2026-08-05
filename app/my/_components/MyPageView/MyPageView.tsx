@@ -17,15 +17,18 @@ const loggedInSettings = [
   '내가 남긴 흔적',
   '좋아요 누른 흔적',
   '알림 설정',
+  '차단 관리',
 ]
 const loggedOutSettings = ['공지사항', '개인정보 처리 방침', '서비스 이용약관']
 
-function getPolicyPath(label: string): null | string {
+function getSettingPath(label: string): null | string {
   switch (label) {
     case '개인정보 처리 방침':
       return POLICY_META_BY_SLUG.privacy.path
     case '서비스 이용약관':
       return POLICY_META_BY_SLUG.service.path
+    case '차단 관리':
+      return '/my/blocks'
     default:
       return null
   }
@@ -212,7 +215,7 @@ function SettingSection({ items }: { items: string[] }) {
       <h2 className="text-body-16bd text-text-primary">설정</h2>
       <ul className="flex w-full flex-col gap-4">
         {items.map((label) => {
-          const policyPath = getPolicyPath(label)
+          const settingPath = getSettingPath(label)
           const className = 'flex w-full items-center gap-2'
           const content = (
             <>
@@ -226,8 +229,8 @@ function SettingSection({ items }: { items: string[] }) {
 
           return (
             <li key={label}>
-              {policyPath ? (
-                <Link href={policyPath} className={className}>
+              {settingPath ? (
+                <Link href={settingPath} className={className}>
                   {content}
                 </Link>
               ) : (

@@ -10,6 +10,7 @@ export function formatTraceDate(createdAt: string, now: Date = new Date()): stri
   return createdAt.slice(0, 10)
 }
 
-export function formatLikeCount(count: number): string {
+/** 좋아요·댓글 수 표기 — 99를 넘으면 99+로 줄인다 */
+export function formatCount(count: number): string {
   return count > 99 ? '99+' : String(count)
 }

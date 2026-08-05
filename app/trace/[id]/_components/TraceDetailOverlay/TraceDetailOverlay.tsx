@@ -7,7 +7,7 @@ import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGa
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { useOpinionLike } from '../../_hooks/useOpinionLike'
-import { formatLikeCount, formatTraceDate } from '../../_services/traceFormat.service'
+import { formatCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { HighlightQuote, Trace } from '../../_types/readerHighlights.type'
 import { QuotePanel } from '../QuotePanel/QuotePanel'
 
@@ -70,7 +70,7 @@ export function TraceDetailOverlay({ trace, quote, state, onClose }: TraceDetail
               height={20}
               className={like.isLiked ? 'text-icon-accent' : 'text-icon-active'}
             />
-            공감 {formatLikeCount(like.likeCount)}
+            공감 {formatCount(like.likeCount)}
           </button>
         </div>
       </div>

@@ -57,6 +57,7 @@ const opinionSeed = [
     nickname: '책책책을읽자',
     content: '첫 번째 흔적',
     likeCount: 4,
+    commentCount: 7,
     createdAt: '2026-07-27T00:00:00.000Z',
   },
   {
@@ -65,6 +66,7 @@ const opinionSeed = [
     nickname: '밤의독서가',
     content: '두 번째 흔적',
     likeCount: 1,
+    commentCount: 1,
     createdAt: '2026-07-26T00:00:00.000Z',
   },
 ]
