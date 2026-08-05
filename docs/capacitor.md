@@ -207,7 +207,7 @@ adb shell am start -n kr.pallang.app/.MainActivity
 ## 애플 로그인 (Sign in with Apple) 네이티브 검증
 
 - **엔티틀먼트는 파일로 관리한다** (Xcode GUI 금지 — 함정 2): `ios/App/App/App.entitlements`에 `com.apple.developer.applesignin = [Default]`가 있고, `project.pbxproj`의 App 타겟 Debug/Release `CODE_SIGN_ENTITLEMENTS = App/App.entitlements`가 이를 가리킨다. `ios/`를 재생성하면 이 두 가지를 다시 적용할 것.
-- **Apple Developer 콘솔 선행 작업**: App ID(`kr.pallang.app`)에 "Sign In with Apple" capability 활성화. 활성화 전에는 실기기에서 자동 서명이 프로비저닝 프로파일 생성에 실패한다(`-allowProvisioningUpdates`로 빌드 시 에러 메시지에 드러남).
+- **Apple Developer 콘솔 선행 작업**: App ID(`kr.co.pallang.app`)에 "Sign In with Apple" capability 활성화. 활성화 전에는 실기기에서 자동 서명이 프로비저닝 프로파일 생성에 실패한다(`-allowProvisioningUpdates`로 빌드 시 에러 메시지에 드러남).
 - **검증은 실기기 권장**: 네이티브 authorize 시트는 기기에 Apple ID가 로그인돼 있어야 뜬다. 시뮬레이터는 설정에서 Apple ID 로그인 후 가능하지만 불안정한 사례가 많다. 플로우: 로그인 화면 → "Apple로 계속하기" → 시트 → Face ID/암호 → 홈(또는 약관 동의) 진입 확인.
 - **웹 팝업 경로는 별개 설정**: Service ID(`NEXT_PUBLIC_APPLE_CLIENT_ID`)와 콘솔에 등록된 Return URL(`NEXT_PUBLIC_APPLE_REDIRECT_URI`)이 필요하다. env가 없으면 버튼은 스낵바 안내로 안전하게 실패한다. Android 웹뷰는 팝업 차단 가능성이 있어 미검증 상태다.
 
