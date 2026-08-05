@@ -209,14 +209,14 @@ describe('흔적·댓글 신고와 사용자 차단', () => {
     expect(screen.getByRole('button', { name: '수정' })).toBeInTheDocument()
   })
 
-  it('신고 시트는 사유를 골라야 제출할 수 있고, 성공하면 스낵바로 알린다', async () => {
+  it('신고 모달은 사유를 골라야 제출할 수 있고, 성공하면 스낵바로 알린다', async () => {
     const { recorded } = await renderView()
     await openMenuItem('신고하기')
 
-    const submit = await screen.findByRole('button', { name: '신고하기' })
+    const submit = await screen.findByRole('button', { name: '신고 하기' })
     expect(submit).toBeDisabled()
 
-    fireEvent.click(screen.getByRole('radio', { name: '스팸/홍보' }))
+    fireEvent.click(screen.getByRole('radio', { name: '홍보성 (스팸·광고)' }))
     expect(submit).toBeEnabled()
     fireEvent.click(submit)
 
@@ -224,15 +224,32 @@ describe('흔적·댓글 신고와 사용자 차단', () => {
     expect(recorded.reports).toEqual([{ url: '/api/opinions/1/reports', body: { reason: 'SPAM' } }])
   })
 
+  it('서버 enum에 짝이 없는 사유는 ETC로 보내고 라벨을 상세에 싣는다', async () => {
+    const { recorded } = await renderView()
+    await openMenuItem('신고하기')
+
+    fireEvent.click(screen.getByRole('radio', { name: '스포일러 미표시' }))
+    fireEvent.click(screen.getByRole('button', { name: '신고 하기' }))
+
+    await screen.findByText('신고가 접수됐어요.')
+    expect(recorded.reports).toEqual([
+      { url: '/api/opinions/1/reports', body: { reason: 'ETC', detail: '스포일러 미표시' } },
+    ])
+  })
+
   it('기타 사유는 상세를 써야 제출할 수 있고, 본문에 상세가 실린다', async () => {
     const { recorded } = await renderView()
     await openMenuItem('신고하기')
 
-    const submit = await screen.findByRole('button', { name: '신고하기' })
+    // 상세 입력은 항상 보이지만 기타를 고르기 전에는 잠겨 있다
+    const detailInput = await screen.findByLabelText('신고 상세 내용')
+    expect(detailInput).toBeDisabled()
+
+    const submit = screen.getByRole('button', { name: '신고 하기' })
     fireEvent.click(screen.getByRole('radio', { name: '기타' }))
     expect(submit).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText('신고 상세 내용'), {
+    fireEvent.change(detailInput, {
       target: { value: '무단 도용이에요' },
     })
     expect(submit).toBeEnabled()
@@ -249,8 +266,8 @@ describe('흔적·댓글 신고와 사용자 차단', () => {
     await renderView()
     await openMenuItem('신고하기')
 
-    fireEvent.click(screen.getByRole('radio', { name: '스팸/홍보' }))
-    fireEvent.click(screen.getByRole('button', { name: '신고하기' }))
+    fireEvent.click(screen.getByRole('radio', { name: '홍보성 (스팸·광고)' }))
+    fireEvent.click(screen.getByRole('button', { name: '신고 하기' }))
 
     expect(await screen.findByText('이미 신고했거나 신고할 수 없는 글이에요.')).toBeInTheDocument()
   })
