@@ -7,6 +7,7 @@ import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { initAuthSession, signOut as signOutSession } from '@/app/_global/_queries/auth.queries'
 import { hasTokens, subscribeAuthTokens } from '@/app/_global/_services/authToken.service'
 import { hideSplashScreen } from '@/app/_global/_services/splashScreen.service'
+import { hasPendingWithdrawalNotice } from '@/app/_global/_services/withdrawal.service'
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated'
 
@@ -25,8 +26,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // 세션 만료 처리: 로그인 상태였다가 풀리면(refresh 실패·로그아웃) 로그인 화면으로 보낸다.
   // 처음부터 비로그인인 사용자는 대상이 아니다(공개 페이지 탐색 허용).
+  // 회원 탈퇴로 토큰이 비었을 때는 예외다 — 탈퇴 흐름이 비로그인 마이페이지로 보내고
+  // 거기서 완료 스낵바를 띄우므로, 로그인 화면으로 가로채지 않는다.
   useEffect(() => {
-    if (prevStatusRef.current === 'authenticated' && status === 'unauthenticated') {
+    if (
+      prevStatusRef.current === 'authenticated' &&
+      status === 'unauthenticated' &&
+      !hasPendingWithdrawalNotice()
+    ) {
       router.replace(LOGIN_PATH)
     }
     prevStatusRef.current = status

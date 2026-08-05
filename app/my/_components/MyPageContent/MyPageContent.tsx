@@ -2,16 +2,33 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
+import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { userQueries } from '@/app/_global/_queries/user.queries'
+import { consumeWithdrawalNotice } from '@/app/_global/_services/withdrawal.service'
 
 import { MyPageView } from '../MyPageView/MyPageView'
 
 export function MyPageContent() {
   const router = useRouter()
   const { status, isAuthenticated, signOut } = useAuth()
+
+  // 회원 탈퇴 직후 여기로 옮겨진다 — 도착 시 플래그를 소비해 완료 스낵바를 1회 띄운다.
+  // 프리렌더에는 sessionStorage가 없어 effect에서 읽고, setState는 다음 틱으로 넘긴다
+  // (동기로 부르면 set-state-in-effect의 연쇄 렌더 경고에 걸린다).
+  const [noticeMessage, setNoticeMessage] = useState('')
+  useEffect(() => {
+    if (!consumeWithdrawalNotice()) return
+    const timer = setTimeout(() => {
+      setNoticeMessage('성공적으로 탈퇴됐습니다!')
+    }, 0)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [])
   const { data, isError } = useQuery({ ...userQueries.me(), enabled: isAuthenticated })
   const { data: opinionsData } = useQuery({
     ...userQueries.myOpinions(),
@@ -38,14 +55,22 @@ export function MyPageContent() {
     })) ?? []
 
   return (
-    <MyPageView
-      user={user}
-      isPending={isPending}
-      recentTraces={recentTraces}
-      onLoginClick={() => {
-        router.push(LOGIN_PATH)
-      }}
-      onLogout={() => void signOut()}
-    />
+    <>
+      <MyPageView
+        user={user}
+        isPending={isPending}
+        recentTraces={recentTraces}
+        onLoginClick={() => {
+          router.push(LOGIN_PATH)
+        }}
+        onLogout={() => void signOut()}
+      />
+      <Snackbar
+        message={noticeMessage}
+        onClose={() => {
+          setNoticeMessage('')
+        }}
+      />
+    </>
   )
 }
