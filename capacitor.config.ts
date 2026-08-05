@@ -1,10 +1,10 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
-// 배포 전 실제 값으로 교체할 것
-const APP_ID = 'kr.pallang.app'
-const PROD_SERVER_URL = 'https://pallang.example.com'
+const APP_ID = 'kr.co.pallang.app'
+// 기본은 운영. dev 서버를 로드하는 빌드(TestFlight 내부 테스트 등)는 CAP_SERVER_URL로 덮어쓴다.
+const PROD_SERVER_URL = 'https://pallang.co.kr'
 
-// dev 라이브리로드: CAP_SERVER_URL=http://<LAN_IP>:3000 pnpm cap:ios
+// dev 라이브리로드: CAP_SERVER_URL=http://<LAN_IP>:3000 pnpm cap:ios / TestFlight dev: pnpm ios:archive:dev
 const serverUrl = process.env['CAP_SERVER_URL'] ?? PROD_SERVER_URL
 
 const config: CapacitorConfig = {

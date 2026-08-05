@@ -3,7 +3,14 @@
 // refresh 배선을 여기 모아 노출한다. 순수 조회가 아니라 mutation/세션 성격이지만, _apis 접근이 허용되는
 // 유일한 계층이라 여기에 둔다.
 
-import { agreeToTerms, loginWithKakao, logout, refresh } from '../_apis/_generated/auth/auth'
+import {
+  agreeToTerms,
+  loginWithApple,
+  loginWithKakao,
+  logout,
+  refresh,
+} from '../_apis/_generated/auth/auth'
+import type { AppleLoginRequest } from '../_apis/_generated/models/appleLoginRequest'
 import type { LoginResponse } from '../_apis/_generated/models/loginResponse'
 import { setAccessTokenGetter, setTokenRefresher } from '../_apis/customFetch.api'
 import {
@@ -46,6 +53,18 @@ export async function initAuthSession(): Promise<void> {
 // 웹·앱 공통: 카카오 액세스 토큰 → pallang 로그인 → 토큰 저장 → 로그인 결과 반환.
 export async function signInWithKakaoToken(kakaoAccessToken: string): Promise<LoginResponse> {
   const res = await loginWithKakao({ kakaoAccessToken })
+  const data = res.data
+  if (!data?.accessToken || !data.refreshToken) {
+    throw new Error('로그인 응답에 토큰이 없습니다.')
+  }
+  await saveTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+  return data
+}
+
+// 웹·앱 공통: 애플 identity token → pallang 로그인 → 토큰 저장 → 로그인 결과 반환.
+// authorizationCode는 탈퇴 시 애플 연동 해제(revoke)용이라 받았으면 함께 보낸다.
+export async function signInWithAppleToken(request: AppleLoginRequest): Promise<LoginResponse> {
+  const res = await loginWithApple(request)
   const data = res.data
   if (!data?.accessToken || !data.refreshToken) {
     throw new Error('로그인 응답에 토큰이 없습니다.')

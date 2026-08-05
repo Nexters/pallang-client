@@ -4,12 +4,13 @@
 
 ## 쓰는 플러그인
 
-| 플러그인                   | 용도                                                                         |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| `@capacitor/camera`        | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)              |
-| `@capacitor/app`           | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
-| `@capacitor/preferences`   | 토큰 저장                                                                    |
-| `@capacitor/splash-screen` | 인증 판정 전 깜빡임 방지                                                     |
+| 플러그인                             | 용도                                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `@capacitor/camera`                  | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)              |
+| `@capacitor/app`                     | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
+| `@capacitor/preferences`             | 토큰 저장                                                                    |
+| `@capacitor/splash-screen`           | 인증 판정 전 깜빡임 방지                                                     |
+| `@capacitor-community/apple-sign-in` | 애플 로그인 (iOS 네이티브 시트 — 웹 미제공, 버튼도 iOS 앱에서만 노출)        |
 
 - 플러그인을 추가하면 `npx cap sync` 후 **앱 재설치**가 필요하다(아래 표의 "네이티브 변경").
 - `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만**, 그리고 **앱 전체에서 하나만** 붙인다(`HardwareBackProvider`). 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
@@ -128,7 +129,7 @@ pnpm cap:dev:sync
      -derivedDataPath ./build-ios build
    APP=./build-ios/Build/Products/Debug-iphoneos/App.app
    xcrun devicectl device install app --device "$DEV" "$APP"
-   xcrun devicectl device process launch --device "$DEV" kr.pallang.app
+   xcrun devicectl device process launch --device "$DEV" kr.co.pallang.app
    ```
 
 ## 시뮬레이터 절차 (빠른 확인, 카메라는 없음)
@@ -139,7 +140,7 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
   -destination 'platform=iOS Simulator,name=iPhone 17' \
   -derivedDataPath ./build-sim CODE_SIGNING_ALLOWED=NO build
 xcrun simctl install booted ./build-sim/Build/Products/Debug-iphonesimulator/App.app
-xcrun simctl launch booted kr.pallang.app
+xcrun simctl launch booted kr.co.pallang.app
 xcrun simctl io booted screenshot out.png   # 화면 확인
 ```
 
@@ -203,8 +204,46 @@ adb shell am start -n kr.pallang.app/.MainActivity
 - **에뮬레이터 카메라**: `-camera-back webcam0`(맥 웹캠, 가장 현실적) / `virtualscene`(3D 가상방) / `emulated`(패턴). iOS 시뮬레이터와 달리 Android 에뮬레이터는 **카메라 촬영까지 테스트 가능**.
 - 검증된 왕복: 버튼 탭 → `Camera.getPhoto {"source":"PROMPT",...}` → "Take Picture" → 웹캠 촬영 → `webPath`로 사진 반환 → `<img>` 미리보기.
 
+## 애플 로그인 (Sign in with Apple) 네이티브 검증
+
+- **엔티틀먼트는 파일로 관리한다** (Xcode GUI 금지 — 함정 2): `ios/App/App/App.entitlements`에 `com.apple.developer.applesignin = [Default]`가 있고, `project.pbxproj`의 App 타겟 Debug/Release `CODE_SIGN_ENTITLEMENTS = App/App.entitlements`가 이를 가리킨다. `ios/`를 재생성하면 이 두 가지를 다시 적용할 것.
+- **Apple Developer 콘솔 선행 작업**: App ID(`kr.co.pallang.app`)에 "Sign In with Apple" capability 활성화. 활성화 전에는 실기기에서 자동 서명이 프로비저닝 프로파일 생성에 실패한다(`-allowProvisioningUpdates`로 빌드 시 에러 메시지에 드러남).
+- **검증은 실기기 권장**: 네이티브 authorize 시트는 기기에 Apple ID가 로그인돼 있어야 뜬다. 시뮬레이터는 설정에서 Apple ID 로그인 후 가능하지만 불안정한 사례가 많다. 플로우: 로그인 화면 → "Apple로 계속하기" → 시트 → Face ID/암호 → 홈(또는 약관 동의) 진입 확인.
+- **웹 브라우저에는 애플 로그인을 제공하지 않는다(정책 결정)**: 버튼이 iOS 네이티브에서만 렌더되므로 Service ID·Return URL·관련 env가 필요 없다. 웹 제공으로 바뀌면 Apple JS SDK(usePopup) 경로와 콘솔 Service ID 등록을 다시 붙인다.
+
 ## 미확정 / 배포 전 할 일
 
-- `capacitor.config.ts`의 `appId`(`kr.pallang.app`), `PROD_SERVER_URL`(현재 플레이스홀더)을 실제 값으로 교체.
+- `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://pallang.co.kr`)은 실제 값으로 교체 완료. Android 패키지명(`kr.pallang.app`)은 별도 정리 예정.
 - **iOS**: 시뮬레이터 + 실기기(iPhone 12 Pro) 카메라 검증 완료. **Android**: 에뮬레이터(Android 16) 카메라 검증 완료. 둘 다 실기 스토어 제출(서명·심사)은 미수행.
 - **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
+
+## TestFlight 배포
+
+전체 Xcode 필요. 프로젝트를 Xcode GUI로 열지 말 것(pbxproj 손상) — 아래 스크립트가 아카이브까지 CLI로 처리한다.
+
+### dev 빌드와 운영 빌드 — 개념부터
+
+이 앱은 웹뷰가 **원격 URL을 로드하는 껍데기**다. 그래서 빌드는 두 종류지만 네이티브는 완전히 같고, **열어보는 웹 주소만 다르다.**
+
+|             | `pnpm ios:archive:dev`             | `pnpm ios:archive`             |
+| ----------- | ---------------------------------- | ------------------------------ |
+| 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `pallang.co.kr` (release 배포) |
+| 용도        | TestFlight 내부 테스트             | **심사 제출·정식 배포 전용**   |
+
+이 구조에서 헷갈리기 쉬운 것들:
+
+- **웹 코드 변경은 앱을 다시 올릴 필요가 없다.** dev 빌드를 TestFlight에 한 번 올려두면 이후 develop에 배포되는 변경은 앱을 다시 열기만 해도 반영된다. 재아카이브가 필요한 건 네이티브가 바뀔 때뿐 — 플러그인 추가, 아이콘·권한 문구, 로드 URL 전환.
+- 두 빌드는 **같은 번들 ID의 같은 앱**이고 TestFlight에는 빌드 번호로만 구분되어 쌓인다. 어떤 빌드가 어느 서버를 보는지 TestFlight "테스트 세부사항" 메모에 적어둘 것.
+- **dev 빌드를 심사에 제출하면 안 된다** — 심사관이 dev 서버를 보게 된다. 심사는 반드시 `pnpm ios:archive`(운영)로.
+- 흐름: dev 빌드로 테스트 → 기능이 release까지 운영 배포되면 → 운영 빌드 아카이브 → 그걸 심사 제출.
+
+1. **App Store Connect 앱 생성(1회)**: appstoreconnect.apple.com → 앱 → `+` → 번들 ID `kr.co.pallang.app` 선택.
+2. **아카이브**:
+   ```bash
+   pnpm ios:archive:dev   # dev.pallang.co.kr 을 로드하는 내부 테스트 빌드
+   pnpm ios:archive       # 운영(pallang.co.kr) 빌드 — 심사 제출용
+   ```
+   `build-ios/export/`에 .ipa가 생성된다. 서명은 자동(팀 DQ3Q4Z82DZ, `ExportOptions.plist`).
+3. **업로드**: Transporter 앱(App Store에서 설치)에 .ipa를 드래그해 업로드.
+4. App Store Connect → TestFlight 탭에서 처리 완료(수 분) 후 내부 테스터 추가. 수출 규정 질문은 `ITSAppUsesNonExemptEncryption=false`로 생략된다.
+5. 버전은 `MARKETING_VERSION`, 빌드 번호는 `CURRENT_PROJECT_VERSION`(pbxproj) — 같은 버전을 다시 올릴 땐 빌드 번호를 올려야 한다.

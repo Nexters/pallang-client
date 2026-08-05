@@ -11,6 +11,9 @@ importers:
       '@base-ui/react':
         specifier: 1.6.0
         version: 1.6.0(@types/react@19.2.17)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@capacitor-community/apple-sign-in':
+        specifier: ^7.1.0
+        version: 7.1.0(@capacitor/core@8.4.2)
       '@capacitor/android':
         specifier: ^8.4.2
         version: 8.4.2(@capacitor/core@8.4.2)
@@ -775,6 +778,11 @@ packages:
   '@boundaries/elements@3.1.0':
     resolution: {integrity: sha512-9YtjJG2sSHssCcmU4dCeqHHwHF5Il0Gc1C8AywksbZyvQ9CFvpNURFuJbT21OpMdp0KHWJB14clMy85oiGwX9w==}
     engines: {node: '>=18.18'}
+
+  '@capacitor-community/apple-sign-in@7.1.0':
+    resolution: {integrity: sha512-df7cA7vfvvvilTtpJKeVvxO31W+py5t3HK9233GBD5MvgAgtGvCqeQ3pI0noNkVsKPF9B1g/po8Mph6s4bVSmw==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   '@capacitor/android@8.4.2':
     resolution: {integrity: sha512-bzf8XZ9C+ePgOQ+e+T0fnhHGH4aCNY494vvSQIF5w4AY07RwEmkFqZs1678DDSMH0hLSQpxEwXGFNUVcXO6bBA==}
@@ -2282,6 +2290,9 @@ packages:
 
   '@types/resolve@1.20.6':
     resolution: {integrity: sha512-A4STmOXPhMUtHH+S6ymgE2GiBSMqf4oTvcQZMcHzokuTLVYzXTB8ttjcgxOVaAp2lGwEdzZ0J+cRbbeevQj1UQ==}
+
+  '@types/scriptjs@0.0.2':
+    resolution: {integrity: sha512-GFrUgzGYfNX3VWZwMyzr0JrBwzLv5Kes4BQBvo6hXdRy14/GBbpCiVwwB7v1o2xIEvFf+9GyznmYhuesQQjSag==}
 
   '@types/slice-ansi@4.0.0':
     resolution: {integrity: sha512-+OpjSaq85gvlZAYINyzKpLeiFkSC4EsC6IIiT6v6TLSU5k5U83fHGj9Lel8oKEXM0HqgrMVCjXPDPVICtxF7EQ==}
@@ -4747,6 +4758,9 @@ packages:
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
+  scriptjs@2.5.9:
+    resolution: {integrity: sha512-qGVDoreyYiP1pkQnbnFAUIS5AjenNwwQBdl7zeos9etl+hYKWahjRTfzAZZYBv5xNHx7vNKCmaLDQZ6Fr2AEXg==}
+
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
@@ -6258,6 +6272,12 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
+  '@capacitor-community/apple-sign-in@7.1.0(@capacitor/core@8.4.2)':
+    dependencies:
+      '@capacitor/core': 8.4.2
+      '@types/scriptjs': 0.0.2
+      scriptjs: 2.5.9
+
   '@capacitor/android@8.4.2(@capacitor/core@8.4.2)':
     dependencies:
       '@capacitor/core': 8.4.2
@@ -7748,6 +7768,8 @@ snapshots:
       csstype: 3.2.3
 
   '@types/resolve@1.20.6': {}
+
+  '@types/scriptjs@0.0.2': {}
 
   '@types/slice-ansi@4.0.0': {}
 
@@ -10684,6 +10706,8 @@ snapshots:
   sax@1.6.0: {}
 
   scheduler@0.27.0: {}
+
+  scriptjs@2.5.9: {}
 
   semver@6.3.1: {}
 
