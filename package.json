@@ -7,7 +7,7 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "bash scripts/ensure-env.sh && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

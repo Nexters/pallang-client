@@ -112,13 +112,13 @@ function LoggedInContent({
             지금까지 {user.traceCount}개의 흔적을 남겼어요!
           </p>
         </div>
-        <button
-          type="button"
+        <Link
+          href="/my/profile"
           aria-label="설정"
-          className="shrink-0 rounded-full border border-border-default p-1.5"
+          className="shrink-0 rounded-full border border-border-default p-1.5 press"
         >
           <SettingIcon className="text-icon-muted" />
-        </button>
+        </Link>
       </section>
 
       {recentTraces.length > 0 && (
