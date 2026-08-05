@@ -27,7 +27,9 @@
     "cap:open:ios": "cap open ios",
     "cap:dev:ios": "bash scripts/cap-dev.sh ios",
     "cap:dev:android": "bash scripts/cap-dev.sh android-emulator",
-    "cap:dev:sync": "bash scripts/cap-dev.sh sync-only"
+    "cap:dev:sync": "bash scripts/cap-dev.sh sync-only",
+    "ios:archive": "bash scripts/ios-archive.sh",
+    "ios:archive:dev": "CAP_SERVER_URL=https://dev.pallang.co.kr bash scripts/ios-archive.sh"
   },
   "dependencies": {
     "@base-ui/react": "1.6.0",

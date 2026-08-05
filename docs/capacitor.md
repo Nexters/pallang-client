@@ -129,7 +129,7 @@ pnpm cap:dev:sync
      -derivedDataPath ./build-ios build
    APP=./build-ios/Build/Products/Debug-iphoneos/App.app
    xcrun devicectl device install app --device "$DEV" "$APP"
-   xcrun devicectl device process launch --device "$DEV" kr.pallang.app
+   xcrun devicectl device process launch --device "$DEV" kr.co.pallang.app
    ```
 
 ## 시뮬레이터 절차 (빠른 확인, 카메라는 없음)
@@ -140,7 +140,7 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
   -destination 'platform=iOS Simulator,name=iPhone 17' \
   -derivedDataPath ./build-sim CODE_SIGNING_ALLOWED=NO build
 xcrun simctl install booted ./build-sim/Build/Products/Debug-iphonesimulator/App.app
-xcrun simctl launch booted kr.pallang.app
+xcrun simctl launch booted kr.co.pallang.app
 xcrun simctl io booted screenshot out.png   # 화면 확인
 ```
 
@@ -213,6 +213,21 @@ adb shell am start -n kr.pallang.app/.MainActivity
 
 ## 미확정 / 배포 전 할 일
 
-- `capacitor.config.ts`의 `appId`(`kr.pallang.app`), `PROD_SERVER_URL`(현재 플레이스홀더)을 실제 값으로 교체.
+- `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://pallang.co.kr`)은 실제 값으로 교체 완료. Android 패키지명(`kr.pallang.app`)은 별도 정리 예정.
 - **iOS**: 시뮬레이터 + 실기기(iPhone 12 Pro) 카메라 검증 완료. **Android**: 에뮬레이터(Android 16) 카메라 검증 완료. 둘 다 실기 스토어 제출(서명·심사)은 미수행.
 - **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
+
+## TestFlight 배포
+
+전체 Xcode 필요. 프로젝트를 Xcode GUI로 열지 말 것(pbxproj 손상) — 아래 스크립트가 아카이브까지 CLI로 처리한다.
+
+1. **App Store Connect 앱 생성(1회)**: appstoreconnect.apple.com → 앱 → `+` → 번들 ID `kr.co.pallang.app` 선택.
+2. **아카이브**:
+   ```bash
+   pnpm ios:archive:dev   # dev.pallang.co.kr 을 로드하는 내부 테스트 빌드
+   pnpm ios:archive       # 운영(pallang.co.kr) 빌드 — 심사 제출용
+   ```
+   `build-ios/export/`에 .ipa가 생성된다. 서명은 자동(팀 DQ3Q4Z82DZ, `ExportOptions.plist`).
+3. **업로드**: Transporter 앱(App Store에서 설치)에 .ipa를 드래그해 업로드.
+4. App Store Connect → TestFlight 탭에서 처리 완료(수 분) 후 내부 테스터 추가. 수출 규정 질문은 `ITSAppUsesNonExemptEncryption=false`로 생략된다.
+5. 버전은 `MARKETING_VERSION`, 빌드 번호는 `CURRENT_PROJECT_VERSION`(pbxproj) — 같은 버전을 다시 올릴 땐 빌드 번호를 올려야 한다.
