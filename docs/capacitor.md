@@ -10,7 +10,7 @@
 | `@capacitor/app`                     | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
 | `@capacitor/preferences`             | 토큰 저장                                                                    |
 | `@capacitor/splash-screen`           | 인증 판정 전 깜빡임 방지                                                     |
-| `@capacitor-community/apple-sign-in` | 애플 로그인 (iOS 네이티브 시트, 웹은 Apple JS SDK 폴백)                      |
+| `@capacitor-community/apple-sign-in` | 애플 로그인 (iOS 네이티브 시트 — 웹 미제공, 버튼도 iOS 앱에서만 노출)        |
 
 - 플러그인을 추가하면 `npx cap sync` 후 **앱 재설치**가 필요하다(아래 표의 "네이티브 변경").
 - `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만**, 그리고 **앱 전체에서 하나만** 붙인다(`HardwareBackProvider`). 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
@@ -209,7 +209,7 @@ adb shell am start -n kr.pallang.app/.MainActivity
 - **엔티틀먼트는 파일로 관리한다** (Xcode GUI 금지 — 함정 2): `ios/App/App/App.entitlements`에 `com.apple.developer.applesignin = [Default]`가 있고, `project.pbxproj`의 App 타겟 Debug/Release `CODE_SIGN_ENTITLEMENTS = App/App.entitlements`가 이를 가리킨다. `ios/`를 재생성하면 이 두 가지를 다시 적용할 것.
 - **Apple Developer 콘솔 선행 작업**: App ID(`kr.co.pallang.app`)에 "Sign In with Apple" capability 활성화. 활성화 전에는 실기기에서 자동 서명이 프로비저닝 프로파일 생성에 실패한다(`-allowProvisioningUpdates`로 빌드 시 에러 메시지에 드러남).
 - **검증은 실기기 권장**: 네이티브 authorize 시트는 기기에 Apple ID가 로그인돼 있어야 뜬다. 시뮬레이터는 설정에서 Apple ID 로그인 후 가능하지만 불안정한 사례가 많다. 플로우: 로그인 화면 → "Apple로 계속하기" → 시트 → Face ID/암호 → 홈(또는 약관 동의) 진입 확인.
-- **웹 팝업 경로는 별개 설정**: Service ID(`NEXT_PUBLIC_APPLE_CLIENT_ID`)와 콘솔에 등록된 Return URL(`NEXT_PUBLIC_APPLE_REDIRECT_URI`)이 필요하다. env가 없으면 버튼은 스낵바 안내로 안전하게 실패한다. Android 웹뷰는 팝업 차단 가능성이 있어 미검증 상태다.
+- **웹 브라우저에는 애플 로그인을 제공하지 않는다(정책 결정)**: 버튼이 iOS 네이티브에서만 렌더되므로 Service ID·Return URL·관련 env가 필요 없다. 웹 제공으로 바뀌면 Apple JS SDK(usePopup) 경로와 콘솔 Service ID 등록을 다시 붙인다.
 
 ## 미확정 / 배포 전 할 일
 
