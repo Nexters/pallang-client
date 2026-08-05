@@ -221,6 +221,22 @@ adb shell am start -n kr.pallang.app/.MainActivity
 
 전체 Xcode 필요. 프로젝트를 Xcode GUI로 열지 말 것(pbxproj 손상) — 아래 스크립트가 아카이브까지 CLI로 처리한다.
 
+### dev 빌드와 운영 빌드 — 개념부터
+
+이 앱은 웹뷰가 **원격 URL을 로드하는 껍데기**다. 그래서 빌드는 두 종류지만 네이티브는 완전히 같고, **열어보는 웹 주소만 다르다.**
+
+|             | `pnpm ios:archive:dev`             | `pnpm ios:archive`             |
+| ----------- | ---------------------------------- | ------------------------------ |
+| 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `pallang.co.kr` (release 배포) |
+| 용도        | TestFlight 내부 테스트             | **심사 제출·정식 배포 전용**   |
+
+이 구조에서 헷갈리기 쉬운 것들:
+
+- **웹 코드 변경은 앱을 다시 올릴 필요가 없다.** dev 빌드를 TestFlight에 한 번 올려두면 이후 develop에 배포되는 변경은 앱을 다시 열기만 해도 반영된다. 재아카이브가 필요한 건 네이티브가 바뀔 때뿐 — 플러그인 추가, 아이콘·권한 문구, 로드 URL 전환.
+- 두 빌드는 **같은 번들 ID의 같은 앱**이고 TestFlight에는 빌드 번호로만 구분되어 쌓인다. 어떤 빌드가 어느 서버를 보는지 TestFlight "테스트 세부사항" 메모에 적어둘 것.
+- **dev 빌드를 심사에 제출하면 안 된다** — 심사관이 dev 서버를 보게 된다. 심사는 반드시 `pnpm ios:archive`(운영)로.
+- 흐름: dev 빌드로 테스트 → 기능이 release까지 운영 배포되면 → 운영 빌드 아카이브 → 그걸 심사 제출.
+
 1. **App Store Connect 앱 생성(1회)**: appstoreconnect.apple.com → 앱 → `+` → 번들 ID `kr.co.pallang.app` 선택.
 2. **아카이브**:
    ```bash
