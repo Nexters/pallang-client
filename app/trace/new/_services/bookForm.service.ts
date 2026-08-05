@@ -6,7 +6,6 @@ export type BookFormErrors = Partial<Record<BookFormField, string>>
 
 type CreateBookInput = {
   author: string
-  coverImageUrl?: string
   isbn?: string
   pageCount: number
   publisher: string
@@ -75,17 +74,14 @@ export function isValidBookForm(values: BookFormValues): boolean {
   return Object.keys(validateBookForm(values)).length === 0
 }
 
-export function toCreateBookInput(
-  values: BookFormValues,
-  coverImageUrl: null | string,
-): CreateBookInput {
+// 표지는 서버가 multipart 파일(coverImage)로만 받게 바뀌어 URL은 더 이상 보내지 않는다.
+export function toCreateBookInput(values: BookFormValues): CreateBookInput {
   const isbn = values.isbn.trim()
 
   return {
     author: values.author.trim(),
     // 빈 문자열을 보내면 서버 형식 검증에 걸린다. 없는 값은 키 자체를 넣지 않는다.
     ...(isbn.length > 0 ? { isbn } : {}),
-    ...(coverImageUrl ? { coverImageUrl } : {}),
     pageCount: Number(values.pageCount.trim()),
     publisher: values.publisher.trim(),
     title: values.title.trim(),

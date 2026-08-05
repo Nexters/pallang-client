@@ -7,6 +7,8 @@ export interface MeResponse {
   userId: number
   nickname: string
   /** @nullable */
+  email?: string | null
+  /** @nullable */
   profileImageUrl?: string | null
   /** @nullable */
   backgroundColor?: string | null

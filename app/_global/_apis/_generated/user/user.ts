@@ -15,11 +15,37 @@ import type { GetLikedOpinionsParams } from '../models/getLikedOpinionsParams'
 
 import type { GetMyOpinionsParams } from '../models/getMyOpinionsParams'
 
+import type { ModifyProfileImageBody } from '../models/modifyProfileImageBody'
+
 import type { UpdateBackgroundColorRequest } from '../models/updateBackgroundColorRequest'
 
 import type { UpdateNicknameRequest } from '../models/updateNicknameRequest'
 
 import { customFetch } from '../../customFetch.api'
+
+export const getModifyProfileImageUrl = () => {
+  return `/api/users/me/profile-image`
+}
+
+/**
+ * 프로필 이미지를 업로드하여 변경합니다(jpeg/png). Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * @summary 프로필 이미지 변경
+ */
+export const modifyProfileImage = async (
+  modifyProfileImageBody?: ModifyProfileImageBody,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseMeResponse> => {
+  const formData = new FormData()
+  if (modifyProfileImageBody?.image !== undefined) {
+    formData.append(`image`, modifyProfileImageBody.image)
+  }
+
+  return customFetch<DataResponseMeResponse>(getModifyProfileImageUrl(), {
+    ...options,
+    method: 'PATCH',
+    body: formData,
+  })
+}
 
 export const getCompleteOnboardingUrl = () => {
   return `/api/users/me/onboarding-complete`
@@ -83,7 +109,7 @@ export const getGetMeUrl = () => {
 }
 
 /**
- * 닉네임, 프로필 이미지, 배경색, 가입 경로(SNS), 지금까지 남긴 흔적 수를 조회합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 닉네임, 이메일, 프로필 이미지, 배경색, 가입 경로(SNS), 지금까지 남긴 흔적 수를 조회합니다. 이메일은 SNS 이메일 동의 여부에 따라 없을 수 있습니다(null). Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 내 프로필 조회
  */
 export const getMe = async (
@@ -100,7 +126,7 @@ export const getWithdrawUrl = () => {
 }
 
 /**
- * 소프트 삭제 처리하고 닉네임을 익명화합니다(다른 이용자의 대화 맥락 유지를 위해 공개된 발췌·의견·댓글은 남습니다). Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 소프트 삭제 처리하고 닉네임을 익명화합니다(다른 이용자의 대화 맥락 유지를 위해 공개된 발췌·의견·댓글은 남습니다). 카카오 연동 해제를 함께 시도하나 실패해도 탈퇴 자체는 계속 진행되며(best-effort), 발급된 모든 리프레시 토큰은 즉시 무효화됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 회원 탈퇴
  */
 export const withdraw = async (

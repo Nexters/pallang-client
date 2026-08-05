@@ -11,5 +11,4 @@ export interface CreateBookRequest {
   publisher: string
   pageCount?: number
   isbn?: string
-  coverImageUrl?: string
 }

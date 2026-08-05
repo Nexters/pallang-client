@@ -75,7 +75,7 @@ export function BookAddForm({
     setIsSubmitted(true)
     if (!isValidBookForm(values)) return
 
-    createBook.mutate(toCreateBookInput(values, coverImageUrl), {
+    createBook.mutate(toCreateBookInput(values), {
       onSuccess: (response) => {
         const created = response.data
         if (!created) {

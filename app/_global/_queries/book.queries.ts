@@ -67,9 +67,11 @@ export const bookQueries = {
 
 export const bookMutations = {
   all: () => ['book'] as const,
+  // ponytail: 서버가 multipart(book + coverImage 파일)로 바뀌면서 표지 URL 전달 경로가 사라졌다.
+  // 표지 파일 업로드(coverImage 파트)는 정책 확정 후 배선한다(웹뷰 교차 오리진 fetch 제약 확인 필요).
   create: () =>
     mutationOptions({
       mutationKey: [...bookMutations.all(), 'create'],
-      mutationFn: (data: CreateBookRequest) => createBook(data),
+      mutationFn: (data: CreateBookRequest) => createBook({ book: data }),
     }),
 }
