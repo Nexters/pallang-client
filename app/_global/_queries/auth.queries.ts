@@ -20,6 +20,14 @@ import {
   hydrateTokens,
   saveTokens,
 } from '../_services/authToken.service'
+import { getQueryClient } from '../_services/queryClient.service'
+
+// 계정 경계(로그인 성공·로그아웃)에서 이전 세션의 서버 상태를 비운다.
+// 브라우저 QueryClient는 모듈 싱글턴이라, 안 비우면 로그아웃 후 다른 계정으로 로그인해도
+// 이전 계정의 캐시(me·좋아요·내 흔적…)가 staleTime 동안 그대로 화면에 나온다.
+function clearSessionCache(): void {
+  getQueryClient().clear()
+}
 
 // 401(만료) 시 리프레시 토큰으로 새 토큰을 발급한다. 실패하면 토큰을 비우고 null.
 async function refreshAccessToken(): Promise<string | null> {
@@ -58,6 +66,7 @@ export async function signInWithKakaoToken(kakaoAccessToken: string): Promise<Lo
     throw new Error('로그인 응답에 토큰이 없습니다.')
   }
   await saveTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+  clearSessionCache()
   return data
 }
 
@@ -70,6 +79,7 @@ export async function signInWithAppleToken(request: AppleLoginRequest): Promise<
     throw new Error('로그인 응답에 토큰이 없습니다.')
   }
   await saveTokens({ accessToken: data.accessToken, refreshToken: data.refreshToken })
+  clearSessionCache()
   return data
 }
 
@@ -78,7 +88,7 @@ export async function agreeTerms(): Promise<void> {
   await agreeToTerms()
 }
 
-// 로그아웃: 서버 리프레시 토큰 폐기 + 로컬 토큰 정리. 서버 실패해도 로컬은 정리한다.
+// 로그아웃: 서버 리프레시 토큰 폐기 + 로컬 토큰·세션 캐시 정리. 서버 실패해도 로컬은 정리한다.
 export async function signOut(): Promise<void> {
   const currentRefreshToken = getRefreshToken()
   try {
@@ -87,5 +97,6 @@ export async function signOut(): Promise<void> {
     console.warn('로그아웃 요청 실패', error)
   } finally {
     await clearTokens()
+    clearSessionCache()
   }
 }
