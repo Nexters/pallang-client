@@ -18,7 +18,7 @@ import { userQueries } from '@/app/_global/_queries/user.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { BlockConfirmDialog } from '../BlockConfirmDialog/BlockConfirmDialog'
-import { ReportSheet } from '../ReportSheet/ReportSheet'
+import { ReportDialog } from '../ReportDialog/ReportDialog'
 
 type ModerationMenuProps = {
   /** 신고 대상 — 흔적이면 opinionId, 댓글이면 commentId */
@@ -165,7 +165,7 @@ export function ModerationMenu({ target, authorUserId, authorNickname }: Moderat
           </button>
         </div>
       )}
-      <ReportSheet
+      <ReportDialog
         open={isReportOpen}
         loading={report.isPending}
         onClose={() => {
