@@ -197,7 +197,7 @@ emulator -avd pallang_test -camera-back webcam0 -partition-size 2048 -no-snapsho
 
 # 5. 설치 & 실행 (다른 탭)
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -n kr.pallang.app/.MainActivity
+adb shell am start -n kr.co.pallang.app/.MainActivity
 ```
 
 - **디스크 주의**: 에뮬레이터가 userdata에 ~7GB 요구. 부족하면 `Not enough space to create userdata partition`으로 부팅 실패 → 공간 확보 후 재시도. `config.ini`의 `disk.dataPartition.size` 축소로도 완화.
@@ -213,7 +213,7 @@ adb shell am start -n kr.pallang.app/.MainActivity
 
 ## 미확정 / 배포 전 할 일
 
-- `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://pallang.co.kr`)은 실제 값으로 교체 완료. Android 패키지명(`kr.pallang.app`)은 별도 정리 예정.
+- `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://pallang.co.kr`)은 실제 값으로 교체 완료. Android 패키지명도 `kr.co.pallang.app`으로 통일 완료.
 - **iOS**: 시뮬레이터 + 실기기(iPhone 12 Pro) 카메라 검증 완료. **Android**: 에뮬레이터(Android 16) 카메라 검증 완료. 둘 다 실기 스토어 제출(서명·심사)은 미수행.
 - **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
 
