@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 // 배포 전 실제 값으로 교체할 것
-const APP_ID = 'kr.pallang.app'
+const APP_ID = 'kr.co.pallang.app'
 const PROD_SERVER_URL = 'https://pallang.example.com'
 
 // dev 라이브리로드: CAP_SERVER_URL=http://<LAN_IP>:3000 pnpm cap:ios
