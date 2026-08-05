@@ -83,7 +83,7 @@ describe('normalizeExternalAuthor', () => {
 
 describe('toCreateBookInput', () => {
   it('페이지 수를 숫자로 바꾸고 앞뒤 공백을 턴다', () => {
-    expect(toCreateBookInput({ ...filled, title: '  채식주의자 ' }, null)).toEqual({
+    expect(toCreateBookInput({ ...filled, title: '  채식주의자 ' })).toEqual({
       author: '한강',
       isbn: '9788936434120',
       pageCount: 268,
@@ -92,16 +92,9 @@ describe('toCreateBookInput', () => {
     })
   })
 
-  it('빈 ISBN과 커버는 아예 넣지 않는다', () => {
+  it('빈 ISBN은 아예 넣지 않는다', () => {
     // 빈 문자열을 그대로 보내면 서버가 형식 검증에서 400을 낸다.
-    const input = toCreateBookInput({ ...filled, isbn: '' }, null)
+    const input = toCreateBookInput({ ...filled, isbn: '' })
     expect('isbn' in input).toBe(false)
-    expect('coverImageUrl' in input).toBe(false)
-  })
-
-  it('커버 URL이 있으면 함께 보낸다', () => {
-    expect(toCreateBookInput(filled, 'https://image.aladin.co.kr/cover.jpg').coverImageUrl).toBe(
-      'https://image.aladin.co.kr/cover.jpg',
-    )
   })
 })

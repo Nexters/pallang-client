@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import type { FC, SVGProps } from 'react'
 import { useState } from 'react'
 
+import AppleIcon from './assets/apple.svg'
 import BackIcon from './assets/back.svg'
 import BookAddIcon from './assets/book-add.svg'
 import CameraIcon from './assets/camera.svg'
@@ -51,6 +52,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'BookAddIcon', Component: BookAddIcon },
   { name: 'SettingIcon', Component: SettingIcon },
   { name: 'KakaoIcon', Component: KakaoIcon },
+  { name: 'AppleIcon', Component: AppleIcon },
   // 흔적 꾸미기 효과 썸네일. 글자(#717171)와 효과 자국(브랜드 오렌지)이 고정된 2색 아이콘이라
   // currentColor로 치환하지 않는다 — 색을 바꿀 수 있게 만들면 두 색 중 하나만 따라간다.
   { name: 'EffectHighlightIcon', Component: EffectHighlightIcon },
