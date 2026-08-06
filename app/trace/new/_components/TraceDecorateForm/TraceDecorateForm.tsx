@@ -172,10 +172,7 @@ export function TraceDecorateForm() {
         <EffectPicker onPick={handlePick} disabled={false} />
       </div>
 
-      <div
-        className="mt-auto flex gap-2 p-4"
-        style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
-      >
+      <div className="mt-auto flex gap-2 px-4 pt-4 pb-safe">
         <Button
           variant="back"
           className="h-[54px] flex-1"

@@ -135,7 +135,7 @@ export default function TermsAgreePage() {
         </div>
       </div>
 
-      <div className="relative z-10 mt-auto flex shrink-0 items-center justify-center p-4">
+      <div className="relative z-10 mt-auto flex shrink-0 items-center justify-center px-4 pt-4 pb-safe">
         <Button
           disabled={!termsAgreed || isSubmitting}
           onClick={handleNextClick}

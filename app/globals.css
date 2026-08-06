@@ -295,3 +295,15 @@ body {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* 하단에 붙는 요소가 홈 인디케이터를 피하는 표준 여백. 인라인 style로 같은 식을 반복하면
+   빠뜨려도 눈에 띄지 않는다(약관 동의 화면이 그렇게 새서 버튼이 인디케이터에 덮였다).
+   safeAreaConvention.spec.ts가 인라인 사용을 막고 이 유틸리티로 몬다. */
+@utility pb-safe {
+  padding-bottom: max(1rem, var(--safe-bottom));
+}
+
+/* 여백이 더 넓은 화면용(CameraCheck) — 기준값만 다르고 규칙은 같다 */
+@utility pb-safe-8 {
+  padding-bottom: max(2rem, var(--safe-bottom));
+}

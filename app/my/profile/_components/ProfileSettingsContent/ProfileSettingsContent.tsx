@@ -6,12 +6,11 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
-import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
+import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { Spinner } from '@/app/_global/_components/Spinner/Spinner'
 import { Textfield } from '@/app/_global/_components/Textfield/Textfield'
-import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { ApiError } from '@/app/_global/_data/api.model'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
@@ -109,58 +108,45 @@ export function ProfileSettingsContent() {
   const isPending = status === 'loading' || (isAuthenticated && !me && !isError)
 
   return (
-    // 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다
-    <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
+    <>
       {/* 셸은 데이터를 기다리지 않는다 — 로딩 중에도 TopBar와 타이틀은 그대로 선다 */}
-      <TopBar.Root>
-        <TopBar.Action
-          aria-label="뒤로"
-          onClick={() => {
-            router.back()
-          }}
-        >
-          <BackIcon />
-        </TopBar.Action>
-        <TopBar.Title as="h1">프로필 설정</TopBar.Title>
-      </TopBar.Root>
-
-      {me && !isPending ? (
-        <ProfileForm
-          email={me.email ?? null}
-          profileImageUrl={me.profileImageUrl ?? null}
-          nickname={nicknameInput ?? me.nickname}
-          nicknameError={nicknameError}
-          isImageUploading={modifyProfileImage.isPending}
-          onNicknameChange={(value) => {
-            setNicknameInput(value)
-            setNicknameError('')
-          }}
-          onEditImage={() => void handleEditImage()}
-          onWithdrawClick={() => {
-            setIsWithdrawOpen(true)
-          }}
-        />
-      ) : isError ? (
-        <p className="flex flex-1 items-center justify-center px-4 text-center text-body-14md text-text-tertiary">
-          프로필을 불러오지 못했어요. 잠시 후 다시 시도해주세요.
-        </p>
-      ) : (
-        <ProfileSettingsSkeleton />
-      )}
-
-      <div
-        className="mt-auto flex shrink-0 p-4"
-        style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
+      <ScreenLayout
+        title="프로필 설정"
+        footer={
+          <Button
+            className="h-[54px] flex-1"
+            disabled={!me}
+            loading={modifyNickname.isPending}
+            onClick={handleSave}
+          >
+            저장하기
+          </Button>
+        }
       >
-        <Button
-          className="h-[54px] flex-1"
-          disabled={!me}
-          loading={modifyNickname.isPending}
-          onClick={handleSave}
-        >
-          저장하기
-        </Button>
-      </div>
+        {me && !isPending ? (
+          <ProfileForm
+            email={me.email ?? null}
+            profileImageUrl={me.profileImageUrl ?? null}
+            nickname={nicknameInput ?? me.nickname}
+            nicknameError={nicknameError}
+            isImageUploading={modifyProfileImage.isPending}
+            onNicknameChange={(value) => {
+              setNicknameInput(value)
+              setNicknameError('')
+            }}
+            onEditImage={() => void handleEditImage()}
+            onWithdrawClick={() => {
+              setIsWithdrawOpen(true)
+            }}
+          />
+        ) : isError ? (
+          <p className="flex flex-1 items-center justify-center px-4 text-center text-body-14md text-text-tertiary">
+            프로필을 불러오지 못했어요. 잠시 후 다시 시도해주세요.
+          </p>
+        ) : (
+          <ProfileSettingsSkeleton />
+        )}
+      </ScreenLayout>
 
       <WithdrawDialog
         open={isWithdrawOpen}
@@ -171,13 +157,14 @@ export function ProfileSettingsContent() {
         onConfirm={handleWithdraw}
       />
 
+      {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
         message={message}
         onClose={() => {
           setMessage('')
         }}
       />
-    </main>
+    </>
   )
 }
 
@@ -201,7 +188,7 @@ function ProfileForm({
   onWithdrawClick: () => void
 }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
+    <div className="flex flex-col px-4">
       <div className="flex justify-center py-6">
         <div className="relative">
           {profileImageUrl ? (

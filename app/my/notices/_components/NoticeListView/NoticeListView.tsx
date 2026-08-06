@@ -4,11 +4,11 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 
 import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
+import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { noticeQueries } from '@/app/_global/_queries/notice.queries'
 
 import { formatNoticeDate } from '../../_services/noticeDate.service'
-import { NoticeScreenShell } from '../NoticeScreenShell/NoticeScreenShell'
 
 export function NoticeListView() {
   const listQuery = useQuery(noticeQueries.list())
@@ -53,7 +53,11 @@ export function NoticeListView() {
     )
   }
 
-  return <NoticeScreenShell>{renderList()}</NoticeScreenShell>
+  return (
+    <ScreenLayout title="공지사항" bodyClassName="px-4">
+      {renderList()}
+    </ScreenLayout>
+  )
 }
 
 /** 목록과 같은 좌표(제목 + 날짜 두 줄, 행 py-4)로 자리를 지킨다 */

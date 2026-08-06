@@ -2,21 +2,18 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
-import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
+import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
-import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { blockMutations, blockQueries } from '@/app/_global/_queries/block.queries'
 import { commentQueries } from '@/app/_global/_queries/comment.queries'
 import { opinionQueries } from '@/app/_global/_queries/opinion.queries'
 
 // ponytail: 차단 관리 확정 디자인이 없다 — 마이페이지 톤(흰 배경·프로필 행)으로 만든 1차 구현.
 export function BlockedUsersView() {
-  const router = useRouter()
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('')
 
@@ -123,30 +120,19 @@ export function BlockedUsersView() {
   }
 
   return (
-    <main className="flex h-full min-h-0 flex-col bg-bg-default">
-      {/* 셸(TopBar)은 데이터를 기다리지 않는다 — 목록 자리만 골격으로 채운다 */}
-      <TopBar.Root>
-        <TopBar.Action
-          aria-label="뒤로 가기"
-          onClick={() => {
-            router.back()
-          }}
-        >
-          <BackIcon />
-        </TopBar.Action>
-        <TopBar.Title as="h1">차단 관리</TopBar.Title>
-        <TopBar.Spacer />
-      </TopBar.Root>
+    <>
+      <ScreenLayout title="차단 관리" bodyClassName="px-4 py-2">
+        {renderList()}
+      </ScreenLayout>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2">{renderList()}</div>
-
+      {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
         message={message}
         onClose={() => {
           setMessage('')
         }}
       />
-    </main>
+    </>
   )
 }
 
