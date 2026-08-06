@@ -10,31 +10,25 @@ import { POLICY_META_BY_SLUG } from '@/app/_shared/terms/_data/policy.constant'
 import type { MyTrace, MyUser } from '../../_types/myUser.type'
 import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 
-const loggedInSettings = [
-  '공지사항',
-  '배경 변경',
-  '스포일러 관리',
-  '내가 남긴 흔적',
-  '좋아요 누른 흔적',
-  '알림 설정',
-  '차단 관리',
-]
-const loggedOutSettings = ['공지사항', '개인정보 처리 방침', '서비스 이용약관']
+/** 갈 곳이 없는 항목(path 없음)은 아직 화면이 없는 것 — 버튼으로만 그린다 */
+type SettingItem = { label: string; path?: string }
 
-function getSettingPath(label: string): null | string {
-  switch (label) {
-    case '개인정보 처리 방침':
-      return POLICY_META_BY_SLUG.privacy.path
-    case '서비스 이용약관':
-      return POLICY_META_BY_SLUG.service.path
-    case '차단 관리':
-      return '/my/blocks'
-    case '공지사항':
-      return '/my/notices'
-    default:
-      return null
-  }
-}
+const loggedInSettings: SettingItem[] = [
+  { label: '공지사항', path: '/my/notices' },
+  // 화면이 아직 없는 기능 — #170에서 구현하면 다시 노출한다
+  // { label: '배경 변경' },
+  // 백엔드 API가 아직 없는 기능 — 스펙이 생기면 다시 노출한다
+  // { label: '스포일러 관리' },
+  { label: '내가 남긴 흔적', path: '/my/traces' },
+  { label: '좋아요 누른 흔적', path: '/my/likes' },
+  // { label: '알림 설정' },
+  { label: '차단 관리', path: '/my/blocks' },
+]
+const loggedOutSettings: SettingItem[] = [
+  { label: '공지사항', path: '/my/notices' },
+  { label: '개인정보 처리 방침', path: POLICY_META_BY_SLUG.privacy.path },
+  { label: '서비스 이용약관', path: POLICY_META_BY_SLUG.service.path },
+]
 
 type MyPageViewProps = {
   user: MyUser | null
@@ -211,13 +205,12 @@ function LoggedOutContent({ onLoginClick }: { onLoginClick?: () => void }) {
   )
 }
 
-function SettingSection({ items }: { items: string[] }) {
+function SettingSection({ items }: { items: SettingItem[] }) {
   return (
     <section className="flex flex-col gap-6 px-4">
       <h2 className="text-body-16bd text-text-primary">설정</h2>
       <ul className="flex w-full flex-col gap-4">
-        {items.map((label) => {
-          const settingPath = getSettingPath(label)
+        {items.map(({ label, path }) => {
           const className = 'flex w-full items-center gap-2'
           const content = (
             <>
@@ -231,8 +224,8 @@ function SettingSection({ items }: { items: string[] }) {
 
           return (
             <li key={label}>
-              {settingPath ? (
-                <Link href={settingPath} className={className}>
+              {path ? (
+                <Link href={path} className={className}>
                   {content}
                 </Link>
               ) : (

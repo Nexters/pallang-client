@@ -13,9 +13,10 @@ export type Highlight = {
 }
 
 /** 보고 있는 대목의 위치.
-    이전 페이지로 넘어갈 때는 그 페이지의 대목 수를 아직 모르므로 'last'로 미뤄두고,
-    대목이 도착한 렌더 시점에 실제 인덱스로 푼다(resolveQuoteIndex) */
-export type QuoteCursor = number | 'last'
+    인덱스로 확정할 수 없는 자리는 그 페이지의 대목이 도착한 렌더 시점에 푼다(resolveQuoteIndex).
+    - 'last': 이전 페이지로 넘어갈 때 — 그 페이지의 대목 수를 아직 모른다
+    - { passageId }: 목록 화면에서 특정 흔적을 지목해 들어올 때 — 몇 번째 대목인지 아직 모른다 */
+export type QuoteCursor = number | 'last' | { passageId: number }
 
 /** 좌우 스와이프 방향 — next는 다음 대목(끝이면 다음 페이지) 쪽 */
 export type SwipeDirection = 'next' | 'prev'
