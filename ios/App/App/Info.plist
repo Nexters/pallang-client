@@ -11,9 +11,11 @@
 	<!-- 이 앱은 사진을 저장하지 않는다(saveToGallery=false). 그런데도 이 키가 필요하다 —
 	     Capacitor 카메라 플러그인이 getPhoto 진입에서 CameraPropertyListKeys의 세 키를
 	     모두 검사하고(CameraTypes.swift), 하나라도 없으면 카메라를 열기 전에 reject한다.
-	     빠지면 권한 창도 안 뜨고 촬영이 통째로 죽는다. 세 키는 항상 같이 둔다. -->
+	     빠지면 권한 창도 안 뜨고 촬영이 통째로 죽는다. 세 키는 항상 같이 둔다.
+	     문구가 "저장하지 않는다"고 못 박는 이유 — 목적 문자열은 실제 사용을 정확히 설명해야
+	     한다(가이드라인 5.1.1). 저장 기능이 없으므로 저장한다고 쓰면 사실과 다르다. -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>촬영한 도서 사진을 사진 앱에 저장할 때 사용합니다.</string>
+	<string>촬영 기능을 사용하기 위해 필요한 항목입니다. 이 앱은 사진 앱에 이미지를 저장하지 않습니다.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
