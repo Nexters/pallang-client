@@ -17,14 +17,14 @@
 	     아래 CFBundleURLSchemes의 kakao<앱키>와 같은 값이라 한 파일에 모아 둔다.
 	     공개되는 클라이언트 식별자다 — REST 키/client secret은 서버 env에만 둔다. -->
 	<key>KAKAO_NATIVE_APP_KEY</key>
-	<string>7cf59ac643beca67379d26c74feaa5cb</string>
+	<string>b7259995598de30dd888e3f6eed22023</string>
 	<!-- 카카오톡이 로그인을 마치고 앱으로 돌아올 때 쓰는 주소(kakao<앱키>://oauth). -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kakao7cf59ac643beca67379d26c74feaa5cb</string>
+				<string>kakaob7259995598de30dd888e3f6eed22023</string>
 			</array>
 		</dict>
 	</array>

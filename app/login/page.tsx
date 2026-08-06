@@ -8,7 +8,8 @@ import { Button } from '@/app/_global/_components/Button/Button'
 import AppleIcon from '@/app/_global/_components/Icon/assets/apple.svg'
 import KakaoIcon from '@/app/_global/_components/Icon/assets/kakao.svg'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
-import { KAKAO_LOGIN_PATH } from '@/app/_global/_data/auth.constant'
+import { ApiError } from '@/app/_global/_data/api.model'
+import { KAKAO_LOGIN_PATH, WITHDRAWN_ACCOUNT_CODE } from '@/app/_global/_data/auth.constant'
 import { signInWithAppleToken, signInWithKakaoToken } from '@/app/_global/_queries/auth.queries'
 import { resolvePostLoginPath } from '@/app/_global/_services/postLoginRedirect.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
@@ -54,7 +55,12 @@ export default function LoginPage() {
         // 사용자가 직접 닫은 것은 실패가 아니다 — 조용히 돌아온다.
         if (isCancel(e)) return
         console.error(`${label} 로그인 실패`, e)
-        setSnackbarMessage(`${label} 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.`)
+        // 탈퇴한 계정은 재시도해도 계속 막히므로 "잠시 후 다시 시도"로 안내하면 안 된다.
+        setSnackbarMessage(
+          e instanceof ApiError && e.code === WITHDRAWN_ACCOUNT_CODE
+            ? '탈퇴한 계정이에요. 다른 계정으로 로그인해 주세요.'
+            : `${label} 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.`,
+        )
       })
       .finally(() => {
         setPending(null)

@@ -27,6 +27,11 @@ export const REFRESH_TOKEN_KEY = 'pallang.refreshToken'
 // 서버가 액세스 토큰 만료 시 내려주는 에러 코드(AUTH_401_2). 이때만 refresh 회전을 시도한다.
 export const TOKEN_EXPIRED_CODE = 'AUTH_401_2'
 
+// 탈퇴한 계정으로 로그인을 시도할 때 서버가 내려주는 코드(AUTH_403_1).
+// ponytail: 백엔드가 탈퇴 계정의 즉시 재가입을 허용하면 이 코드는 더 내려오지 않는다 — 그때 이 상수와
+// 로그인 화면의 분기를 함께 지운다. 그전까지는 "잠시 후 다시 시도" 안내가 거짓말이라 분기가 필요하다.
+export const WITHDRAWN_ACCOUNT_CODE = 'AUTH_403_1'
+
 // 로그인 후 이동 경로.
 export const HOME_PATH = '/'
 export const LOGIN_PATH = '/login'
