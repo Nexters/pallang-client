@@ -29,6 +29,8 @@ function getSettingPath(label: string): null | string {
       return POLICY_META_BY_SLUG.service.path
     case '차단 관리':
       return '/my/blocks'
+    case '공지사항':
+      return '/my/notices'
     default:
       return null
   }
