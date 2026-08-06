@@ -289,3 +289,79 @@ adb shell am start -n kr.co.pallang.app/.MainActivity
 3. **업로드**: Transporter 앱(App Store에서 설치)에 .ipa를 드래그해 업로드.
 4. App Store Connect → TestFlight 탭에서 처리 완료(수 분) 후 내부 테스터 추가. 수출 규정 질문은 `ITSAppUsesNonExemptEncryption=false`로 생략된다.
 5. 버전은 `MARKETING_VERSION`, 빌드 번호는 `CURRENT_PROJECT_VERSION`(pbxproj) — 같은 버전을 다시 올릴 땐 빌드 번호를 올려야 한다.
+
+## Google Play 배포 (릴리스 번들 · AAB)
+
+TestFlight 절의 Android 대응이다. **개념은 같다** — 네이티브는 한 종류이고 로드하는 웹 주소만 다르다.
+
+|             | `pnpm android:bundle:dev`          | `pnpm android:bundle`              |
+| ----------- | ---------------------------------- | ---------------------------------- |
+| 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `www.pallang.co.kr` (release 배포) |
+| 용도        | 내부 테스트 트랙                   | **심사 제출·프로덕션 전용**        |
+
+iOS와 마찬가지로 **웹 코드 변경은 앱을 다시 올릴 필요가 없다.** 재빌드가 필요한 건 네이티브가 바뀔 때뿐이다.
+
+### 업로드 키 만들기 (최초 1회)
+
+Play는 서명되지 않은 번들을 받지 않는다. **키와 비밀번호는 저장소에 넣지 않는다** — `android/.gitignore`가 `*.jks`와 `keystore.properties`를 막는다.
+
+```bash
+PW=$(openssl rand -base64 24)      # 비밀번호는 만든 뒤 비밀번호 관리자에 옮길 것
+keytool -genkeypair -v \
+  -keystore android/pallang-upload.jks \
+  -alias pallang-upload \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storepass "$PW" -keypass "$PW" \
+  -dname "CN=pallang, OU=Nexters, O=Nexters, L=Seoul, C=KR"
+
+cat > android/keystore.properties <<EOF
+storeFile=pallang-upload.jks
+storePassword=$PW
+keyAlias=pallang-upload
+keyPassword=$PW
+EOF
+chmod 600 android/keystore.properties android/pallang-upload.jks
+```
+
+- **`validity`는 넉넉하게** — Play는 2033년 이후까지 유효한 키를 요구한다. 10000일이면 충분하다.
+- **Play App Signing을 켤 것.** 그러면 이 키는 *업로드 키*일 뿐이고 실제 앱 서명 키는 구글이 보관한다. 업로드 키를 잃어버리거나 유출해도 Play Console에서 재설정할 수 있다. 끄면 이 키가 곧 앱 서명 키라 분실 시 앱을 영영 업데이트할 수 없다.
+- `android/app/build.gradle`은 `keystore.properties`가 **있을 때만** 서명 설정을 만든다. 없으면 release가 서명되지 않은 채로 빌드된다 — 키 없는 환경(CI·새 개발자)에서도 컴파일 검증은 되게 하기 위해서다. 대신 Play에는 올릴 수 없다.
+
+### 번들 만들기
+
+```bash
+pnpm android:bundle        # 운영(www) — 심사 제출용
+pnpm android:bundle:dev    # dev 서버를 보는 내부 테스트 빌드
+```
+
+`scripts/android-bundle.sh`가 iOS 스크립트와 같은 일을 한다.
+
+| 값            | 출처                                           | 비고                                                      |
+| ------------- | ---------------------------------------------- | --------------------------------------------------------- |
+| `versionName` | `package.json` 버전에서 prerelease 접미사 제거 | 사용자에게 보이는 버전. iOS `MARKETING_VERSION`과 같은 값 |
+| `versionCode` | 빌드마다 +1                                    | Play는 같은 값을 두 번 받지 않는다                        |
+
+산출물은 `android/app/build/outputs/bundle/release/app-release.aab`.
+
+**빌드가 `build.gradle`을 고치므로 끝나면 커밋한다.** 안 하면 다음 빌드가 같은 `versionCode`에서 다시 시작해 Play가 거부한다(iOS의 `pbxproj`와 같은 함정).
+
+### 올리기 전 확인
+
+```bash
+AAB=android/app/build/outputs/bundle/release/app-release.aab
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+
+jarsigner -verify "$AAB"                      # "jar verified." 가 나와야 한다
+keytool -printcert -jarfile "$AAB"            # SHA256 지문이 업로드 키와 같은지
+unzip -p "$AAB" base/assets/capacitor.config.json | grep url   # 의도한 서버를 보는지
+```
+
+- `jarsigner`가 내는 **"self-signed" · "certificate chain is invalid" 경고는 정상이다.** 업로드 키는 자체 서명이고 CA 체인이 없다.
+- **로드 URL 확인을 빠뜨리지 말 것** — dev 번들을 심사에 올리면 심사관이 dev 서버를 보게 된다.
+
+### Play Console (최초 1회)
+
+1. 앱 만들기 → 패키지명 `kr.co.pallang.app`
+2. **Play App Signing 활성화** (위 참고)
+3. 첫 업로드는 내부 테스트 트랙을 권한다 — 프로덕션은 되돌리기 어렵다
+4. 스토어 등록정보·콘텐츠 등급·데이터 보안 양식은 별도 작업이다. **이 앱은 카메라와 사진 접근을 쓰므로 데이터 보안 양식에 그 용도를 정확히 적어야 한다**(iOS의 `NSCameraUsageDescription` 문구와 어긋나지 않게).
