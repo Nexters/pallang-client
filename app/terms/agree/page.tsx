@@ -90,7 +90,9 @@ export default function TermsAgreePage() {
 
       <div className="relative z-10 h-11 shrink-0" />
 
-      <div className="relative z-10 flex h-115.5 shrink-0 items-center justify-center px-6 py-25">
+      {/* 높이를 고정하면(디자인 값 462px) 작은 화면에서 아래 카드와 CTA를 화면 밖으로 밀어낸다 —
+          section이 overflow-hidden이라 버튼에 닿을 수조차 없었다. 남는 공간을 이 영역이 흡수한다. */}
+      <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-6 py-25">
         <div className="flex flex-col items-center gap-1">
           <Logo aria-label="Pallang" className="h-25 w-60" />
           <p className="whitespace-nowrap text-center text-title-16sb text-text-primary">

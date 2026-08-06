@@ -8,6 +8,12 @@
 	<string>도서 표지를 촬영하고 책 문장을 인식하기 위해 카메라를 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>도서 표지 이미지를 등록하기 위해 선택한 사진에만 접근합니다.</string>
+	<!-- 이 앱은 사진을 저장하지 않는다(saveToGallery=false). 그런데도 이 키가 필요하다 —
+	     Capacitor 카메라 플러그인이 getPhoto 진입에서 CameraPropertyListKeys의 세 키를
+	     모두 검사하고(CameraTypes.swift), 하나라도 없으면 카메라를 열기 전에 reject한다.
+	     빠지면 권한 창도 안 뜨고 촬영이 통째로 죽는다. 세 키는 항상 같이 둔다. -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>촬영한 도서 사진을 사진 앱에 저장할 때 사용합니다.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
