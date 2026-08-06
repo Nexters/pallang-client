@@ -12,7 +12,8 @@ import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 
 const loggedInSettings = [
   '공지사항',
-  '배경 변경',
+  // 화면이 아직 없는 기능 — #170에서 구현하면 다시 노출한다
+  // '배경 변경',
   // 백엔드 API가 아직 없는 기능 — 스펙이 생기면 다시 노출한다
   // '스포일러 관리',
   '내가 남긴 흔적',
