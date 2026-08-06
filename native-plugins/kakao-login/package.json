@@ -1,0 +1,11 @@
+{
+  "name": "capacitor-kakao-login",
+  "version": "1.0.0",
+  "private": true,
+  "description": "카카오 네이티브 로그인(카카오톡 앱 전환) — iOS 전용 로컬 Capacitor 플러그인",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
