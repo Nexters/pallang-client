@@ -60,6 +60,14 @@
 - Next의 클라이언트 라우팅(SPA 전환)은 이 판정을 타지 않아서 평소엔 정상으로 보인다. `window.location.assign` 같은 **full-page 내비게이션에서만** 터져서 발견이 늦는다.
 - **해결: `CAP_SERVER_URL`은 항상 origin까지만.** `scripts/cap-dev.sh`가 origin만 굽도록 되어 있다(경로 인자 제거됨).
 
+### 같은 함정의 두 번째 얼굴 — 리다이렉트로 **호스트**가 바뀌어도 튕긴다
+
+- 증상: **운영 빌드가 첫 로드부터 Safari로 열리고 앱은 빈 화면.** 경로를 넣지 않았는데도 터진다.
+- 원인: 판정 기준이 "절대 URL 문자열 prefix"라 **호스트가 달라져도 외부로 본다.** `PROD_SERVER_URL`이 apex(`pallang.co.kr`)면 서버가 `www`로 308 리다이렉트하는 순간 `https://www.pallang.co.kr/...`가 되고, 이는 `https://pallang.co.kr`로 시작하지 않는다.
+- **dev(`dev.pallang.co.kr`)는 리다이렉트가 없어 TestFlight dev 빌드로는 절대 재현되지 않는다.** 운영 빌드에서만 터진다.
+- **해결: `server.url`에는 리다이렉트 이후의 최종 호스트를 넣는다.** 지금은 `https://www.pallang.co.kr`. 보험으로 apex를 `allowNavigation`에 함께 넣어 두었다(allowNavigation에 오른 호스트는 내부로 판정된다).
+- 도메인 정책을 바꿔 canonical이 뒤집히면 이 값도 같이 바꿔야 한다. `curl -s -o /dev/null -w '%{http_code} %{redirect_url}' https://pallang.co.kr` 로 확인한다.
+
 ## ⚠️ 함정 5 — `Camera.getPhoto`의 `width` 축소가 글자를 뭉갠다 (OCR 인식률 저하)
 
 - 증상: 앱 카메라로 찍은 사진의 OCR 정확도가 **갤러리에서 고른 사진보다 눈에 띄게 낮다.** 사진은 멀쩡해 보이는데 인식만 안 된다.
@@ -213,7 +221,7 @@ adb shell am start -n kr.co.pallang.app/.MainActivity
 
 ## 미확정 / 배포 전 할 일
 
-- `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://pallang.co.kr`)은 실제 값으로 교체 완료. Android 패키지명도 `kr.co.pallang.app`으로 통일 완료.
+- `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://www.pallang.co.kr` — apex가 아니라 리다이렉트 이후의 최종 호스트, 함정 4 참고)은 실제 값으로 교체 완료. Android 패키지명도 `kr.co.pallang.app`으로 통일 완료.
 - **iOS**: 시뮬레이터 + 실기기(iPhone 12 Pro) 카메라 검증 완료. **Android**: 에뮬레이터(Android 16) 카메라 검증 완료. 둘 다 실기 스토어 제출(서명·심사)은 미수행.
 - **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
 
@@ -225,10 +233,10 @@ adb shell am start -n kr.co.pallang.app/.MainActivity
 
 이 앱은 웹뷰가 **원격 URL을 로드하는 껍데기**다. 그래서 빌드는 두 종류지만 네이티브는 완전히 같고, **열어보는 웹 주소만 다르다.**
 
-|             | `pnpm ios:archive:dev`             | `pnpm ios:archive`             |
-| ----------- | ---------------------------------- | ------------------------------ |
-| 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `pallang.co.kr` (release 배포) |
-| 용도        | TestFlight 내부 테스트             | **심사 제출·정식 배포 전용**   |
+|             | `pnpm ios:archive:dev`             | `pnpm ios:archive`                 |
+| ----------- | ---------------------------------- | ---------------------------------- |
+| 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `www.pallang.co.kr` (release 배포) |
+| 용도        | TestFlight 내부 테스트             | **심사 제출·정식 배포 전용**       |
 
 이 구조에서 헷갈리기 쉬운 것들:
 
@@ -241,7 +249,7 @@ adb shell am start -n kr.co.pallang.app/.MainActivity
 2. **아카이브**:
    ```bash
    pnpm ios:archive:dev   # dev.pallang.co.kr 을 로드하는 내부 테스트 빌드
-   pnpm ios:archive       # 운영(pallang.co.kr) 빌드 — 심사 제출용
+   pnpm ios:archive       # 운영(www.pallang.co.kr) 빌드 — 심사 제출용
    ```
    `build-ios/export/`에 .ipa가 생성된다. 서명은 자동(팀 DQ3Q4Z82DZ, `ExportOptions.plist`).
 3. **업로드**: Transporter 앱(App Store에서 설치)에 .ipa를 드래그해 업로드.

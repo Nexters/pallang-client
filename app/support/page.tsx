@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
+import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { POLICY_META_BY_SLUG } from '@/app/_shared/terms/_data/policy.constant'
 
 const SUPPORT_EMAIL = 'pallang4you@gmail.com'
@@ -30,53 +32,63 @@ const faqs = [
 
 export default function SupportPage() {
   return (
-    <main className="flex h-full min-h-0 flex-col overflow-y-auto bg-bg-default px-4 py-6">
-      <h1 className="text-title-20bd text-text-primary">팔랑 고객지원</h1>
-      <p className="mt-2 text-body-14rg leading-6 text-text-secondary">
-        이용 중 불편한 점이나 궁금한 점을 알려주시면 확인 후 답변드립니다.
-      </p>
+    <main className="flex h-full min-h-0 flex-col bg-bg-default">
+      <TopBar.Root>
+        {/* App Store에서 웹으로 바로 들어오면 뒤로 갈 히스토리가 없다 — router.back() 대신 링크로 보낸다 */}
+        <TopBar.LinkAction href="/my" aria-label="뒤로 가기">
+          <BackIcon />
+        </TopBar.LinkAction>
+        <TopBar.Title as="h1">고객지원</TopBar.Title>
+        <TopBar.Spacer />
+      </TopBar.Root>
 
-      <section className="mt-6 flex flex-col gap-2 rounded-lg bg-bg-book-card p-4">
-        <h2 className="text-body-16bd text-text-primary">문의하기</h2>
-        <a
-          href={`mailto:${SUPPORT_EMAIL}`}
-          className="text-body-14sb text-text-secondary underline press"
-        >
-          {SUPPORT_EMAIL}
-        </a>
-        <p className="text-body-14rg leading-6 text-text-tertiary">
-          영업일 기준 3일 이내에 회신합니다. 오류 제보는 사용 중인 기기와 상황을 함께 적어주시면
-          확인이 빠릅니다.
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+        <p className="text-body-14rg leading-6 text-text-secondary">
+          이용 중 불편한 점이나 궁금한 점을 알려주시면 확인 후 답변드립니다.
         </p>
-      </section>
 
-      <section className="mt-8 flex flex-col gap-6">
-        <h2 className="text-body-16bd text-text-primary">자주 묻는 질문</h2>
-        <dl className="flex flex-col gap-5">
-          {faqs.map(({ question, answer }) => (
-            <div key={question} className="flex flex-col gap-1.5">
-              <dt className="text-body-14sb text-text-primary">{question}</dt>
-              <dd className="text-body-14rg leading-6 text-text-secondary">{answer}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+        <section className="mt-6 flex flex-col gap-2 rounded-lg bg-bg-book-card p-4">
+          <h2 className="text-body-16bd text-text-primary">문의하기</h2>
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="text-body-14sb text-text-secondary underline press"
+          >
+            {SUPPORT_EMAIL}
+          </a>
+          <p className="text-body-14rg leading-6 text-text-tertiary">
+            영업일 기준 3일 이내에 회신합니다. 오류 제보는 사용 중인 기기와 상황을 함께 적어주시면
+            확인이 빠릅니다.
+          </p>
+        </section>
 
-      <nav className="mt-10 flex items-center gap-2.5 pb-2">
-        <Link
-          href={POLICY_META_BY_SLUG.service.path}
-          className="text-body-14sb tracking-normal text-text-tertiary"
-        >
-          이용약관
-        </Link>
-        <span aria-hidden className="h-3 w-px bg-border-default" />
-        <Link
-          href={POLICY_META_BY_SLUG.privacy.path}
-          className="text-body-14sb tracking-normal text-text-tertiary"
-        >
-          개인정보 처리방침
-        </Link>
-      </nav>
+        <section className="mt-8 flex flex-col gap-6">
+          <h2 className="text-body-16bd text-text-primary">자주 묻는 질문</h2>
+          <dl className="flex flex-col gap-5">
+            {faqs.map(({ question, answer }) => (
+              <div key={question} className="flex flex-col gap-1.5">
+                <dt className="text-body-14sb text-text-primary">{question}</dt>
+                <dd className="text-body-14rg leading-6 text-text-secondary">{answer}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <nav className="mt-10 flex items-center gap-2.5">
+          <Link
+            href={POLICY_META_BY_SLUG.service.path}
+            className="text-body-14sb tracking-normal text-text-tertiary"
+          >
+            이용약관
+          </Link>
+          <span aria-hidden className="h-3 w-px bg-border-default" />
+          <Link
+            href={POLICY_META_BY_SLUG.privacy.path}
+            className="text-body-14sb tracking-normal text-text-tertiary"
+          >
+            개인정보 처리방침
+          </Link>
+        </nav>
+      </div>
     </main>
   )
 }

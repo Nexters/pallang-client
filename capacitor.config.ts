@@ -2,9 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const APP_ID = 'kr.co.pallang.app'
 // 기본은 운영. dev 서버를 로드하는 빌드(TestFlight 내부 테스트 등)는 CAP_SERVER_URL로 덮어쓴다.
-// apex(pallang.co.kr)는 www로 308 리다이렉트된다. Capacitor iOS는 내부/외부 내비게이션을
-// serverURL 문자열 prefix로 판정하므로(함정 4), apex를 박으면 리다이렉트 직후 호스트가 달라져
-// 첫 로드부터 외부 판정 → Safari로 튕긴다. 반드시 리다이렉트 이후의 최종 호스트를 쓴다.
+// 리다이렉트 이후의 최종 호스트를 쓴다(apex는 www로 308). 이유는 docs/capacitor.md 함정 4.
 const PROD_SERVER_URL = 'https://www.pallang.co.kr'
 
 // dev 라이브리로드: CAP_SERVER_URL=http://<LAN_IP>:3000 pnpm cap:ios / TestFlight dev: pnpm ios:archive:dev
@@ -26,10 +24,14 @@ const config: CapacitorConfig = {
     allowNavigation: ['pallang.co.kr', 'kauth.kakao.com', 'accounts.kakao.com'],
   },
   plugins: {
-    // 인증 상태(로그인/비로그인) 결정 전까지 비로그인 화면이 깜빡 보이는 것 방지.
-    // AuthProvider가 초기화 완료 후 SplashScreen.hide()를 호출한다.
+    // 인증 상태(로그인/비로그인) 결정 전까지 비로그인 화면이 깜빡 보이는 것 방지 —
+    // AuthProvider가 초기화를 마치면 SplashScreen.hide()로 더 일찍 내린다.
+    // 상한을 네이티브에 두는 이유: 원격 URL을 로드하므로 네트워크 단절·번들 404처럼
+    // JS가 아예 실행되지 않는 실패에서는 웹에 둔 타이머가 걸리지 않는다. 그 경우
+    // 스플래시가 영영 남아 "앱 실행 불가"로 읽힌다.
     SplashScreen: {
-      launchAutoHide: false,
+      launchAutoHide: true,
+      launchShowDuration: 5000,
     },
   },
 }

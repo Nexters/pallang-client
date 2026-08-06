@@ -19,9 +19,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-/** 인증 초기화가 응답 없이 매달릴 때 스플래시를 강제로 내리는 시점 */
-const SPLASH_FALLBACK_MS = 5000
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [status, setStatus] = useState<AuthStatus>('loading')
@@ -48,9 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (active) setStatus(hasTokens() ? 'authenticated' : 'unauthenticated')
     }
     const unsubscribe = subscribeAuthTokens(sync)
-    // 초기화가 실패해도(finally), 응답이 영영 오지 않아도(타이머) 스플래시는 반드시 내린다.
-    // launchAutoHide: false라 여기서 안 내리면 스플래시가 그대로 남아 "앱 실행 불가"로 보인다.
-    const splashTimer = setTimeout(() => void hideSplashScreen(), SPLASH_FALLBACK_MS)
     void initAuthSession()
       // 초기화가 실패해도 저장된 토큰 기준으로 상태를 확정한다. 여기서 sync를 건너뛰면
       // status가 'loading'에 머물러 화면이 영원히 골격으로 남는다.
@@ -58,13 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('인증 초기화 실패 — 저장된 토큰 기준으로 진행한다', error)
       })
       .then(sync)
-      .finally(() => {
-        clearTimeout(splashTimer)
-        void hideSplashScreen()
-      })
+      // 인증이 끝나면 스플래시를 내린다. 응답이 영영 오지 않는 경우의 상한은
+      // capacitor.config.ts의 launchShowDuration이 네이티브에서 맡는다.
+      .finally(() => void hideSplashScreen())
     return () => {
       active = false
-      clearTimeout(splashTimer)
       unsubscribe()
     }
   }, [])
