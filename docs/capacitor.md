@@ -4,16 +4,36 @@
 
 ## 쓰는 플러그인
 
-| 플러그인                             | 용도                                                                         |
-| ------------------------------------ | ---------------------------------------------------------------------------- |
-| `@capacitor/camera`                  | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)              |
-| `@capacitor/app`                     | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6) |
-| `@capacitor/preferences`             | 토큰 저장                                                                    |
-| `@capacitor/splash-screen`           | 인증 판정 전 깜빡임 방지                                                     |
-| `@capacitor-community/apple-sign-in` | 애플 로그인 (iOS 네이티브 시트 — 웹 미제공, 버튼도 iOS 앱에서만 노출)        |
+| 플러그인                             | 용도                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------ |
+| `@capacitor/camera`                  | 대목 사진 촬영 (함정 3 참고 — 경로가 아니라 `DataUrl`로 받는다)                |
+| `@capacitor/app`                     | Android 하드웨어 back·엣지 스와이프 인터셉트(`HardwareBackProvider`, 함정 6)   |
+| `@capacitor/preferences`             | 토큰 저장                                                                      |
+| `@capacitor/splash-screen`           | 인증 판정 전 깜빡임 방지                                                       |
+| `@capacitor-community/apple-sign-in` | 애플 로그인 (iOS 네이티브 시트 — 웹 미제공, 버튼도 iOS 앱에서만 노출)          |
+| `capacitor-kakao-login`              | 카카오 로그인 (iOS 카카오톡 앱 전환 — 이 저장소 안의 로컬 플러그인, 아래 참고) |
 
 - 플러그인을 추가하면 `npx cap sync` 후 **앱 재설치**가 필요하다(아래 표의 "네이티브 변경").
 - `@capacitor/app`의 `backButton` 리스너는 **네이티브에서만**, 그리고 **앱 전체에서 하나만** 붙인다(`HardwareBackProvider`). 브라우저에서는 `Capacitor.isNativePlatform()`이 `false`라 리스너를 걸지 않고, 브라우저 back이 그대로 동작한다.
+
+### 로컬 플러그인 (`native-plugins/`)
+
+카카오 로그인은 npm 패키지가 아니라 저장소 안의 플러그인이다. 공개된 것들 중 관리되는 쪽은 카카오톡 앱 전환을 실제로 하지 않고, 어느 쪽을 쓰든 `Info.plist`와 URL 복귀 처리는 어차피 직접 해야 해서 Swift 한 파일이 더 싸다.
+
+```
+native-plugins/kakao-login/
+  package.json    # capacitor.ios.src — 이게 있어야 cap sync가 플러그인으로 인식한다
+  Package.swift   # 카카오 공식 SDK 의존성
+  ios/Sources/KakaoLoginPlugin/KakaoLoginPlugin.swift
+```
+
+붙이는 방법과 지켜야 할 제약:
+
+- 루트 `package.json`에 **`"capacitor-kakao-login": "link:./native-plugins/kakao-login"`**. import하는 코드는 없고, `cap sync`가 플러그인을 발견하게 하는 것이 유일한 목적이다. `file:`이 아니라 `link:`인 이유는 `file:`이 하드링크 복사라 Swift 파일을 다시 쓰면 연결이 끊기기 때문.
+- **`Package.swift`의 패키지·product 이름은 `CapacitorKakaoLogin`이어야 한다.** Capacitor CLI가 npm 이름(`capacitor-kakao-login`)을 `fixName`으로 변환해 `CapApp-SPM/Package.swift`에 적는 이름과 byte 단위로 같아야 한다. 어긋나면 없는 product를 참조해 빌드가 깨진다.
+- `ios/App/CapApp-SPM/Package.swift`는 **CLI가 생성**한다(`DO NOT MODIFY` 주석). 카카오 SDK 의존성은 거기가 아니라 플러그인 자신의 `Package.swift`에 선언한다.
+- JS 쪽은 패키지에 두지 않는다. `registerPlugin('KakaoLogin')` 한 줄이 전부라 `app/login/_services/kakaoAuth.service.ts`에 직접 쓴다.
+- 앱 키와 URL scheme은 `ios/App/App/Info.plist`에 있다 — 위 "ios/ 재생성 후 재적용 목록" 참고.
 
 아래는 **실제 구현·기기 검증에서 확인된 함정들**이다. 다시 겪으면 시간을 크게 날리므로 먼저 읽을 것. (함정 1·3은 iOS·Android 공통, 함정 2는 iOS 전용, Android는 아래 별도 섹션.)
 
@@ -36,9 +56,23 @@
 - **해결: iOS 프로젝트를 재생성**하고, 이후 **Xcode GUI로 열지 말고 CLI로 빌드/설치**한다.
   ```bash
   rm -rf ios && npx cap add ios
-  # 그리고 Info.plist 권한/ATS, DEVELOPMENT_TEAM 재적용(아래 참고)
+  # 그리고 아래 "ios/ 재생성 후 재적용 목록"을 전부 다시 넣는다
   ```
   - 재생성 후 `ios/App/App.xcodeproj/project.pbxproj`의 Sources 페이즈에 `AppDelegate.swift`가 있는지 확인(정상이면 크기 ~14KB, 손상되면 ~10KB).
+
+### ios/ 재생성 후 재적용 목록
+
+`npx cap add ios`는 템플릿을 새로 깔기 때문에 **손으로 넣은 값은 전부 사라진다.** 빌드가 깨지면 바로 알지만, 아래 카카오 키 세 개는 **빌드가 멀쩡히 되고 로그인만 조용히 망가지므로** 특히 놓치기 쉽다.
+
+| 파일                         | 넣을 것                                              | 빠뜨리면                                                    |
+| ---------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| `Info.plist`                 | `NSCameraUsageDescription` 등 카메라·앨범 권한 문구  | 카메라 호출 시 즉시 크래시                                  |
+| `Info.plist`                 | `NSAppTransportSecurity` / `NSAllowsLocalNetworking` | dev(LAN http) 로드 실패                                     |
+| `Info.plist`                 | `KAKAO_NATIVE_APP_KEY`                               | SDK 미초기화 → 카카오 로그인이 일반 실패 스낵바로 끝남      |
+| `Info.plist`                 | `CFBundleURLTypes`의 `kakao<앱키>`                   | 카카오톡이 앱으로 못 돌아옴 → 버튼이 계속 로딩 상태로 멈춤  |
+| `Info.plist`                 | `LSApplicationQueriesSchemes`의 `kakaokompassauth`   | **조용히 망가짐** — 앱 전환을 안 하고 늘 웹 시트로 떨어진다 |
+| `App.entitlements` + pbxproj | 애플 로그인 entitlement와 `CODE_SIGN_ENTITLEMENTS`   | 애플 로그인 실패                                            |
+| pbxproj                      | `DEVELOPMENT_TEAM`                                   | 실기기 서명 실패                                            |
 
 ## ⚠️ 함정 3 — 네이티브가 준 파일 경로(`capacitor://localhost/...`)는 `fetch`로 못 읽음
 

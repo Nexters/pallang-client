@@ -41,26 +41,21 @@ public class KakaoLoginPlugin: CAPPlugin, CAPBridgedPlugin {
             object: nil)
     }
 
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-
     /// 로그인을 마친 카카오톡이 `kakao<앱키>://oauth`로 앱을 다시 연다. 이 처리가 없으면 앱으로
     /// 돌아오기만 하고 `login`의 completion이 영영 호출되지 않는다.
     ///
     /// AppDelegate 대신 여기서 받는 이유는 두 가지다. AppDelegate는 Capacitor가 생성·관리하는 파일이라
     /// iOS 프로젝트를 재생성하면 편집이 날아가고, 앱 타겟에서는 SPM 이행 의존인 KakaoSDKAuth를 import할 수 없다.
     @objc private func handleUrlOpened(notification: NSNotification) {
-        guard let object = notification.object as? [String: Any?],
-              let url = object["url"] as? NSURL else {
+        guard let object = notification.object as? [String: Any],
+              let url = object["url"] as? URL,
+              AuthApi.isKakaoTalkLoginUrl(url) else {
             return
         }
 
-        guard AuthApi.isKakaoTalkLoginUrl(url as URL) else { return }
-
         // handleOpenUrl은 main actor 격리라 노티 셀렉터(nonisolated)에서 직접 부를 수 없다.
         DispatchQueue.main.async {
-            _ = AuthController.handleOpenUrl(url: url as URL)
+            _ = AuthController.handleOpenUrl(url: url)
         }
     }
 
@@ -99,5 +94,9 @@ public class KakaoLoginPlugin: CAPPlugin, CAPBridgedPlugin {
 
         // 백엔드(POST /auth/kakao)가 요구하는 건 카카오 액세스 토큰 하나뿐이라 나머지는 넘기지 않는다.
         call.resolve(["accessToken": token.accessToken])
+
+        // SDK가 UserDefaults에 심어둔 토큰을 지운다. 이 앱은 카카오 API를 직접 부르지 않아 쓸 일이 없는데,
+        // 남겨두면 initSDK가 등록한 TokenRefresher가 앱을 켤 때마다 토큰 점검 요청을 카카오로 보낸다.
+        TokenManager.manager.deleteToken()
     }
 }

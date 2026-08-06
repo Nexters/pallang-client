@@ -4,13 +4,12 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import {
-  HOME_PATH,
   KAKAO_CALLBACK_PATH,
   KAKAO_EXCHANGE_PATH,
   LOGIN_PATH,
-  SIGN_UP_TERMS_PATH,
 } from '@/app/_global/_data/auth.constant'
 import { signInWithKakaoToken } from '@/app/_global/_queries/auth.queries'
+import { resolvePostLoginPath } from '@/app/_global/_services/postLoginRedirect.service'
 
 export default function KakaoCallbackPage() {
   const router = useRouter()
@@ -46,14 +45,7 @@ export default function KakaoCallbackPage() {
       const { kakaoAccessToken } = (await res.json()) as { kakaoAccessToken: string }
       const login = await signInWithKakaoToken(kakaoAccessToken)
 
-      // 약관 미동의(신규) 사용자는 약관 동의 화면에서 동의를 받는다.
-      if (!login.termsAgreed) {
-        router.replace(SIGN_UP_TERMS_PATH)
-        return
-      }
-
-      // TODO(onboarding): !login.hasCompletedOnboarding이면 온보딩 라우트로 보낸다(미구현이라 홈으로).
-      router.replace(HOME_PATH)
+      router.replace(resolvePostLoginPath(login))
     }
 
     run().catch((e: unknown) => {
