@@ -33,10 +33,13 @@ git log --oneline origin/release..origin/develop
 git tag -l 'v*' | tail -1        # 직전 태그
 ```
 
-1.0.0 전까지 major는 쓰지 않는다. 웹앱이라 public API가 없으므로 실용 규칙만 쓴다:
+웹앱이라 public API가 없으므로 실용 규칙만 쓴다:
 
 - 기능 추가가 하나라도 있으면 → **minor**
 - 버그 수정·리팩터링·문서만이면 → **patch**
+- major는 제품이 통째로 달라질 때만. 앱 스토어 노출 버전이라 함부로 올리지 않는다.
+
+`package.json`의 버전이 **웹과 앱 공통의 제품 버전**이다. 아래 "버전 체계"를 함께 읽는다.
 
 ## 3. 확인받기
 
@@ -94,5 +97,57 @@ gh release create v0.2.0 --generate-notes
 
 ---
 
+# 버전 체계
+
+**`package.json`의 버전이 제품 버전의 단일 소스다.** 웹과 앱이 같은 코드를 보므로
+(앱은 `www.pallang.co.kr`을 원격 로드하는 웹뷰다) 두 버전을 따로 굴리지 않는다.
+
+```
+package.json  1.1.0-3  ──┬─→ 웹 dev     dev.pallang.co.kr (develop 자동 배포)
+                         └─→ 앱 dev     MARKETING_VERSION 1.1.0 + 빌드번호
+package.json  1.1.0    ──┬─→ 웹 운영    www.pallang.co.kr (release ff push, 태그 v1.1.0)
+                         └─→ 앱 운영    MARKETING_VERSION 1.1.0 + 빌드번호
+```
+
+## dev 배포 (prerelease)
+
+QA·기획이 dev 빌드를 이름으로 부를 일이 있을 때만 붙인다. 없으면 건너뛴다 —
+`develop`은 머지마다 자동 배포되므로 전부 태그하면 태그가 PR 수만큼 쌓인다.
+
+```bash
+pnpm version preminor -m "chore: %s"     # 1.0.0 → 1.1.0-0  (다음 minor 작업 시작)
+pnpm version prerelease -m "chore: %s"   # 1.1.0-0 → 1.1.0-1 (이후 dev 배포마다)
+git push origin HEAD:develop --follow-tags
+```
+
+운영 배포는 4번에서 `pnpm version minor`를 쓴다 — prerelease 상태(`1.1.0-3`)에서
+`minor`를 부르면 접미사만 떨어져 `1.1.0`이 된다. 번호가 건너뛰지 않는다.
+
+## 앱 (iOS) 파이프라인
+
+`scripts/ios-archive.sh`가 아카이브할 때마다 두 값을 자동으로 맞춘다.
+
+| 값                        | 출처                                           | 비고                                                                               |
+| ------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `MARKETING_VERSION`       | `package.json` 버전에서 prerelease 접미사 제거 | App Store 노출 버전. **마침표로 나뉜 정수만 허용** — `1.1.0-3`은 업로드가 거부된다 |
+| `CURRENT_PROJECT_VERSION` | 아카이브마다 +1                                | TestFlight 구분자. 같은 번호를 두 번 못 올린다                                     |
+
+```bash
+pnpm ios:archive        # 운영 URL 로드 (www) — 제출용
+pnpm ios:archive:dev    # dev URL 로드 — 내부 테스트용
+```
+
+**dev 빌드와 운영 빌드는 표시 버전이 같다.** 가르는 건 빌드 번호와 로드하는 서버 URL이다.
+TestFlight에서 어느 쪽인지 구분하려면 빌드 번호를 적어둔다.
+
+아카이브가 `pbxproj`를 고치므로 **끝나면 커밋한다.** 안 하면 다음 아카이브가 같은 빌드
+번호에서 다시 시작해 App Store Connect가 거부한다.
+
+**앱 배포는 웹 배포 뒤에 한다.** 앱이 운영 URL을 원격 로드하므로, 웹이 먼저 나가야
+제출한 빌드가 의도한 화면을 띄운다.
+
+---
+
 ponytail: 로컬 머지 없이 원격 ref만 밀어 fast-forward. 체인지로그 생성은 `--generate-notes`에 위임.
-draft/prerelease 플래그, 배포 후 헬스체크, 롤백 절차는 실제로 필요해질 때 추가.
+버전은 `pnpm version`이 이미 하는 일에 얹었다 — 커스텀 스크립트 없음.
+배포 후 헬스체크, 롤백 절차는 실제로 필요해질 때 추가.
