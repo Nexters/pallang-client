@@ -5,9 +5,11 @@ import type { QuoteCursor } from '../_types/readerHighlights.type'
 export function useHighlightViewer(
   requireLogin: (action: () => void) => void,
   firstPage: number | undefined,
+  /** 목록 화면에서 지목해 들어온 시작 위치 — 사용자가 페이지·대목을 옮기면 그대로 덮인다 */
+  initialPosition?: { page: number; cursor: QuoteCursor },
 ) {
-  const [selectedPage, setSelectedPage] = useState<number | null>(null)
-  const [quoteCursor, setQuoteCursor] = useState<QuoteCursor>(0)
+  const [selectedPage, setSelectedPage] = useState<null | number>(initialPosition?.page ?? null)
+  const [quoteCursor, setQuoteCursor] = useState<QuoteCursor>(initialPosition?.cursor ?? 0)
   // 해제 상태는 페이지 단위로 유지된다 — 같은 페이지의 다른 스포일러 대목으로 넘어가도 다시 가리지 않는다
   const [isRevealed, setIsRevealed] = useState(false)
   const activePage = selectedPage ?? firstPage

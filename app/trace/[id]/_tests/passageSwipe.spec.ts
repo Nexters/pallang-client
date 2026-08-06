@@ -43,16 +43,21 @@ describe('isBackGestureEdge', () => {
 
 describe('resolveQuoteIndex', () => {
   it("'last'는 그 페이지의 마지막 대목으로 풀린다", () => {
-    expect(resolveQuoteIndex('last', 3)).toBe(2)
+    expect(resolveQuoteIndex('last', [71, 72, 73])).toBe(2)
   })
 
   it('대목이 아직 없으면 0으로 둔다', () => {
-    expect(resolveQuoteIndex('last', 0)).toBe(0)
-    expect(resolveQuoteIndex(2, 0)).toBe(0)
+    expect(resolveQuoteIndex('last', [])).toBe(0)
+    expect(resolveQuoteIndex(2, [])).toBe(0)
   })
 
   it('대목 수가 적은 페이지로 넘어오면 범위 안으로 좁힌다', () => {
-    expect(resolveQuoteIndex(5, 2)).toBe(1)
+    expect(resolveQuoteIndex(5, [71, 72])).toBe(1)
+  })
+
+  it('지목된 대목은 그 인덱스로, 이 페이지에 없으면 첫 대목으로 풀린다', () => {
+    expect(resolveQuoteIndex({ passageId: 72 }, [71, 72, 73])).toBe(1)
+    expect(resolveQuoteIndex({ passageId: 99 }, [71, 72, 73])).toBe(0)
   })
 })
 

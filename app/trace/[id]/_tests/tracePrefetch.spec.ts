@@ -124,6 +124,25 @@ describe('흔적 페이지 서버 프리페치', () => {
     expect(prefetched.opinions?.pages[0]?.data?.opinions[0]?.content).toBe('첫 번째 흔적')
   })
 
+  // 첫 페이지를 채우면 클라이언트가 딥링크 쪽을 다시 조회해 스테이지가 한 번 비었다가 채워진다
+  it('목록에서 지목한 흔적이 있으면 첫 페이지 대신 그 쪽을 채운다', async () => {
+    stubTraceApi()
+    const queryClient = new QueryClient()
+
+    await prefetchTraceScreen(queryClient, BOOK_ID, {
+      pageNumber: 9,
+      passageId: FIRST_PASSAGE_ID,
+      opinionId: 1,
+    })
+
+    expect(
+      queryClient.getQueryData(passageQueries.passagesByPage(BOOK_ID, 9).queryKey),
+    ).toBeDefined()
+    expect(
+      queryClient.getQueryData(passageQueries.passagesByPage(BOOK_ID, FIRST_PAGE).queryKey),
+    ).toBeUndefined()
+  })
+
   it('쿠키의 accessToken을 요청 스코프로 실어 보낸다', async () => {
     const calls = stubTraceApi()
 
@@ -169,9 +188,12 @@ describe('TracePrefetchBoundary', () => {
   it('유효하지 않은 [id]는 notFound로 처리한다', async () => {
     stubTraceApi()
 
-    await expect(TracePrefetchBoundary({ params: Promise.resolve({ id: 'abc' }) })).rejects.toThrow(
-      'NEXT_NOT_FOUND',
-    )
+    await expect(
+      TracePrefetchBoundary({
+        params: Promise.resolve({ id: 'abc' }),
+        searchParams: Promise.resolve({}),
+      }),
+    ).rejects.toThrow('NEXT_NOT_FOUND')
     expect(notFoundMock).toHaveBeenCalled()
     // 프리페치까지 가지 않으므로 서버에서 나가는 요청도 없다
     expect(vi.mocked(fetch)).not.toHaveBeenCalled()
@@ -182,6 +204,7 @@ describe('TracePrefetchBoundary', () => {
 
     const boundary = (await TracePrefetchBoundary({
       params: Promise.resolve({ id: '1' }),
+      searchParams: Promise.resolve({}),
     })) as ReactElement<{ children: ReactElement<{ bookId: number }> }>
 
     expect(notFoundMock).not.toHaveBeenCalled()

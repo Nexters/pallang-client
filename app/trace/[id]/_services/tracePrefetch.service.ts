@@ -6,6 +6,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import { opinionQueries } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import { getServerFetchOptions } from '@/app/_global/_services/serverAuth.service'
+import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { DEFAULT_OPINION_SORT_TYPE } from '../_data/readerHighlights.constant'
 
@@ -19,12 +20,31 @@ export function parseBookId(id: string): number | undefined {
 /**
  * 첫 화면에 필요한 쿼리를 순서대로 채운다. 앞 응답이 있어야 다음 queryKey가 정해지는 구조라
  * 서버에서도 직렬이지만, 브라우저 왕복 3번이 서버 내부 3번으로 바뀐다.
+ * 목록 화면이 좌표를 넘겨준 경우에는 세 queryKey가 처음부터 정해져 있어 직렬로 갈 이유가 없다.
  * prefetch 계열은 실패를 삼키므로(에러 쿼리는 dehydrate 대상이 아니다) 실패하면 클라이언트가 다시 조회한다.
  */
-export async function prefetchTraceScreen(queryClient: QueryClient, bookId: number): Promise<void> {
+export async function prefetchTraceScreen(
+  queryClient: QueryClient,
+  bookId: number,
+  /** 목록 화면이 지목한 흔적 — 있으면 첫 페이지·첫 대목 대신 이 좌표를 채운다 */
+  target?: TraceTarget | null,
+): Promise<void> {
   const fetchOptions = await getServerFetchOptions()
-
   const pageNumbersOptions = passageQueries.pageNumbers(bookId, fetchOptions)
+
+  if (target) {
+    await Promise.all([
+      queryClient.prefetchInfiniteQuery(pageNumbersOptions),
+      queryClient.prefetchQuery(
+        passageQueries.passagesByPage(bookId, target.pageNumber, fetchOptions),
+      ),
+      queryClient.prefetchInfiniteQuery(
+        opinionQueries.listByPassage(target.passageId, DEFAULT_OPINION_SORT_TYPE, fetchOptions),
+      ),
+    ])
+    return
+  }
+
   await queryClient.prefetchInfiniteQuery(pageNumbersOptions)
 
   const pageNumbers = queryClient.getQueryData(pageNumbersOptions.queryKey)

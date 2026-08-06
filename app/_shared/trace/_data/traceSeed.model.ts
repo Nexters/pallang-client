@@ -6,6 +6,8 @@
  * URL 쿼리는 렌더 시점에 읽히므로 그 경합이 없다.
  */
 
+import { readParam, readPositiveInt } from '@/app/_global/_services/searchParams.service'
+
 /** 씨앗을 실어 나르는 쿼리 키. 만드는 쪽과 읽는 쪽이 어긋나지 않도록 한곳에 둔다. */
 const PARAM = {
   bookId: 'bookId',
@@ -32,21 +34,6 @@ export type TraceSeed = {
   passage: TraceSeedPassage | null
 }
 
-function readParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string | undefined {
-  const value = params[key]
-  return Array.isArray(value) ? value[0] : value
-}
-
-/** 양의 정수만 통과시킨다 — '1.5', 'abc', '-3'은 모두 무효. */
-function parsePositiveInt(value: string | undefined): number | undefined {
-  if (value === undefined || !/^\d+$/.test(value)) return undefined
-  const parsed = Number(value)
-  return parsed > 0 ? parsed : undefined
-}
-
 /** 흔적 작성 플로우로 보낼 링크. 대목을 함께 넘기면 꾸미기 단계부터 시작한다. */
 export function buildTraceSeedHref(seed: TraceSeed): string {
   const params = new URLSearchParams({
@@ -67,12 +54,12 @@ export function buildTraceSeedHref(seed: TraceSeed): string {
 export function parseTraceSeed(
   params: Record<string, string | string[] | undefined>,
 ): TraceSeed | null {
-  const bookId = parsePositiveInt(readParam(params, PARAM.bookId))
+  const bookId = readPositiveInt(params, PARAM.bookId)
   const bookTitle = readParam(params, PARAM.bookTitle)
   if (bookId === undefined || !bookTitle) return null
 
-  const passageId = parsePositiveInt(readParam(params, PARAM.passageId))
-  const pageNumber = parsePositiveInt(readParam(params, PARAM.page))
+  const passageId = readPositiveInt(params, PARAM.passageId)
+  const pageNumber = readPositiveInt(params, PARAM.page)
   const quotedText = readParam(params, PARAM.quote)
 
   return {

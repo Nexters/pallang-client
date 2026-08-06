@@ -2,12 +2,14 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { notFound } from 'next/navigation'
 
 import { getQueryClient } from '@/app/_global/_services/queryClient.service'
+import { parseTraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { parseBookId, prefetchTraceScreen } from '../../_services/tracePrefetch.service'
 import { TraceCollapseView } from '../TraceCollapseView/TraceCollapseView'
 
 type TracePrefetchBoundaryProps = {
   params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 /**
@@ -15,7 +17,7 @@ type TracePrefetchBoundaryProps = {
  * params/쿠키 같은 요청 시점 값을 여기서만 읽으므로(page는 Suspense로 감싸기만 한다)
  * cacheComponents 환경에서 페이지 셸은 그대로 프리렌더되고 이 안쪽만 요청 시점에 스트리밍된다.
  */
-export async function TracePrefetchBoundary({ params }: TracePrefetchBoundaryProps) {
+export async function TracePrefetchBoundary({ params, searchParams }: TracePrefetchBoundaryProps) {
   const { id } = await params
   const bookId = parseBookId(id)
   // 예전에는 클라이언트가 NaN으로 API를 호출했다.
@@ -23,12 +25,15 @@ export async function TracePrefetchBoundary({ params }: TracePrefetchBoundaryPro
   // 404 상태 코드까지 필요해지면 params를 Suspense 바깥에서 읽어야 하고(= 라우트 전체가 blocking) 셸 프리렌더를 잃는다.
   if (bookId === undefined) notFound()
 
+  // 목록 화면이 지목한 흔적이 있으면 첫 페이지 대신 그 좌표를 채운다 — 도착하자마자 그 대목이 보인다
+  const target = parseTraceTarget(await searchParams)
+
   const queryClient = getQueryClient()
-  await prefetchTraceScreen(queryClient, bookId)
+  await prefetchTraceScreen(queryClient, bookId, target)
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <TraceCollapseView bookId={bookId} />
+      <TraceCollapseView bookId={bookId} target={target} />
     </HydrationBoundary>
   )
 }
