@@ -43,6 +43,7 @@
     "@capacitor/splash-screen": "^8.0.2",
     "@tanstack/react-query": "^5.101.4",
     "capacitor-kakao-login": "link:./native-plugins/kakao-login",
+    "capacitor-native-settings": "^8.2.0",
     "clsx": "^2.1.1",
     "galmuri": "^2.40.3",
     "next": "16.2.11",

@@ -9,13 +9,14 @@ import { Capacitor } from '@capacitor/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CAMERA_OPTIONS } from '@/app/_global/_data/camera.constant'
+import { CameraPermissionDeniedError } from '@/app/_global/_data/camera.model'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: vi.fn() },
 }))
 vi.mock('@capacitor/camera', () => ({
-  Camera: { getPhoto: vi.fn() },
+  Camera: { getPhoto: vi.fn(), checkPermissions: vi.fn() },
   CameraResultType: { DataUrl: 'dataUrl', Uri: 'uri' },
   CameraSource: { Camera: 'CAMERA', Photos: 'PHOTOS', Prompt: 'PROMPT' },
 }))
@@ -23,6 +24,8 @@ vi.mock('@capacitor/camera', () => ({
 describe('useCamera', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // 권한이 허용된 상태를 기본으로 둔다 — 권한을 다루는 테스트만 이 값을 덮어쓴다.
+    vi.mocked(Camera.checkPermissions).mockResolvedValue({ camera: 'granted', photos: 'granted' })
   })
 
   afterEach(() => {
@@ -90,6 +93,51 @@ describe('useCamera', () => {
     expect(await takePhoto()).toBeNull()
   })
 
+  // 한 번 거부하면 iOS는 권한 팝업을 다시 띄우지 않는다. 촬영을 시도해봐야 같은 자리에서
+  // 막히므로, 호출부가 "설정으로 보내라"를 알아볼 수 있게 전용 에러로 구분해 던진다.
+  it('카메라 권한이 이미 거부돼 있으면 촬영을 시도하지 않고 전용 에러를 던진다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+    vi.mocked(Camera.checkPermissions).mockResolvedValue({ camera: 'denied', photos: 'granted' })
+
+    await expect(useCamera().takePhoto()).rejects.toThrow(CameraPermissionDeniedError)
+    expect(Camera.getPhoto).not.toHaveBeenCalled()
+  })
+
+  it('갤러리는 사진 권한을 본다 — 카메라가 막혀 있어도 앨범은 열린다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+    vi.mocked(Camera.checkPermissions).mockResolvedValue({ camera: 'denied', photos: 'granted' })
+    vi.mocked(Camera.getPhoto).mockResolvedValue({} as Awaited<ReturnType<typeof Camera.getPhoto>>)
+
+    await useCamera().takePhoto('gallery')
+
+    expect(Camera.getPhoto).toHaveBeenCalledWith(expect.objectContaining({ source: 'PHOTOS' }))
+  })
+
+  it('사진 권한이 거부돼 있으면 갤러리도 photos 종류로 막는다', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+    vi.mocked(Camera.checkPermissions).mockResolvedValue({ camera: 'granted', photos: 'denied' })
+
+    await expect(useCamera().takePhoto('gallery')).rejects.toMatchObject({ kind: 'photos' })
+    expect(Camera.getPhoto).not.toHaveBeenCalled()
+  })
+
+  // 아직 묻지 않은 상태(prompt)는 막지 않는다 — 플러그인이 시스템 팝업을 띄운다.
+  // limited는 iOS의 "선택한 사진만 허용"으로, 고를 수 있는 상태다.
+  it.each(['prompt', 'prompt-with-rationale', 'limited'] as const)(
+    '권한이 %s면 촬영을 그대로 진행한다',
+    async (state) => {
+      vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true)
+      vi.mocked(Camera.checkPermissions).mockResolvedValue({ camera: state, photos: state })
+      vi.mocked(Camera.getPhoto).mockResolvedValue(
+        {} as Awaited<ReturnType<typeof Camera.getPhoto>>,
+      )
+
+      await useCamera().takePhoto()
+
+      expect(Camera.getPhoto).toHaveBeenCalled()
+    },
+  )
+
   it('브라우저에서는 Camera.getPhoto를 호출하지 않고 파일 input을 생성한다', () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false)
     const createEl = vi.spyOn(document, 'createElement')
@@ -97,6 +145,8 @@ describe('useCamera', () => {
     void useCamera().takePhoto()
 
     expect(Camera.getPhoto).not.toHaveBeenCalled()
+    // 웹에서 checkPermissions는 unavailable을 던진다. 부르지 않아야 파일 선택이 산다.
+    expect(Camera.checkPermissions).not.toHaveBeenCalled()
     const input = createEl.mock.results.at(-1)?.value as HTMLInputElement
     expect(input.type).toBe('file')
     expect(input.accept).toBe('image/*')
