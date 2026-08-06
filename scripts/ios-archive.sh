@@ -5,8 +5,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "▶ cap sync ios (server.url = ${CAP_SERVER_URL:-운영 기본값 https://pallang.co.kr})"
+# 운영 URL을 여기 다시 적지 않는다 — capacitor.config.ts와 어긋나기 시작한다
+echo "▶ cap sync ios (server.url = ${CAP_SERVER_URL:-capacitor.config.ts의 운영 기본값})"
 npx cap sync ios
+
+# App Store Connect는 같은 빌드 번호를 두 번 받지 않는다. 아카이브마다 올려 둔다.
+# ponytail: pbxproj를 직접 치환 — agvtool은 프로젝트 설정을 따로 요구한다. 값이 여러 개라도
+# 각각 제 값에서 1씩 오르므로 Debug/Release가 갈라져도 견딘다.
+PBXPROJ=ios/App/App.xcodeproj/project.pbxproj
+perl -pi -e 's/(CURRENT_PROJECT_VERSION = )(\d+)/$1 . ($2 + 1)/e' "$PBXPROJ"
+echo "▶ 빌드 번호 올림 → $(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ") (pbxproj 변경 — 커밋할 것)"
 
 ARCHIVE=build-ios/App.xcarchive
 EXPORT_DIR=build-ios/export

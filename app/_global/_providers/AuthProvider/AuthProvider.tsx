@@ -45,8 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (active) setStatus(hasTokens() ? 'authenticated' : 'unauthenticated')
     }
     const unsubscribe = subscribeAuthTokens(sync)
-    // 초기화 실패 시에도 스플래시는 반드시 내린다(무한 스플래시 방지).
-    void initAuthSession().then(sync).finally(hideSplashScreen)
+    void initAuthSession()
+      // 초기화가 실패해도 저장된 토큰 기준으로 상태를 확정한다. 여기서 sync를 건너뛰면
+      // status가 'loading'에 머물러 화면이 영원히 골격으로 남는다.
+      .catch((error: unknown) => {
+        console.warn('인증 초기화 실패 — 저장된 토큰 기준으로 진행한다', error)
+      })
+      .then(sync)
+      // 인증이 끝나면 스플래시를 내린다. 응답이 영영 오지 않는 경우의 상한은
+      // capacitor.config.ts의 launchShowDuration이 네이티브에서 맡는다.
+      .finally(() => void hideSplashScreen())
     return () => {
       active = false
       unsubscribe()

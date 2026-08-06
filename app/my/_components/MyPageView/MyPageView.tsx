@@ -23,9 +23,11 @@ const loggedInSettings: SettingItem[] = [
   { label: '좋아요 누른 흔적', path: '/my/likes' },
   // { label: '알림 설정' },
   { label: '차단 관리', path: '/my/blocks' },
+  { label: '고객지원', path: '/support' },
 ]
 const loggedOutSettings: SettingItem[] = [
   { label: '공지사항', path: '/my/notices' },
+  { label: '고객지원', path: '/support' },
   { label: '개인정보 처리 방침', path: POLICY_META_BY_SLUG.privacy.path },
   { label: '서비스 이용약관', path: POLICY_META_BY_SLUG.service.path },
 ]
