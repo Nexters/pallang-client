@@ -1,16 +1,25 @@
-import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
-import { NoticeDetailView } from './_components/NoticeDetailView/NoticeDetailView'
+import { NoticeScreenShell } from '../_components/NoticeScreenShell/NoticeScreenShell'
+import { NoticeDetailBoundary } from './_components/NoticeDetailBoundary/NoticeDetailBoundary'
+import { NoticeDetailSkeleton } from './_components/NoticeDetailSkeleton/NoticeDetailSkeleton'
 
 type NoticeDetailPageProps = {
   params: Promise<{ noticeId: string }>
 }
 
-export default async function NoticeDetailPage({ params }: NoticeDetailPageProps) {
-  const { noticeId } = await params
-  const parsed = Number(noticeId)
-
-  if (!Number.isInteger(parsed)) notFound()
-
-  return <NoticeDetailView noticeId={parsed} />
+export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
+  // params 접근은 Suspense 안쪽(NoticeDetailBoundary)으로 미룬다 — 셸은 프리렌더되고 본문만 스트리밍된다.
+  // fallback을 비우면 그 셸이 빈 채로 나가므로, 도착할 화면과 같은 셸에 골격을 실어 보낸다
+  return (
+    <Suspense
+      fallback={
+        <NoticeScreenShell>
+          <NoticeDetailSkeleton />
+        </NoticeScreenShell>
+      }
+    >
+      <NoticeDetailBoundary params={params} />
+    </Suspense>
+  )
 }
