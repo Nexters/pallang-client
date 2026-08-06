@@ -22,9 +22,15 @@ PR #185에서 `Info.plist`의 `NSPhotoLibraryAddUsageDescription` 누락을 고�
 
 ## 설계
 
-### 1. 설정 열기 — `capacitor-native-settings`
+### 1. 설정 열기 — 자체 플러그인
 
-`pnpm add capacitor-native-settings` (v8.2.0, `@capacitor/core >=8.0.2`) 후 `npx cap sync`.
+**기성 플러그인(`capacitor-native-settings`)을 쓰지 않는다.** 그 플러그인의 iOS 구현은 특정 설정 화면으로 뛰는 `App-prefs:` 계열 비공개 URL 스킴 문자열을 **31개** 딕셔너리로 들고 있다(`NativeSettings.swift:18`). 우리는 그중 하나도 호출하지 않지만 문자열 리터럴은 호출 여부와 무관하게 바이너리에 남고, 애플 심사의 정적 검사에 걸릴 수 있다(가이드라인 2.5.1 — 비공개 API). 플러그인 문서 자체가 이를 경고한다. 우리가 필요한 건 함수 하나뿐이라 회피 비용이 낮아 직접 만든다.
+
+플랫폼마다 가장 확실한 방식을 쓴다. 둘 다 jsName이 `AppSettings`, 메서드가 `openSettings`라 웹에서는 하나의 API로 보인다.
+
+- **iOS** — `native-plugins/app-settings/` 로컬 Capacitor 패키지. `native-plugins/kakao-login`과 같은 구조이고 `cap sync`가 `CapApp-SPM/Package.swift`에 배선한다. `UIApplication.openSettingsURLString` **하나만** 쓴다 — 애플이 공식 허용하는 유일한 설정 딥링크다.
+  - 앱 타겟(`AppDelegate.swift`)에 넣지 않는 이유: Capacitor가 생성·관리하는 파일이라 `ios/` 재생성 시 편집이 날아간다(kakao-login이 같은 이유로 패키지를 쓴다).
+- **Android** — 앱 모듈의 `AppSettingsPlugin.java` + `MainActivity`의 `registerPlugin`. `ACTION_APPLICATION_DETAILS_SETTINGS` 인텐트를 띄운다. gradle 모듈을 새로 얹지 않아도 되는 표준 방식이라 iOS와 달리 별도 패키지를 만들지 않는다.
 
 화면 코드는 플러그인을 직접 부르지 않고 래퍼를 거친다.
 
@@ -34,10 +40,9 @@ PR #185에서 `Info.plist`의 `NSPhotoLibraryAddUsageDescription` 누락을 고�
 export async function openAppSettings(): Promise<void>
 ```
 
+- `registerPlugin<AppSettingsPlugin>('AppSettings', { web: ... })`로 네이티브 구현에 붙는다.
 - 네이티브가 아니면 no-op — 웹에는 열 설정 화면이 없다.
-- `NativeSettings.open({ optionAndroid: AndroidSettings.ApplicationDetails, optionIOS: IOSSettings.App })`.
-
-**알려진 리스크(수용함):** 이 플러그인의 iOS 구현은 `App-prefs:` 로 시작하는 비공개 URL 스킴 문자열 30여 개를 딕셔너리로 들고 있고, 우리가 그중 하나도 쓰지 않아도 바이너리에 문자열로 남는다. 애플이 정적 검사로 리젝한 사례가 있다. 우리가 쓰는 `IOSSettings.App`은 공식 API(`UIApplication.openSettingsURLString`)로 빠진다. 리젝되면 그때 자체 플러그인(iOS는 `AppDelegate.swift`에 20줄, Android는 java 파일 하나)으로 교체한다 — `appSettings.service.ts` 한 파일만 바뀐다.
+- 설정을 못 열어도 예외를 밖으로 흘리지 않는다. 안내 화면이 남아 사용자가 직접 찾아갈 수 있다.
 
 ### 2. 거부 상태 감지 — `useCamera`
 
@@ -84,11 +89,19 @@ export class CameraPermissionDeniedError extends Error {
 ## 테스트
 
 - `useCamera.spec.ts` — `denied`면 `getPhoto`가 호출되지 않고 `CameraPermissionDeniedError`가 나온다 / `prompt`·`granted`·`limited`면 호출된다 / `gallery`는 `photos` 상태를 본다 / 웹에서는 `checkPermissions`를 부르지 않는다.
-- `OcrSelector` — 카메라 거부 시 `[설정 열기]`가 뜨고 누르면 `openAppSettings`가 불린다 / 사진까지 거부면 갤러리 버튼이 없다.
-- `ProfileSettingsContent` — 사진 권한 거부 시 Dialog가 뜬다.
+- `appSettings.spec.ts` — 네이티브에서만 설정을 열고, 실패해도 예외를 흘리지 않는다.
+- `ocrPermission.spec.tsx` — 카메라 거부 시 `[설정 열기]`가 뜨고 누르면 `openAppSettings`가 불린다 / 사진까지 거부면 갤러리 버튼이 없다 / 복귀(`appStateChange`)에 재시도한다.
+- `photoPermission.spec.tsx` — 사진 권한 거부 시 Dialog가 뜬다.
 
 ## 검증
 
-`pnpm lint && pnpm typecheck && pnpm test`.
+`pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
 
-네이티브 의존성이 추가되므로 **iOS 재아카이브·Android 재빌드 후 기기 확인이 필요하다.** 확인 절차: 권한을 거부한 상태로 흔적 작성 → 안내 화면 → `[설정 열기]` → 권한 허용 → (Android) 복귀 시 자동 촬영 / (iOS) 앱 재시작 후 재진입.
+네이티브 코드가 추가되므로 빌드도 확인한다.
+
+- **iOS**: `xcodebuild -project ios/App/App.xcodeproj -scheme App -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`
+  - 링크 결과 확인: `nm -gU <App.app>/App.debug.dylib | grep AppSettingsPlugin` (심볼이 있어야 함)
+  - 비공개 스킴 잔존 확인: `strings -a <App.app>/App.debug.dylib | grep -c "App-prefs"` → **0**
+- **Android**: JDK 21이 필요하다. 이 작업 시점 환경에 JDK가 없어 컴파일 검증을 하지 못했다 — Android 빌드 시 `AppSettingsPlugin.java`와 `MainActivity`의 `registerPlugin`을 먼저 확인할 것.
+
+기기 확인 절차: 권한을 거부한 상태로 흔적 작성 → 안내 화면 → `[설정 열기]` → 권한 허용 → (Android) 복귀 시 자동 촬영 / (iOS) 앱 재시작 후 재진입.

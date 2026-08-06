@@ -38,12 +38,12 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.101.4
         version: 5.101.4(react@19.2.4)
+      capacitor-app-settings:
+        specifier: link:./native-plugins/app-settings
+        version: link:native-plugins/app-settings
       capacitor-kakao-login:
         specifier: link:./native-plugins/kakao-login
         version: link:native-plugins/kakao-login
-      capacitor-native-settings:
-        specifier: ^8.2.0
-        version: 8.2.0(@capacitor/core@8.4.2)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -2802,11 +2802,6 @@ packages:
 
   caniuse-lite@1.0.30001806:
     resolution: {integrity: sha512-72Cuvd95zbSYPKq6Fhg8eDJRlzgWDf7/mtoZv6Qe/DYNCEBdNxoA3+rZAU2ZhGCpZlns3EssFavaZomckT5Uuw==}
-
-  capacitor-native-settings@8.2.0:
-    resolution: {integrity: sha512-jqklDll5YFvPpt2SI+wa+oMy0ykvWESSclDMhSI/t1TvJDnomATa7Iz0eE219DY/6pJxRhI7+8RYE0ePtAYxAw==}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.2'
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -8296,10 +8291,6 @@ snapshots:
   camelcase@6.3.0: {}
 
   caniuse-lite@1.0.30001806: {}
-
-  capacitor-native-settings@8.2.0(@capacitor/core@8.4.2):
-    dependencies:
-      '@capacitor/core': 8.4.2
 
   ccount@2.0.1: {}
 

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -31,8 +31,17 @@ vi.mock('@capacitor/app', () => ({
   },
 }))
 
-/** 앱이 포그라운드로 돌아오는(또는 내려가는) 순간을 흉내 낸다. */
+/**
+ * 앱이 포그라운드로 돌아오는(또는 내려가는) 순간을 흉내 낸다.
+ *
+ * 리스너 등록을 기다린 뒤에 쏜다 — 안내 화면이 그려지는 시점과 effect가 도는 시점은
+ * 같은 커밋이지만 스케줄링에 따라 어긋날 수 있고, 핸들러가 없으면 아무 일도 없이 지나가
+ * 테스트가 산발적으로 실패한다.
+ */
 async function emitAppState(isActive: boolean) {
+  await waitFor(() => {
+    expect(appStateHandlers).not.toHaveLength(0)
+  })
   await act(async () => {
     appStateHandlers.at(-1)?.({ isActive })
     await Promise.resolve()
@@ -106,7 +115,9 @@ describe('OCR 화면의 권한 거부 안내', () => {
     takePhoto.mockResolvedValue(null)
     await emitAppState(true)
 
-    expect(takePhoto).toHaveBeenCalledTimes(2)
+    await waitFor(() => {
+      expect(takePhoto).toHaveBeenCalledTimes(2)
+    })
   })
 
   it('백그라운드로 내려갈 때는 촬영을 다시 시도하지 않는다', async () => {
