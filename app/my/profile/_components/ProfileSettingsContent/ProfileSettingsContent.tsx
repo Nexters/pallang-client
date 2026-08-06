@@ -12,10 +12,12 @@ import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { Spinner } from '@/app/_global/_components/Spinner/Spinner'
 import { Textfield } from '@/app/_global/_components/Textfield/Textfield'
 import { ApiError } from '@/app/_global/_data/api.model'
+import { CameraPermissionDeniedError } from '@/app/_global/_data/camera.model'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { userMutations, userQueries } from '@/app/_global/_queries/user.queries'
 
+import { PhotoPermissionDialog } from '../PhotoPermissionDialog/PhotoPermissionDialog'
 import { ProfileSettingsSkeleton } from '../ProfileSettingsSkeleton/ProfileSettingsSkeleton'
 import { WithdrawDialog } from '../WithdrawDialog/WithdrawDialog'
 
@@ -33,6 +35,8 @@ export function ProfileSettingsContent() {
   const [nicknameError, setNicknameError] = useState('')
   const [message, setMessage] = useState('')
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false)
+  // 사진 권한이 이미 거부된 상태. 스낵바로는 풀 방법을 안내할 수 없어 모달로 띄운다.
+  const [isPhotoPermissionOpen, setIsPhotoPermissionOpen] = useState(false)
 
   const modifyNickname = useMutation(userMutations.modifyNickname())
   const modifyProfileImage = useMutation(userMutations.modifyProfileImage())
@@ -58,7 +62,12 @@ export function ProfileSettingsContent() {
           },
         },
       )
-    } catch {
+    } catch (error) {
+      // 권한 거부는 다시 시도해도 같은 벽이다. "잠시 후"가 아니라 설정으로 안내한다.
+      if (error instanceof CameraPermissionDeniedError) {
+        setIsPhotoPermissionOpen(true)
+        return
+      }
       setMessage('사진을 불러오지 못했어요. 잠시 후 다시 시도해주세요.')
     }
   }
@@ -155,6 +164,13 @@ export function ProfileSettingsContent() {
           setIsWithdrawOpen(false)
         }}
         onConfirm={handleWithdraw}
+      />
+
+      <PhotoPermissionDialog
+        open={isPhotoPermissionOpen}
+        onClose={() => {
+          setIsPhotoPermissionOpen(false)
+        }}
       />
 
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}

@@ -38,6 +38,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.101.4
         version: 5.101.4(react@19.2.4)
+      capacitor-app-settings:
+        specifier: link:./native-plugins/app-settings
+        version: link:native-plugins/app-settings
       capacitor-kakao-login:
         specifier: link:./native-plugins/kakao-login
         version: link:native-plugins/kakao-login

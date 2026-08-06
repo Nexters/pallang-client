@@ -17,6 +17,7 @@ let package = Package(
         .package(name: "CapacitorCamera", path: "../../../node_modules/.pnpm/@capacitor+camera@8.2.1_@capacitor+core@8.4.2/node_modules/@capacitor/camera"),
         .package(name: "CapacitorPreferences", path: "../../../node_modules/.pnpm/@capacitor+preferences@8.0.1_@capacitor+core@8.4.2/node_modules/@capacitor/preferences"),
         .package(name: "CapacitorSplashScreen", path: "../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.2_@capacitor+core@8.4.2/node_modules/@capacitor/splash-screen"),
+        .package(name: "CapacitorAppSettings", path: "../../../native-plugins/app-settings"),
         .package(name: "CapacitorKakaoLogin", path: "../../../native-plugins/kakao-login")
     ],
     targets: [
@@ -30,6 +31,7 @@ let package = Package(
                 .product(name: "CapacitorCamera", package: "CapacitorCamera"),
                 .product(name: "CapacitorPreferences", package: "CapacitorPreferences"),
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
+                .product(name: "CapacitorAppSettings", package: "CapacitorAppSettings"),
                 .product(name: "CapacitorKakaoLogin", package: "CapacitorKakaoLogin")
             ]
         )

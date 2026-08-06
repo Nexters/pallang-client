@@ -1,10 +1,15 @@
 'use client'
 
+import { App } from '@capacitor/app'
 import { useMutation } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
+import {
+  CameraPermissionDeniedError,
+  type CameraPermissionKind,
+} from '@/app/_global/_data/camera.model'
 import type { Photo, PhotoSource } from '@/app/_global/_hooks/useCamera'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
@@ -14,6 +19,7 @@ import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { BlockBox } from '../../_services/blockSelection.service'
 import { clampQuote, joinBlockTexts, type OcrBlock } from '../../_services/ocrText.service'
+import { OcrPermissionNotice } from '../OcrPermissionNotice/OcrPermissionNotice'
 import { OcrPhotoStage } from '../OcrPhotoStage/OcrPhotoStage'
 import { OcrQuoteSheet } from '../OcrQuoteSheet/OcrQuoteSheet'
 import { OcrScanningOverlay } from '../OcrScanningOverlay/OcrScanningOverlay'
@@ -36,6 +42,8 @@ export function OcrSelector() {
   const [editedText, setEditedText] = useState<null | string>(null)
   // 사진이 놓일 자리에 대신 띄우는 실패 안내. 갤러리로 이어서 진행할 수 있다.
   const [failure, setFailure] = useState<null | string>(null)
+  // 이미 거부된 권한. 재시도로는 풀리지 않아 실패와 다른 안내를 띄운다.
+  const [permissionBlocked, setPermissionBlocked] = useState<CameraPermissionKind | null>(null)
   const [message, setMessage] = useState('')
   const started = useRef(false)
   const objectUrlRef = useRef<string | null>(null)
@@ -60,6 +68,12 @@ export function OcrSelector() {
     try {
       photo = await latestRef.current.takePhoto(source)
     } catch (error) {
+      // 권한이 이미 꺼져 있으면 다시 찍어도 같은 벽이다. 설정으로 보내는 안내로 갈아탄다.
+      if (error instanceof CameraPermissionDeniedError) {
+        setFailure(null)
+        setPermissionBlocked(error.kind)
+        return
+      }
       // 취소는 null로 오고 여기 오는 건 실제 실패다. 되돌리지 말고 대안을 보여준다.
       console.error('사진을 가져오지 못했습니다.', error)
       setFailure(
@@ -77,6 +91,7 @@ export function OcrSelector() {
     }
 
     setFailure(null)
+    setPermissionBlocked(null)
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
     objectUrlRef.current = photo.webPath.startsWith('blob:') ? photo.webPath : null
     setImageUrl(photo.webPath)
@@ -121,6 +136,20 @@ export function OcrSelector() {
     void runCapture(true)
   }, [runCapture])
 
+  // 설정에서 권한을 켜고 돌아왔으면 바로 이어서 진행한다.
+  // iOS는 권한을 바꾸는 순간 OS가 앱을 종료시켜 이 경로로 돌아오지 않는다 — 실질적으로 Android용이다.
+  // 권한이 그대로면 takePhoto가 다시 같은 에러를 던져 상태가 유지되므로 별도 확인이 필요 없다.
+  useEffect(() => {
+    if (!permissionBlocked) return
+    const source: PhotoSource = permissionBlocked === 'photos' ? 'gallery' : 'camera'
+    const listener = App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void runCapture(false, source)
+    })
+    return () => {
+      void listener.then((handle) => handle.remove())
+    }
+  }, [permissionBlocked, runCapture])
+
   const selectedText = joinBlockTexts(selected.map((index) => blocks[index]).filter((b) => !!b))
   const quotedText = editedText ?? clampQuote(selectedText, MAX_QUOTE_LENGTH)
 
@@ -128,7 +157,14 @@ export function OcrSelector() {
     // min-h-0이 없으면 사진이 세로로 길 때 flex 아이템이 콘텐츠 높이 아래로 줄지 못해
     // 아래 시트가 화면 밖으로 밀린다
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-bg-black">
-      {failure ? (
+      {permissionBlocked ? (
+        <OcrPermissionNotice
+          kind={permissionBlocked}
+          onPickFromGallery={() => {
+            void runCapture(false, 'gallery')
+          }}
+        />
+      ) : failure ? (
         <div
           role="alert"
           className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-6 text-center"

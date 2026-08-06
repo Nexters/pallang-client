@@ -23,6 +23,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 브릿지는 super.onCreate에서 만들어진다 — 등록은 그 전에 끝나야 한다.
+        registerPlugin(AppSettingsPlugin.class);
+
         super.onCreate(savedInstanceState);
 
         // Android 14 이하는 창이 시스템 바를 침범하지 않는다 — 웹뷰가 이미 인셋 안쪽이라

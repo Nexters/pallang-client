@@ -1,0 +1,11 @@
+{
+  "name": "capacitor-app-settings",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OS 설정의 앱 권한 화면 열기 — iOS 전용 로컬 Capacitor 플러그인(Android는 앱 모듈의 AppSettingsPlugin이 담당)",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
