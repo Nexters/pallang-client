@@ -163,10 +163,7 @@ export function BookAddForm({
         </div>
       </div>
 
-      <div
-        className="mt-auto flex shrink-0 p-4"
-        style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
-      >
+      <div className="mt-auto flex shrink-0 px-4 pt-4 pb-safe">
         <Button
           className="h-[54px] flex-1"
           disabled={isPreparingCover || createBook.isPending}

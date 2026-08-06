@@ -43,7 +43,7 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
             ref={popupRef}
             initialFocus={popupRef}
             className={cn(
-              'relative flex flex-col rounded-t-[32px] bg-bg-default pt-6 pb-4',
+              'relative flex flex-col rounded-t-[32px] bg-bg-default pt-6 pb-safe',
               // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
               'outline-none',
               'transition-transform duration-normal ease-enter',
@@ -51,7 +51,6 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
               'data-ending-style:duration-fast data-ending-style:ease-exit',
             )}
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
-            style={{ paddingBottom: 'max(1rem, var(--safe-bottom))' }}
           >
             <div className="flex items-center gap-2.5 px-4 py-2.5">
               <BaseDialog.Title className="min-w-px flex-1 text-title-18bd text-text-secondary">

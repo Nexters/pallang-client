@@ -15,11 +15,11 @@ export function CameraCheck() {
 
   return (
     <main
-      className="flex min-h-full flex-col items-center justify-center gap-8 p-8"
-      // 상단 인셋은 레이아웃 셸이 소비한다 — 좌우·하단만 직접 피한다
+      className="flex min-h-full flex-col items-center justify-center gap-8 p-8 pb-safe-8"
+      // 상단 인셋은 레이아웃 셸이, 하단은 pb-safe-8이 소비한다.
+      // 좌우는 토큰이 없어(가로 모드가 없다) env를 직접 읽는다
       style={{
         paddingRight: 'max(2rem, env(safe-area-inset-right))',
-        paddingBottom: 'max(2rem, var(--safe-bottom))',
         paddingLeft: 'max(2rem, env(safe-area-inset-left))',
       }}
     >

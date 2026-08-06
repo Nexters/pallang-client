@@ -3,9 +3,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
+import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { noticeQueries } from '@/app/_global/_queries/notice.queries'
 
-import { NoticeScreenShell } from '../../../_components/NoticeScreenShell/NoticeScreenShell'
 import { formatNoticeDate } from '../../../_services/noticeDate.service'
 import { NoticeDetailSkeleton } from '../NoticeDetailSkeleton/NoticeDetailSkeleton'
 
@@ -55,5 +55,9 @@ export function NoticeDetailView({ noticeId }: NoticeDetailViewProps) {
     )
   }
 
-  return <NoticeScreenShell>{renderBody()}</NoticeScreenShell>
+  return (
+    <ScreenLayout title="공지사항" bodyClassName="px-4">
+      {renderBody()}
+    </ScreenLayout>
+  )
 }

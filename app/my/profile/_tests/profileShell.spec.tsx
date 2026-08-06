@@ -45,7 +45,7 @@ function renderWith(seedMe?: SeedMe) {
 function queryShell() {
   return [
     screen.queryByRole('heading', { name: '프로필 설정' }),
-    screen.queryByRole('button', { name: '뒤로' }),
+    screen.queryByRole('button', { name: '뒤로 가기' }),
   ]
 }
 
