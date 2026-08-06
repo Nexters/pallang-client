@@ -7,6 +7,7 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { cn } from '@/app/_global/_services/cn.service'
 import { buildTraceSeedHref } from '@/app/_shared/trace/_data/traceSeed.model'
+import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
@@ -17,17 +18,19 @@ import styles from './TraceCollapseView.module.css'
 
 type TraceCollapseViewProps = {
   bookId: number
+  /** 목록 화면에서 특정 흔적을 지목해 들어온 경우의 좌표(쪽 → 대목 → 흔적) */
+  target?: TraceTarget | null
 }
 
 /** 셸 — 인용문 무대 흐름(usePassageViewer)과 흔적 목록 흐름(TraceListPanel)을 연결하고,
     두 흐름에 걸치는 것(접힘 제스처, 하단 입력바)만 직접 든다 */
-export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
+export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const router = useRouter()
   const runWithLogin = useLoginGate()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
-  const stage = usePassageViewer(bookId)
+  const stage = usePassageViewer(bookId, target)
   // 댓글은 아코디언 — id를 하나만 들고 있으므로 다른 흔적을 열면 앞의 것은 자동으로 닫힌다
   const [openCommentOpinionId, setOpenCommentOpinionId] = useState<number | null>(null)
   // 상세 오버레이(aria-modal)가 떠 있는 동안 하단 입력바를 포커스·접근성 트리에서 뺀다.
@@ -130,6 +133,7 @@ export function TraceCollapseView({ bookId }: TraceCollapseViewProps) {
           onToggleTraceCreate={addTraceToCurrentPassage}
           onToggleTraceComment={toggleTraceComment}
           onDetailOpenChange={setIsDetailOpen}
+          initialTraceId={target?.opinionId}
         />
         {/* fixed 입력바가 마지막 콘텐츠를 가리지 않도록 바 높이만큼 자리를 비운다 */}
         {openCommentOpinionId !== null && <div aria-hidden className={styles['bottomBarSpacer']} />}

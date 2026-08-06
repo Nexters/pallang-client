@@ -42,11 +42,13 @@ export function resolveSwipeDirection(deltaX: number): SwipeDirection | undefine
 }
 
 /** 커서를 실제 대목 인덱스로 푼다.
-    'last'는 그 페이지의 대목 수를 알아야 정해지므로 렌더 시점까지 미뤄둔 값이다.
+    'last'와 { passageId }는 그 페이지의 대목이 도착해야 정해지므로 렌더 시점까지 미뤄둔 값이다.
     페이지마다 대목 수가 달라 앞 페이지에서 들고 온 인덱스가 범위를 넘을 수 있어 함께 좁힌다 */
-export function resolveQuoteIndex(cursor: QuoteCursor, quoteCount: number) {
-  const lastIndex = Math.max(quoteCount - 1, 0)
+export function resolveQuoteIndex(cursor: QuoteCursor, passageIds: number[]) {
+  const lastIndex = Math.max(passageIds.length - 1, 0)
   if (cursor === 'last') return lastIndex
+  // 지목된 대목이 이 페이지에 없으면(잘못된 링크) 첫 대목으로 내려앉는다
+  if (typeof cursor === 'object') return Math.max(passageIds.indexOf(cursor.passageId), 0)
   return Math.min(cursor, lastIndex)
 }
 

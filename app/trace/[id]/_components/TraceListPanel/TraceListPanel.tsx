@@ -30,6 +30,8 @@ type TraceListPanelProps = {
   onToggleTraceComment: (opinionId: number) => void
   /** 상세 오버레이(aria-modal) 노출 여부. 셸이 형제로 든 하단 입력바를 포커스에서 빼는 데 쓴다 */
   onDetailOpenChange: (isOpen: boolean) => void
+  /** 딥링크로 지목된 흔적 — 목록이 도착하면 상세가 열린 채 시작한다 */
+  initialTraceId?: number
 }
 
 /** 흔적 목록 흐름의 컴포넌트 경계 — 목록·무한스크롤·에러·상세 오버레이를 소유한다 */
@@ -44,12 +46,18 @@ export function TraceListPanel({
   onToggleTraceCreate,
   onToggleTraceComment,
   onDetailOpenChange,
+  initialTraceId,
 }: TraceListPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const list = useTraceList(passageId)
+  const list = useTraceList(passageId, initialTraceId)
   // 닫히는 동안에도 내용이 남아 있어야 슬라이드 아웃이 빈 화면으로 보이지 않는다
   const shownTrace = useLastPresent(list.selectedTrace ?? null)
-  const detail = useExitTransition(list.selectedTrace !== undefined, MOTION_DURATION.slow)
+  // 가림막이 씌워져 있으면 상세도 열리지 않는다 — 목록 탭은 onSelectTrace가 막지만
+  // 딥링크로 지목돼 들어온 흔적은 탭을 거치지 않아 여기서도 같은 조건을 건다(#49)
+  const detail = useExitTransition(
+    list.selectedTrace !== undefined && !isMasked,
+    MOTION_DURATION.slow,
+  )
   // 퇴장 전환 중에도 오버레이는 aria-modal인 채로 화면에 남아 있어, 언마운트될 때까지 열린 것으로 본다
   const isDetailOpen = detail.shouldRender && shownTrace !== null
 
