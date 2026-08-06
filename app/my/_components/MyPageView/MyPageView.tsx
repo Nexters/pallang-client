@@ -14,7 +14,7 @@ import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 type SettingItem = { label: string; path?: string }
 
 const loggedInSettings: SettingItem[] = [
-  { label: '공지사항' },
+  { label: '공지사항', path: '/my/notices' },
   // 화면이 아직 없는 기능 — #170에서 구현하면 다시 노출한다
   // { label: '배경 변경' },
   // 백엔드 API가 아직 없는 기능 — 스펙이 생기면 다시 노출한다
@@ -25,7 +25,7 @@ const loggedInSettings: SettingItem[] = [
   { label: '차단 관리', path: '/my/blocks' },
 ]
 const loggedOutSettings: SettingItem[] = [
-  { label: '공지사항' },
+  { label: '공지사항', path: '/my/notices' },
   { label: '개인정보 처리 방침', path: POLICY_META_BY_SLUG.privacy.path },
   { label: '서비스 이용약관', path: POLICY_META_BY_SLUG.service.path },
 ]
