@@ -1,12 +1,12 @@
 import Image from 'next/image'
 
-import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
+import { LANDING_GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 
 export function LandingHeroSection() {
   return (
     <section
       aria-label="팔랑 소개"
-      className={`flex min-h-[1080px] flex-col items-center overflow-hidden px-10 pt-[140px] text-center font-pretendard ${GRID_BACKGROUND_CLASS_NAME}`}
+      className={`flex min-h-[1080px] flex-col items-center overflow-hidden px-10 pt-[140px] text-center font-pretendard ${LANDING_GRID_BACKGROUND_CLASS_NAME}`}
     >
       <p className="whitespace-nowrap text-[40px] leading-[1.2] font-bold tracking-[-0.02em] text-black">
         흔적을 넘기면 다른 생각이 팔랑
