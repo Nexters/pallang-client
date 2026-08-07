@@ -15,7 +15,10 @@ export function LandingFooter() {
         </div>
 
         <p className="text-[16px] leading-[1.4] font-normal tracking-[-0.02em] text-[#595959]">
-          문의 : palling.book@gmail.com
+          문의 :{' '}
+          <a href="mailto:palling.book@gmail.com" className="cursor-pointer">
+            palling.book@gmail.com
+          </a>
         </p>
 
         <div className="flex gap-6 text-[16px] leading-[1.4] font-normal tracking-[-0.02em] text-[#595959]">
