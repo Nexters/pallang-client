@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 const stepCopy = [
   {
     id: 'book',
@@ -49,21 +51,21 @@ const stepCopy = [
   },
 ] as const
 
-const screenPlaceholders = [
+const screens = [
   {
-    id: 'how-it-works-1.png',
+    imageSrc: '/images/landing/how-it-works-1.png',
     className: 'top-[307px] left-[1290px]',
   },
   {
-    id: 'how-it-works-2.png',
+    imageSrc: '/images/landing/how-it-works-2.png',
     className: 'top-[1012px] left-[320px]',
   },
   {
-    id: 'how-it-works-3.png',
+    imageSrc: '/images/landing/how-it-works-3.png',
     className: 'top-[1718px] left-[1291px]',
   },
   {
-    id: 'how-it-works-4.png',
+    imageSrc: '/images/landing/how-it-works-4.png',
     className: 'top-[2422px] left-[320px]',
   },
 ] as const
@@ -87,12 +89,18 @@ export function LandingHowItWorksSection() {
           </div>
         ))}
 
-        {screenPlaceholders.map((screen) => (
+        {screens.map((screen) => (
           <div
-            key={screen.id}
-            className={`absolute flex h-[671px] w-[310px] items-center justify-center rounded-[40px] bg-bg-surface text-body-16md text-text-tertiary shadow-[0_24px_48px_rgba(0,0,0,0.16)] ${screen.className}`}
+            key={screen.imageSrc}
+            className={`absolute h-[670px] w-[310px] overflow-hidden rounded-[32px] border border-black bg-white shadow-[123px_282px_86px_0_rgba(0,0,0,0),79px_181px_79px_0_rgba(0,0,0,0.01),44px_102px_66px_0_rgba(0,0,0,0.05),20px_45px_49px_0_rgba(0,0,0,0.09),5px_11px_27px_0_rgba(0,0,0,0.1)] ${screen.className}`}
           >
-            {screen.id}
+            <Image
+              src={screen.imageSrc}
+              alt=""
+              width={310}
+              height={670}
+              className="size-full object-cover"
+            />
           </div>
         ))}
       </div>
