@@ -266,6 +266,7 @@
    색까지 이 유틸이 함께 전환한다 — transition-colors를 덧붙이면 transition-property가
    서로를 덮어 눌림 스케일이 죽는다(duration-instant가 곧 '프레스·색' 토큰이다). */
 @utility press {
+  cursor: pointer;
   transition-property: transform, scale, opacity, color, background-color, border-color;
   --tw-duration: var(--duration-instant);
   transition-duration: var(--duration-instant);
@@ -274,6 +275,10 @@
 
   &:active {
     scale: 0.97;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
   }
 }
 
