@@ -206,7 +206,13 @@ function ProfileForm({
   return (
     <div className="flex flex-col px-4">
       <div className="flex justify-center py-6">
-        <div className="relative">
+        <button
+          type="button"
+          aria-label="프로필 이미지 변경"
+          disabled={isImageUploading}
+          onClick={onEditImage}
+          className="relative rounded-3xl press disabled:pointer-events-none"
+        >
           {profileImageUrl ? (
             // 외부 이미지 도메인이 유동적이라 next/image 대신 img 사용
             // eslint-disable-next-line @next/next/no-img-element
@@ -220,20 +226,14 @@ function ProfileForm({
               className="rounded-3xl"
             />
           )}
-          <button
-            type="button"
-            aria-label="프로필 이미지 변경"
-            disabled={isImageUploading}
-            onClick={onEditImage}
-            className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border border-border-default bg-bg-default text-icon-primary press"
-          >
+          <span className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full border border-border-default bg-bg-default text-icon-primary">
             {isImageUploading ? (
               <Spinner className="size-3.5" />
             ) : (
               <PencilIcon aria-hidden="true" className="size-3.5" />
             )}
-          </button>
-        </div>
+          </span>
+        </button>
       </div>
 
       <div className="flex flex-col gap-4">
