@@ -30,7 +30,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## 네이밍 & 접미사
 
-- 컴포넌트 폴더/파일: `PascalCase`. 예: `ExampleCard/ExampleCard.tsx`.
+- 컴포넌트 폴더/파일: `PascalCase`. 예: `TraceCard/TraceCard.tsx`.
 - 일반 TS 파일: `camelCase`. 훅·서비스·스토어·모델·상수·쿼리·API·액션·타입·테스트에 적용.
 - URL 경로 및 API route: `kebab-case`. 예: `my-course/`, `api/payment-info/`.
 - 역할 접미사: `.service.ts`, `.store.ts`, `.model.ts`, `.constant.ts`, `.queries.ts`, `.api.ts`, `.action.ts`, `.type.ts`, `.spec.ts`.
@@ -82,7 +82,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - API 호출 함수는 `app/_global/_apis/*.api.ts`에 둔다. `_apis` 파일은 fetch 호출만 담당한다.
 - 서버 쿼리는 `app/_global/_queries/*.queries.ts`에 둔다. `_queries` 파일은 `queryKey`와 `queryOptions`만 정의하고 `useQuery`를 호출하지 않는다.
-- 사용부에서는 `useQuery(exampleQueries.list())`처럼 `_queries`의 queryOptions를 주입해 호출한다.
+- 사용부에서는 `useQuery(traceQueries.list())`처럼 `_queries`의 queryOptions를 주입해 호출한다.
 - feature 코드에서 `_apis`를 직접 import하지 않는다. 서버 상태 조회는 `@/app/_global/_queries`를 경유한다.
 - `QueryProvider`는 `app/_global/_providers/QueryProvider`에 두고 `app/layout.tsx`에서 래핑한다.
 - TanStack Query의 queryKey 설계, mutation, invalidation, prefetch/dehydrate 규칙은 `.agents/tanstack-query.md`를 만들어 별도로 관리한다.
@@ -92,7 +92,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 아이콘은 `app/_global/_components/Icon/assets/*.svg`(kebab-case)에 두고 SVGR로 컴포넌트처럼 import해서 쓴다. 색은 `currentColor` 기반.
 - 새 아이콘 추가 절차와 SVG 정리 규칙, 빌드 설정(next/turbopack·storybook/vite·`svg.d.ts`)은 `.agents/icons.md`를 따른다.
 
-참조 예시: `app/example/`, `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
+참조 예시: `app/_global/_apis`, `app/_global/_queries`, `app/_global/_providers/`.
 
 ## Safe area (노치 인셋)
 

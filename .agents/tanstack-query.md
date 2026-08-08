@@ -32,12 +32,12 @@
 - 기본 key 스타일은 `all`에서 출발해 list/detail 등으로 확장한다.
 
 ```ts
-export const exampleQueries = {
-  all: () => ['example'] as const,
+export const traceQueries = {
+  all: () => ['trace'] as const,
   list: () =>
     queryOptions({
-      queryKey: [...exampleQueries.all(), 'list'],
-      queryFn: fetchExamples,
+      queryKey: [...traceQueries.all(), 'list'],
+      queryFn: fetchTraces,
     }),
 }
 ```
@@ -52,17 +52,17 @@ export const exampleQueries = {
 
 - mutation HTTP 함수는 `app/_global/_apis/*.api.ts`에 둔다.
 - mutation options는 `app/_global/_queries/*.queries.ts`에 `mutationOptions`로 정의한다.
-- mutation export는 query export와 분리한다. 예: `exampleQueries`, `exampleMutations`.
+- mutation export는 query export와 분리한다. 예: `traceQueries`, `traceMutations`.
 - `_queries` 파일에서는 `useMutation`을 호출하지 않는다.
 - invalidation, optimistic update, toast, navigation 같은 side effect는 사용부 또는 route-local hook에서 처리한다.
 - mutation 성공 후 invalidate할 queryKey는 `_queries`의 key factory를 사용한다.
 
 ```ts
-export const exampleMutations = {
+export const traceMutations = {
   create: () =>
     mutationOptions({
-      mutationKey: [...exampleQueries.all(), 'create'],
-      mutationFn: createExample,
+      mutationKey: [...traceQueries.all(), 'create'],
+      mutationFn: createTrace,
     }),
 }
 ```
@@ -73,5 +73,5 @@ export const exampleMutations = {
 2. 새 API 호출 함수는 `_apis/*.api.ts`에 추가한다.
 3. 조회 queryOptions는 `_queries/*.queries.ts`에 추가한다.
 4. 변경 mutationOptions는 `_queries/*.queries.ts`에 추가한다.
-5. 사용부에서는 `useQuery(exampleQueries.list())` 또는 `useMutation(exampleMutations.create())` 형태로 호출한다.
+5. 사용부에서는 `useQuery(traceQueries.list())` 또는 `useMutation(traceMutations.create())` 형태로 호출한다.
 6. 변경 후 `pnpm lint && pnpm typecheck && pnpm test`로 검증한다.
