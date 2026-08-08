@@ -1,6 +1,7 @@
 import Image from 'next/image'
 
 import { LANDING_GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
+import LetterLogo from '@/public/images/letter-logo.svg'
 
 export function LandingHeroSection() {
   return (
@@ -12,7 +13,7 @@ export function LandingHeroSection() {
         흔적을 넘기면 다른 생각이 팔랑
       </p>
 
-      <div aria-hidden="true" className="mt-[22px] h-[182px] w-[560px] shrink-0" />
+      <LetterLogo aria-label="Pallang" className="mt-[22px] h-[183px] w-[560px] shrink-0" />
 
       <p className="mt-3 whitespace-nowrap text-[24px] leading-[1.5] font-medium tracking-[-0.02em] text-[#616161]">
         책 속 문장을 발췌하고 내 생각을 기록하며
