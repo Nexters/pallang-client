@@ -1,6 +1,25 @@
 import '../app/globals.css'
 
 import type { Preview } from '@storybook/nextjs-vite'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import {
+  PathnameContext,
+  PathParamsContext,
+  SearchParamsContext,
+} from 'next/dist/shared/lib/hooks-client-context.shared-runtime'
+
+import { AuthProvider } from '@/app/_global/_providers/AuthProvider/AuthProvider'
+import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+
+const storybookRouter: AppRouterInstance = {
+  back: () => undefined,
+  forward: () => undefined,
+  refresh: () => undefined,
+  push: () => undefined,
+  replace: () => undefined,
+  prefetch: () => undefined,
+}
 
 const appViewports = {
   mobile375: {
@@ -23,6 +42,23 @@ const appViewports = {
 
 const preview: Preview = {
   tags: ['autodocs'],
+  decorators: [
+    (Story) => (
+      <AppRouterContext.Provider value={storybookRouter}>
+        <PathnameContext.Provider value="/">
+          <SearchParamsContext.Provider value={new URLSearchParams()}>
+            <PathParamsContext.Provider value={{}}>
+              <AuthProvider>
+                <LoginGateProvider>
+                  <Story />
+                </LoginGateProvider>
+              </AuthProvider>
+            </PathParamsContext.Provider>
+          </SearchParamsContext.Provider>
+        </PathnameContext.Provider>
+      </AppRouterContext.Provider>
+    ),
+  ],
   parameters: {
     controls: {
       matchers: {
