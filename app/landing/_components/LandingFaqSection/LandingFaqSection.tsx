@@ -36,21 +36,21 @@ export function LandingFaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
-    <section className="relative h-[919px] overflow-hidden bg-bg-default font-pretendard">
-      <div className="absolute top-0 left-1/2 h-full w-[1920px] -translate-x-1/2">
+    <section className="relative min-h-[719px] overflow-hidden bg-bg-default font-pretendard md:h-[919px]">
+      <div className="relative mx-auto w-full max-w-[414px] md:absolute md:top-0 md:left-1/2 md:h-full md:w-[1920px] md:max-w-none md:-translate-x-1/2">
         <Image
           src="/images/landing/faq-character.png"
           alt=""
           width={146}
           height={106}
-          className="absolute top-[162px] left-[1238px] h-[106px] w-[146px] object-contain"
+          className="absolute top-[613px] right-[7px] h-[106px] w-[146px] object-contain md:top-[162px] md:right-auto md:left-[1238px]"
         />
 
-        <h2 className="absolute top-32 left-1/2 -translate-x-1/2 text-[48px] leading-[1.4] font-bold tracking-[-0.02em] text-black">
+        <h2 className="pt-10 text-center text-[24px] leading-[1.4] font-bold tracking-[-0.02em] text-black md:absolute md:top-32 md:left-1/2 md:-translate-x-1/2 md:pt-0 md:text-[48px]">
           FAQ
         </h2>
 
-        <div className="absolute top-[251px] left-1/2 flex w-[848px] -translate-x-1/2 flex-col gap-4">
+        <div className="relative top-auto left-auto mx-4 mt-[38px] flex w-auto translate-x-0 flex-col gap-4 md:absolute md:top-[251px] md:left-1/2 md:mx-0 md:mt-0 md:w-[848px] md:-translate-x-1/2">
           {faqItems.map((item, index) => {
             const isOpen = openIndex === index
 
@@ -58,25 +58,25 @@ export function LandingFaqSection() {
               <div key={item.question} className="rounded-2xl bg-bg-alternative">
                 <button
                   type="button"
-                  className="flex w-full cursor-pointer items-center gap-[89px] p-6 text-left"
+                  className="flex w-full cursor-pointer items-center gap-4 p-6 text-left md:gap-[89px]"
                   aria-expanded={isOpen}
                   onClick={() => {
                     setOpenIndex(isOpen ? null : index)
                   }}
                 >
-                  <span className="min-w-0 flex-1 text-[24px] leading-[1.4] font-bold tracking-[-0.02em] text-black">
+                  <span className="min-w-0 flex-1 text-[16px] leading-[1.4] font-bold tracking-[-0.02em] text-black md:text-[24px]">
                     {item.question}
                   </span>
                   <ChevronDownIcon
                     aria-hidden="true"
-                    className={`size-6 shrink-0 text-icon-primary transition-transform duration-instant ease-standard ${
+                    className={`size-5 shrink-0 text-icon-primary transition-transform duration-instant ease-standard md:size-6 ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
 
                 {isOpen && (
-                  <p className="px-6 pb-6 text-[18px] leading-[1.4] font-medium tracking-[-0.02em] text-[#505050]">
+                  <p className="px-6 pb-6 text-[12px] leading-[1.4] font-medium tracking-[-0.02em] text-[#505050] md:text-[18px]">
                     {item.answer}
                   </p>
                 )}
