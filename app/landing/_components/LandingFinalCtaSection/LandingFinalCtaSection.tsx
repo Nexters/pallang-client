@@ -18,12 +18,14 @@ export function LandingFinalCtaSection() {
             </p>
           </div>
 
-          <button
-            type="button"
+          <a
+            href="https://naver.me/51u1mr53"
+            target="_blank"
+            rel="noreferrer"
             className="press mt-[65px] flex h-20 w-[210px] items-center justify-center rounded-full bg-interactive-accent px-6 py-2 text-[24px] leading-[1.2] font-bold tracking-[-0.02em] text-white"
           >
             출시 알람 받기
-          </button>
+          </a>
         </div>
 
         <Image
