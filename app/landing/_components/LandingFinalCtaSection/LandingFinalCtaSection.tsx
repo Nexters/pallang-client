@@ -5,9 +5,13 @@ export function LandingFinalCtaSection() {
     <section className="relative h-[719px] overflow-hidden bg-bg-default font-pretendard md:h-[748px]">
       <div className="absolute top-0 left-1/2 h-full w-[414px] -translate-x-1/2 md:w-[1920px]">
         <div className="absolute top-[72px] left-1/2 flex w-[343px] -translate-x-1/2 flex-col items-center md:top-[148px] md:left-[320px] md:w-[472px] md:translate-x-0 md:items-start">
-          <div className="flex size-[164px] items-center justify-center bg-[#d9d9d9] text-[20px] leading-[1.4] font-medium tracking-[-0.02em] text-[#595959]">
-            인스타 QR
-          </div>
+          <Image
+            src="/images/landing/instagram-qr.png"
+            alt="팔랑 인스타그램 QR 코드"
+            width={492}
+            height={492}
+            className="size-[164px] object-contain"
+          />
 
           <div className="mt-6 flex w-full flex-col gap-4 md:mt-10">
             <h2 className="whitespace-nowrap text-center text-[24px] leading-[1.4] font-bold tracking-[-0.02em] text-black md:text-left md:text-[48px]">
