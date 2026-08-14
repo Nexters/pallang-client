@@ -30,13 +30,11 @@ export type QuoteStageProps = {
   isRevealed: boolean
   isCollapsed: boolean
   onSelectPage: (page: number) => void
-  /** 더 불러올 대목 페이지가 있을 때만 전달된다 — 페이지 탭을 끝까지 스크롤하면 호출된다 */
+  /** 더 불러올 대목 페이지가 있을 때만 전달된다 — 헤더 쪽 선택기를 끝까지 스크롤하면 호출된다 */
   onLoadMorePages?: () => void
   onClickQuote: () => void
-  /** 카드 위 좌우 스와이프(와 좌우 방향키)로 대목·페이지를 옮긴다 */
+  /** 카드 위 좌우 스와이프와 카드 안 화살표로 대목·페이지를 옮긴다 */
   onSwipeQuote: (direction: SwipeDirection) => void
-  /** 헤더의 + — 이 책에 새 대목을 남기러 간다 */
-  onAddTrace: () => void
 }
 
 /** 서버 OpinionSummaryResponse 중 목록 UI가 쓰는 필드만 추린 뷰 타입 */

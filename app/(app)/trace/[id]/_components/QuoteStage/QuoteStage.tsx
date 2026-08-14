@@ -1,13 +1,13 @@
 import { useRef } from 'react'
 
+import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
+import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 import { DecoratedQuote } from '@/app/_shared/trace/_components/DecoratedQuote/DecoratedQuote'
 
 import { useQuoteSwipe } from '../../_hooks/useQuoteSwipe'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
-import { PageTabs } from '../PageTabs/PageTabs'
-import { QuoteIndicator } from '../QuoteIndicator/QuoteIndicator'
 import { TraceHeader } from '../TraceHeader/TraceHeader'
 import styles from './QuoteStage.module.css'
 
@@ -22,9 +22,8 @@ export function QuoteStage({
   onLoadMorePages,
   onClickQuote,
   onSwipeQuote,
-  onAddTrace,
 }: QuoteStageProps) {
-  const cardRef = useRef<HTMLButtonElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
   useQuoteSwipe(cardRef, onSwipeQuote)
   const activeQuote = highlight.quotes[quoteIndex]
   // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
@@ -33,42 +32,31 @@ export function QuoteStage({
   return (
     <div className={cn(styles['stage'], 'absolute inset-x-0 top-0')}>
       <div className="absolute inset-0 bg-bg-book-card" />
-      {/* 펼친 상태 흰 배경 — 진행에 따라 걷힌다 */}
-      <div className="absolute inset-0 bg-bg-default opacity-[var(--inv)]" />
-      <div className={cn(styles['banner'], 'absolute inset-x-0 top-0 bg-orange-500')} />
+      {/* 모눈종이 — 아래로 갈수록 배경색으로 걷힌다(디자인 200:939).
+          책 표지가 아니라 화면마다 같은 정적 이미지다 */}
+      <div className={cn(styles['paper'], 'absolute inset-x-0 top-0 overflow-hidden')}>
+        <div className="absolute inset-0 bg-neutral-200" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- 고정 크기 정적 배경이라 next/image의 최적화가 붙을 자리가 없다 */}
+        <img
+          src="/images/trace-grid-paper.png"
+          alt=""
+          className="absolute top-1/2 left-1/2 h-[820px] w-[530px] max-w-none -translate-1/2"
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent to-neutral-200" />
+      </div>
+      {/* 모눈종이 아래는 목록과 같은 어두운 면이고, 카드가 그 경계에 걸쳐 놓인다 */}
+      <div className={cn(styles['underlay'], 'absolute inset-x-0 bottom-0 bg-bg-dark')} />
       <TraceHeader
         title={title}
-        onAddTrace={onAddTrace}
+        pages={pages}
+        activePage={highlight.page}
+        onSelectPage={onSelectPage}
+        onLoadMorePages={onLoadMorePages}
         className="absolute inset-x-0 top-(--safe-top)"
       />
-      {/* 완전히 투명해진 뒤에도 초점이 남지 않도록 전환이 끝나면 언마운트한다 */}
-      {!isCollapsed && (
-        <div
-          className={cn(
-            styles['tabsClip'],
-            'absolute inset-x-0 top-[calc(var(--safe-top)+var(--header-height))] overflow-hidden',
-          )}
-        >
-          <PageTabs
-            pages={pages}
-            activePage={highlight.page}
-            onSelect={onSelectPage}
-            onLoadMore={onLoadMorePages}
-            className={styles['tabs']}
-          />
-        </div>
-      )}
-      {/* 대목 이동은 카드 위 좌우 스와이프가 맡는다.
-          터치가 없는 환경에는 제스처를 대신할 입구가 없으므로 좌우 방향키를 함께 받는다 */}
-      <button
+      {/* 대목 이동은 카드 위 좌우 스와이프와 카드 안 화살표가 함께 맡는다 */}
+      <div
         ref={cardRef}
-        type="button"
-        onClick={onClickQuote}
-        onKeyDown={(event) => {
-          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-          event.preventDefault()
-          onSwipeQuote(event.key === 'ArrowRight' ? 'next' : 'prev')
-        }}
         className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
       >
         {/* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
@@ -79,8 +67,32 @@ export function QuoteStage({
           decorations={activeQuote?.decorations ?? []}
           className="text-body-20md -m-4 min-h-0 flex-1 overflow-hidden p-4 text-text-secondary"
         />
+        {/* ponytail: 시안(200:967)의 화살표는 아직 스크린샷을 붙여둔 자리라 에셋이 없다.
+            글리프가 가장 가까운 back/next를 쓰고, 실제 아이콘이 나오면 갈아끼운다 */}
+        <div className="absolute right-8 bottom-8 flex items-center gap-2.5">
+          <button
+            type="button"
+            aria-label="이전 대목"
+            onClick={() => {
+              onSwipeQuote('prev')
+            }}
+          >
+            <BackIcon width={14} height={14} className="text-text-secondary opacity-40" />
+          </button>
+          <button
+            type="button"
+            aria-label="다음 대목"
+            onClick={() => {
+              onSwipeQuote('next')
+            }}
+          >
+            <NextIcon width={14} height={14} className="text-text-secondary" />
+          </button>
+        </div>
         {isCovered && (
-          <span
+          <button
+            type="button"
+            onClick={onClickQuote}
             className={cn(
               styles['cover'],
               'absolute inset-0 flex flex-col items-center justify-center rounded-[inherit] bg-bg-book-card/70 backdrop-blur-[9px]',
@@ -108,14 +120,9 @@ export function QuoteStage({
                 누르면 확인 할 수 있어요
               </span>
             </span>
-          </span>
+          </button>
         )}
-      </button>
-      <QuoteIndicator
-        quotes={highlight.quotes}
-        activeIndex={quoteIndex}
-        className={cn(styles['indicator'], 'absolute inset-x-0')}
-      />
+      </div>
     </div>
   )
 }

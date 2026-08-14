@@ -2,7 +2,6 @@ import { type CSSProperties, type RefObject, useCallback, useEffect, useRef, use
 
 import { WIDTH_TIMING } from '../_data/widthTiming.constant'
 import {
-  BANNER_HEIGHT,
   CARD_HEIGHT,
   CARD_RISE,
   CARD_SHRINK,
@@ -13,11 +12,9 @@ import {
   easeOutCubic,
   getTransitionIntent,
   HEADER_HEIGHT,
-  INDICATOR_RISE,
-  INDICATOR_TOP_EXPANDED,
+  PAPER_HEIGHT,
   STAGE_COLLAPSED,
   STAGE_EXPANDED,
-  TABS_HEIGHT,
   TOUCH_COLLAPSE_DRAG,
   TOUCH_EXPAND_DRAG,
   WHEEL_TRIGGER_DELTA,
@@ -32,15 +29,12 @@ const stageStyle = {
   '--stage-collapsed': px(STAGE_COLLAPSED),
   '--stage-shift': px(COLLAPSE_DISTANCE),
   '--header-height': px(HEADER_HEIGHT),
-  '--tabs-height': px(TABS_HEIGHT),
-  '--banner-height': px(BANNER_HEIGHT),
+  '--paper-height': px(PAPER_HEIGHT),
   '--card-width': px(CARD_WIDTH),
   '--card-height': px(CARD_HEIGHT),
   '--card-rise': px(CARD_RISE),
   '--card-shrink': px(CARD_SHRINK),
   '--card-top-collapsed': px(CARD_TOP_COLLAPSED),
-  '--indicator-top-expanded': px(INDICATOR_TOP_EXPANDED),
-  '--indicator-rise': px(INDICATOR_RISE),
 } as CSSProperties
 
 // 움직임 축소 설정에서는 전환을 즉시 끝낸다

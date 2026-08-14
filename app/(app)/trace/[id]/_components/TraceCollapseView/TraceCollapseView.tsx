@@ -13,6 +13,7 @@ import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
 import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentComposer'
+import { TraceCreateFab } from '../TraceCreateFab/TraceCreateFab'
 import { TraceListPanel } from '../TraceListPanel/TraceListPanel'
 import styles from './TraceCollapseView.module.css'
 
@@ -115,10 +116,6 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
             onLoadMorePages={stage.loadMorePages}
             onClickQuote={stage.clickQuote}
             onSwipeQuote={stage.swipeQuote}
-            onAddTrace={() => {
-              // 헤더의 +는 이 책에 '새 대목'을 남기는 자리라 대목을 물리지 않는다
-              goCreateTrace(null)
-            }}
           />
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
@@ -130,7 +127,6 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
           scrollerRef={scrollerRef}
           stageError={{ isError: stage.isError, retry: stage.retry }}
           openCommentOpinionId={openCommentOpinionId}
-          onToggleTraceCreate={addTraceToCurrentPassage}
           onToggleTraceComment={toggleTraceComment}
           onDetailOpenChange={setIsDetailOpen}
           initialTraceId={target?.opinionId}
@@ -141,6 +137,16 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
       {/* 댓글을 펼친 흔적에만 하단 입력바가 붙는다(디자인 2183:10060 주석) */}
       {openCommentOpinionId !== null && (
         <TraceCommentComposer opinionId={openCommentOpinionId} isInert={isDetailOpen} />
+      )}
+      {/* 남기기 버튼은 하단 입력바·상세 오버레이와 같은 자리를 다투므로 그 둘이 없을 때만 뜬다 */}
+      {openCommentOpinionId === null && !isDetailOpen && (
+        <TraceCreateFab
+          onAddOpinion={addTraceToCurrentPassage}
+          onAddRecord={() => {
+            // '기록'은 이 책에 새 대목을 남기는 자리라 보고 있는 대목을 물리지 않는다
+            goCreateTrace(null)
+          }}
+        />
       )}
     </>
   )

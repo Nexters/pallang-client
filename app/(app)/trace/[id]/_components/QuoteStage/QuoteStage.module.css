@@ -13,23 +13,17 @@
   height: calc(var(--safe-top) + var(--stage-expanded) - var(--stage-shift) * var(--collapse));
 }
 
-/* 오렌지 배너 — 반투명해지며 흐려지지 않도록, 채도를 유지한 채 자기 높이만큼 걷혀 올라간다.
-   노치 뒤까지 오렌지가 이어지도록 배너만 인셋만큼 늘리고, 걷힐 때도 늘어난 높이만큼 올라간다 */
-.banner {
-  height: calc(var(--safe-top) + var(--banner-height));
-  transform: translateY(calc(-1 * (var(--safe-top) + var(--banner-height)) * var(--collapse)));
+/* 모눈종이 배경 — 반투명해지며 흐려지지 않도록, 채도를 유지한 채 자기 높이만큼 걷혀 올라간다.
+   노치 뒤까지 종이가 이어지도록 이 층만 인셋만큼 늘리고, 걷힐 때도 늘어난 높이만큼 올라간다 */
+.paper {
+  height: calc(var(--safe-top) + var(--paper-height));
+  transform: translateY(calc(-1 * (var(--safe-top) + var(--paper-height)) * var(--collapse)));
 }
 
-/* 탭은 헤더 바로 아래에서 잘리며 헤더 밑으로 미끄러져 들어간다 — 흐려질 필요가 없다.
-   글자가 잘린 채 오래 남지 않도록 전환 전반부에 빠르게 빠져나간다 */
-.tabsClip {
-  --tabs-progress: clamp(0, calc(var(--collapse) * 2), 1);
-
-  height: calc(var(--tabs-height) * (1 - var(--tabs-progress)));
-}
-
-.tabs {
-  transform: translateY(calc(-1 * var(--tabs-height) * var(--tabs-progress)));
+/* 모눈종이 아래 어두운 면 — 목록과 같은 색이라 스티커가 두 면에 걸쳐 놓인 것처럼 보인다.
+   접히면 카드가 화면 폭으로 벌어지며 이 면을 통째로 덮는다 */
+.underlay {
+  top: calc(var(--safe-top) + var(--paper-height));
 }
 
 /* 기울어진 포스트잇 → 화면 폭 패널.
@@ -44,14 +38,6 @@
   border-radius: calc(4px * var(--inv));
   transform: rotate(calc(-3deg * var(--inv)));
   box-shadow: 4px 10px 17.5px rgb(0 0 0 / calc(0.2 * var(--inv)));
-}
-
-/* 카드 아래 → 패널 안쪽 하단으로 이동한다 */
-.indicator {
-  top: calc(
-    var(--safe-top) + var(--indicator-top-expanded) - var(--indicator-rise) * var(--collapse)
-  );
-  padding-inline: calc(64px + 24px * var(--collapse));
 }
 
 /* 스포일러 가림막 — 카드 안에 있으므로 회전·크기 변화를 그대로 따라간다 */

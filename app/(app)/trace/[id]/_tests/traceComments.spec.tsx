@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
@@ -489,7 +490,7 @@ describe('흔적 댓글 인라인 펼침', () => {
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
 
     // 인용문 카드를 옆으로 넘기면 다음 대목으로 이동해 목록이 통째로 갈린다(#131)
-    const card = screen.getByRole('button', { name: '첫 번째 대목 인용문' })
+    const card = screen.getByText('첫 번째 대목 인용문')
     fireEvent.touchStart(card, { touches: [{ clientX: 200, clientY: 200 }] })
     fireEvent.touchMove(card, { touches: [{ clientX: 140, clientY: 200 }] })
     fireEvent.touchEnd(card, { touches: [] })
@@ -742,13 +743,14 @@ describe('흔적 댓글 인라인 펼침', () => {
     await renderView()
 
     // 가림막을 해제해야 목록을 읽을 수 있다
-    fireEvent.click(screen.getByRole('button', { name: /첫 번째 대목 인용문/ }))
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
     fireEvent.click(commentToggle(0))
     await screen.findByText('내가 쓴 댓글')
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
 
-    // 같은 페이지 탭을 다시 누르면 해제가 풀린다 — passageId는 그대로라 대목 전환 리셋에 걸리지 않는다
-    fireEvent.click(screen.getByRole('button', { name: `${String(PAGE)}p` }))
+    // 같은 쪽을 다시 고르면 해제가 풀린다 — passageId는 그대로라 대목 전환 리셋에 걸리지 않는다
+    await userEvent.click(screen.getByLabelText('쪽 선택'))
+    await userEvent.click(await screen.findByRole('option', { name: `${String(PAGE)}p` }))
 
     // 목록만 흐려지고 입력바가 남으면 더는 읽을 수 없는 흔적에 댓글을 쓸 수 있다
     await waitFor(() => {
