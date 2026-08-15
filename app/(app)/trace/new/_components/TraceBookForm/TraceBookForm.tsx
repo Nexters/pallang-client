@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -10,6 +10,7 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
@@ -34,6 +35,9 @@ export function TraceBookForm() {
   const similarCheck = useMutation(passageMutations.similarCheck())
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
+  // 비로그인이면 401이라 me가 비어 있다 — BookSearchView의 처리와 같게 '나'로 떨어뜨린다.
+  const me = useQuery(userQueries.me())
+  const nickname = me.data?.data?.nickname ?? '나'
 
   // 병합 다이얼로그가 떠 있는 동안에는 뒤로가기가 화면을 나가는 대신 다이얼로그만 닫는다.
   useOverlayBackGuard(candidate !== null, () => {
@@ -113,36 +117,45 @@ export function TraceBookForm() {
 
   return (
     <div className="relative flex flex-1 flex-col bg-bg-dark">
-      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
+      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다.
+          시안(3092:14086)은 이 화면도 write/decorate와 같은 밝음/어둠 구성이다 —
+          책 카드까지 흰 영역에 넣는다(TraceWriteForm·TraceDecorateForm과 같은 처리). */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepIndicator current={3} />
-      </div>
-
-      <div className="flex flex-1 flex-col gap-6 overflow-y-auto pt-6 pb-4">
-        <div className="px-4">
-          <button
-            type="button"
-            aria-label="책 다시 고르기"
-            onClick={() => {
-              setSheetOpen(true)
-            }}
-            className="w-full cursor-pointer rounded-lg bg-bg-surface/10 p-3 text-left"
-          >
+        <div className="px-4 pt-2 pb-6">
+          <div className="flex items-start justify-between gap-3 rounded-lg bg-bg-surface p-3">
             {draft.book && (
               <BookItem
+                className="flex-1"
                 author={draft.book.author}
                 coverImageUrl={draft.book.coverImageUrl}
                 title={draft.book.title}
               />
             )}
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSheetOpen(true)
+              }}
+              className="press shrink-0 cursor-pointer rounded-full border border-border-default px-3 py-1.5 text-body-14md text-text-secondary"
+            >
+              편집하기
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div className="px-8">
+      {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운
+          배경이다(TraceWriteForm·TraceDecorateForm과 같은 처리). */}
+      <div className="relative bg-bg-default px-8">
+        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+        <div className="relative">
           <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
         </div>
+      </div>
 
-        <TraceOpinionPreview content={draft.content} />
+      <div className="pt-6 pb-4">
+        <TraceOpinionPreview content={draft.content} nickname={nickname} />
       </div>
 
       <div className="mt-auto flex gap-2 px-4 pb-safe">
@@ -162,7 +175,7 @@ export function TraceBookForm() {
           loading={createOpinion.isPending}
           onClick={handleSubmit}
         >
-          등록하기
+          기록 완료
         </Button>
       </div>
 

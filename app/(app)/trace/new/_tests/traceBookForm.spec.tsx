@@ -135,22 +135,29 @@ describe('책 등록 단계', () => {
     expect(screen.getByText('좋았다')).toBeTruthy()
   })
 
-  it('책 카드를 누르면 검색 시트가 다시 열린다', async () => {
+  it('편집하기를 누르면 검색 시트가 다시 열린다', async () => {
     renderForm()
     await pickBook()
 
-    fireEvent.click(await screen.findByRole('button', { name: /책 다시 고르기/ }))
+    fireEvent.click(await screen.findByRole('button', { name: '편집하기' }))
 
     expect(await screen.findByPlaceholderText('책 제목을 입력해 주세요.')).toBeTruthy()
   })
 
-  it('등록하기를 누르면 흔적을 저장하고 완료로 간다', async () => {
+  it('의견 헤딩에 닉네임이 들어간다', async () => {
+    renderForm()
+    await pickBook()
+
+    expect(await screen.findByText('나님이 기록한 의견')).toBeTruthy()
+  })
+
+  it('기록 완료를 누르면 흔적을 저장하고 완료로 간다', async () => {
     replaceMock.mockClear()
     createOpinionMock.mockClear()
     renderForm()
     await pickBook()
 
-    fireEvent.click(await screen.findByRole('button', { name: '등록하기' }))
+    fireEvent.click(await screen.findByRole('button', { name: '기록 완료' }))
 
     await waitFor(() => {
       expect(createOpinionMock).toHaveBeenCalled()

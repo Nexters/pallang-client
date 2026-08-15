@@ -59,7 +59,7 @@ export function TraceSourceSheet({
     <BottomSheet open={open} title="새로운 기록을 어떻게 남길까요?" onClose={onClose}>
       {book && (
         <div className="flex flex-col gap-2">
-          <span className="w-fit rounded-lg bg-bg-surface px-2 py-1 text-body-12md text-text-tertiary">
+          <span className="w-fit rounded-full bg-interactive-accent px-2 py-1 text-body-12md text-text-inverse">
             지금 기록을 남기는 책
           </span>
           <div className="flex items-center gap-3 rounded-lg bg-bg-surface p-3">
