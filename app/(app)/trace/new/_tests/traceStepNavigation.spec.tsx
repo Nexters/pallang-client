@@ -76,23 +76,23 @@ describe('흔적 작성 단계 이동', () => {
     prefetchMock.mockClear()
   })
 
-  it('꾸미기에서 뒤로 가면 push 없이 상세로 replace한다', () => {
+  it('꾸미기에서 뒤로 가면 push 없이 생각 작성으로 replace한다', () => {
     renderAt('/trace/new/decorate')
     fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
 
-    expect(replaceMock).toHaveBeenCalledWith('/trace/new/detail')
+    expect(replaceMock).toHaveBeenCalledWith('/trace/new/write')
     expect(pushMock).not.toHaveBeenCalled()
   })
 
-  it('상세에서 뒤로 가면 책 검색으로 replace한다', () => {
-    renderAt('/trace/new/detail')
+  it('생각 작성에서 뒤로 가면 방식 선택으로 replace한다', () => {
+    renderAt('/trace/new/write')
     fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
 
     expect(replaceMock).toHaveBeenCalledWith('/trace/new')
   })
 
   it('작성 중 닫기를 누르면 바로 나가지 않고 확인을 받는다', () => {
-    renderAt('/trace/new/detail')
+    renderAt('/trace/new/write')
     fireEvent.click(screen.getByRole('button', { name: '대목 담기' }))
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
@@ -111,7 +111,7 @@ describe('흔적 작성 단계 이동', () => {
 
   it('단계에 들어서면 다음 단계 route를 미리 프리페치한다', () => {
     // 이게 빠지면 전환마다 RSC 왕복이 생겨 웹뷰에서 버벅인다
-    renderAt('/trace/new/detail')
+    renderAt('/trace/new/write')
     expect(prefetchMock).toHaveBeenCalledWith('/trace/new/decorate')
   })
 })

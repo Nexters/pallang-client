@@ -23,7 +23,7 @@ describe('resolveExitDecision', () => {
       resolveExitDecision({
         draft: draftWith({ book, quotedText: '문장' }),
         hasOverlay: true,
-        step: 'detail',
+        step: 'write',
       }),
     ).toBe('closeOverlay')
   })
@@ -40,13 +40,13 @@ describe('resolveExitDecision', () => {
 
   it('책만 고른 상태는 확인 없이 나간다', () => {
     expect(
-      resolveExitDecision({ draft: draftWith({ book }), hasOverlay: false, step: 'search' }),
+      resolveExitDecision({ draft: draftWith({ book }), hasOverlay: false, step: 'source' }),
     ).toBe('exit')
   })
 
   it('아무것도 고르지 않은 첫 화면은 확인 없이 나간다', () => {
     expect(
-      resolveExitDecision({ draft: initialTraceDraft, hasOverlay: false, step: 'search' }),
+      resolveExitDecision({ draft: initialTraceDraft, hasOverlay: false, step: 'source' }),
     ).toBe('exit')
   })
 
@@ -55,7 +55,7 @@ describe('resolveExitDecision', () => {
       resolveExitDecision({
         draft: draftWith({ book, quotedText: '문장' }),
         hasOverlay: false,
-        step: 'detail',
+        step: 'write',
       }),
     ).toBe('confirm')
   })
@@ -78,7 +78,7 @@ describe('resolveExitDecision', () => {
       resolveExitDecision({
         draft: draftWith({ book, content: '내 의견' }),
         hasOverlay: false,
-        step: 'opinion',
+        step: 'book',
       }),
     ).toBe('confirm')
   })
@@ -94,7 +94,7 @@ describe('resolveExitDecision', () => {
           result: { opinionId: 1, merged: false },
         }),
         hasOverlay: false,
-        step: 'opinion',
+        step: 'book',
       }),
     ).toBe('exit')
   })

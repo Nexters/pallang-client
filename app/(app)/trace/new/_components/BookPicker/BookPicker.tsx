@@ -149,7 +149,7 @@ export function BookPicker({ seed = null }: BookPickerProps) {
         onSubmit={(quotedText) => {
           dispatch({ type: 'setQuotedText', quotedText })
           setSheet('none')
-          goTo('detail')
+          goTo('write')
         }}
       />
     </>

@@ -80,7 +80,7 @@ export function TraceDecorateForm() {
   }
 
   const goToOpinion = () => {
-    goTo('opinion')
+    goTo('book')
   }
 
   const handleNext = () => {

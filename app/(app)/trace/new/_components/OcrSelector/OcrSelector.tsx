@@ -223,7 +223,7 @@ export function OcrSelector() {
         }}
         onSubmit={() => {
           dispatch({ type: 'setQuotedText', quotedText })
-          goTo('detail')
+          goTo('write')
         }}
       />
 

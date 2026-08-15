@@ -15,16 +15,16 @@ export function resolveGuardRedirect(pathname: string, draft: TraceDraft): strin
   if (pathname === `${START}/photo`) {
     return draft.book ? null : START
   }
-  if (pathname === `${START}/detail`) {
+  if (pathname === `${START}/write`) {
     return draft.book && draft.quotedText ? null : START
   }
   if (pathname === `${START}/decorate`) {
     if (!draft.book || !draft.quotedText) return START
-    return draft.pageNumber === null ? `${START}/detail` : null
+    return draft.pageNumber === null ? `${START}/write` : null
   }
-  if (pathname === `${START}/opinion`) {
+  if (pathname === `${START}/book`) {
     if (!draft.book || !draft.quotedText) return START
-    if (draft.pageNumber === null) return `${START}/detail`
+    if (draft.pageNumber === null) return `${START}/write`
     return draft.decorations.length > 0 ? null : `${START}/decorate`
   }
   return null

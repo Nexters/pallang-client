@@ -26,26 +26,26 @@ describe('resolveGuardRedirect', () => {
     expect(resolveGuardRedirect('/trace/new/photo', initialTraceDraft)).toBe('/trace/new')
   })
 
-  it('대목 없이 detail에 들어오면 시작으로 되돌린다', () => {
-    expect(resolveGuardRedirect('/trace/new/detail', draftWith({ book }))).toBe('/trace/new')
+  it('대목 없이 write에 들어오면 시작으로 되돌린다', () => {
+    expect(resolveGuardRedirect('/trace/new/write', draftWith({ book }))).toBe('/trace/new')
   })
 
-  it('대목이 있으면 detail을 통과한다', () => {
+  it('대목이 있으면 write를 통과한다', () => {
     expect(
-      resolveGuardRedirect('/trace/new/detail', draftWith({ book, quotedText: '문장' })),
+      resolveGuardRedirect('/trace/new/write', draftWith({ book, quotedText: '문장' })),
     ).toBeNull()
   })
 
-  it('페이지 없이 decorate에 들어오면 detail로 되돌린다', () => {
+  it('페이지 없이 decorate에 들어오면 write로 되돌린다', () => {
     expect(
       resolveGuardRedirect('/trace/new/decorate', draftWith({ book, quotedText: '문장' })),
-    ).toBe('/trace/new/detail')
+    ).toBe('/trace/new/write')
   })
 
-  it('효과 없이 opinion에 들어오면 decorate로 되돌린다', () => {
+  it('효과 없이 book에 들어오면 decorate로 되돌린다', () => {
     expect(
       resolveGuardRedirect(
-        '/trace/new/opinion',
+        '/trace/new/book',
         draftWith({ book, quotedText: '문장', pageNumber: 87 }),
       ),
     ).toBe('/trace/new/decorate')
@@ -75,8 +75,8 @@ describe('resolveGuardRedirect', () => {
     })
 
     expect(resolveGuardRedirect('/trace/new/decorate', saved)).toBe('/trace/new/done')
-    expect(resolveGuardRedirect('/trace/new/opinion', saved)).toBe('/trace/new/done')
-    expect(resolveGuardRedirect('/trace/new/detail', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new/book', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new/write', saved)).toBe('/trace/new/done')
   })
 
   it('결과가 있어도 첫 화면은 막지 않는다', () => {
