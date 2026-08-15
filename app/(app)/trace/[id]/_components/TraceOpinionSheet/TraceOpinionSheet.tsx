@@ -1,0 +1,141 @@
+'use client'
+
+import { useRef } from 'react'
+
+import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
+import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
+import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
+import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
+import { cn } from '@/app/_global/_services/cn.service'
+
+import type { Trace } from '../../_types/readerHighlights.type'
+import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentComposer'
+import { TraceCommentSection } from '../TraceCommentSection/TraceCommentSection'
+import { TraceItem } from '../TraceItem/TraceItem'
+
+type TraceOpinionSheetProps = {
+  open: boolean
+  traces: Trace[]
+  traceCount: number
+  /** 답글 화면에 들어가 있는 의견 — null이면 의견 목록 화면이다 */
+  selectedOpinionId: number | null
+  canFetchMore: boolean
+  onFetchMore: () => void
+  onSelectOpinion: (opinionId: number) => void
+  /** 답글 화면에서 의견 목록으로 되돌아간다 */
+  onShowList: () => void
+  onClose: () => void
+}
+
+/** 시트가 떠 있는 동안만 하드웨어 back을 가져간다 — 항상 등록하면 닫힌 시트가 페이지의 back을 삼킨다 */
+function SheetHardwareBack({ onBack }: { onBack: () => void }) {
+  useHardwareBack(onBack)
+  return null
+}
+
+/**
+ * "N개의 의견"으로 진입하는 의견 목록 바텀시트(디자인 202:7290).
+ * 의견 카드의 답글 버튼을 누르면 시트 안에서 답글 화면(디자인 202:7346)으로 겹쳐 전환된다.
+ */
+export function TraceOpinionSheet({
+  open,
+  traces,
+  traceCount,
+  selectedOpinionId,
+  canFetchMore,
+  onFetchMore,
+  onSelectOpinion,
+  onShowList,
+  onClose,
+}: TraceOpinionSheetProps) {
+  const listScrollRef = useRef<HTMLDivElement>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  const selectedTrace = traces.find((trace) => trace.opinionId === selectedOpinionId) ?? null
+  const isReplyOpen = open && selectedTrace !== null
+  // 답글 화면은 목록 위로 밀려 들어오는 오버레이 — 되돌아갈 때 슬라이드 아웃이 보이게 수명을 늘린다
+  const reply = useExitTransition(isReplyOpen, MOTION_DURATION.normal)
+  // 닫히는 동안에도 원본 의견과 답글이 남아 있어야 퇴장이 빈 화면으로 보이지 않는다
+  const shownTrace = useLastPresent(selectedTrace)
+
+  useLoadMoreOnVisible({
+    targetRef: loadMoreRef,
+    rootRef: listScrollRef,
+    enabled: open && canFetchMore,
+    onLoadMore: onFetchMore,
+  })
+
+  return (
+    <>
+      {open && (
+        <SheetHardwareBack
+          onBack={() => {
+            if (selectedOpinionId !== null) onShowList()
+            else onClose()
+          }}
+        />
+      )}
+      <BottomSheet
+        open={open}
+        tone="dark"
+        title={
+          isReplyOpen
+            ? `답글 (${String(selectedTrace.commentCount)})`
+            : `의견 (${String(traceCount)})`
+        }
+        onBack={isReplyOpen ? onShowList : undefined}
+        onClose={onClose}
+        contentClassName="gap-0 p-0"
+      >
+        {/* 시트 높이를 고정해 목록↔답글 화면을 오가도 시트가 출렁이지 않게 한다 */}
+        <div className="relative h-[70dvh] overflow-hidden">
+          {/* 답글 화면이 덮고 있는 동안 뒤의 목록은 포커스·보조기기에서 뺀다 */}
+          <div ref={listScrollRef} inert={isReplyOpen} className="h-full overflow-y-auto px-4">
+            <ul className="flex flex-col">
+              {traces.map((trace, index) => (
+                <li
+                  key={trace.opinionId}
+                  className={index > 0 ? 'border-t border-dashed border-white/30' : undefined}
+                >
+                  <TraceItem
+                    trace={trace}
+                    onSelect={() => {
+                      onSelectOpinion(trace.opinionId)
+                    }}
+                    onOpenComments={() => {
+                      onSelectOpinion(trace.opinionId)
+                    }}
+                  />
+                </li>
+              ))}
+            </ul>
+            {/* 목록 끝 sentinel — 시트 스크롤이 끝에 닿으면 다음 의견 페이지를 불러온다 */}
+            <div ref={loadMoreRef} aria-hidden className="h-px w-full" />
+          </div>
+          {reply.shouldRender && shownTrace && (
+            <div
+              data-state={reply.state}
+              aria-label="답글 상세"
+              className={cn(
+                'absolute inset-0 z-1 flex flex-col bg-bg-dark',
+                'transition-transform duration-normal ease-enter',
+                'data-[state=entering]:translate-x-full data-[state=exiting]:translate-x-full',
+                'data-[state=exiting]:ease-exit',
+                // 슬라이드 아웃 동안 클릭이 죽은 화면에 먹히지 않게 흘려보낸다
+                'data-[state=exiting]:pointer-events-none',
+              )}
+            >
+              <div className="min-h-0 flex-1 overflow-y-auto px-4">
+                <TraceItem trace={shownTrace} isContentClamped={false} />
+                <TraceCommentSection opinionId={shownTrace.opinionId} />
+              </div>
+              <TraceCommentComposer opinionId={shownTrace.opinionId} />
+            </div>
+          )}
+        </div>
+      </BottomSheet>
+    </>
+  )
+}

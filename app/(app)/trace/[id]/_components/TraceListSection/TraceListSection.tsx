@@ -1,10 +1,10 @@
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
+import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import type { Trace } from '../../_types/readerHighlights.type'
-import { TraceCommentSection } from '../TraceCommentSection/TraceCommentSection'
 import { TraceItem } from '../TraceItem/TraceItem'
 
 type TraceListSectionProps = {
@@ -13,12 +13,13 @@ type TraceListSectionProps = {
   /** 스포일러 대목이 가림막 해제 전일 때 목록을 블러 처리한다 */
   isMasked: boolean
   sortType: OpinionSortType
-  /** 댓글이 펼쳐진 흔적 — 아코디언이라 한 번에 하나만 열린다 */
-  openCommentOpinionId: number | null
   onToggleSort: () => void
   onToggleTraceCreate: () => void
   onSelectTrace: (trace: Trace) => void
-  onToggleTraceComment: (trace: Trace) => void
+  /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 202:3672 주석) */
+  onOpenOpinionSheet: () => void
+  /** 흔적의 답글 버튼 — 그 의견의 답글 화면이 열린 채 바텀시트로 진입한다 */
+  onOpenTraceComments: (trace: Trace) => void
   className?: string
 }
 
@@ -27,11 +28,11 @@ export function TraceListSection({
   traceCount,
   isMasked,
   sortType,
-  openCommentOpinionId,
   onToggleSort,
   onToggleTraceCreate,
   onSelectTrace,
-  onToggleTraceComment,
+  onOpenOpinionSheet,
+  onOpenTraceComments,
   className,
 }: TraceListSectionProps) {
   return (
@@ -39,7 +40,14 @@ export function TraceListSection({
       {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
       <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
-          <p className="text-title-16sb text-text-inverse">{traceCount}개의 흔적</p>
+          <button
+            type="button"
+            onClick={onOpenOpinionSheet}
+            className="press flex items-center gap-0.5 text-title-16sb text-text-inverse"
+          >
+            {traceCount}개의 의견
+            <NextIcon width={16} height={16} className="text-icon-active" />
+          </button>
           <button type="button" aria-label="흔적 남기기" onClick={onToggleTraceCreate}>
             <PencilIcon width={20} height={20} className="text-icon-active" />
           </button>
@@ -66,18 +74,13 @@ export function TraceListSection({
           >
             <TraceItem
               trace={trace}
-              isCommentOpen={trace.opinionId === openCommentOpinionId}
               onSelect={() => {
                 onSelectTrace(trace)
               }}
-              onToggleComment={() => {
-                onToggleTraceComment(trace)
+              onOpenComments={() => {
+                onOpenTraceComments(trace)
               }}
             />
-            {/* 댓글은 별도 화면이 아니라 이 흔적 바로 아래로 펼쳐진다(디자인 2183:10060 주석) */}
-            {trace.opinionId === openCommentOpinionId && (
-              <TraceCommentSection opinionId={trace.opinionId} />
-            )}
           </li>
         ))}
       </ul>

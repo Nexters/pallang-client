@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
@@ -237,9 +238,11 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' 
   // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   const { container } = render(
     <QueryClientProvider client={client}>
-      <LoginGateProvider>
-        <TraceCollapseView bookId={BOOK_ID} />
-      </LoginGateProvider>
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <TraceCollapseView bookId={BOOK_ID} />
+        </LoginGateProvider>
+      </HardwareBackProvider>
     </QueryClientProvider>,
   )
   await screen.findByRole('button', { name: `${String(pages[0])}p` })
@@ -328,12 +331,12 @@ describe('ReaderHighlightsPage', () => {
     const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
     if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
     fireEvent.click(toggle)
-    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
 
     swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
 
     // 입력바는 blur 바깥의 fixed라, 남으면 목록에 없는 흔적에 댓글을 달 수 있다
-    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
@@ -348,7 +351,7 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(toggle)
 
     // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
-    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('책의 첫 대목에서 뒤로 넘겨도 끝으로 돌아가지 않는다', async () => {
@@ -376,7 +379,7 @@ describe('ReaderHighlightsPage', () => {
     await renderPage()
 
     expect(await screen.findByText('첫 대목의 첫 번째 흔적')).toBeInTheDocument()
-    expect(screen.getByText('2개의 흔적')).toBeInTheDocument()
+    expect(screen.getByText('2개의 의견')).toBeInTheDocument()
     expect(screen.queryByText('두 번째 대목의 흔적')).not.toBeInTheDocument()
   })
 
@@ -384,7 +387,7 @@ describe('ReaderHighlightsPage', () => {
     await renderPage([15])
 
     expect(await screen.findByText('많은 흔적 1')).toBeInTheDocument()
-    expect(screen.getByText('25개의 흔적')).toBeInTheDocument()
+    expect(screen.getByText('25개의 의견')).toBeInTheDocument()
     expect(screen.getByText('많은 흔적 20')).toBeInTheDocument()
     expect(screen.queryByText('많은 흔적 21')).not.toBeInTheDocument()
   })
@@ -399,12 +402,12 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('많은 흔적 1')).toBeInTheDocument()
   })
 
-  it('흔적 조회에 실패하면 "0개의 흔적" 대신 에러 상태를 보여준다', async () => {
+  it('흔적 조회에 실패하면 "0개의 의견" 대신 에러 상태를 보여준다', async () => {
     await renderPage([7, 9], 'opinions')
 
     expect(await screen.findByLabelText('흔적 목록 오류')).toBeInTheDocument()
     expect(screen.getByText(/앗! 흔적들이 도착하지 않았어요!/)).toBeInTheDocument()
-    expect(screen.queryByText('0개의 흔적')).not.toBeInTheDocument()
+    expect(screen.queryByText('0개의 의견')).not.toBeInTheDocument()
   })
 
   it('대목 조회에 실패해도 같은 에러 상태를 보여주고, 다시 시도하면 재조회한다', async () => {
