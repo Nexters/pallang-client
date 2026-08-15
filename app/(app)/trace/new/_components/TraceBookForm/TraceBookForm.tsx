@@ -5,23 +5,58 @@ import { useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
-import { Textarea } from '@/app/_global/_components/Textarea/Textarea'
 import { ApiError } from '@/app/_global/_data/api.model'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
+import { passageMutations } from '@/app/_global/_queries/passage.queries'
+import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 
+import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
+import type { SelectedBook } from '../../_types/traceDraft.type'
+import { BookSearchSheet } from '../BookSearchSheet/BookSearchSheet'
+import { MergeDialog } from '../MergeDialog/MergeDialog'
 import { TraceNote } from '../TraceNote/TraceNote'
-import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
+import { TraceOpinionPreview } from '../TraceOpinionPreview/TraceOpinionPreview'
+import { TraceStepIndicator } from '../TraceStepIndicator/TraceStepIndicator'
 
-export function TraceOpinionForm() {
+type MergeCandidate = { passageId: number; quotedText: string }
+
+export function TraceBookForm() {
   const { draft, dispatch } = useTraceDraft()
   const { goBack, goTo } = useTraceNav()
+  // 씨앗으로 책이 이미 있으면(책 상세에서 들어온 경우) 시트를 다시 열 이유가 없다 — 바로 확인 화면이다.
+  const [sheetOpen, setSheetOpen] = useState(draft.book === null)
+  const [candidate, setCandidate] = useState<MergeCandidate | null>(null)
   const [message, setMessage] = useState('')
+  const similarCheck = useMutation(passageMutations.similarCheck())
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
+
+  // 병합 다이얼로그가 떠 있는 동안에는 뒤로가기가 화면을 나가는 대신 다이얼로그만 닫는다.
+  useOverlayBackGuard(candidate !== null, () => {
+    setCandidate(null)
+  })
+
+  const handleSelectBook = (book: SelectedBook) => {
+    dispatch({ type: 'selectBook', book })
+    setSheetOpen(false)
+    similarCheck.mutate(
+      { bookId: book.bookId, pageNumber: draft.pageNumber ?? 0, quotedText: draft.quotedText },
+      {
+        onSuccess: (response) => {
+          const first = response.data?.passages[0]
+          if (first) setCandidate({ passageId: first.passageId, quotedText: first.quotedText })
+        },
+        // 유사 검사는 편의 기능이다. 실패해도 등록을 막지 않는다.
+        onError: () => {
+          setCandidate(null)
+        },
+      },
+    )
+  }
 
   const handleSubmit = () => {
     if (!draft.book) return
@@ -80,29 +115,34 @@ export function TraceOpinionForm() {
     <div className="relative flex flex-1 flex-col bg-bg-dark">
       {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
-        <TraceStepHeader
-          step={3}
-          title={'해당 대목에 남기고 싶은 흔적을\n자유롭게 작성해 주세요.'}
-        />
-      </div>
-      {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
-      <div className="relative bg-bg-default px-8">
-        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
-        <div className="relative">
-          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
-        </div>
+        <TraceStepIndicator current={3} />
       </div>
 
-      <div className="px-4 pt-6">
-        <Textarea
-          variant="dark"
-          maxLength={300}
-          value={draft.content}
-          placeholder="의견을 작성해주세요."
-          onChange={(event) => {
-            dispatch({ type: 'setContent', content: event.target.value })
-          }}
-        />
+      <div className="flex flex-1 flex-col gap-6 overflow-y-auto pt-6 pb-4">
+        <div className="px-4">
+          <button
+            type="button"
+            aria-label="책 다시 고르기"
+            onClick={() => {
+              setSheetOpen(true)
+            }}
+            className="w-full cursor-pointer rounded-lg bg-bg-surface/10 p-3 text-left"
+          >
+            {draft.book && (
+              <BookItem
+                author={draft.book.author}
+                coverImageUrl={draft.book.coverImageUrl}
+                title={draft.book.title}
+              />
+            )}
+          </button>
+        </div>
+
+        <div className="px-8">
+          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+        </div>
+
+        <TraceOpinionPreview content={draft.content} />
       </div>
 
       <div className="mt-auto flex gap-2 px-4 pb-safe">
@@ -118,13 +158,35 @@ export function TraceOpinionForm() {
         <Button
           variant="activated"
           className="flex-1"
-          disabled={draft.content.trim().length === 0}
+          disabled={!draft.book}
           loading={createOpinion.isPending}
           onClick={handleSubmit}
         >
-          흔적 남기기
+          등록하기
         </Button>
       </div>
+
+      <BookSearchSheet
+        open={sheetOpen}
+        onClose={() => {
+          setSheetOpen(false)
+        }}
+        onSelect={handleSelectBook}
+      />
+
+      <MergeDialog
+        open={candidate !== null}
+        myQuote={draft.quotedText}
+        candidateQuote={candidate?.quotedText ?? ''}
+        onMerge={() => {
+          dispatch({ type: 'setMergeTarget', passageId: candidate?.passageId ?? null })
+          setCandidate(null)
+        }}
+        onSeparate={() => {
+          dispatch({ type: 'setMergeTarget', passageId: null })
+          setCandidate(null)
+        }}
+      />
 
       <Snackbar
         message={message}
