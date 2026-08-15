@@ -44,6 +44,14 @@ function Probe() {
       >
         대목 담기
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          dispatch({ type: 'setQuotedText', quotedText: '문장' })
+        }}
+      >
+        대목만 담기
+      </button>
       <button type="button" onClick={goBack}>
         뒤로
       </button>
@@ -104,10 +112,11 @@ describe('흔적 작성 단계 이동', () => {
 
   it('책 없이 대목만 있어도 닫기는 확인을 받는다', () => {
     renderAt('/trace/new/write')
-    fireEvent.click(screen.getByRole('button', { name: '대목 담기' }))
+    fireEvent.click(screen.getByRole('button', { name: '대목만 담기' }))
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     expect(replaceMock).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: '나갈게요' })).toBeInTheDocument()
   })
 
   it('책만 고른 상태에서 닫기를 누르면 확인 없이 나간다', () => {

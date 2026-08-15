@@ -9,6 +9,7 @@ function hasWritten(draft: TraceDraft): boolean {
 
 export function resolveGuardRedirect(pathname: string, draft: TraceDraft): string | null {
   // 이미 저장된 흔적이 있으면 작성 단계로 되돌아갈 수 없다.
+  // (done에서 뒤로 가면 book이 남아 있어 같은 흔적을 한 번 더 저장할 수 있었다.)
   // 다만 첫 화면은 새 흔적을 시작하는 자리라 막지 않는다 — 막으면 done에 갇힌다.
   if (draft.result !== null && pathname !== `${START}/done` && pathname !== START) {
     return `${START}/done`
