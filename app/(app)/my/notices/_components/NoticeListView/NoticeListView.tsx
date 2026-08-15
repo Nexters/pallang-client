@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 
+import PlusThinIcon from '@/app/_global/_components/Icon/assets/plus-thin.svg'
 import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
@@ -35,17 +36,20 @@ export function NoticeListView() {
     return (
       <ul className="flex flex-col">
         {notices.map((notice) => (
-          <li key={notice.noticeId} className="border-b border-border-default last:border-b-0">
+          <li key={notice.noticeId} className="border-b border-border-default">
             {/* 목록 응답이 본문까지 들고 있어 상세는 캐시에서 즉시 그린다 — RSC 프리페치는 낭비 */}
             <Link
               href={`/my/notices/${String(notice.noticeId)}`}
               prefetch={false}
-              className="flex flex-col gap-1 py-4 press"
+              className="flex items-center justify-between gap-2 py-6 press"
             >
-              <span className="text-body-16md text-text-secondary">{notice.title}</span>
-              <time dateTime={notice.createdAt} className="text-body-14rg text-text-tertiary">
-                {formatNoticeDate(notice.createdAt)}
-              </time>
+              <span className="flex min-w-0 flex-1 flex-col gap-2">
+                <span className="text-title-18md text-text-secondary">{notice.title}</span>
+                <time dateTime={notice.createdAt} className="text-body-18rg text-text-tertiary">
+                  {formatNoticeDate(notice.createdAt)}
+                </time>
+              </span>
+              <PlusThinIcon width={32} height={32} className="shrink-0 text-icon-muted" />
             </Link>
           </li>
         ))}
@@ -60,14 +64,14 @@ export function NoticeListView() {
   )
 }
 
-/** 목록과 같은 좌표(제목 + 날짜 두 줄, 행 py-4)로 자리를 지킨다 */
+/** 목록과 같은 좌표(제목 + 날짜 두 줄, 행 py-6)로 자리를 지킨다 */
 function NoticeListSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col">
       {Array.from({ length: 5 }, (_, index) => (
-        <div key={index} className="flex flex-col gap-1 py-4">
+        <div key={index} className="flex flex-col gap-2 py-6">
           <Skeleton className="h-6 w-52" />
-          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-28" />
         </div>
       ))}
     </div>

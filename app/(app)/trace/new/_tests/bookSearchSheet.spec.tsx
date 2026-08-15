@@ -9,13 +9,17 @@ import { BookSearchSheet } from '../_components/BookSearchSheet/BookSearchSheet'
 import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
 import { useTraceOverlay } from '../_hooks/useTraceOverlay'
 
-vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
-  // 저장하기 footer 버튼(BookAddForm의 <form> 밖, HTML form 속성으로만 연결)이 실제로 그
-  // 폼을 제출하는지 검증하는 테스트가 이 응답의 data를 그대로 onSelect까지 흘려보낸다.
+// 도서 직접 등록은 multipart라 생성물이 아니라 손으로 쓴 book.api에 산다(#211).
+// 저장하기 footer 버튼(BookAddForm의 <form> 밖, HTML form 속성으로만 연결)이 실제로 그
+// 폼을 제출하는지 검증하는 테스트가 이 응답의 data를 그대로 onSelect까지 흘려보낸다.
+vi.mock('@/app/_global/_apis/book.api', () => ({
   createBook: () =>
     Promise.resolve({
       data: { bookId: 99, title: '새 책', author: '지은이', coverImageUrl: null, pageCount: 100 },
     }),
+}))
+
+vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
   getPopularBooks: () => Promise.resolve({ data: { books: [] } }),
   getRecentBooks: () =>
     Promise.resolve({

@@ -42,10 +42,16 @@ type RenderOptions = {
   shouldFail?: boolean
   /** 응답을 releaseLike() 호출 전까지 붙잡아 낙관적 갱신 상태를 관찰할 수 있게 한다 */
   holdLike?: boolean
+  /** 상세 오버레이가 열린 채로 시작한다 — 상세로 가는 길은 딥링크뿐이다 */
+  withDetail?: boolean
 }
 
 /** 좋아요 토글을 상태를 가진 목으로 흉내낸다. 반환한 releaseLike로 응답 시점을 제어한다. */
-async function renderPage({ shouldFail = false, holdLike = false }: RenderOptions = {}) {
+async function renderPage({
+  shouldFail = false,
+  holdLike = false,
+  withDetail = false,
+}: RenderOptions = {}) {
   const likeState = { liked: false, likeCount: opinion.likeCount }
   let pendingLike: (() => void) | null = null
 
@@ -105,11 +111,17 @@ async function renderPage({ shouldFail = false, holdLike = false }: RenderOption
   render(
     <QueryClientProvider client={client}>
       <LoginGateProvider>
-        <TraceCollapseView bookId={BOOK_ID} />
+        <TraceCollapseView
+          bookId={BOOK_ID}
+          target={
+            withDetail ? { pageNumber: 7, passageId: 71, opinionId: opinion.opinionId } : undefined
+          }
+        />
       </LoginGateProvider>
     </QueryClientProvider>,
   )
-  await screen.findByText('첫 번째 흔적')
+  // 딥링크로 상세가 열린 채 시작하면 목록과 오버레이에 같은 본문이 둘 나온다
+  await screen.findAllByText('첫 번째 흔적')
 
   return {
     releaseLike: () => {
@@ -192,18 +204,21 @@ describe('흔적 좋아요', () => {
     expect(postLikeCalls()).toHaveLength(1)
   })
 
-  it('목록에서 누른 좋아요가 상세 오버레이에도 반영된다', async () => {
-    await renderPage()
+  it('상세 오버레이에서 누른 좋아요가 목록에도 반영된다', async () => {
+    await renderPage({ withDetail: true })
 
-    fireEvent.click(likeButton())
+    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
+    fireEvent.click(within(dialog).getByRole('button', { name: '좋아요' }))
+    await waitFor(() => {
+      expect(within(dialog).getByRole('button', { name: '좋아요' })).toHaveTextContent('공감 10')
+    })
+
+    // 상세를 닫으면 같은 흔적이 목록에서도 눌린 상태로 보인다 — 둘은 같은 캐시를 본다
+    fireEvent.click(within(dialog).getByLabelText('닫기'))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+    })
     await expectLike(true, '10')
-
-    fireEvent.click(screen.getByText('첫 번째 흔적'))
-    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
-    const detailLike = within(dialog).getByRole('button', { name: '좋아요' })
-
-    expect(detailLike).toHaveAttribute('aria-pressed', 'true')
-    expect(detailLike).toHaveTextContent('공감 10')
   })
 
   it('비로그인 상태에서 좋아요를 누르면 좋아요 문구의 로그인 유도 팝업이 뜨고 요청은 나가지 않는다', async () => {
@@ -219,10 +234,9 @@ describe('흔적 좋아요', () => {
 
   it('상세 오버레이의 좋아요도 좋아요 문구로 막는다', async () => {
     authState.isAuthenticated = false
-    await renderPage()
+    await renderPage({ withDetail: true })
 
-    fireEvent.click(screen.getByText('첫 번째 흔적'))
-    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
+    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
     fireEvent.click(within(dialog).getByRole('button', { name: '좋아요' }))
 
     expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()

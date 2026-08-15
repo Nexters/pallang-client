@@ -4,6 +4,7 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import BookAddIcon from '@/app/_global/_components/Icon/assets/book-add.svg'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
@@ -36,7 +37,7 @@ export function BookSearchView({
   selectedBookId,
 }: BookSearchViewProps) {
   const [keyword, setKeyword] = useState('')
-  // 스크롤은 이제 시트(BottomSheet의 fullHeight 본문)가 갖는다. 무한스크롤 관찰자가
+  // 스크롤은 이제 시트(BookSearchSheet가 contentClassName으로 잡는 본문)가 갖는다. 무한스크롤 관찰자가
   // 볼 스크롤 컨테이너는 이 뷰의 DOM 바깥에 있어, 여기서는 그 조상을 찾아 담아 둔다.
   const scrollRootRef = useRef<HTMLElement | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -128,11 +129,24 @@ export function BookSearchView({
     // 컴포넌트를 마운트된 채로 둬 keyword state와 SearchTextfield의 비제어 입력값을 보존한다.
     // gap-4는 이 div가 없을 때 bottom-sheet-body(flex flex-col gap-4)가 주던 간격을 그대로 낸다.
     <div hidden={hidden} className="flex flex-col gap-4">
-      <BookSearchBar
-        placeholder="책 제목을 입력해 주세요."
-        onAddBook={onAddManually}
-        onKeywordChange={setKeyword}
-      />
+      {/* 도서 직접 등록 버튼은 공용 BookSearchBar에 있었지만 도서 검색 지면 개편(#211)에서
+          빠졌다. 검색 지면은 결과가 없을 때만 등록을 권하면 되지만, 이 시트는 흔적을 남기다
+          들른 자리라 검색 전에도 등록으로 빠져나갈 길이 늘 보여야 한다 — 여기에 따로 둔다. */}
+      <div className="flex items-center gap-2 px-4 py-2.5">
+        <BookSearchBar
+          className="min-w-px flex-1 px-0 py-0"
+          placeholder="책 제목을 입력해 주세요."
+          onKeywordChange={setKeyword}
+        />
+        <button
+          type="button"
+          aria-label="도서 추가"
+          onClick={onAddManually}
+          className="press flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#555555] text-icon-active backdrop-blur-[1px]"
+        >
+          <BookAddIcon className="size-6 text-icon-active" aria-hidden="true" />
+        </button>
+      </div>
 
       <div
         ref={(node) => {

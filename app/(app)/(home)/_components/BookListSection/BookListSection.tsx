@@ -8,7 +8,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import ContentIcon from '@/app/_global/_components/Icon/assets/content.svg'
-import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
@@ -189,7 +188,6 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
       ),
     [pages],
   )
-  const totalCount = pages?.[0]?.data?.pageInfo.totalElements ?? 0
   const activeBookIndex =
     activeBookId === null ? -1 : books.findIndex((book) => book.bookId === activeBookId)
   const activeBookIdRef = useRef<null | number>(null)
@@ -336,13 +334,6 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
     <section aria-label="기록 중인 책 목록" className="mt-9 flex flex-col gap-4">
       <div className="flex flex-col gap-1 px-4">
         <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
-        <Link
-          href="/book/internal"
-          className="flex items-center gap-0.5 self-start text-title-16sb text-text-primary opacity-60"
-        >
-          <span>{totalCount}권 모두 보기</span>
-          <NextIcon aria-hidden="true" className="size-4" />
-        </Link>
       </div>
 
       <div className="relative h-82.25 w-full overflow-visible">

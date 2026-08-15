@@ -25,7 +25,7 @@ function overlaps(box: BlockBox, rect: Rect): boolean {
   )
 }
 
-/** 사각형에 걸친 블록들의 인덱스를 읽기 순서(배열 순서)대로 반환한다. */
+/** 사각형(드래그)에 걸친 블록들의 인덱스를 읽기 순서(배열 순서)대로 반환한다. */
 export function selectIndicesInRect(blocks: BlockBox[], rect: Rect): number[] {
   return blocks.reduce<number[]>((indices, box, index) => {
     if (overlaps(box, rect)) indices.push(index)
@@ -33,23 +33,68 @@ export function selectIndicesInRect(blocks: BlockBox[], rect: Rect): number[] {
   }, [])
 }
 
-export type ToggleMode = 'add' | 'remove'
-
-/**
- * 제스처가 처음 닿은 블록의 상태로 모드를 정한다.
- * 이미 고른 블록에서 시작하면 그 제스처는 해제만, 아니면 추가만 한다.
- * (한 제스처가 블록마다 뒤집으면 지나간 자리가 뒤죽박죽이 된다.)
- */
-export function resolveToggleMode(selected: number[], touched: number[]): ToggleMode {
-  const first = touched[0]
-  return first !== undefined && selected.includes(first) ? 'remove' : 'add'
+/** 점과 블록 사이의 빈 간격. 축마다 잰 뒤 큰 쪽을 쓴다. 안에 있으면 0이다. */
+function gapFrom(box: BlockBox, point: Point): number {
+  const gapX = Math.max(0, box.left - point.x, point.x - (box.left + box.width))
+  const gapY = Math.max(0, box.top - point.y, point.y - (box.top + box.height))
+  return Math.max(gapX, gapY)
 }
 
-/** 제스처가 시작될 때의 선택에 지나간 블록을 더하거나 뺀다. 결과는 읽기 순서를 유지한다. */
-export function applyToggle(base: number[], swept: number[], mode: ToggleMode): number[] {
-  const sweptSet = new Set(swept)
-  const kept = base.filter((index) => mode === 'add' || !sweptSet.has(index))
-  if (mode === 'remove') return kept
+/** 점에서 블록 중심까지의 거리. 겹친 상자 가운데 어느 쪽을 눌렀는지 가른다. */
+function distanceToCenter(box: BlockBox, point: Point): number {
+  return Math.hypot(box.left + box.width / 2 - point.x, box.top + box.height / 2 - point.y)
+}
+
+/**
+ * 한 점(탭)이 가리키는 블록 하나. 없으면 null.
+ *
+ * 안에 든 블록이 있으면 그중 중심이 가장 가까운 것 — OCR 상자는 넉넉해서 윗줄·아랫줄이 겹치는데,
+ * 읽기 순서 첫 번째를 잡으면 늘 윗줄만 걸려 빼려던 어절 대신 엉뚱한 게 더해진다.
+ * 안에 든 게 없으면 tolerance 안에서 가장 가까운 것 — 어절은 손가락 끝보다 작아 살짝 빗나가기 쉽다.
+ * 어느 쪽이든 하나만 돌려준다. 어절 사이 간격은 tolerance보다 좁기 일쑤라, 여유 안의 것을 다 주면
+ * 사이를 한 번 눌렀을 때 양옆 두 어절이 함께 발췌문에 낀다.
+ */
+export function pickBlockAt(blocks: BlockBox[], point: Point, tolerance: number): number | null {
+  const best = blocks.reduce<{ gap: number; index: number; toCenter: number } | null>(
+    (current, box, index) => {
+      const gap = gapFrom(box, point)
+      if (gap > tolerance) return current
+      const toCenter = distanceToCenter(box, point)
+      // 간격이 0(안에 듦)인 쪽이 늘 우선이고, 같은 간격끼리는 중심이 가까운 쪽
+      const better =
+        !current || gap < current.gap || (gap === current.gap && toCenter < current.toCenter)
+      return better ? { gap, index, toCenter } : current
+    },
+    null,
+  )
+  return best ? best.index : null
+}
+
+/**
+ * 두 선택이 같은지 본다. 양쪽 모두 읽기 순서로 정렬돼 있어 자리끼리 비교하면 된다.
+ *
+ * applySweep은 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
+ * 탭하기만 해도 선택이 바뀐 것으로 취급돼, 손으로 고친 발췌문이 되돌릴 수 없이 날아간다.
+ */
+export function sameSelection(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((index, at) => index === b[at])
+}
+
+/**
+ * 제스처가 시작될 때의 선택(base)에 지나간 블록(swept)을 적용한다.
+ *
+ * 지나간 것 중 고른 게 하나라도 있으면 **해제만** 한다 — 고른 건 풀리고 안 고른 건 그대로.
+ * 하나도 없을 때만 전부 켠다. 고른 문장을 지우려고 그 앞 안 고른 어절에서부터 훑는 게 자연스러운
+ * 손짓인데, 각자 뒤집으면 앞의 안 고른 어절이 켜져 깨끗하게 지워지지 않는다. 대가는 고른 문장의
+ * 끝 어절 위에서 시작해 이어 붙이면 그 끝 어절이 풀린다는 것 — 끝 어절 바로 뒤에서 시작하면 된다.
+ *
+ * 매번 base에 대해 지금 사각형 안의 것을 적용하므로, 끌다가 되돌아와 사각형에서 벗어난 블록은
+ * 원래대로 돌아간다. 결과는 읽기 순서를 유지한다.
+ */
+export function applySweep(base: number[], swept: number[]): number[] {
   const baseSet = new Set(base)
-  return [...kept, ...swept.filter((index) => !baseSet.has(index))].sort((a, b) => a - b)
+  const sweptSet = new Set(swept)
+  const touchesPicked = swept.some((index) => baseSet.has(index))
+  if (touchesPicked) return base.filter((index) => !sweptSet.has(index))
+  return [...base, ...swept].sort((a, b) => a - b)
 }

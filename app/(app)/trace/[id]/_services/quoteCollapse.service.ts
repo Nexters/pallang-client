@@ -6,34 +6,21 @@ import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 
 /** TraceHeader: py-2.5(20) + 아이콘 24 */
 export const HEADER_HEIGHT = 44
-/** PageTabs: py-3(24) + h-8(32) */
-export const TABS_HEIGHT = 56
-/** 탭과 카드 사이 여백 (mt-8) */
-const TABS_TO_CARD = 32
-/** 펼친 상태 오렌지 배너 (h-77) */
-export const BANNER_HEIGHT = 308
+/** 펼친 상태 스티커 영역 — 헤더 아래로 고정된 높이. 비율이 아니라 이 수치 그대로다 */
+export const STICKER_HEIGHT = 367
+/** 모눈종이 배경이 덮는 높이 — 스티커 영역 안에서 여기부터 아래는 목록과 같은 어두운 면이고,
+    카드가 그 경계를 가로질러 걸친다(시안 200:939의 img 335 − 노치 44 − 목록이 덮는 25) */
+export const PAPER_HEIGHT = 266
 /** 포스트잇 카드 (w-78 / h-80) */
 export const CARD_WIDTH = 312
 export const CARD_HEIGHT = 320
-/** 축소 상태 패널 높이 */
+/** 축소 상태 패널 높이.
+    카드 아래 끝은 두 상태 모두 스테이지 하단과 맞물린다(펼침 44+47+320 = 접힘 0+높이 = 스테이지 높이).
+    그래서 카드는 높이를 따로 받지 않고 bottom으로 스테이지 하단에 묶여 있다 */
 const PANEL_HEIGHT = 270
-/** 축소 상태 패널 하단 여백 (py-8) */
-const PANEL_PADDING_BOTTOM = 32
-/** 인용 인디케이터 (mt-10 / 활성 바 높이) */
-const INDICATOR_GAP = 40
-const INDICATOR_HEIGHT = 17
-/** 펼친 상태 스테이지 하단 여백 (pb-10) */
-const STAGE_PADDING_BOTTOM = 40
 
 /** 펼친 상태 스테이지 전체 높이 */
-export const STAGE_EXPANDED =
-  HEADER_HEIGHT +
-  TABS_HEIGHT +
-  TABS_TO_CARD +
-  CARD_HEIGHT +
-  INDICATOR_GAP +
-  INDICATOR_HEIGHT +
-  STAGE_PADDING_BOTTOM
+export const STAGE_EXPANDED = HEADER_HEIGHT + STICKER_HEIGHT
 
 /** 축소 상태 스테이지 전체 높이 */
 export const STAGE_COLLAPSED = HEADER_HEIGHT + PANEL_HEIGHT
@@ -42,17 +29,12 @@ export const STAGE_COLLAPSED = HEADER_HEIGHT + PANEL_HEIGHT
     두 높이의 차와 같아야 스테이지 하단과 정렬 바 상단이 정확히 붙어 움직인다 */
 export const COLLAPSE_DISTANCE = STAGE_EXPANDED - STAGE_COLLAPSED
 
-/** 카드·탭·배너가 함께 밀려 올라가는 거리 */
-export const CARD_RISE = TABS_HEIGHT + TABS_TO_CARD
-/** 카드 높이 축소량 */
-export const CARD_SHRINK = CARD_HEIGHT - PANEL_HEIGHT
-/** 축소 상태에서 카드 상단 위치 */
-export const CARD_TOP_COLLAPSED = HEADER_HEIGHT
-
-/** 인디케이터: 펼친 상태에서는 카드 아래, 축소 상태에서는 패널 안쪽 하단 */
-export const INDICATOR_TOP_EXPANDED = STAGE_EXPANDED - STAGE_PADDING_BOTTOM - INDICATOR_HEIGHT
-export const INDICATOR_RISE =
-  INDICATOR_TOP_EXPANDED - (STAGE_COLLAPSED - PANEL_PADDING_BOTTOM - INDICATOR_HEIGHT)
+/** 카드 위 여백 = 카드가 밀려 올라가는 거리.
+    스티커 영역은 이 여백과 카드 높이로 정확히 채워진다 */
+export const CARD_RISE = STICKER_HEIGHT - CARD_HEIGHT
+/** 펼친 상태 카드 상단 위치. 축소 상태에서는 0이다 —
+    카드가 헤더 뒤까지 올라가 헤더가 놓일 크림 면을 스스로 만든다 */
+export const CARD_TOP_EXPANDED = HEADER_HEIGHT + CARD_RISE
 
 /* 전환은 스크롤 스크럽이 아니라 상태 점프 한 번이다(#76).
    스크럽은 관성 세기에 따라 전환이 통째로 건너뛰어지거나(플릭 한 번에 목록 바닥까지)

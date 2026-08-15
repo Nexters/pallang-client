@@ -41,7 +41,7 @@ describe('흔적 작성 첫 화면', () => {
   })
 
   it('책을 물고 들어오면 그 책을 시트에 보여준다', async () => {
-    renderView({ bookId: 11, bookTitle: '모순', bookCoverImageUrl: null })
+    renderView({ bookId: 11, bookTitle: '모순', bookCoverImageUrl: null, passage: null })
 
     expect(await screen.findByText('지금 기록을 남기는 책')).toBeTruthy()
     expect(screen.getByText('모순')).toBeTruthy()

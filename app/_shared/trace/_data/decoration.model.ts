@@ -1,6 +1,16 @@
 /** 생성 타입 DecorationRequestEffectType·DecorationResponseEffectType과 값이 같다.
- *  _apis import 금지 규칙 때문에 로컬로 둔다. */
-export type EffectType = 'CIRCLE' | 'DOTTED' | 'DOUBLE_LINE' | 'HIGHLIGHT' | 'UNDERLINE' | 'WAVY'
+ *  _apis import 금지 규칙 때문에 로컬로 둔다.
+ *  바깥에서 들어온 값(URL 씨앗)을 걸러내려면 런타임 목록이 필요해 배열에서 타입을 뽑는다. */
+export const EFFECT_TYPES = [
+  'CIRCLE',
+  'DOTTED',
+  'DOUBLE_LINE',
+  'HIGHLIGHT',
+  'UNDERLINE',
+  'WAVY',
+] as const
+
+export type EffectType = (typeof EFFECT_TYPES)[number]
 
 /** 흔적 남기기(작성 중인 초안)와 흔적 보기(서버 응답)가 함께 쓰는 꾸미기 효과 한 개.
  *  서버 DecorationResponse의 decorationId는 렌더에 쓰지 않아 담지 않는다. */

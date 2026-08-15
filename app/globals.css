@@ -79,7 +79,7 @@
   /* Semantic — Background */
   --color-bg-default: #ffffff; /* Background/Background, neutral/0 */
   --color-bg-surface: #f0f0f0; /* neutral/50 */
-  --color-bg-book-card: #f3f2e0; /* neutral/100 */
+  --color-bg-book-card: #f7f2c6; /* Background/Book-Card */
   --color-bg-gray: #323232;
   --color-bg-dark: #222222;
   --color-bg-black: #111111;
@@ -107,6 +107,11 @@
   --color-icon-inactive: #d9d9d9;
   --color-icon-muted: #848484;
   --color-icon-muted-a50: #84848480;
+
+  /* Semantic — OCR 발췌 (사진 위 어절 표시) */
+  --color-ocr-block: #ffffff33; /* white/a20 — 고를 수 있는 어절 */
+  --color-ocr-block-picked: #ff7a2866; /* orange/400 40% — 고른 어절 */
+  --color-ocr-block-overflow: #ff7a281f; /* orange/400 12% — 골랐지만 길이를 넘겨 담기지 않은 어절 */
 
   /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
   --font-suit: 'SUIT Variable', sans-serif;
@@ -162,6 +167,10 @@
   --text-body-20md--line-height: 1.5;
   --text-body-20md--letter-spacing: -0.04em;
   --text-body-20md--font-weight: 500;
+  --text-body-18rg: 18px; /* 공지 목록 날짜 — Figma 18px/1.2/-2% Regular */
+  --text-body-18rg--line-height: 1.2;
+  --text-body-18rg--letter-spacing: -0.02em;
+  --text-body-18rg--font-weight: 400;
   --text-body-16md: 16px; /* Reader Title/Body/M/medium 기준으로 lh·ls 갱신 */
   --text-body-16md--line-height: 1.4;
   --text-body-16md--letter-spacing: -0.02em;

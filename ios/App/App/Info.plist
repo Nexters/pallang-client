@@ -45,7 +45,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>pallang</string>
+	<!-- 홈 화면 아이콘 라벨과 권한 팝업("Pallang"이(가) 카메라에 접근하려고 합니다)에 쓰인다.
+	     스토어 노출명(Pallang - 팔랑)과 다르다 — 홈 화면 라벨은 11자쯤에서 잘리기 때문이다. -->
+	<string>Pallang</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

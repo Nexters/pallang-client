@@ -47,6 +47,16 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
   // 폼이 본문을 차지하는 동안에는 하드웨어 뒤로가기가 시트를 나가는 대신 폼만 닫는다.
   useOverlayBackGuard(form !== null, closeForm)
 
+  // 헤더의 ←·Escape·바깥 탭·하드웨어 뒤로가기가 모두 같은 규칙을 따른다:
+  // 폼이 열려 있으면 폼만 닫고, 아니면 시트 전체를 닫는다.
+  const closeTopLayer = () => {
+    if (form) {
+      closeForm()
+      return
+    }
+    onClose()
+  }
+
   const handleCreated = (book: SelectedBook) => {
     // 직접 등록한 책은 다시 고를 이유가 없다 — 후보를 거치지 않고 바로 확정한다.
     setForm(null)
@@ -58,17 +68,11 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
     <BottomSheet
       open={open}
       title={form ? '책 추가하기' : '책 검색'}
-      leading="back"
-      fullHeight
-      onClose={() => {
-        // 헤더의 ←·Escape·바깥 탭도 하드웨어 뒤로가기와 같은 규칙을 따른다:
-        // 폼이 열려 있으면 폼만 닫고, 아니면 시트 전체를 닫는다.
-        if (form) {
-          closeForm()
-          return
-        }
-        onClose()
-      }}
+      // 화면 상단 여백만 남기고 채운다 — 본문이 시트 안에서 스크롤되고 footer는 바닥에 붙는다
+      popupClassName="h-[calc(100%-40px)]"
+      contentClassName="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
+      onBack={closeTopLayer}
+      onClose={closeTopLayer}
       footer={
         form ? (
           <Button

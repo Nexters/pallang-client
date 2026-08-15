@@ -57,11 +57,15 @@ export function TraceBookForm() {
   // 않는 경로(흔적 보기 → 흔적 남기기)에서는 아예 돌지 않고, ①로 돌아가 페이지만 바꿔도
   // 예전 판정이 그대로 남는다. 그래서 조합을 키로 삼아 effect에서 돌린다.
   const bookId = draft.book?.bookId ?? null
-  const { pageNumber, quotedText } = draft
+  const { pageNumber, passageId, quotedText } = draft
   const checkedKey = useRef<null | string>(null)
 
   useEffect(() => {
     if (bookId === null) return
+    // 합칠 대목이 이미 정해져 있으면 물을 것이 없다(#228). 흔적 보기에서 대목을 물고 들어온
+    // 경우가 그렇고(그 대목이 곧 합칠 대목이다), 이 화면의 다이얼로그에서 합치기를 고른 뒤
+    // ①로 돌아가 페이지만 고친 경우도 같다 — 다시 물으면 방금 한 선택을 또 시킨다.
+    if (passageId !== null) return
     // 같은 조합은 두 번 묻지 않는다 — 시트를 여닫거나 다시 렌더돼도 재요청이 없고,
     // 실패해도 키가 남아 재시도 루프가 생기지 않는다.
     const key = [bookId, pageNumber ?? 0, quotedText].join(':')
@@ -81,7 +85,7 @@ export function TraceBookForm() {
         },
       },
     )
-  }, [bookId, checkSimilar, pageNumber, quotedText])
+  }, [bookId, checkSimilar, pageNumber, passageId, quotedText])
 
   const handleSelectBook = (book: SelectedBook) => {
     // selectBook이 passageId를 비우므로 조합이 달라지고, 위 effect가 새 책으로 다시 묻는다.

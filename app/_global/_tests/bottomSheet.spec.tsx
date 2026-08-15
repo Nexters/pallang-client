@@ -86,15 +86,16 @@ describe('BottomSheet', () => {
     expect(screen.getByRole('button', { name: '닫기' })).toBeTruthy()
   })
 
-  it('leading이 back이면 뒤로 버튼으로 바뀐다', () => {
+  it('onBack을 주면 제목 앞에 뒤로 버튼이 붙는다', () => {
     render(
-      <BottomSheet open title="책 검색" leading="back" onClose={vi.fn()}>
+      <BottomSheet open title="책 검색" onBack={vi.fn()} onClose={vi.fn()}>
         <p>본문</p>
       </BottomSheet>,
     )
 
     expect(screen.getByRole('button', { name: '뒤로' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: '닫기' })).toBeNull()
+    // 뒤로는 한 층 걷어내는 길이고 닫기는 시트를 통째로 접는 길이라 함께 선다
+    expect(screen.getByRole('button', { name: '닫기' })).toBeTruthy()
   })
 
   it('footer는 본문 스크롤 영역 바깥에 그린다', () => {
@@ -102,7 +103,8 @@ describe('BottomSheet', () => {
       <BottomSheet
         open
         title="책 검색"
-        fullHeight
+        popupClassName="h-[calc(100%-40px)]"
+        contentClassName="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
         footer={<button>등록하기</button>}
         onClose={vi.fn()}
       >
