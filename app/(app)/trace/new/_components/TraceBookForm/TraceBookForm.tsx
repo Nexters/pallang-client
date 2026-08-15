@@ -5,10 +5,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
-import { ApiError } from '@/app/_global/_data/api.model'
-import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
-import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
-import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
@@ -16,6 +12,7 @@ import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
+import { useTraceSubmit } from '../../_hooks/useTraceSubmit'
 import type { SelectedBook } from '../../_types/traceDraft.type'
 import { BookSearchSheet } from '../BookSearchSheet/BookSearchSheet'
 import { MergeDialog } from '../MergeDialog/MergeDialog'
@@ -27,14 +24,13 @@ type MergeCandidate = { passageId: number; quotedText: string }
 
 export function TraceBookForm() {
   const { draft, dispatch } = useTraceDraft()
-  const { goBack, goTo } = useTraceNav()
+  const { goBack } = useTraceNav()
   // 씨앗으로 책이 이미 있으면(책 상세에서 들어온 경우) 시트를 다시 열 이유가 없다 — 바로 확인 화면이다.
   const [sheetOpen, setSheetOpen] = useState(draft.book === null)
   const [candidate, setCandidate] = useState<MergeCandidate | null>(null)
-  const [message, setMessage] = useState('')
   const { mutate: checkSimilar } = useMutation(passageMutations.similarCheck())
-  const createOpinion = useMutation(opinionMutations.create())
-  const runWithLogin = useLoginGate()
+  // 저장은 ①(대목을 물고 들어온 경로)과도 나눠 쓴다 — useTraceSubmit이 그 한 벌이다.
+  const { closeMessage, isSaving, message, save } = useTraceSubmit()
   // 비로그인이면 401이라 me가 비어 있다 — BookSearchView의 처리와 같게 '나'로 떨어뜨린다.
   const me = useQuery(userQueries.me())
   const nickname = me.data?.data?.nickname ?? '나'
@@ -91,68 +87,6 @@ export function TraceBookForm() {
     // selectBook이 passageId를 비우므로 조합이 달라지고, 위 effect가 새 책으로 다시 묻는다.
     dispatch({ type: 'selectBook', book })
     setSheetOpen(false)
-  }
-
-  const handleSubmit = () => {
-    if (!draft.book) return
-    // 페이지 상한은 ①에서 볼 수 없다 — 책을 여기서 고르기 때문이다. 그래서 쪽수를 아는
-    // 이 자리에서 막는다. 그냥 보내면 서버가 거절하고 "잠시 후 다시 시도" 안내가 뜨는데,
-    // 다시 눌러도 계속 실패하고 무엇을 고쳐야 하는지도 알 수 없다.
-    // 인기 목록 책은 쪽수를 모른다(pageCount가 null) — 그때는 검사를 건너뛴다.
-    const maxPage = draft.book.pageCount
-    if (draft.pageNumber !== null && maxPage !== null && draft.pageNumber > maxPage) {
-      setMessage('페이지 번호가 이 책의 쪽수를 넘어요. 뒤로 가서 페이지를 확인해주세요.')
-      return
-    }
-    createOpinion.mutate(
-      {
-        bookId: draft.book.bookId,
-        pageNumber: draft.pageNumber ?? undefined,
-        quotedText: draft.quotedText,
-        isSpoiler: draft.isSpoiler,
-        passageId: draft.passageId,
-        content: draft.content,
-        decorations: draft.decorations.map((decoration) => ({
-          startOffset: decoration.startOffset,
-          endOffset: decoration.endOffset,
-          effectType: decoration.effectType,
-          color: decoration.color,
-        })),
-      },
-      {
-        onSuccess: (response) => {
-          if (!response.data) {
-            setMessage('흔적을 남기지 못했어요. 잠시 후 다시 시도해주세요.')
-            return
-          }
-          dispatch({
-            type: 'setResult',
-            result: { opinionId: response.data.opinionId, merged: response.data.merged },
-          })
-          goTo('done')
-        },
-        onError: (error) => {
-          // draft는 그대로 둔다. 여기서 날리면 사용자가 입력한 전부가 사라진다.
-          // 저장은 로그인이 필요하다. 일반 문구로 뭉개면 다시 눌러도 계속 실패한다.
-          if (error instanceof ApiError && error.status === 401) {
-            runWithLogin(() => {
-              // 로그인 상태인데도 401이면 토큰이 만료된 것이다. 다시 시도하도록 알린다.
-              setMessage('로그인 정보가 만료됐어요. 다시 시도해주세요.')
-            }, LOGIN_GATE_MESSAGE.traceCreate)
-            return
-          }
-          if (
-            error instanceof ApiError &&
-            (error.code === 'PASSAGE_400_2' || error.code === 'PASSAGE_404_1')
-          ) {
-            dispatch({ type: 'setMergeTarget', passageId: null })
-            setMessage('합치려던 대목이 사라졌어요. 다시 시도해주세요.')
-            return
-          }
-          setMessage('흔적을 남기지 못했어요. 잠시 후 다시 시도해주세요.')
-        },
-      },
-    )
   }
 
   // min-h-0이 없으면 flex 아이템의 min-height:auto 때문에 셸(h-dvh)보다 커져도 줄지 않는다
@@ -221,8 +155,8 @@ export function TraceBookForm() {
           variant="activated"
           className="flex-1"
           disabled={!draft.book}
-          loading={createOpinion.isPending}
-          onClick={handleSubmit}
+          loading={isSaving}
+          onClick={save}
         >
           기록 완료
         </Button>
@@ -250,12 +184,7 @@ export function TraceBookForm() {
         }}
       />
 
-      <Snackbar
-        message={message}
-        onClose={() => {
-          setMessage('')
-        }}
-      />
+      <Snackbar message={message} onClose={closeMessage} />
     </div>
   )
 }
