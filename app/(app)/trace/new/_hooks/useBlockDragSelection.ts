@@ -45,7 +45,12 @@ export function useBlockDragSelection(
   // 확대할수록 좌표계상 여유·슬롭을 좁혀, 화면에서 보이는 크기는 배율과 상관없이 일정하게 둔다
   const tolerance = TAP_TOLERANCE / scale
   const slop = TAP_SLOP / scale
-  const gestureRef = useRef<{ base: number[]; mode: ToggleMode | null; origin: Point } | null>(null)
+  const gestureRef = useRef<{
+    base: number[]
+    mode: ToggleMode | null
+    origin: Point
+    pointerId: number
+  } | null>(null)
   const [drag, setDrag] = useState<{ marquee: Rect | null; mode: ToggleMode | null } | null>(null)
 
   const update = (point: Point) => {
@@ -57,9 +62,10 @@ export function useBlockDragSelection(
     const swept = isTap
       ? [pickBlockAt(blocks, gesture.origin, tolerance)].filter((i): i is number => i !== null)
       : selectIndicesInRect(blocks, rect)
-    // 처음 어절에 닿는 순간 모드를 정하고, 그 제스처가 끝날 때까지 바꾸지 않는다
-    if (gesture.mode === null && swept.length > 0)
-      gesture.mode = resolveToggleMode(gesture.base, swept)
+    // 훑은 영역의 다수결로 매 순간 정한다 — 고른 게 더 많으면 전부 빼고, 적으면 전부 더한다.
+    // 시작점 어절 하나로 잠그면 고른 문장 살짝 앞에서 시작한 손짓이 추가 모드가 돼 아무 일도 안 일어난다.
+    // 결과는 늘 한 가지(전부 선택 또는 전부 해제)라 훑고 나서 섞인 채 남지 않는다.
+    gesture.mode = resolveToggleMode(gesture.base, swept, gesture.mode)
     setDrag({ marquee: isTap ? null : rect, mode: gesture.mode })
     const next = gesture.mode ? applyToggle(gesture.base, swept, gesture.mode) : gesture.base
     // 고른 게 그대로면 알리지 않는다 — 여백을 탭했을 뿐인데 선택이 바뀐 것으로 읽히면
@@ -72,25 +78,36 @@ export function useBlockDragSelection(
     setDrag(null)
   }
 
+  /** 제스처를 시작한 손가락의 이벤트인지. 다른 손가락은 끼어들어도 흔들지 못한다. */
+  const owns = (event: ReactPointerEvent<HTMLElement>) =>
+    gestureRef.current !== null && gestureRef.current.pointerId === event.pointerId
+
   return {
     /** 진행 중인 제스처를 그 자리에서 끝낸다. 두 번째 손가락이 닿아 확대로 넘어갈 때 쓴다. */
     cancel: end,
     handlers: {
-      onPointerCancel: end,
+      onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => {
+        if (owns(event)) end()
+      },
       onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
         const surface = surfaceRef.current
         if (!surface) return
+        // 이미 한 손가락이 고르는 중이면 다른 손가락은 새 제스처를 시작하지 못한다.
+        // 같은 손가락이 다시 닿은 거면 앞선 up을 놓친 것이라 새로 시작한다(한 손가락이 두 번 내려올 수는 없다).
+        if (gestureRef.current && gestureRef.current.pointerId !== event.pointerId) return
         // 포인터를 캡처해야 사진 밖으로 끌어도 move/up 이벤트가 계속 들어온다
         event.currentTarget.setPointerCapture(event.pointerId)
         const origin = toLocalPoint(surface, event, scale)
-        gestureRef.current = { base: selected, mode: null, origin }
+        gestureRef.current = { base: selected, mode: null, origin, pointerId: event.pointerId }
         update(origin)
       },
       onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
         const surface = surfaceRef.current
-        if (gestureRef.current && surface) update(toLocalPoint(surface, event, scale))
+        if (owns(event) && surface) update(toLocalPoint(surface, event, scale))
       },
-      onPointerUp: end,
+      onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
+        if (owns(event)) end()
+      },
     },
     marquee: drag?.marquee ?? null,
     // 끄는 동안 이 제스처가 더하는 중인지 빼는 중인지 — 사각형 색을 갈라 보여준다.

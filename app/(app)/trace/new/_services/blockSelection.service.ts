@@ -73,13 +73,25 @@ export function pickBlockAt(blocks: BlockBox[], point: Point, tolerance: number)
 export type ToggleMode = 'add' | 'remove'
 
 /**
- * 제스처가 처음 닿은 블록의 상태로 모드를 정한다.
- * 이미 고른 블록에서 시작하면 그 제스처는 해제만, 아니면 추가만 한다.
- * (한 제스처가 블록마다 뒤집으면 지나간 자리가 뒤죽박죽이 된다.)
+ * 훑은 블록들의 다수결로 이 제스처가 더하는 중인지 빼는 중인지 정한다.
+ *
+ * 고른 게 더 많으면 해제, 적으면 추가. 반반이거나 아무것도 훑지 않았으면 이전 값을 지킨다 —
+ * 경계에서 한 어절 왔다 갔다 할 때마다 뒤집히지 않게. 시작 어절 하나로 잠그면 고른 문장 살짝
+ * 앞에서 시작한 손짓이 추가 모드가 돼 문장이 안 지워지고, 블록마다 뒤집으면 훑은 자리가 뒤죽박죽이 된다.
+ * 결과는 늘 한 가지(전부 추가 또는 전부 해제)라 훑고 나서 섞인 채 남지 않는다.
  */
-export function resolveToggleMode(selected: number[], touched: number[]): ToggleMode {
-  const first = touched[0]
-  return first !== undefined && selected.includes(first) ? 'remove' : 'add'
+export function resolveToggleMode(
+  base: number[],
+  swept: number[],
+  previous: ToggleMode | null,
+): ToggleMode | null {
+  if (swept.length === 0) return previous
+  const baseSet = new Set(base)
+  const picked = swept.filter((index) => baseSet.has(index)).length
+  const unpicked = swept.length - picked
+  if (picked > unpicked) return 'remove'
+  if (picked < unpicked) return 'add'
+  return previous ?? 'add'
 }
 
 /**

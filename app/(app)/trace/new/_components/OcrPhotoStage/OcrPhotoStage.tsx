@@ -125,6 +125,9 @@ export function OcrPhotoStage({
         event.preventDefault()
         if (!pinchingRef.current) latestRef.current.cancelSelection()
       }
+      // 손가락이 다 떨어졌으면 고르던 제스처도 끝난 것이다. 보통은 pointerup이 먼저 정리해 두지만,
+      // iOS가 pointerup을 흘리면 제스처가 남아 다음 손가락을 다른 손가락으로 오인해 드래그가 막힌다.
+      if (points.length === 0) latestRef.current.cancelSelection()
       pinchingRef.current = pinching
       latestRef.current.onTouches(points, stage)
     }
@@ -146,22 +149,19 @@ export function OcrPhotoStage({
     }
   }, [])
 
-  // 선택은 포인터 이벤트로. 첫 손가락(isPrimary)만, 확대 중이 아닐 때만 받는다 —
+  // 선택은 포인터 이벤트로, 확대 중이 아닐 때만 받는다. 훅이 제스처를 시작한 손가락만 따르므로
   // 둘째 손가락의 pointerdown이 touchstart보다 먼저 와도 새 선택을 시작하지 않는다.
+  // (isPrimary로 거르지 않는다 — iOS에서 핀치 뒤 primary 판정이 어긋나면 이후 드래그가 통째로 무시된다)
   const { handlers } = selection
   const pointerHandlers = {
-    onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.isPrimary) handlers.onPointerCancel()
-    },
+    onPointerCancel: handlers.onPointerCancel,
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.isPrimary && !pinchingRef.current) handlers.onPointerDown(event)
+      if (!pinchingRef.current) handlers.onPointerDown(event)
     },
     onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.isPrimary && !pinchingRef.current) handlers.onPointerMove(event)
+      if (!pinchingRef.current) handlers.onPointerMove(event)
     },
-    onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.isPrimary) handlers.onPointerUp()
-    },
+    onPointerUp: handlers.onPointerUp,
   }
 
   return (

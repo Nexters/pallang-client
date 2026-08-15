@@ -96,16 +96,37 @@ describe('pickBlockAt', () => {
 })
 
 describe('resolveToggleMode', () => {
-  it('고르지 않은 블록에서 시작하면 추가 모드다', () => {
-    expect(resolveToggleMode([1], [0])).toBe('add')
+  it('고르지 않은 블록 하나를 훑으면 추가 모드다', () => {
+    expect(resolveToggleMode([1], [0], null)).toBe('add')
   })
 
-  it('이미 고른 블록에서 시작하면 해제 모드다', () => {
-    expect(resolveToggleMode([0, 1], [0])).toBe('remove')
+  it('이미 고른 블록 하나를 훑으면 해제 모드다', () => {
+    expect(resolveToggleMode([0, 1], [0], null)).toBe('remove')
   })
 
-  it('빈 자리에서 시작하면 추가 모드다', () => {
-    expect(resolveToggleMode([0], [])).toBe('add')
+  // 고른 문장 살짝 앞에서 훑기 시작하는 게 자연스러운 손짓이다. 처음 닿는 어절 하나로 잠그면
+  // 그 앞 어절이 안 고른 거라 추가 모드가 돼 문장이 안 지워진다. 훑은 영역 전체의 다수가 정한다.
+  it('훑은 영역에 고른 게 더 많으면 해제 모드다', () => {
+    expect(resolveToggleMode([2, 3, 4], [1, 2, 3, 4], null)).toBe('remove')
+  })
+
+  it('훑은 영역에 고르지 않은 게 더 많으면 추가 모드다', () => {
+    expect(resolveToggleMode([4], [1, 2, 3, 4], null)).toBe('add')
+  })
+
+  // 반반이면 끌던 방향을 지킨다 — 경계에서 한 어절 왔다 갔다 할 때마다 뒤집히지 않게
+  it('반반이면 이전 모드를 유지한다', () => {
+    expect(resolveToggleMode([0, 1], [0, 1, 2, 3], 'remove')).toBe('remove')
+    expect(resolveToggleMode([0, 1], [0, 1, 2, 3], 'add')).toBe('add')
+  })
+
+  it('반반인데 이전 모드가 없으면 추가 모드다', () => {
+    expect(resolveToggleMode([0], [0, 1], null)).toBe('add')
+  })
+
+  it('아무것도 훑지 않았으면 이전 모드를 유지한다', () => {
+    expect(resolveToggleMode([0], [], null)).toBeNull()
+    expect(resolveToggleMode([0], [], 'remove')).toBe('remove')
   })
 })
 
