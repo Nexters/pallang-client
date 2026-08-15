@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import type { TraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
 import { BookPicker } from '../_components/BookPicker/BookPicker'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
@@ -27,9 +28,11 @@ const { apiState } = vi.hoisted(() => ({
   },
 }))
 
+const { replaceMock } = vi.hoisted(() => ({ replaceMock: vi.fn() }))
+
 vi.mock('next/navigation', () => ({
   usePathname: () => '/trace/new',
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: replaceMock, prefetch: vi.fn() }),
 }))
 
 vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
@@ -48,7 +51,7 @@ vi.mock('@/app/_global/_apis/_generated/user/user', () => ({
   getMyOpinions: () => Promise.resolve({ data: { opinions: [] } }),
 }))
 
-function renderPicker() {
+function renderPicker(seed?: TraceSeed) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -56,7 +59,7 @@ function renderPicker() {
         <TraceDraftProvider>
           <TraceOverlayProvider>
             <TraceNavProvider>
-              <BookPicker />
+              <BookPicker seed={seed} />
             </TraceNavProvider>
           </TraceOverlayProvider>
         </TraceDraftProvider>
@@ -64,6 +67,49 @@ function renderPicker() {
     </QueryClientProvider>,
   )
 }
+
+const SEED_BOOK = { bookId: 7, bookTitle: '모순', bookCoverImageUrl: null }
+const SEED_PASSAGE = {
+  passageId: 42,
+  pageNumber: 122,
+  quotedText: '문장이 오래 남았다',
+  isSpoiler: false,
+}
+
+describe('BookPicker 씨앗 진입', () => {
+  beforeEach(() => {
+    replaceMock.mockClear()
+  })
+
+  it('꾸밈까지 담긴 대목으로 들어오면 의견 작성으로 바로 간다 — 꾸미기를 이어받아 건너뛴다', async () => {
+    renderPicker({
+      ...SEED_BOOK,
+      passage: {
+        ...SEED_PASSAGE,
+        decorations: [{ startOffset: 0, endOffset: 2, effectType: 'WAVY', color: '#06D6A0' }],
+      },
+    })
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith('/trace/new/opinion')
+    })
+  })
+
+  it('꾸밈이 없는 대목이면 꾸미기부터 시작한다 — 의견 작성은 효과 하나를 요구한다', async () => {
+    renderPicker({ ...SEED_BOOK, passage: { ...SEED_PASSAGE, decorations: [] } })
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith('/trace/new/decorate')
+    })
+  })
+
+  it('책만 담겨 오면(기록 남기기) 대목을 어떻게 남길지부터 묻는다', async () => {
+    renderPicker({ ...SEED_BOOK, passage: null })
+
+    expect(await screen.findByText('사진으로 입력')).toBeInTheDocument()
+    expect(replaceMock).not.toHaveBeenCalled()
+  })
+})
 
 describe('BookPicker 도서 추가', () => {
   beforeEach(() => {

@@ -40,7 +40,7 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
   const isTraceListMasked = Boolean(stage.activePassage?.isSpoiler) && !stage.isRevealed
 
   /**
-   * 흔적 작성은 꾸밈을 반드시 하나 이상 요구해서(createOpinion) 이 화면에서 바로 등록할 수 없다.
+   * 흔적 작성은 여러 단계를 거쳐야 해서 이 화면에서 바로 등록할 수 없다.
    * 작성 플로우로 보내되, 초안은 그 route 안에서만 사는 Context라 씨앗을 URL로 넘긴다.
    * passage를 함께 넘기면 그 대목에 붙고(병합), 넘기지 않으면 새 대목을 만든다.
    */
@@ -57,6 +57,11 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
     }, LOGIN_GATE_MESSAGE.traceCreate)
   }
 
+  /**
+   * '의견 남기기' — 보고 있는 대목에 의견 하나를 더한다.
+   * 대목의 꾸밈까지 실어 보내 작성 플로우가 꾸미기를 건너뛰고 의견 작성부터 열게 한다.
+   * 합칠 대목도 이 대목으로 정해져 있어 합치기를 따로 묻지 않는다.
+   */
   const addTraceToCurrentPassage = () => {
     const passage = stage.activePassage
     if (!passage) return
@@ -65,6 +70,7 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
       pageNumber: stage.highlight.page,
       quotedText: passage.quotedText,
       isSpoiler: passage.isSpoiler,
+      decorations: passage.decorations,
     })
   }
 

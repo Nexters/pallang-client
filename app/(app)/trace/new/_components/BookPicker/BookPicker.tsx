@@ -61,16 +61,21 @@ export function BookPicker({ seed = null }: BookPickerProps) {
     })
     if (!pending.passage) return
 
-    // 대목까지 물고 왔으면 꾸미기부터 시작한다. setQuotedText가 꾸밈을 비우고,
-    // selectBook이 병합 대상을 지우므로 setMergeTarget이 마지막이어야 한다.
+    // setQuotedText가 꾸밈을 비우고 selectBook이 병합 대상을 지우므로,
+    // 꾸밈 이어받기와 setMergeTarget은 그 뒤에 와야 한다.
     dispatch({ type: 'setQuotedText', quotedText: pending.passage.quotedText })
     dispatch({
       type: 'setPageDetail',
       pageNumber: pending.passage.pageNumber,
       isSpoiler: pending.passage.isSpoiler,
     })
+    for (const decoration of pending.passage.decorations) {
+      dispatch({ type: 'applyDecoration', decoration })
+    }
     dispatch({ type: 'setMergeTarget', passageId: pending.passage.passageId })
-    goTo('decorate')
+    // 대목의 꾸밈을 이어받았으면 꾸미기를 건너뛰고 의견 작성부터 시작한다('의견 남기기').
+    // 꾸밈이 없는 대목은 그대로 꾸미기부터 — 의견 작성 단계가 효과 하나를 요구한다.
+    goTo(pending.passage.decorations.length > 0 ? 'opinion' : 'decorate')
   }, [dispatch, goTo])
 
   const closeForm = () => {
