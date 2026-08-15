@@ -4,7 +4,9 @@ import ReplyIcon from '@/app/_global/_components/Icon/assets/reply.svg'
 import type { CommentResponse } from '@/app/_global/_queries/comment.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
+import { resolveCommentEdit } from '../../_services/commentEdit.service'
 import { formatTraceDate } from '../../_services/traceFormat.service'
+import { CommentEditForm } from '../CommentEditForm/CommentEditForm'
 import { ModerationMenu } from '../ModerationMenu/ModerationMenu'
 
 type CommentItemProps = {
@@ -17,8 +19,7 @@ type CommentItemProps = {
 }
 
 export function CommentItem({ comment, isMine, isReply, onUpdate, onRemove }: CommentItemProps) {
-  // null이면 보기 모드, 문자열이면 그 값을 편집 중
-  const [draft, setDraft] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
 
   return (
     <div className={cn('flex items-start gap-0.5 bg-bg-overlay p-4', isReply && 'pl-8')}>
@@ -38,50 +39,30 @@ export function CommentItem({ comment, isMine, isReply, onUpdate, onRemove }: Co
               />
             )}
           </div>
-          {draft === null ? (
-            <p className="break-words text-body-16md text-text-inverse">{comment.content}</p>
-          ) : (
-            <form
-              className="flex items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault()
-                const trimmed = draft.trim()
-                if (trimmed && trimmed !== comment.content) onUpdate(comment.commentId, trimmed)
-                setDraft(null)
+          {isEditing ? (
+            <CommentEditForm
+              initialContent={comment.content}
+              onSubmit={(draft) => {
+                // 공백만 남겼거나 원문 그대로면 보낼 것이 없다 — 요청 없이 보기 모드로 돌아간다
+                const content = resolveCommentEdit(draft, comment.content)
+                if (content !== null) onUpdate(comment.commentId, content)
+                setIsEditing(false)
               }}
-            >
-              <input
-                type="text"
-                aria-label="댓글 수정 입력"
-                value={draft}
-                maxLength={500}
-                onChange={(event) => {
-                  setDraft(event.target.value)
-                }}
-                className="min-w-0 flex-1 rounded-full bg-bg-dark px-4 py-1.5 text-body-14rg text-text-inverse outline-none"
-              />
-              <button type="submit" className="shrink-0 text-body-14rg text-text-inverse">
-                저장
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDraft(null)
-                }}
-                className="shrink-0 text-body-14rg text-text-inverse opacity-50"
-              >
-                취소
-              </button>
-            </form>
+              onCancel={() => {
+                setIsEditing(false)
+              }}
+            />
+          ) : (
+            <p className="break-words text-body-16md text-text-inverse">{comment.content}</p>
           )}
           <div className="flex items-center gap-3 text-body-14rg text-text-inverse/50">
             <span>{formatTraceDate(comment.createdAt)}</span>
-            {isMine && draft === null && (
+            {isMine && !isEditing && (
               <>
                 <button
                   type="button"
                   onClick={() => {
-                    setDraft(comment.content)
+                    setIsEditing(true)
                   }}
                 >
                   수정
