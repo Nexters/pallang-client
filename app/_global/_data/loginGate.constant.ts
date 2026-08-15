@@ -3,7 +3,6 @@ export const DEFAULT_LOGIN_GATE_MESSAGE = '로그인하면 이용할 수 있어�
 
 // ponytail: 액션별 문구는 기획 확정 전 임시안 — 확정되면 교체 (#68)
 export const LOGIN_GATE_MESSAGE = {
-  pageView: '해당 페이지부터는 로그인해야 확인할 수 있어요!',
   like: '로그인하면 이 흔적에 공감할 수 있어요!',
   commentCreate: '로그인하면 댓글을 남길 수 있어요!',
   traceCreate: '로그인하면 흔적을 남길 수 있어요!',

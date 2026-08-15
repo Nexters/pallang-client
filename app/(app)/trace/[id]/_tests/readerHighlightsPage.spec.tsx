@@ -376,15 +376,15 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('7p')
   })
 
-  it('비로그인 시 스와이프로 페이지를 넘으려 해도 로그인 유도 팝업이 뜬다', async () => {
+  it('열람은 로그인을 요구하지 않는다 — 비로그인도 스와이프로 다음 쪽까지 넘어간다', async () => {
     authState.isAuthenticated = false
     await renderPage()
 
     swipeCard(await screen.findByText('첫 번째 대목 인용문'), 'next')
     swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
 
-    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
-    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
   })
 
   it('흔적 목록은 선택된 대목의 흔적 조회 API 응답으로 그린다', async () => {
@@ -440,20 +440,7 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('첫 대목의 첫 번째 흔적')).not.toBeInTheDocument()
   })
 
-  it('비로그인 시 다른 쪽을 고르면 로그인 유도 팝업이 뜨고, 로그인 페이지로 이동한다', async () => {
-    authState.isAuthenticated = false
-    await renderPage()
-
-    await selectPage(9)
-    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
-    expect(pushMock).toHaveBeenCalledWith('/login')
-    // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 닫지 않으면 로그인 화면을 덮는다.
-    expect(screen.queryByText(LOGIN_GATE_MESSAGE.pageView)).not.toBeInTheDocument()
-  })
-
-  it('앞선 게이트의 문구가 다음 게이트에 남지 않는다', async () => {
+  it('비로그인 시 흔적을 남기려 하면 로그인 유도 팝업이 뜨고, 로그인 페이지로 이동한다', async () => {
     authState.isAuthenticated = false
     await renderPage()
     // 대목이 도착해야 붙일 대상이 정해진다
@@ -461,18 +448,34 @@ describe('ReaderHighlightsPage', () => {
 
     clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
-    await selectPage(9)
-    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
+    expect(pushMock).toHaveBeenCalledWith('/login')
+    // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 닫지 않으면 로그인 화면을 덮는다.
     expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
   })
 
-  it('로그인 상태에서 다른 쪽을 고르면 바로 이동한다', async () => {
+  it('앞선 게이트의 문구가 다음 게이트에 남지 않는다', async () => {
+    authState.isAuthenticated = false
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    clickFabAction('의견 남기기')
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+
+    const like = (await screen.findAllByRole('button', { name: '좋아요' }))[0]
+    if (!like) throw new Error('좋아요 버튼을 찾지 못했다')
+    fireEvent.click(like)
+
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()
+    expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
+  })
+
+  it('다른 쪽을 고르면 바로 이동한다', async () => {
     await renderPage()
 
     await selectPage(9)
-    expect(screen.queryByText(LOGIN_GATE_MESSAGE.pageView)).not.toBeInTheDocument()
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
