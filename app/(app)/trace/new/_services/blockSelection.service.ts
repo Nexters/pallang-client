@@ -70,45 +70,28 @@ export function pickBlockAt(blocks: BlockBox[], point: Point, tolerance: number)
   return best ? best.index : null
 }
 
-export type ToggleMode = 'add' | 'remove'
-
-/**
- * 훑은 블록들의 다수결로 이 제스처가 더하는 중인지 빼는 중인지 정한다.
- *
- * 고른 게 더 많으면 해제, 적으면 추가. 반반이거나 아무것도 훑지 않았으면 이전 값을 지킨다 —
- * 경계에서 한 어절 왔다 갔다 할 때마다 뒤집히지 않게. 시작 어절 하나로 잠그면 고른 문장 살짝
- * 앞에서 시작한 손짓이 추가 모드가 돼 문장이 안 지워지고, 블록마다 뒤집으면 훑은 자리가 뒤죽박죽이 된다.
- * 결과는 늘 한 가지(전부 추가 또는 전부 해제)라 훑고 나서 섞인 채 남지 않는다.
- */
-export function resolveToggleMode(
-  base: number[],
-  swept: number[],
-  previous: ToggleMode | null,
-): ToggleMode | null {
-  if (swept.length === 0) return previous
-  const baseSet = new Set(base)
-  const picked = swept.filter((index) => baseSet.has(index)).length
-  const unpicked = swept.length - picked
-  if (picked > unpicked) return 'remove'
-  if (picked < unpicked) return 'add'
-  return previous ?? 'add'
-}
-
 /**
  * 두 선택이 같은지 본다. 양쪽 모두 읽기 순서로 정렬돼 있어 자리끼리 비교하면 된다.
  *
- * applyToggle은 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
+ * toggleIndices는 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
  * 탭하기만 해도 선택이 바뀐 것으로 취급돼, 손으로 고친 발췌문이 되돌릴 수 없이 날아간다.
  */
 export function sameSelection(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((index, at) => index === b[at])
 }
 
-/** 제스처가 시작될 때의 선택에 지나간 블록을 더하거나 뺀다. 결과는 읽기 순서를 유지한다. */
-export function applyToggle(base: number[], swept: number[], mode: ToggleMode): number[] {
-  const sweptSet = new Set(swept)
-  const kept = base.filter((index) => mode === 'add' || !sweptSet.has(index))
-  if (mode === 'remove') return kept
+/**
+ * 제스처가 시작될 때의 선택에서 지나간 블록을 각각 뒤집는다 — 고른 건 풀리고 안 고른 건 켜진다.
+ *
+ * 매번 시작 시점 선택(base)에 대해 지금 사각형 안의 것을 뒤집으므로, 끌다가 되돌아와 사각형에서
+ * 벗어난 블록은 원래대로 돌아간다. 손을 뗄 때 사각형 안에 있는 것만 뒤집힌 채 남는다.
+ * 결과는 읽기 순서를 유지한다.
+ */
+export function toggleIndices(base: number[], swept: number[]): number[] {
   const baseSet = new Set(base)
-  return [...kept, ...swept.filter((index) => !baseSet.has(index))].sort((a, b) => a - b)
+  const sweptSet = new Set(swept)
+  return [
+    ...base.filter((index) => !sweptSet.has(index)),
+    ...swept.filter((index) => !baseSet.has(index)),
+  ].sort((a, b) => a - b)
 }

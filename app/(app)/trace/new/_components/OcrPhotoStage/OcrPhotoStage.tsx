@@ -90,7 +90,7 @@ export function OcrPhotoStage({
   const zoom = usePinchZoom(fitted && { height: fitted.height, width: fitted.width })
   const { offset, scale } = zoom.transform
   const selection = useBlockDragSelection(scaledBlocks, selected, onSelect, surfaceRef, scale)
-  const { marquee, mode } = selection
+  const { marquee } = selection
   const selectedSet = new Set(selected)
   const overflowSet = new Set(overflow)
 
@@ -201,12 +201,7 @@ export function OcrPhotoStage({
               top: marquee.top,
               width: marquee.width,
             }}
-            // 빼는 제스처는 색을 갈라 보여준다 — 더하려다 해제 모드로 걸린 걸 끄는 중에 알아챌 수 있다
-            className={
-              mode === 'remove'
-                ? 'absolute rounded-[2px] border border-white-a60 bg-white-a10'
-                : 'absolute rounded-[2px] border border-interactive-accent bg-interactive-accent/10'
-            }
+            className="absolute rounded-[2px] border border-interactive-accent bg-interactive-accent/10"
           />
         )}
       </div>

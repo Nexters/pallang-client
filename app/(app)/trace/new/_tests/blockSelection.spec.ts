@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  applyToggle,
   type BlockBox,
   pickBlockAt,
   rectFromPoints,
-  resolveToggleMode,
   sameSelection,
   selectIndicesInRect,
+  toggleIndices,
 } from '../_services/blockSelection.service'
 
 const blocks: BlockBox[] = [
@@ -95,41 +94,6 @@ describe('pickBlockAt', () => {
   })
 })
 
-describe('resolveToggleMode', () => {
-  it('고르지 않은 블록 하나를 훑으면 추가 모드다', () => {
-    expect(resolveToggleMode([1], [0], null)).toBe('add')
-  })
-
-  it('이미 고른 블록 하나를 훑으면 해제 모드다', () => {
-    expect(resolveToggleMode([0, 1], [0], null)).toBe('remove')
-  })
-
-  // 고른 문장 살짝 앞에서 훑기 시작하는 게 자연스러운 손짓이다. 처음 닿는 어절 하나로 잠그면
-  // 그 앞 어절이 안 고른 거라 추가 모드가 돼 문장이 안 지워진다. 훑은 영역 전체의 다수가 정한다.
-  it('훑은 영역에 고른 게 더 많으면 해제 모드다', () => {
-    expect(resolveToggleMode([2, 3, 4], [1, 2, 3, 4], null)).toBe('remove')
-  })
-
-  it('훑은 영역에 고르지 않은 게 더 많으면 추가 모드다', () => {
-    expect(resolveToggleMode([4], [1, 2, 3, 4], null)).toBe('add')
-  })
-
-  // 반반이면 끌던 방향을 지킨다 — 경계에서 한 어절 왔다 갔다 할 때마다 뒤집히지 않게
-  it('반반이면 이전 모드를 유지한다', () => {
-    expect(resolveToggleMode([0, 1], [0, 1, 2, 3], 'remove')).toBe('remove')
-    expect(resolveToggleMode([0, 1], [0, 1, 2, 3], 'add')).toBe('add')
-  })
-
-  it('반반인데 이전 모드가 없으면 추가 모드다', () => {
-    expect(resolveToggleMode([0], [0, 1], null)).toBe('add')
-  })
-
-  it('아무것도 훑지 않았으면 이전 모드를 유지한다', () => {
-    expect(resolveToggleMode([0], [], null)).toBeNull()
-    expect(resolveToggleMode([0], [], 'remove')).toBe('remove')
-  })
-})
-
 describe('sameSelection', () => {
   it('같은 인덱스가 같은 순서로 있으면 같은 선택이다', () => {
     expect(sameSelection([0, 2], [0, 2])).toBe(true)
@@ -147,30 +111,34 @@ describe('sameSelection', () => {
     expect(sameSelection([0, 1], [0, 2])).toBe(false)
   })
 
-  it('applyToggle이 만든 새 배열이라도 내용이 같으면 같은 선택이다', () => {
+  it('toggleIndices가 만든 새 배열이라도 내용이 같으면 같은 선택이다', () => {
     // 빈 자리를 탭하면 지나간 블록이 없어 내용이 그대로인 새 배열이 나온다.
     // 이걸 변경으로 읽으면 손으로 고친 발췌문이 날아간다.
     const selected = [0, 1]
-    expect(sameSelection(selected, applyToggle(selected, [], 'add'))).toBe(true)
+    expect(sameSelection(selected, toggleIndices(selected, []))).toBe(true)
   })
 })
 
-describe('applyToggle', () => {
-  it('추가 모드는 기존 선택에 더하고 읽기 순서를 유지한다', () => {
-    expect(applyToggle([2], [0, 1], 'add')).toEqual([0, 1, 2])
+describe('toggleIndices', () => {
+  it('고르지 않은 블록을 지나가면 켜지고 읽기 순서를 유지한다', () => {
+    expect(toggleIndices([2], [0, 1])).toEqual([0, 1, 2])
   })
 
-  it('추가 모드는 이미 고른 블록을 중복해 넣지 않는다', () => {
-    expect(applyToggle([0, 1], [1, 2], 'add')).toEqual([0, 1, 2])
+  it('고른 블록을 지나가면 풀린다', () => {
+    expect(toggleIndices([0, 1, 2], [1])).toEqual([0, 2])
   })
 
-  it('해제 모드는 지나간 블록만 뺀다', () => {
-    expect(applyToggle([0, 1, 2], [1], 'remove')).toEqual([0, 2])
+  // 지나간 블록은 각자 뒤집힌다 — 고른 건 풀리고 안 고른 건 켜진다
+  it('섞인 영역을 지나가면 각자 뒤집힌다', () => {
+    expect(toggleIndices([0, 2], [0, 1, 2, 3])).toEqual([1, 3])
   })
 
-  it('한 제스처 안에서는 블록마다 뒤집지 않는다', () => {
-    // 지나간 블록 중 일부만 이미 골라져 있어도 모드는 하나로 유지된다
-    expect(applyToggle([0], [0, 1], 'add')).toEqual([0, 1])
-    expect(applyToggle([0], [0, 1], 'remove')).toEqual([])
+  it('아무것도 지나가지 않으면 그대로다', () => {
+    expect(toggleIndices([0, 1], [])).toEqual([0, 1])
+  })
+
+  // 같은 영역을 두 번 훑으면 원래대로 — 뒤집기의 정의다
+  it('같은 블록을 두 번 뒤집으면 원래대로 돌아온다', () => {
+    expect(toggleIndices(toggleIndices([0], [0, 1]), [0, 1])).toEqual([0])
   })
 })

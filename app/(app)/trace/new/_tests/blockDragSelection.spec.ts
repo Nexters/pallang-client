@@ -97,67 +97,8 @@ describe('useBlockDragSelection — 탭', () => {
 })
 
 describe('useBlockDragSelection — 드래그', () => {
-  // 실제 OCR 상자는 넉넉해서 윗줄과 겹친다. 고른 문장 위에 손가락을 대고 끌었는데, 슬롭을 넘는 순간의
-  // 작은 사각형이 윗줄 상자에 살짝 걸리면 읽기 순서 첫 번째(윗줄, 안 고름)가 모드를 정해 추가 모드로
-  // 잠겼다 — 이미 고른 건 그대로. 겹침이 안 걸리는 날만 해제돼 "간헐적"으로 보였다.
-  it('고른 어절 위에서 시작하면 초기 사각형이 윗줄 상자에 겹쳐도 해제 모드다', () => {
-    const overlapping: BlockBox[] = [
-      { height: 14, left: 0, top: 0, width: 60 }, // 0: 윗줄 (안 고름), y 0~14
-      { height: 14, left: 0, top: 10, width: 60 }, // 1: 아랫줄 (고름), y 10~24 — 4px 겹침
-    ]
-    const onChange = vi.fn()
-    const { result } = renderHook(() =>
-      useBlockDragSelection(overlapping, [1], onChange, surfaceRef),
-    )
-
-    act(() => {
-      result.current.handlers.onPointerDown(pointerAt(10, 13)) // 둘 다 안이지만 아랫줄 중심(17)에 더 가깝다
-    })
-    act(() => {
-      result.current.handlers.onPointerMove(pointerAt(30, 13)) // 슬롭을 넘는다 — 사각형은 두 상자에 다 걸친다
-    })
-
-    expect(result.current.mode).toBe('remove')
-    expect(onChange).toHaveBeenLastCalledWith([])
-  })
-
-  // 고른 문장을 지우려고 그 살짝 앞(안 고른 어절)에서 훑기 시작하는 게 자연스러운 손짓이다.
-  // 시작 어절 하나로 잠그면 추가 모드가 돼 아무 일도 안 일어났다 — 시작점 몇 px에 따라 되다 말다 했다.
-  // 훑은 영역에 고른 게 많아지는 순간 해제로 돌아서고, 앞의 안 고른 어절은 원래대로 남는다.
-  it('고른 문장 살짝 앞에서 훑기 시작해도 고른 게 많아지면 해제한다', () => {
-    const { onChange, result } = renderSelection([1, 2])
-
-    act(() => {
-      result.current.handlers.onPointerDown(pointerAt(10, 5)) // 어절 0 (안 고름) — 잠깐 추가 모드
-    })
-    expect(result.current.mode).toBe('add')
-    act(() => {
-      result.current.handlers.onPointerMove(pointerAt(50, 25)) // 어절 0·1·2 — 고른 게 2, 안 고른 게 1
-    })
-
-    expect(result.current.mode).toBe('remove')
-    expect(onChange).toHaveBeenLastCalledWith([]) // 어절 0은 원래 안 고른 채 그대로
-  })
-
-  // 반반이면 끌던 방향을 지킨다 — 경계에서 한 어절 왔다 갔다 할 때마다 뒤집히지 않게
-  it('반반이 되면 끌던 방향(추가)을 지킨다', () => {
-    const { onChange, result } = renderSelection([1])
-
-    act(() => {
-      result.current.handlers.onPointerDown(pointerAt(10, 5)) // 어절 0 (안 고름) → 추가
-    })
-    act(() => {
-      result.current.handlers.onPointerMove(pointerAt(60, 6)) // 어절 0·1 — 1:1
-    })
-
-    expect(result.current.mode).toBe('add')
-    expect(onChange).toHaveBeenLastCalledWith([0, 1])
-  })
-
-  // 고른 문장을 지우려고 앞 여백에서부터 훑는 게 자연스러운 손짓이다.
-  // 시작점(여백)으로 모드를 정하면 추가 모드로 잠겨 이미 고른 어절 위를 지나가도 아무 일도 없다.
-  it('여백에서 시작해 고른 어절을 훑으면 해제한다', () => {
-    const { onChange, result } = renderSelection([0, 1])
+  it('고르지 않은 어절을 훑으면 켜진다', () => {
+    const { onChange, result } = renderSelection([])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5)) // 첫 줄 왼쪽 여백
@@ -166,12 +107,12 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0·1을 지나감
     })
 
-    expect(result.current.mode).toBe('remove')
-    expect(onChange).toHaveBeenLastCalledWith([])
+    expect(onChange).toHaveBeenLastCalledWith([0, 1])
   })
 
-  it('여백에서 시작해 고르지 않은 어절을 훑으면 추가한다', () => {
-    const { onChange, result } = renderSelection([2])
+  // 고른 것을 다시 훑으면 풀린다 — 어디서 시작하든 상관없다
+  it('고른 어절을 훑으면 풀린다', () => {
+    const { onChange, result } = renderSelection([0, 1])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5))
@@ -180,30 +121,43 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(50, 6))
     })
 
-    expect(result.current.mode).toBe('add')
-    expect(onChange).toHaveBeenLastCalledWith([0, 1, 2])
+    expect(onChange).toHaveBeenLastCalledWith([])
   })
 
-  // 결과는 늘 한 가지다 — 다수 쪽으로 전부 더하거나 전부 뺀다. 블록마다 뒤집으면 훑은 자리가 뒤죽박죽이 된다.
-  it('훑은 영역이 섞여 있어도 결과는 전부 선택 또는 전부 해제 중 하나다', () => {
+  // 지나간 어절은 각자 뒤집힌다 — 고른 건 풀리고 안 고른 건 켜진다. 모드도 방향도 없다.
+  it('섞인 영역을 훑으면 각자 뒤집힌다', () => {
     const { onChange, result } = renderSelection([1])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5))
     })
     act(() => {
-      result.current.handlers.onPointerMove(pointerAt(10, 6)) // 어절 0(안 고름) → 추가
-    })
-    act(() => {
-      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0·1 — 1:1이라 추가 유지 → 둘 다 켜짐
+      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0(안 고름)·1(고름)
     })
 
-    expect(result.current.mode).toBe('add')
-    expect(onChange).toHaveBeenLastCalledWith([0, 1])
+    expect(onChange).toHaveBeenLastCalledWith([0])
   })
 
-  it('아직 어절에 닿지 않았으면 모드가 없고 사각형만 그린다', () => {
-    const { result } = renderSelection([0])
+  // 뒤집기는 매번 시작 시점 선택에 대해 계산한다. 끌다가 되돌아와 사각형에서 벗어난 어절은
+  // 원래대로 돌아와야지, 지나갔다는 이유로 뒤집힌 채 남으면 안 된다.
+  it('끌다가 되돌아오면 사각형을 벗어난 어절은 원래대로 돌아온다', () => {
+    const { onChange, result } = renderSelection([])
+
+    act(() => {
+      result.current.handlers.onPointerDown(pointerAt(-20, 5))
+    })
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0·1 켜짐
+    })
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(20, 6)) // 어절 1은 사각형 밖으로
+    })
+
+    expect(onChange).toHaveBeenLastCalledWith([0])
+  })
+
+  it('아직 어절에 닿지 않았으면 사각형만 그린다', () => {
+    const { onChange, result } = renderSelection([0])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(200, 200))
@@ -212,11 +166,11 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(220, 230))
     })
 
-    expect(result.current.mode).toBeNull()
+    expect(onChange).not.toHaveBeenCalled()
     expect(result.current.marquee).not.toBeNull()
   })
 
-  it('손을 떼면 사각형과 모드가 함께 사라진다', () => {
+  it('손을 떼면 사각형이 사라진다', () => {
     const { result } = renderSelection([0])
 
     act(() => {
@@ -230,7 +184,6 @@ describe('useBlockDragSelection — 드래그', () => {
     })
 
     expect(result.current.marquee).toBeNull()
-    expect(result.current.mode).toBeNull()
   })
 
   // 제스처는 그것을 시작한 손가락만 따른다. 둘째 손가락의 down이 touchstart보다 먼저 와도
