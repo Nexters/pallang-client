@@ -4,18 +4,24 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
 
-import { Button } from '@/app/_global/_components/Button/Button'
+import { FlatDialog } from '@/app/_global/_components/FlatDialog/FlatDialog'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
+import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
+import type { BlockedUserResponse } from '@/app/_global/_queries/block.queries'
 import { blockMutations, blockQueries } from '@/app/_global/_queries/block.queries'
 import { commentQueries } from '@/app/_global/_queries/comment.queries'
 import { opinionQueries } from '@/app/_global/_queries/opinion.queries'
 
-// ponytail: 차단 관리 확정 디자인이 없다 — 마이페이지 톤(흰 배경·프로필 행)으로 만든 1차 구현.
+const AVATAR_SIZE = 32
+
 export function BlockedUsersView() {
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('')
+  const [target, setTarget] = useState<BlockedUserResponse | null>(null)
+  // 다이얼로그가 닫히는 동안에도 문구가 비지 않아야 한다
+  const shownTarget = useLastPresent(target)
 
   const listQuery = useInfiniteQuery(blockQueries.list())
   const users = useMemo(
@@ -26,6 +32,7 @@ export function BlockedUsersView() {
   const unblock = useMutation({
     ...blockMutations.unblock(),
     onSuccess: async () => {
+      setTarget(null)
       setMessage('차단을 해제했어요.')
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: blockQueries.all() }),
@@ -35,6 +42,7 @@ export function BlockedUsersView() {
       ])
     },
     onError: () => {
+      setTarget(null)
       setMessage('차단을 해제하지 못했어요. 잠시 후 다시 시도해주세요.')
     },
   })
@@ -69,37 +77,39 @@ export function BlockedUsersView() {
       <>
         <ul className="flex flex-col">
           {users.map((user) => (
-            <li key={user.userId} className="flex items-center gap-3 py-3">
+            <li
+              key={user.userId}
+              className="flex items-center gap-2 border-b border-border-default py-4"
+            >
               {user.profileImageUrl ? (
                 // 외부 이미지 도메인이 유동적이라 next/image 대신 img 사용
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={user.profileImageUrl}
                   alt=""
-                  className="size-12 shrink-0 rounded-2xl object-cover"
+                  className="size-8 shrink-0 rounded-lg object-cover"
                 />
               ) : (
                 <Image
                   src="/images/profile-character-gray.png"
                   alt=""
-                  width={48}
-                  height={48}
-                  className="shrink-0 rounded-2xl"
+                  width={AVATAR_SIZE}
+                  height={AVATAR_SIZE}
+                  className="shrink-0 rounded-lg"
                 />
               )}
-              <span className="min-w-0 flex-1 truncate text-body-16md text-text-secondary">
+              <span className="min-w-0 flex-1 truncate text-body-16bd text-text-primary">
                 {user.nickname}
               </span>
-              <Button
-                className="shrink-0 rounded-full px-4 py-2 text-body-14sb"
-                loading={unblock.isPending && unblock.variables === user.userId}
-                disabled={unblock.isPending}
+              <button
+                type="button"
                 onClick={() => {
-                  unblock.mutate(user.userId)
+                  setTarget(user)
                 }}
+                className="flex h-8 w-16 shrink-0 items-center justify-center rounded-full border border-border-default bg-bg-default text-center text-title-12bd text-text-tertiary press"
               >
                 차단 해제
-              </Button>
+              </button>
             </li>
           ))}
         </ul>
@@ -121,12 +131,30 @@ export function BlockedUsersView() {
 
   return (
     <>
-      <ScreenLayout title="차단 관리" bodyClassName="px-4 py-2">
+      <ScreenLayout title="차단 유저 관리" bodyClassName="px-4">
         {renderList()}
       </ScreenLayout>
 
+      {/* 설명은 시안(218:12138)이 정한 자리에서 줄을 바꾼다 — Dialog.Description이 pre-line이다 */}
+      <FlatDialog
+        open={target !== null}
+        title={`${shownTarget?.nickname ?? ''}님의 차단을 해제하시겠어요?`}
+        description={`차단 해제 시 ${shownTarget?.nickname ?? ''}님이 작성하신\n댓글을 확인할 수 있어요`}
+        cancelLabel="뒤로"
+        confirmLabel="차단 해제"
+        loading={unblock.isPending}
+        illustrated={false}
+        onCancel={() => {
+          setTarget(null)
+        }}
+        onConfirm={() => {
+          if (target) unblock.mutate(target.userId)
+        }}
+      />
+
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
+        tone="light"
         message={message}
         onClose={() => {
           setMessage('')
@@ -136,13 +164,13 @@ export function BlockedUsersView() {
   )
 }
 
-/** 목록과 같은 좌표(프로필 48px + 행 py-3)로 자리를 지킨다 */
+/** 목록과 같은 좌표(프로필 32px + 행 py-4 + 구분선)로 자리를 지킨다 */
 function BlockedUsersSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col">
       {Array.from({ length: 4 }, (_, index) => (
-        <div key={index} className="flex items-center gap-3 py-3">
-          <Skeleton className="size-12 shrink-0 rounded-2xl" />
+        <div key={index} className="flex items-center gap-2 border-b border-border-default py-4">
+          <Skeleton className="size-8 shrink-0 rounded-lg" />
           <Skeleton className="h-5 w-28" />
         </div>
       ))}

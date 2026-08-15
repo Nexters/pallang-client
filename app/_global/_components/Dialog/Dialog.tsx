@@ -60,13 +60,13 @@ function Viewport({ className, ...props }: ComponentProps<typeof BaseDialog.View
   )
 }
 
+type PopupProps = ComponentProps<typeof BaseDialog.Popup> & {
+  /** 일러스트가 겹쳐 올라오는지. 상단 여백이 그 자리라 일러스트와 함께 켜고 끈다. */
+  illustrated?: boolean
+}
+
 // 카드 본체. 일러스트가 위로 삐져나오므로 relative만 두고 overflow는 자르지 않는다.
-function Popup({
-  className,
-  initialFocus,
-  ref,
-  ...props
-}: ComponentProps<typeof BaseDialog.Popup>) {
+function Popup({ className, illustrated = true, initialFocus, ref, ...props }: PopupProps) {
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 팝업 안 첫 tabbable 요소를
   // 잡는다 — 열자마자 첫 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡아 링을 없앤다.
   // `false`(포커스 이동 안 함)는 쓰지 않는다 — 모달이 바깥을 aria-hidden 처리하므로
@@ -85,7 +85,9 @@ function Popup({
       }}
       initialFocus={initialFocus ?? popupRef}
       className={cn(
-        'relative flex w-full max-w-[343px] flex-col gap-6 rounded-[32px] bg-bg-default px-4 pt-[46px] pb-6',
+        'relative flex w-full max-w-[343px] flex-col gap-6 rounded-[32px] bg-bg-default px-4 pb-6',
+        // 일러스트가 카드 안쪽으로 38px 겹쳐 들어오므로 그만큼 제목을 밀어 둔다
+        illustrated ? 'pt-[46px]' : 'pt-6',
         // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
         'outline-none',
         // 등장은 넉넉하게, 퇴장은 짧게 — 사라지는 걸 기다리게 하지 않는다
@@ -104,7 +106,7 @@ function Popup({
 
 // shadcn의 DialogContent 대응 — Portal + Backdrop + Viewport + Popup을 한 번에 묶은 편의 래퍼.
 // 백드롭을 커스터마이즈하려면 Portal/Backdrop/Viewport/Popup을 직접 조합하면 된다.
-function Content({ children, ...props }: ComponentProps<typeof BaseDialog.Popup>) {
+function Content({ children, ...props }: PopupProps) {
   return (
     <Portal>
       <Backdrop />
@@ -115,9 +117,8 @@ function Content({ children, ...props }: ComponentProps<typeof BaseDialog.Popup>
   )
 }
 
-// TODO(design): 일러스트 없는 다이얼로그 디자인이 나오면 반영할 것.
-// 지금은 일러스트가 항상 있는 전제라 Popup의 pt-[46px]도 일러스트 자리로 고정돼 있다.
-// 없는 버전이 생기면 상단 여백까지 함께 분기해야 한다.
+// 일러스트 없는 형태(차단 해제 확인 218:12135)는 Popup의 `illustrated={false}`로 만든다 —
+// 일러스트를 걷으면 그 자리로 잡아 둔 상단 여백도 같이 줄어야 제목 위가 휑하지 않다.
 
 // 카드 위로 겹쳐 올라가는 일러스트. 기본은 마스코트이고, children을 주면 다른 일러스트로 바꿀 수 있다.
 // Figma 기준 카드 안쪽으로 38px 겹치고 가로 중앙 정렬(2260:6966 — img 200×145, 카드 상단 -107px).
