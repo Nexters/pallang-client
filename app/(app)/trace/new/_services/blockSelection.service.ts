@@ -70,33 +70,28 @@ export function pickBlockAt(blocks: BlockBox[], point: Point, tolerance: number)
   return best ? best.index : null
 }
 
-export type ToggleMode = 'add' | 'remove'
-
-/**
- * 제스처가 처음 닿은 블록의 상태로 모드를 정한다.
- * 이미 고른 블록에서 시작하면 그 제스처는 해제만, 아니면 추가만 한다.
- * (한 제스처가 블록마다 뒤집으면 지나간 자리가 뒤죽박죽이 된다.)
- */
-export function resolveToggleMode(selected: number[], touched: number[]): ToggleMode {
-  const first = touched[0]
-  return first !== undefined && selected.includes(first) ? 'remove' : 'add'
-}
-
 /**
  * 두 선택이 같은지 본다. 양쪽 모두 읽기 순서로 정렬돼 있어 자리끼리 비교하면 된다.
  *
- * applyToggle은 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
+ * toggleIndices는 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
  * 탭하기만 해도 선택이 바뀐 것으로 취급돼, 손으로 고친 발췌문이 되돌릴 수 없이 날아간다.
  */
 export function sameSelection(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((index, at) => index === b[at])
 }
 
-/** 제스처가 시작될 때의 선택에 지나간 블록을 더하거나 뺀다. 결과는 읽기 순서를 유지한다. */
-export function applyToggle(base: number[], swept: number[], mode: ToggleMode): number[] {
-  const sweptSet = new Set(swept)
-  const kept = base.filter((index) => mode === 'add' || !sweptSet.has(index))
-  if (mode === 'remove') return kept
+/**
+ * 제스처가 시작될 때의 선택에서 지나간 블록을 각각 뒤집는다 — 고른 건 풀리고 안 고른 건 켜진다.
+ *
+ * 매번 시작 시점 선택(base)에 대해 지금 사각형 안의 것을 뒤집으므로, 끌다가 되돌아와 사각형에서
+ * 벗어난 블록은 원래대로 돌아간다. 손을 뗄 때 사각형 안에 있는 것만 뒤집힌 채 남는다.
+ * 결과는 읽기 순서를 유지한다.
+ */
+export function toggleIndices(base: number[], swept: number[]): number[] {
   const baseSet = new Set(base)
-  return [...kept, ...swept.filter((index) => !baseSet.has(index))].sort((a, b) => a - b)
+  const sweptSet = new Set(swept)
+  return [
+    ...base.filter((index) => !sweptSet.has(index)),
+    ...swept.filter((index) => !baseSet.has(index)),
+  ].sort((a, b) => a - b)
 }

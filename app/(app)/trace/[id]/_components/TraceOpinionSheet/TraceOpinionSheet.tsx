@@ -110,18 +110,27 @@ export function TraceOpinionSheet({
         onClose={onClose}
         // 상단 54px(디자인 202:7346 — 상태바 44 + 10)만 남기고 화면을 채운다.
         // 고정 54px 대신 인셋 토큰을 쓴다 — 노치가 큰 기기에서 헤더가 노치에 가리지 않게.
-        popupClassName="h-[calc(100dvh-var(--safe-top)-10px)]"
+        // pb-0: 하단 인셋은 안쪽에서 소비한다 — 패널이 먼저 먹으면 답글 화면의 검은 입력바
+        // 아래로 시트 바닥이 띠로 남는다. 대신 목록과 입력바가 각자 pb-safe를 진다.
+        popupClassName="h-[calc(100dvh-var(--safe-top)-10px)] pb-0"
         contentClassName="min-h-0 flex-1 gap-0 p-0"
       >
         {/* 시트 높이가 고정이라 목록↔답글 화면을 오가도 시트가 출렁이지 않는다 */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
           {/* 답글 화면이 덮고 있는 동안 뒤의 목록은 포커스·보조기기에서 뺀다 */}
-          <div ref={listScrollRef} inert={isReplyOpen} className="h-full overflow-y-auto px-4">
+          <div
+            ref={listScrollRef}
+            inert={isReplyOpen}
+            className="h-full overflow-y-auto px-4 pb-safe"
+          >
             <ul className="flex flex-col">
               {traces.map((trace, index) => (
                 <li
                   key={trace.opinionId}
-                  className={index > 0 ? 'border-t border-dashed border-white/30' : undefined}
+                  // 구분선 양옆 24px — 흔적 목록과 같은 리듬이다(디자인 202:7290 Content gap)
+                  className={
+                    index > 0 ? 'mt-6 border-t border-dashed border-white/30 pt-6' : undefined
+                  }
                 >
                   <TraceItem
                     trace={trace}
@@ -155,7 +164,7 @@ export function TraceOpinionSheet({
                 <TraceItem trace={shownTrace} isContentClamped={false} />
                 <TraceCommentSection opinionId={shownTrace.opinionId} />
               </div>
-              <TraceCommentComposer opinionId={shownTrace.opinionId} />
+              <TraceCommentComposer opinionId={shownTrace.opinionId} variant="sheet" />
             </div>
           )}
         </div>

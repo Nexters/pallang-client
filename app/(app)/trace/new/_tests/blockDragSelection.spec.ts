@@ -16,13 +16,12 @@ const surfaceRef = {
   current: { getBoundingClientRect: () => ({ left: 0, top: 0 }) } as HTMLElement,
 }
 
-function pointerAt(x: number, y: number) {
+function pointerAt(x: number, y: number, pointerId = 1) {
   return {
     clientX: x,
     clientY: y,
     currentTarget: { setPointerCapture: vi.fn() },
-    isPrimary: true,
-    pointerId: 1,
+    pointerId,
   } as unknown as ReactPointerEvent<HTMLElement>
 }
 
@@ -98,10 +97,8 @@ describe('useBlockDragSelection — 탭', () => {
 })
 
 describe('useBlockDragSelection — 드래그', () => {
-  // 고른 문장을 지우려고 앞 여백에서부터 훑는 게 자연스러운 손짓이다.
-  // 시작점(여백)으로 모드를 정하면 추가 모드로 잠겨 이미 고른 어절 위를 지나가도 아무 일도 없다.
-  it('여백에서 시작해 고른 어절을 훑으면 해제한다', () => {
-    const { onChange, result } = renderSelection([0, 1])
+  it('고르지 않은 어절을 훑으면 켜진다', () => {
+    const { onChange, result } = renderSelection([])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5)) // 첫 줄 왼쪽 여백
@@ -110,12 +107,12 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0·1을 지나감
     })
 
-    expect(result.current.mode).toBe('remove')
-    expect(onChange).toHaveBeenLastCalledWith([])
+    expect(onChange).toHaveBeenLastCalledWith([0, 1])
   })
 
-  it('여백에서 시작해 고르지 않은 어절을 훑으면 추가한다', () => {
-    const { onChange, result } = renderSelection([2])
+  // 고른 것을 다시 훑으면 풀린다 — 어디서 시작하든 상관없다
+  it('고른 어절을 훑으면 풀린다', () => {
+    const { onChange, result } = renderSelection([0, 1])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5))
@@ -124,31 +121,43 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(50, 6))
     })
 
-    expect(result.current.mode).toBe('add')
-    expect(onChange).toHaveBeenLastCalledWith([0, 1, 2])
+    expect(onChange).toHaveBeenLastCalledWith([])
   })
 
-  // 처음 닿은 어절로 정한 모드는 제스처가 끝날 때까지 바뀌지 않는다.
-  // 지나갈 때마다 뒤집으면 한 번 훑은 자리가 뒤죽박죽이 된다.
-  it('처음 닿은 어절로 정한 모드를 제스처 내내 유지한다', () => {
+  // 지나간 어절은 각자 뒤집힌다 — 고른 건 풀리고 안 고른 건 켜진다. 모드도 방향도 없다.
+  it('섞인 영역을 훑으면 각자 뒤집힌다', () => {
     const { onChange, result } = renderSelection([1])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5))
     })
     act(() => {
-      result.current.handlers.onPointerMove(pointerAt(10, 6)) // 어절 0(안 고름) → 추가 모드
-    })
-    act(() => {
-      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 1(고름)까지 — 빼지 않는다
+      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0(안 고름)·1(고름)
     })
 
-    expect(result.current.mode).toBe('add')
-    expect(onChange).toHaveBeenLastCalledWith([0, 1])
+    expect(onChange).toHaveBeenLastCalledWith([0])
   })
 
-  it('아직 어절에 닿지 않았으면 모드가 없고 사각형만 그린다', () => {
-    const { result } = renderSelection([0])
+  // 뒤집기는 매번 시작 시점 선택에 대해 계산한다. 끌다가 되돌아와 사각형에서 벗어난 어절은
+  // 원래대로 돌아와야지, 지나갔다는 이유로 뒤집힌 채 남으면 안 된다.
+  it('끌다가 되돌아오면 사각형을 벗어난 어절은 원래대로 돌아온다', () => {
+    const { onChange, result } = renderSelection([])
+
+    act(() => {
+      result.current.handlers.onPointerDown(pointerAt(-20, 5))
+    })
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0·1 켜짐
+    })
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(20, 6)) // 어절 1은 사각형 밖으로
+    })
+
+    expect(onChange).toHaveBeenLastCalledWith([0])
+  })
+
+  it('아직 어절에 닿지 않았으면 사각형만 그린다', () => {
+    const { onChange, result } = renderSelection([0])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(200, 200))
@@ -157,11 +166,11 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(220, 230))
     })
 
-    expect(result.current.mode).toBeNull()
+    expect(onChange).not.toHaveBeenCalled()
     expect(result.current.marquee).not.toBeNull()
   })
 
-  it('손을 떼면 사각형과 모드가 함께 사라진다', () => {
+  it('손을 떼면 사각형이 사라진다', () => {
     const { result } = renderSelection([0])
 
     act(() => {
@@ -171,11 +180,38 @@ describe('useBlockDragSelection — 드래그', () => {
       result.current.handlers.onPointerMove(pointerAt(60, 30))
     })
     act(() => {
-      result.current.handlers.onPointerUp()
+      result.current.handlers.onPointerUp(pointerAt(60, 30))
     })
 
     expect(result.current.marquee).toBeNull()
-    expect(result.current.mode).toBeNull()
+  })
+
+  // 제스처는 그것을 시작한 손가락만 따른다. 둘째 손가락의 down이 touchstart보다 먼저 와도
+  // 새 선택을 시작하지 않고, 다른 손가락의 move·up이 끼어들어도 흔들리지 않는다.
+  it('제스처를 시작한 손가락만 따르고 다른 손가락은 무시한다', () => {
+    const { onChange, result } = renderSelection([])
+
+    act(() => {
+      result.current.handlers.onPointerDown(pointerAt(10, 5, 1)) // 손가락 1 — 어절 0
+    })
+    act(() => {
+      result.current.handlers.onPointerDown(pointerAt(45, 5, 2)) // 손가락 2 — 무시
+    })
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(60, 30, 2)) // 손가락 2 이동 — 무시
+    })
+    act(() => {
+      result.current.handlers.onPointerUp(pointerAt(60, 30, 2)) // 손가락 2 뗌 — 제스처는 계속
+    })
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange).toHaveBeenLastCalledWith([0])
+    expect(result.current.marquee).toBeNull() // 아직 탭 상태
+    // 손가락 1이 계속 끌면 이어진다
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(60, 6, 1))
+    })
+    expect(result.current.marquee).not.toBeNull()
   })
 
   it('cancel은 손을 뗀 것과 같다 — 확대로 넘어갈 때 고르던 것을 그 자리에서 확정한다', () => {

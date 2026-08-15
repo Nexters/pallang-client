@@ -4,14 +4,13 @@ import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import { useRef, useState } from 'react'
 
 import { TAP_SLOP, TAP_TOLERANCE } from '../_data/gesture.constant'
-import type { BlockBox, Point, Rect, ToggleMode } from '../_services/blockSelection.service'
+import type { BlockBox, Point, Rect } from '../_services/blockSelection.service'
 import {
-  applyToggle,
   pickBlockAt,
   rectFromPoints,
-  resolveToggleMode,
   sameSelection,
   selectIndicesInRect,
+  toggleIndices,
 } from '../_services/blockSelection.service'
 
 /**
@@ -26,12 +25,13 @@ function toLocalPoint(surface: HTMLElement, event: ReactPointerEvent, scale: num
 }
 
 /**
- * 사진 위를 끌거나 눌러 OCR 블록을 고른다. 한 제스처가 선택을 교체하지 않고 토글한다 —
- * 덜 인식된 부분은 이어서 더 고르고, 잘못 잡힌 블록만 다시 눌러 뺄 수 있다.
+ * 사진 위를 끌거나 눌러 OCR 블록을 고른다. 한 제스처가 선택을 교체하지 않고 **뒤집는다** —
+ * 지나간 어절은 각자 고른 건 풀리고 안 고른 건 켜진다. 덜 인식된 부분은 이어서 더 고르고,
+ * 잘못 잡힌 블록은 다시 훑거나 눌러 뺀다. 모드도 방향도 없다.
  *
- * 탭은 어절 하나를 뒤집고, 슬롭을 넘어 끌면 지나간 어절을 훑는다.
- * 추가/해제는 제스처가 **처음 닿는** 어절의 상태로 정한다. 시작점으로 정하면 고른 문장을
- * 지우려고 앞 여백에서부터 훑는 자연스러운 손짓이 추가 모드로 잠겨 아무 일도 안 일어난다.
+ * 탭은 어절 하나를 뒤집고, 슬롭을 넘어 끌면 사각형 안의 어절 전부를 뒤집는다.
+ * 뒤집기는 매번 시작 시점 선택에 대해 계산하므로, 끌다가 사각형에서 벗어난 어절은 원래대로 돌아온다 —
+ * 손을 뗄 때 사각형 안에 있는 것만 뒤집힌 채 남는다.
  *
  * @param surfaceRef 블록 좌표계의 원점이 되는 요소(사진). 핸들러는 그보다 넓은 스테이지에 걸어도 된다.
  */
@@ -45,8 +45,8 @@ export function useBlockDragSelection(
   // 확대할수록 좌표계상 여유·슬롭을 좁혀, 화면에서 보이는 크기는 배율과 상관없이 일정하게 둔다
   const tolerance = TAP_TOLERANCE / scale
   const slop = TAP_SLOP / scale
-  const gestureRef = useRef<{ base: number[]; mode: ToggleMode | null; origin: Point } | null>(null)
-  const [drag, setDrag] = useState<{ marquee: Rect | null; mode: ToggleMode | null } | null>(null)
+  const gestureRef = useRef<{ base: number[]; origin: Point; pointerId: number } | null>(null)
+  const [marquee, setMarquee] = useState<Rect | null>(null)
 
   const update = (point: Point) => {
     const gesture = gestureRef.current
@@ -57,11 +57,8 @@ export function useBlockDragSelection(
     const swept = isTap
       ? [pickBlockAt(blocks, gesture.origin, tolerance)].filter((i): i is number => i !== null)
       : selectIndicesInRect(blocks, rect)
-    // 처음 어절에 닿는 순간 모드를 정하고, 그 제스처가 끝날 때까지 바꾸지 않는다
-    if (gesture.mode === null && swept.length > 0)
-      gesture.mode = resolveToggleMode(gesture.base, swept)
-    setDrag({ marquee: isTap ? null : rect, mode: gesture.mode })
-    const next = gesture.mode ? applyToggle(gesture.base, swept, gesture.mode) : gesture.base
+    setMarquee(isTap ? null : rect)
+    const next = toggleIndices(gesture.base, swept)
     // 고른 게 그대로면 알리지 않는다 — 여백을 탭했을 뿐인데 선택이 바뀐 것으로 읽히면
     // 손으로 고친 발췌문이 새 선택으로 덮여 사라진다
     if (!sameSelection(selected, next)) onChange(next)
@@ -69,32 +66,41 @@ export function useBlockDragSelection(
 
   const end = () => {
     gestureRef.current = null
-    setDrag(null)
+    setMarquee(null)
   }
+
+  /** 제스처를 시작한 손가락의 이벤트인지. 다른 손가락은 끼어들어도 흔들지 못한다. */
+  const owns = (event: ReactPointerEvent<HTMLElement>) =>
+    gestureRef.current !== null && gestureRef.current.pointerId === event.pointerId
 
   return {
     /** 진행 중인 제스처를 그 자리에서 끝낸다. 두 번째 손가락이 닿아 확대로 넘어갈 때 쓴다. */
     cancel: end,
     handlers: {
-      onPointerCancel: end,
+      onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => {
+        if (owns(event)) end()
+      },
       onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
         const surface = surfaceRef.current
         if (!surface) return
+        // 이미 한 손가락이 고르는 중이면 다른 손가락은 새 제스처를 시작하지 못한다.
+        // 같은 손가락이 다시 닿은 거면 앞선 up을 놓친 것이라 새로 시작한다(한 손가락이 두 번 내려올 수는 없다).
+        if (gestureRef.current && gestureRef.current.pointerId !== event.pointerId) return
         // 포인터를 캡처해야 사진 밖으로 끌어도 move/up 이벤트가 계속 들어온다
         event.currentTarget.setPointerCapture(event.pointerId)
         const origin = toLocalPoint(surface, event, scale)
-        gestureRef.current = { base: selected, mode: null, origin }
+        gestureRef.current = { base: selected, origin, pointerId: event.pointerId }
         update(origin)
       },
       onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
         const surface = surfaceRef.current
-        if (gestureRef.current && surface) update(toLocalPoint(surface, event, scale))
+        if (owns(event) && surface) update(toLocalPoint(surface, event, scale))
       },
-      onPointerUp: end,
+      onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
+        if (owns(event)) end()
+      },
     },
-    marquee: drag?.marquee ?? null,
-    // 끄는 동안 이 제스처가 더하는 중인지 빼는 중인지 — 사각형 색을 갈라 보여준다.
-    // 아직 어절에 닿지 않았으면 null이다.
-    mode: drag?.mode ?? null,
+    /** 끌고 있는 사각형. 탭 중이거나 손을 뗐으면 null이다. */
+    marquee,
   }
 }
