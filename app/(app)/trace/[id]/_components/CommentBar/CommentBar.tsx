@@ -10,8 +10,11 @@ type CommentBarProps = {
    * 미지정이면 등록 없이 입력 UI로만 동작하며, 등록된 적이 없으므로 입력도 그대로 남는다.
    */
   onSubmit?: (content: string) => boolean | Promise<boolean>
-  /** floating은 화면 하단에 fixed로 뜨고, sheet는 바텀시트 안에서 흐름에 놓인다 */
-  variant?: 'floating' | 'sheet'
+  /**
+   * floating은 화면 하단에 fixed로 뜨고, sheet는 바텀시트 안에서 흐름에 놓이며,
+   * inline은 흔적 목록에서 펼쳐진 댓글 묶음 끝에 카드처럼 놓인다
+   */
+  variant?: 'floating' | 'sheet' | 'inline'
   placeholder?: string
   /** 제출 버튼의 접근성 이름 — 입력 대상(댓글/답글)과 짝을 맞춘다 */
   submitLabel?: string
@@ -26,7 +29,6 @@ export function CommentBar({
   const [content, setContent] = useState('')
   const [isSending, setIsSending] = useState(false)
   const isEmpty = content.trim().length === 0
-  const isSheet = variant === 'sheet'
 
   return (
     <form
@@ -46,14 +48,19 @@ export function CommentBar({
           setContent((current) => (current.trim() === trimmed ? '' : current))
         })
       }}
-      /* floating: 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
+      /* 색은 어디서나 같다(디자인 202:4910) — 바는 bg-black, 그 위 입력은 한 단 밝은 bg-dark.
+         floating: 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
          fixed는 셸 패딩을 받지 않으므로 하단 인셋을 직접 소비하고, 셸과 같은 최대 폭으로 가운데 정렬한다.
-         sheet: 시트 패널이 pb-safe를 이미 소비하므로 흐름 안에서 상단 여백만 가진다 */
+         sheet: 시트 패널이 pb-0으로 물러나 하단 인셋을 이 바가 대신 소비한다 — 바가 인셋까지
+         칠하지 않으면 검은 바 아래로 시트 바닥(bg-dark)이 띠로 드러난다.
+         inline: 화면 끝이 아니라 목록 안이라 인셋도 테두리도 없다 — 바로 위 "댓글 더보기"와
+         같은 폭·같은 면으로 이어지도록 사방 16px만 둔다 */
       className={cn(
-        'border-t border-border-book px-4 pt-4',
-        isSheet
-          ? 'shrink-0 bg-bg-dark'
-          : 'fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-132.5 bg-bg-black pb-safe',
+        'bg-bg-black px-4',
+        variant === 'inline' && 'py-4',
+        variant === 'sheet' && 'shrink-0 border-t border-border-book pt-4 pb-safe',
+        variant === 'floating' &&
+          'fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-132.5 border-t border-border-book pt-4 pb-safe',
       )}
     >
       <div className="flex items-center gap-2">
@@ -65,11 +72,7 @@ export function CommentBar({
             setContent(event.target.value)
           }}
           placeholder={placeholder}
-          className={cn(
-            'h-9 min-w-0 flex-1 rounded-full px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50',
-            // 놓인 면과 한 단계 차이 나는 색을 골라 입력 영역이 묻히지 않게 한다
-            isSheet ? 'bg-bg-black' : 'bg-bg-dark',
-          )}
+          className="h-9 min-w-0 flex-1 rounded-full bg-bg-dark px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
         />
         {/* 전송 중 표시는 Button의 loading에 맡긴다(스피너 + aria-busy + 클릭 차단).
             비활성 색은 이 바의 기존 처리를 유지한다 — Button 기본값(회색)은 아이콘까지 묻힌다 */}

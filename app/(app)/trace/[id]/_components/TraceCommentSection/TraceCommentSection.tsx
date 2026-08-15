@@ -66,6 +66,23 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
     )
   }
 
+  // 빈 목록을 그냥 두면 의견 카드 바로 아래에 다음 요소가 붙어 "댓글이 없다"는 사실이 화면에
+  // 남지 않는다 — 디자인(202:5958)은 같은 자리에 첫 댓글을 권하는 카드를 세워 둔다
+  if (comments.length === 0) {
+    return (
+      <section
+        aria-label="댓글 목록"
+        aria-busy={commentsQuery.isFetching || undefined}
+        className="flex flex-col pb-4"
+      >
+        <div className="flex h-32 flex-col items-center justify-center bg-bg-overlay p-4 text-center text-body-14md leading-[1.3] tracking-[-0.04em] text-text-inverse">
+          <p>아직 남겨진 댓글이 없습니다.</p>
+          <p>첫번째 댓글을 달아주세요!</p>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section
       aria-label="댓글 목록"

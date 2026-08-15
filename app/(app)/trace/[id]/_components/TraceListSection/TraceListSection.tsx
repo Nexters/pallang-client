@@ -4,6 +4,8 @@ import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import type { Trace } from '../../_types/readerHighlights.type'
+import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentComposer'
+import { TraceCommentSection } from '../TraceCommentSection/TraceCommentSection'
 import { TraceItem } from '../TraceItem/TraceItem'
 
 type TraceListSectionProps = {
@@ -16,8 +18,10 @@ type TraceListSectionProps = {
   onSelectTrace: (trace: Trace) => void
   /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 202:3672 주석) */
   onOpenOpinionSheet: () => void
-  /** 흔적의 답글 버튼 — 그 의견의 답글 화면이 열린 채 바텀시트로 진입한다 */
-  onOpenTraceComments: (trace: Trace) => void
+  /** 댓글이 펼쳐진 의견 — null이면 모두 접혀 있다 */
+  expandedOpinionId: number | null
+  /** 흔적의 댓글 버튼 — 그 자리에서 댓글을 여닫는다(디자인 202:3991 주석) */
+  onToggleComments: (trace: Trace) => void
   className?: string
 }
 
@@ -29,7 +33,8 @@ export function TraceListSection({
   onToggleSort,
   onSelectTrace,
   onOpenOpinionSheet,
-  onOpenTraceComments,
+  expandedOpinionId,
+  onToggleComments,
   className,
 }: TraceListSectionProps) {
   return (
@@ -65,17 +70,26 @@ export function TraceListSection({
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
-            className={index > 0 ? 'border-t border-dashed border-white/30' : undefined}
+            // 구분선 양옆으로 24px씩(디자인 202:7290 Content gap) — 흔적끼리 붙어 보이지 않게 한다
+            className={index > 0 ? 'mt-6 border-t border-dashed border-white/30 pt-6' : undefined}
           >
             <TraceItem
               trace={trace}
+              isCommentsOpen={trace.opinionId === expandedOpinionId}
               onSelect={() => {
                 onSelectTrace(trace)
               }}
               onOpenComments={() => {
-                onOpenTraceComments(trace)
+                onToggleComments(trace)
               }}
             />
+            {/* 댓글은 다른 화면으로 넘기지 않고 흔적 바로 아래로 펼친다(디자인 202:3978) */}
+            {trace.opinionId === expandedOpinionId && (
+              <div className="pb-4">
+                <TraceCommentSection opinionId={trace.opinionId} />
+                <TraceCommentComposer opinionId={trace.opinionId} variant="inline" />
+              </div>
+            )}
           </li>
         ))}
       </ul>

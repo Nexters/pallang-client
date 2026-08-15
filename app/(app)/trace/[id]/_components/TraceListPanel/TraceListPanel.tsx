@@ -48,6 +48,8 @@ export function TraceListPanel({
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const list = useTraceList(passageId, initialTraceId)
   const [sheetState, setSheetState] = useState<OpinionSheetState>(null)
+  // 흔적 목록에서 댓글이 펼쳐진 의견 — 한 번에 하나만 편다(디자인 202:3978)
+  const [expandedOpinionId, setExpandedOpinionId] = useState<number | null>(null)
 
   // 대목이 바뀌면 목록이 통째로 갈리므로 시트도 함께 닫는다 — 남겨두면 화면에 보이지도 않는
   // 이전 대목의 의견에 답글이 등록된다(#128). 렌더 도중의 setState — React가 권하는
@@ -56,12 +58,14 @@ export function TraceListPanel({
   if (prevPassageId !== passageId) {
     setPrevPassageId(passageId)
     setSheetState(null)
+    setExpandedOpinionId(null)
   }
 
   // 가림막이 다시 씌워지면(같은 페이지 탭을 다시 눌러 해제가 풀리는 경우) passageId는 그대로라
   // 위의 리셋에 걸리지 않는다. 시트가 남으면 더는 읽을 수 없는 의견에 답글을 쓸 수 있다.
-  if (isMasked && sheetState !== null) {
+  if (isMasked && (sheetState !== null || expandedOpinionId !== null)) {
     setSheetState(null)
+    setExpandedOpinionId(null)
   }
 
   // 닫히는 동안에도 내용이 남아 있어야 슬라이드 아웃이 빈 화면으로 보이지 않는다
@@ -121,8 +125,13 @@ export function TraceListPanel({
             onOpenOpinionSheet={() => {
               openSheet(null)
             }}
-            onOpenTraceComments={(trace) => {
-              openSheet(trace.opinionId)
+            expandedOpinionId={expandedOpinionId}
+            onToggleComments={(trace) => {
+              // 가려진 의견의 댓글도 읽을 수 없어야 한다 — 블러는 그림일 뿐이다(#49)
+              if (isMasked) return
+              setExpandedOpinionId((current) =>
+                current === trace.opinionId ? null : trace.opinionId,
+              )
             }}
           />
           {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
