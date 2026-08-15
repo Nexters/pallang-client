@@ -5,6 +5,7 @@ import PlusIcon from '@/app/_global/_components/Icon/assets/plus.svg'
 import { Spinner } from '@/app/_global/_components/Spinner/Spinner'
 import { commentQueries } from '@/app/_global/_queries/comment.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
+import { cn } from '@/app/_global/_services/cn.service'
 
 import { useCommentActions } from '../../_hooks/useCommentActions'
 import { CommentThread } from '../CommentThread/CommentThread'
@@ -12,6 +13,12 @@ import { CommentThread } from '../CommentThread/CommentThread'
 type TraceCommentSectionProps = {
   opinionId: number
 }
+
+/**
+ * 목록을 대신하는 자리(로딩·오류·빈 목록)는 모두 같은 상자다 — 높이가 다르면 상태가 넘어갈 때마다
+ * 아래 흔적들이 밀려 올라왔다 내려간다. 크기는 빈 목록 카드(디자인 202:5958, 128px)에 맞춘다.
+ */
+const PLACEHOLDER_BOX = 'flex h-32 flex-col items-center justify-center bg-bg-overlay p-4'
 
 /**
  * 흔적 아이템 바로 아래에 인라인으로 펼쳐지는 댓글 묶음.
@@ -33,12 +40,10 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
   // aria-busy로만 알린다
   if (commentsQuery.isPending) {
     return (
-      <section
-        aria-label="댓글 목록"
-        aria-busy="true"
-        className="flex justify-center bg-bg-overlay p-4"
-      >
-        <Spinner className="text-text-inverse/50" />
+      <section aria-label="댓글 목록" aria-busy="true" className="flex flex-col pb-4">
+        <div className={PLACEHOLDER_BOX}>
+          <Spinner className="text-text-inverse/50" />
+        </div>
       </section>
     )
   }
@@ -48,20 +53,41 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
   // 통째로 갈아치우면 보이던 댓글이 사라진다 — 보여줄 게 하나도 없을 때만 전체 오류로 간다.
   if (commentsQuery.isError && comments.length === 0) {
     return (
+      <section aria-label="댓글 목록" className="flex flex-col pb-4">
+        <div className={cn(PLACEHOLDER_BOX, 'gap-2 text-body-14rg text-text-inverse/50')}>
+          <p>댓글을 불러오지 못했어요.</p>
+          <button
+            type="button"
+            onClick={() => {
+              void commentsQuery.refetch()
+            }}
+            className="text-body-14sb text-text-inverse underline"
+          >
+            댓글 다시 불러오기
+          </button>
+        </div>
+      </section>
+    )
+  }
+
+  // 빈 목록을 그냥 두면 의견 카드 바로 아래에 다음 요소가 붙어 "댓글이 없다"는 사실이 화면에
+  // 남지 않는다 — 디자인(202:5958)은 같은 자리에 첫 댓글을 권하는 카드를 세워 둔다
+  if (comments.length === 0) {
+    return (
       <section
         aria-label="댓글 목록"
-        className="flex flex-col items-center gap-2 bg-bg-overlay p-4 text-body-14rg text-text-inverse/50"
+        aria-busy={commentsQuery.isFetching || undefined}
+        className="flex flex-col pb-4"
       >
-        <p>댓글을 불러오지 못했어요.</p>
-        <button
-          type="button"
-          onClick={() => {
-            void commentsQuery.refetch()
-          }}
-          className="text-body-14sb text-text-inverse underline"
+        <div
+          className={cn(
+            PLACEHOLDER_BOX,
+            'text-center text-body-14md leading-[1.3] tracking-[-0.04em] text-text-inverse',
+          )}
         >
-          댓글 다시 불러오기
-        </button>
+          <p>아직 남겨진 댓글이 없습니다.</p>
+          <p>첫번째 댓글을 달아주세요!</p>
+        </div>
       </section>
     )
   }

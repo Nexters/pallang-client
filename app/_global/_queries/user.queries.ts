@@ -32,12 +32,6 @@ export const userQueries = {
       // 비로그인이면 401이 정상 흐름이라 재시도하지 않는다
       retry: false,
     }),
-  myOpinions: () =>
-    queryOptions({
-      queryKey: [...userQueries.all(), 'my-opinions'],
-      // ponytail: size 10 고정 — 마이페이지 가로 스크롤 미리보기 용도, 전체 목록은 opinionList가 맡는다
-      queryFn: () => getMyOpinions({ size: 10 }),
-    }),
   /**
    * 내가 남긴 / 좋아요 누른 흔적 전체 목록. 두 응답은 `likedAt` 하나만 다르고 목록 UI가 쓰는 필드는
    * 같아서, 화면을 공유하는 만큼 쿼리도 scope 하나로 가른다.

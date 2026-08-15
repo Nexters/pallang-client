@@ -25,6 +25,7 @@ import MyIcon from './assets/my.svg'
 import NextIcon from './assets/next.svg'
 import PencilIcon from './assets/pencil.svg'
 import PlusIcon from './assets/plus.svg'
+import PlusThinIcon from './assets/plus-thin.svg'
 import ReplyIcon from './assets/reply.svg'
 import ResetIcon from './assets/reset.svg'
 import SearchIcon from './assets/search.svg'
@@ -36,6 +37,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'PencilIcon', Component: PencilIcon },
   { name: 'CloseIcon', Component: CloseIcon },
   { name: 'PlusIcon', Component: PlusIcon },
+  { name: 'PlusThinIcon', Component: PlusThinIcon },
   { name: 'ContentIcon', Component: ContentIcon },
   { name: 'ResetIcon', Component: ResetIcon },
   { name: 'TrashIcon', Component: TrashIcon },

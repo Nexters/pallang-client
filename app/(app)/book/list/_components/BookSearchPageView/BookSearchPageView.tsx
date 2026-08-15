@@ -118,7 +118,7 @@ export function BookSearchPageView() {
                 label="도서 검색 정렬"
                 options={BOOK_SEARCH_SORT_OPTIONS}
                 value={sort}
-                variant="light"
+                tone="light"
                 onValueChange={setSort}
               />
             </div>
