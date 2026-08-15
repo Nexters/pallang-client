@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -10,11 +11,7 @@ import { Select } from '@/app/_global/_components/Select/Select'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
-import {
-  BOOK_SEARCH_SORT,
-  bookQueries,
-  type BookSearchSort,
-} from '@/app/_global/_queries/book.queries'
+import { BOOK_SEARCH_SORT, bookQueries } from '@/app/_global/_queries/book.queries'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
 import { BOOK_SEARCH_SORT_OPTIONS } from '@/app/_shared/book/_data/bookSearchSort.constant'
 
@@ -26,9 +23,12 @@ type BookSearchPageViewProps = {
   shouldFocusSearch: boolean
 }
 
+type BookSearchSortValue = (typeof BOOK_SEARCH_SORT_OPTIONS)[number]['value']
+
 export function BookSearchPageView({ shouldFocusSearch }: BookSearchPageViewProps) {
+  const router = useRouter()
   const [keyword, setKeyword] = useState('')
-  const [sort, setSort] = useState<BookSearchSort>(BOOK_SEARCH_SORT.OPINION)
+  const [sort, setSort] = useState<BookSearchSortValue>(BOOK_SEARCH_SORT.OPINION)
   const scrollRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
@@ -103,19 +103,20 @@ export function BookSearchPageView({ shouldFocusSearch }: BookSearchPageViewProp
                 직접 책을 등록해 주세요.
               </>
             }
-            actionLabel="다음"
+            actionLabel="책 등록하기"
+            onAction={() => {
+              router.push('/book/new')
+            }}
           />
         ) : (
           <>
-            <div className="flex h-10 shrink-0 items-center justify-end px-4 py-1">
+            <div className="sticky top-0 z-10 flex h-10 shrink-0 items-center justify-end bg-bg-default px-4 py-1">
               <Select
                 label="도서 검색 정렬"
                 options={BOOK_SEARCH_SORT_OPTIONS}
                 value={sort}
                 variant="light"
-                onValueChange={(nextSort) => {
-                  setSort(nextSort as BookSearchSort)
-                }}
+                onValueChange={setSort}
               />
             </div>
             <BookItemList books={books} />

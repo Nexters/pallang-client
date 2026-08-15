@@ -132,11 +132,7 @@ export function BookSearchView({
         </TopBar.Action>
         <TopBar.Title as="h1">책 검색</TopBar.Title>
       </TopBar.Root>
-      <BookSearchBar
-        placeholder="책 제목을 입력해 주세요."
-        onAddBook={onAddManually}
-        onKeywordChange={setKeyword}
-      />
+      <BookSearchBar placeholder="책 제목을 입력해 주세요." onKeywordChange={setKeyword} />
 
       <div
         ref={scrollRef}
