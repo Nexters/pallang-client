@@ -1,8 +1,9 @@
-import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
+import { Select } from '@/app/_global/_components/Select/Select'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
+import { OPINION_SORT_OPTIONS } from '../../_data/readerHighlights.constant'
 import type { Trace } from '../../_types/readerHighlights.type'
 import { TraceCommentSection } from '../TraceCommentSection/TraceCommentSection'
 import { TraceItem } from '../TraceItem/TraceItem'
@@ -13,7 +14,7 @@ type TraceListSectionProps = {
   /** 스포일러 대목이 가림막 해제 전일 때 목록을 블러 처리한다 */
   isMasked: boolean
   sortType: OpinionSortType
-  onToggleSort: () => void
+  onChangeSort: (sortType: OpinionSortType) => void
   /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 202:3672 주석) */
   onOpenOpinionSheet: () => void
   /** 댓글이 펼쳐진 의견 — null이면 모두 접혀 있다 */
@@ -28,7 +29,7 @@ export function TraceListSection({
   traceCount,
   isMasked,
   sortType,
-  onToggleSort,
+  onChangeSort,
   onOpenOpinionSheet,
   expandedOpinionId,
   onToggleComments,
@@ -49,14 +50,13 @@ export function TraceListSection({
             <NextIcon width={20} height={20} aria-hidden className="text-icon-active" />
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onToggleSort}
-          className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
-        >
-          {sortType === 'LATEST' ? '최신순' : '좋아요순'}
-          <ChevronDownIcon width={20} height={20} className="text-icon-active" />
-        </button>
+        {/* 열리면 트리거가 그대로 첫 줄이 되는 드롭다운(218:8736) — 목록 위로 펼쳐지도록 헤더보다 앞에 세운다 */}
+        <Select
+          label="정렬 기준"
+          options={OPINION_SORT_OPTIONS}
+          value={sortType}
+          onValueChange={onChangeSort}
+        />
       </div>
       {/* inert: 블러는 그림일 뿐이라 키보드·보조기기로는 가려진 흔적에 그대로 닿는다.
           pointer-events-none과 달리 포커스까지 막아 상세 오버레이로 새는 길을 함께 끊는다. */}

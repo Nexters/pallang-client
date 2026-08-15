@@ -121,7 +121,7 @@ export function TraceListPanel({
             traceCount={list.traceCount}
             isMasked={isMasked}
             sortType={list.sortType}
-            onToggleSort={list.toggleSort}
+            onChangeSort={list.changeSort}
             onOpenOpinionSheet={() => {
               openSheet(null)
             }}
