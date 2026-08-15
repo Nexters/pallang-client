@@ -17,7 +17,6 @@ import {
   emptyBookForm,
   isValidBookForm,
   toCreateBookInput,
-  validateBookForm,
 } from '../../_services/bookForm.service'
 
 type FieldSpec = {
@@ -52,15 +51,13 @@ const MAX_PAGE_DIGITS = 5
 export function BookNewPageView() {
   const router = useRouter()
   const [values, setValues] = useState(emptyBookForm)
-  const [isSubmitted, setIsSubmitted] = useState(false)
   const [message, setMessage] = useState('')
   const createBook = useMutation(bookMutations.create())
 
-  const errors = isSubmitted ? validateBookForm(values) : {}
+  const canSubmit = isValidBookForm(values)
 
   const handleSubmit = () => {
-    setIsSubmitted(true)
-    if (!isValidBookForm(values)) return
+    if (!canSubmit) return
 
     createBook.mutate(
       { book: toCreateBookInput(values) },
@@ -97,10 +94,9 @@ export function BookNewPageView() {
       <div className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden">
         <div className="flex shrink-0 items-center justify-center px-4 py-3.5">
           <div className="h-[120px] w-20 shrink-0 overflow-hidden rounded-[2px] border border-border-book bg-bg-surface shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]">
-            <p className="flex size-full items-center justify-center px-1 text-center text-body-14md text-text-secondary">
-              책 이미지를
-              <br />
-              등록해주세요
+            <p className="flex size-full items-center justify-center gap-0.5 px-1 text-center text-body-14md text-text-secondary">
+              <span>이미지</span>
+              <span className="text-text-primary">*</span>
             </p>
           </div>
         </div>
@@ -115,7 +111,6 @@ export function BookNewPageView() {
               inputMode={numeric ? 'numeric' : undefined}
               maxLength={numeric ? MAX_PAGE_DIGITS : undefined}
               value={values[field]}
-              errorMessage={errors[field]}
               onChange={(event) => {
                 const next = numeric
                   ? event.target.value.replace(/[^0-9]/g, '').slice(0, MAX_PAGE_DIGITS)
@@ -128,7 +123,12 @@ export function BookNewPageView() {
       </div>
 
       <div className="mt-auto flex shrink-0 px-4 pt-4 pb-safe">
-        <Button className="h-[54px] flex-1" loading={createBook.isPending} onClick={handleSubmit}>
+        <Button
+          className="h-[54px] flex-1"
+          disabled={!canSubmit}
+          loading={createBook.isPending}
+          onClick={handleSubmit}
+        >
           저장하기
         </Button>
       </div>
