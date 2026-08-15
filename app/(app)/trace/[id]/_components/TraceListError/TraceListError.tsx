@@ -1,6 +1,12 @@
 import { Button } from '@/app/_global/_components/Button/Button'
 import { cn } from '@/app/_global/_services/cn.service'
 
+import {
+  TRACE_LIST_ERROR_GUIDE,
+  TRACE_LIST_ERROR_MESSAGE,
+  TRACE_LIST_ERROR_RETRY_LABEL,
+} from '../../_data/traceCard.constant'
+
 type TraceListErrorProps = {
   onRetry: () => void
   className?: string
@@ -11,15 +17,17 @@ export function TraceListError({ onRetry, className }: TraceListErrorProps) {
   return (
     <section
       aria-label="흔적 목록 오류"
+      // py-19: 목록이 있어야 할 자리를 비워두지 않고 안내를 화면 가운데쯤으로 띄운다
       className={cn('flex flex-col items-center gap-6 px-4 py-19', className)}
     >
       <p className="text-center font-pretendard text-title-18md text-text-inverse">
-        앗! 흔적들이 도착하지 않았어요!
+        {TRACE_LIST_ERROR_MESSAGE}
         <br />
-        다시 시도해주세요.
+        {TRACE_LIST_ERROR_GUIDE}
       </p>
+      {/* 54×167은 시안의 고정 치수 — 문구 길이에 따라 버튼이 늘었다 줄었다 하지 않게 못 박는다 */}
       <Button className="h-[54px] w-[167px]" onClick={onRetry}>
-        다시 시도하기
+        {TRACE_LIST_ERROR_RETRY_LABEL}
       </Button>
     </section>
   )

@@ -1,16 +1,12 @@
-import { useSyncExternalStore } from 'react'
-
 import CommentIcon from '@/app/_global/_components/Icon/assets/comment.svg'
-import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
-import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
-import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { useIsHydrated } from '@/app/_global/_hooks/useIsHydrated'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatCount, formatTraceDate } from '../../_services/traceFormat.service'
 import type { Trace } from '../../_types/readerHighlights.type'
 import { ModerationMenu } from '../ModerationMenu/ModerationMenu'
+import { TraceLikeButton } from '../TraceLikeButton/TraceLikeButton'
 
 type TraceItemProps = {
   trace: Trace
@@ -27,9 +23,6 @@ type TraceItemProps = {
   isCommentsOpen?: boolean
 }
 
-const noop = () => undefined
-const emptySubscribe = () => noop
-
 export function TraceItem({
   trace,
   isContentClamped = true,
@@ -37,15 +30,8 @@ export function TraceItem({
   onOpenComments,
   isCommentsOpen,
 }: TraceItemProps) {
-  const runWithLogin = useLoginGate()
-  const { isLiked, likeCount, toggle } = useOpinionLike(trace.opinionId, trace.likeCount)
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
-  const isHydrated = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false,
-  )
-  const dateLabel = isHydrated ? formatTraceDate(trace.createdAt) : trace.createdAt.slice(0, 10)
+  const isHydrated = useIsHydrated()
 
   return (
     <article className="flex flex-col gap-3 py-4">
@@ -83,24 +69,11 @@ export function TraceItem({
         </p>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-body-14rg text-text-inverse/25">{dateLabel}</span>
+        <span className="text-body-14rg text-text-inverse/25">
+          {formatTraceDate(trace.createdAt, { isHydrated })}
+        </span>
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            aria-label="좋아요"
-            aria-pressed={isLiked}
-            onClick={() => {
-              runWithLogin(toggle, LOGIN_GATE_MESSAGE.like)
-            }}
-            className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
-          >
-            <LikeIcon
-              width={20}
-              height={20}
-              className={isLiked ? 'text-icon-accent' : 'text-icon-active'}
-            />
-            {formatCount(likeCount)}
-          </button>
+          <TraceLikeButton opinionId={trace.opinionId} likeCount={trace.likeCount} />
           {onOpenComments ? (
             <button
               type="button"
