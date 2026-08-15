@@ -15,6 +15,7 @@ type SettingItem = { label: string; path?: string }
 
 const myRecords: SettingItem[] = [
   { label: '내가 남긴 의견', path: '/my/traces' },
+  { label: '좋아요 누른 흔적', path: '/my/likes' },
   // 화면이 아직 없는 기능 — 서재가 생기면 path를 연결한다
   { label: '내 서재' },
 ]
