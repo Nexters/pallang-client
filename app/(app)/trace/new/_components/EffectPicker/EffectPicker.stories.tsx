@@ -28,3 +28,8 @@ export const Default: Story = {}
 export const AllDisabled: Story = {
   args: { disabled: true },
 }
+
+/** 형광펜을 고른 상태. 활성 스타일(흰 배경 + 진한 글자)로 표시한다. */
+export const Selected: Story = {
+  args: { selectedKey: 'highlight' },
+}

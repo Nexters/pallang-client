@@ -15,18 +15,28 @@ function offsetFromPoint(x: number, y: number): number | null {
  * 인용문 위를 끌어 범위를 고른다. 고른 범위는 호출부가 들고 있다 —
  * 손을 뗀 뒤에도 어디에 효과가 들어갈지 보이려면 선택이 남아 있어야 한다.
  * scrollRef를 넘기면 드래그가 노트 가장자리에 닿을 때 자동 스크롤해 넘친 글자까지 고를 수 있다.
+ * onCommit은 손을 뗀 시점에 마지막 범위를 넘긴다 — 효과 적용은 여기서 이뤄진다.
  */
-export function useTextRangeSelection(
-  onChange: (range: TextRange) => void,
-  scrollRef?: RefObject<HTMLElement | null>,
-) {
+export function useTextRangeSelection(params: {
+  onChange: (range: TextRange) => void
+  /** 손을 뗀 시점. 이때 효과를 적용한다. */
+  onCommit?: (range: TextRange) => void
+  scrollRef?: RefObject<HTMLElement | null>
+}) {
+  const { onChange, onCommit, scrollRef } = params
   const anchorRef = useRef<number | null>(null)
   const pointerRef = useRef<{ x: number; y: number } | null>(null)
   const rafRef = useRef<number | null>(null)
+  const lastRangeRef = useRef<TextRange | null>(null)
   // rAF 루프가 매 렌더 새로 만들어지는 onChange를 안정적으로 읽게 한다
   const onChangeRef = useRef(onChange)
   useEffect(() => {
     onChangeRef.current = onChange
+  })
+  // onPointerUp도 매 렌더 새로 만들어지는 콜백이므로 같은 방식으로 최신값을 잡는다
+  const onCommitRef = useRef(onCommit)
+  useEffect(() => {
+    onCommitRef.current = onCommit
   })
 
   const stopAutoScroll = () => {
@@ -56,7 +66,11 @@ export function useTextRangeSelection(
     scrollByDelta(element, delta)
     // 스크롤을 반영한 뒤 포인터 밑 글자를 다시 읽어 선택을 넓힌다
     const offset = offsetFromPoint(pointer.x, pointer.y)
-    if (offset !== null) onChangeRef.current(normalizeRange(anchor, offset))
+    if (offset !== null) {
+      const nextRange = normalizeRange(anchor, offset)
+      lastRangeRef.current = nextRange
+      onChangeRef.current(nextRange)
+    }
     rafRef.current = requestAnimationFrame(tick)
   }
 
@@ -75,22 +89,40 @@ export function useTextRangeSelection(
     event.currentTarget.setPointerCapture(event.pointerId)
     anchorRef.current = offset
     pointerRef.current = { x: event.clientX, y: event.clientY }
-    onChange(normalizeRange(offset, offset))
+    const nextRange = normalizeRange(offset, offset)
+    lastRangeRef.current = nextRange
+    onChange(nextRange)
   }
 
   const onPointerMove = (event: PointerEvent<HTMLElement>) => {
     if (anchorRef.current === null) return
     pointerRef.current = { x: event.clientX, y: event.clientY }
     const offset = offsetFromPoint(event.clientX, event.clientY)
-    if (offset !== null) onChange(normalizeRange(anchorRef.current, offset))
+    if (offset !== null) {
+      const nextRange = normalizeRange(anchorRef.current, offset)
+      lastRangeRef.current = nextRange
+      onChange(nextRange)
+    }
     maybeStartAutoScroll()
   }
 
+  // 손을 뗀 시점에 마지막 범위를 커밋한다 — 효과 적용은 호출부의 onCommit이 담당한다
   const onPointerUp = () => {
+    const committed = anchorRef.current !== null ? lastRangeRef.current : null
     anchorRef.current = null
     pointerRef.current = null
+    lastRangeRef.current = null
+    stopAutoScroll()
+    if (committed) onCommitRef.current?.(committed)
+  }
+
+  // 취소는 커밋하지 않는다 — 제스처가 중간에 끊긴 것이므로 아무 효과도 들어가면 안 된다
+  const onPointerCancel = () => {
+    anchorRef.current = null
+    pointerRef.current = null
+    lastRangeRef.current = null
     stopAutoScroll()
   }
 
-  return { handlers: { onPointerCancel: onPointerUp, onPointerDown, onPointerMove, onPointerUp } }
+  return { handlers: { onPointerCancel, onPointerDown, onPointerMove, onPointerUp } }
 }
