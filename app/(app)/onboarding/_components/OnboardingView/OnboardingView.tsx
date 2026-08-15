@@ -88,8 +88,8 @@ export function OnboardingView() {
             priority={index === 0}
             className={cn(
               'absolute inset-0 m-auto object-contain',
-              'transition-[opacity,scale] duration-slow ease-standard',
-              index === stepIndex ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
+              'transition-opacity duration-slow ease-standard',
+              index === stepIndex ? 'opacity-100' : 'opacity-0',
             )}
           />
         ))}
