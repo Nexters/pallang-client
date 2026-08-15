@@ -337,7 +337,7 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
       <div className="flex flex-col gap-1 px-4">
         <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
         <Link
-          href="/book/internal"
+          href="/book/search"
           className="flex items-center gap-0.5 self-start text-title-16sb text-text-primary opacity-60"
         >
           <span>{totalCount}권 모두 보기</span>

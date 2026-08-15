@@ -6,14 +6,15 @@ import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.
 import { cn } from '@/app/_global/_services/cn.service'
 
 // Figma 2248:3301 — 정렬 필터(최신순/인기순) Select.
-// 이미지 위에 얹히는 컴팩트 셀렉트라 트리거는 배경 없이 blur만 두고 흰 텍스트를 쓴다.
+// 컴팩트 셀렉트라 트리거는 배경 없이 blur만 둔다. 어두운 이미지 위에서는 dark, 흰 목록 위에서는 light를 쓴다.
 // Dialog.tsx와 같은 base-ui 서브패스 import + `render` prop 규약을 따른다.
 
 // 트리거·옵션 타이포는 Figma 스펙(14px / lh 1.3 / ls -4% / Regular)이 --text-body-14rg와 정확히 일치한다.
 // 팝업 배경 #383838도 --color-bg-overlay와 일치해 토큰을 그대로 쓴다.
-const TEXT_CLASS = 'font-pretendard text-body-14rg text-text-inverse'
+const BASE_TEXT_CLASS = 'font-pretendard text-body-14rg'
 
 type SelectOption = { label: string; value: string }
+type SelectVariant = 'dark' | 'light'
 
 type SelectProps = {
   /** 트리거의 접근성 이름. 시각적 라벨이 없는 컴팩트 셀렉트라 필수다. */
@@ -25,6 +26,7 @@ type SelectProps = {
   defaultValue?: string
   onValueChange?: (value: string) => void
   disabled?: boolean
+  variant?: SelectVariant
   className?: string
 }
 
@@ -35,8 +37,11 @@ export function Select({
   defaultValue,
   onValueChange,
   disabled,
+  variant = 'dark',
   className,
 }: SelectProps) {
+  const isLight = variant === 'light'
+
   return (
     <BaseSelect.Root<string>
       items={options}
@@ -52,12 +57,13 @@ export function Select({
         aria-label={label}
         data-slot="select-trigger"
         className={cn(
-          'flex h-8 w-fit cursor-pointer items-center gap-0.5 px-2 py-1',
-          // 배경 없이 뒤 이미지만 살짝 흐리게 눌러 텍스트 가독성을 확보한다(Figma: fill 없음 + blur 1)
+          'flex h-8 w-fit cursor-pointer items-center gap-0.5 rounded-full px-2 py-1',
+          // 배경 없이 뒤를 살짝 흐리게 눌러 텍스트 가독성을 확보한다(Figma: fill 없음 + blur 1)
           'backdrop-blur-[1px] outline-none disabled:cursor-not-allowed disabled:opacity-50',
-          // 열리면 아래 팝업과 이어지는 각진 다크 블록의 첫 행이 된다(Figma 열림 상태)
-          'data-popup-open:bg-bg-overlay',
-          TEXT_CLASS,
+          isLight
+            ? 'text-text-primary data-popup-open:bg-bg-default'
+            : 'text-text-inverse data-popup-open:rounded-none data-popup-open:bg-bg-overlay',
+          BASE_TEXT_CLASS,
           className,
         )}
       >
@@ -67,7 +73,11 @@ export function Select({
           data-slot="select-icon"
           className="flex size-5 shrink-0 items-center justify-center transition-transform duration-fast ease-standard data-popup-open:rotate-180"
         >
-          <ChevronDownIcon width={20} height={20} className="size-5 text-text-inverse" />
+          <ChevronDownIcon
+            width={20}
+            height={20}
+            className={cn('size-5', isLight ? 'text-icon-primary' : 'text-text-inverse')}
+          />
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
 
@@ -84,11 +94,13 @@ export function Select({
           <BaseSelect.Popup
             data-slot="select-popup"
             className={cn(
-              // Figma 열림 상태의 컨테이너는 radius 없는 각진 직사각형이다
-              'min-w-(--anchor-width) bg-bg-overlay outline-none',
+              'min-w-(--anchor-width) outline-none',
               'transition-opacity duration-fast ease-enter data-ending-style:ease-exit',
               'data-ending-style:opacity-0 data-starting-style:opacity-0',
-              TEXT_CLASS,
+              isLight
+                ? 'rounded-2xl bg-bg-default py-1 text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.16)]'
+                : 'bg-bg-overlay text-text-inverse',
+              BASE_TEXT_CLASS,
             )}
           >
             {options.map((option) => (

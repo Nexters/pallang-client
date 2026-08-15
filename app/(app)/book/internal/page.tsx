@@ -1,17 +1,25 @@
-import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 
-import { BookInternalPageSkeleton } from './_components/BookInternalPageSkeleton/BookInternalPageSkeleton'
-import { BookInternalSearchFocus } from './_components/BookInternalSearchFocus/BookInternalSearchFocus'
-
-type BookInternalPageProps = {
+type BookInternalRedirectPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default function BookInternalPage({ searchParams }: BookInternalPageProps) {
-  // searchParams는 요청 시점 값이라 Suspense 안쪽에서 읽는다 — 셸은 프리렌더된다
-  return (
-    <Suspense fallback={<BookInternalPageSkeleton />}>
-      <BookInternalSearchFocus searchParams={searchParams} />
-    </Suspense>
-  )
+export default async function BookInternalRedirectPage({
+  searchParams,
+}: BookInternalRedirectPageProps) {
+  const params = new URLSearchParams()
+  const entries = await searchParams
+
+  Object.entries(entries).forEach(([key, value]) => {
+    if (typeof value === 'string') {
+      params.set(key, value)
+      return
+    }
+    value?.forEach((item) => {
+      params.append(key, item)
+    })
+  })
+
+  const queryString = params.toString()
+  redirect(`/book/search${queryString ? `?${queryString}` : ''}`)
 }
