@@ -26,7 +26,6 @@ export function CommentBar({
   const [content, setContent] = useState('')
   const [isSending, setIsSending] = useState(false)
   const isEmpty = content.trim().length === 0
-  const isSheet = variant === 'sheet'
 
   return (
     <form
@@ -46,14 +45,16 @@ export function CommentBar({
           setContent((current) => (current.trim() === trimmed ? '' : current))
         })
       }}
-      /* floating: 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
+      /* 색은 두 자리에서 같다(디자인 202:4910) — 바는 bg-black, 그 위 입력은 한 단 밝은 bg-dark.
+         floating: 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
          fixed는 셸 패딩을 받지 않으므로 하단 인셋을 직접 소비하고, 셸과 같은 최대 폭으로 가운데 정렬한다.
-         sheet: 시트 패널이 pb-safe를 이미 소비하므로 흐름 안에서 상단 여백만 가진다 */
+         sheet: 시트 패널이 pb-0으로 물러나 하단 인셋을 이 바가 대신 소비한다 — 바가 인셋까지
+         칠하지 않으면 검은 바 아래로 시트 바닥(bg-dark)이 띠로 드러난다 */
       className={cn(
-        'border-t border-border-book px-4 pt-4',
-        isSheet
-          ? 'shrink-0 bg-bg-dark'
-          : 'fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-132.5 bg-bg-black pb-safe',
+        'border-t border-border-book bg-bg-black px-4 pt-4 pb-safe',
+        variant === 'sheet'
+          ? 'shrink-0'
+          : 'fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-132.5',
       )}
     >
       <div className="flex items-center gap-2">
@@ -65,11 +66,7 @@ export function CommentBar({
             setContent(event.target.value)
           }}
           placeholder={placeholder}
-          className={cn(
-            'h-9 min-w-0 flex-1 rounded-full px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50',
-            // 놓인 면과 한 단계 차이 나는 색을 골라 입력 영역이 묻히지 않게 한다
-            isSheet ? 'bg-bg-black' : 'bg-bg-dark',
-          )}
+          className="h-9 min-w-0 flex-1 rounded-full bg-bg-dark px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
         />
         {/* 전송 중 표시는 Button의 loading에 맡긴다(스피너 + aria-busy + 클릭 차단).
             비활성 색은 이 바의 기존 처리를 유지한다 — Button 기본값(회색)은 아이콘까지 묻힌다 */}

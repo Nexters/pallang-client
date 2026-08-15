@@ -191,7 +191,14 @@ function scrollSentinelsIntoView() {
 
 // 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 헤더 쪽 선택기가 그려질 때까지 기다린다.
 // 반환값은 페이지가 그리는 첫 요소인 스크롤 컨테이너다.
-async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' | 'opinions') {
+/** 상세 오버레이로 들어가는 유일한 길인 딥링크 좌표(쪽 → 대목 → 흔적) */
+type DeepLinkTarget = { pageNumber: number; passageId: number; opinionId: number }
+
+async function renderPage(
+  pages = [7, 9, 12, 23, 34, 123],
+  failing?: 'passages' | 'opinions',
+  target?: DeepLinkTarget,
+) {
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
   vi.stubGlobal(
     'fetch',
@@ -241,13 +248,14 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' 
     <QueryClientProvider client={client}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <TraceCollapseView bookId={BOOK_ID} />
+          <TraceCollapseView bookId={BOOK_ID} target={target} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,
   )
-  // 쪽이 하나뿐이면 선택기 대신 라벨만 있는 알약이 서므로, 두 경우 모두 잡히는 첫 쪽 표시를 기다린다
-  await screen.findByText(`${String(pages[0])}p`)
+  // 쪽이 하나뿐이면 선택기 대신 라벨만 있는 알약이 서므로, 두 경우 모두 잡히는 현재 쪽 표시를
+  // 기다린다. 딥링크로 들어오면 첫 쪽이 아니라 지목된 쪽에서 시작한다.
+  await screen.findByText(`${String(target?.pageNumber ?? pages[0])}p`)
   return container.firstElementChild as HTMLElement
 }
 
@@ -506,15 +514,16 @@ describe('ReaderHighlightsPage', () => {
     expect(trace.closest('ul')?.className).not.toContain('blur')
   })
 
-  // 가림막을 우회해 스포일러 원문을 보던 경로 — 목록이 inert라 흔적을 열 수 없어야 한다
-  it('가림막 해제 전에는 흔적을 눌러 상세 오버레이를 열 수 없다', async () => {
-    await renderPage()
+  // 가림막을 우회해 스포일러 원문을 보던 경로 — 딥링크로 지목돼도 상세가 열려선 안 된다
+  it('가림막 해제 전에는 딥링크로 지목된 흔적도 상세로 열리지 않는다', async () => {
+    await renderPage(undefined, undefined, { pageNumber: 9, passageId: 91, opinionId: 4 })
 
-    await selectPage(9)
-    const trace = await screen.findByText('스포일러 대목의 흔적')
-
-    fireEvent.click(trace)
+    await screen.findByText('스포일러가 포함되어있어요!')
     expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+
+    // 해제하면 지목된 흔적이 그제야 상세로 올라온다
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+    expect(await screen.findByRole('dialog', { name: '의견 상세' })).toBeInTheDocument()
   })
 
   it('스포일러 대목이 섞인 페이지에서도 일반 대목을 보는 동안에는 가림막이 없다', async () => {
@@ -584,11 +593,10 @@ describe('ReaderHighlightsPage', () => {
     ).toBe(true)
   })
 
-  it('의견 클릭 시 상세 오버레이가 열리고 X로 닫힌다', async () => {
-    await renderPage()
+  it('딥링크로 지목된 의견은 상세 오버레이로 열리고 X로 닫힌다', async () => {
+    await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 2 })
 
-    fireEvent.click(await screen.findByText('첫 대목의 두 번째 흔적'))
-    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
+    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
     expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
 
     fireEvent.click(within(dialog).getByLabelText('닫기'))
@@ -599,10 +607,9 @@ describe('ReaderHighlightsPage', () => {
   })
 
   it('상세 오버레이에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록 스크롤로만 한다', async () => {
-    await renderPage()
+    await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 1 })
 
-    fireEvent.click(await screen.findByText('첫 대목의 첫 번째 흔적'))
-    const dialog = screen.getByRole('dialog', { name: '의견 상세' })
+    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
 
     expect(within(dialog).queryByLabelText('이전 의견')).not.toBeInTheDocument()
     expect(within(dialog).queryByLabelText('다음 의견')).not.toBeInTheDocument()
@@ -673,11 +680,14 @@ describe('ReaderHighlightsPage', () => {
   })
 
   it('상세 오버레이 안의 스크롤은 접힘 전환을 일으키지 않는다', async () => {
-    const scroller = await renderPage()
+    const scroller = await renderPage(undefined, undefined, {
+      pageNumber: 7,
+      passageId: 71,
+      opinionId: 1,
+    })
 
-    fireEvent.click(await screen.findByText('첫 대목의 첫 번째 흔적'))
     // 오버레이는 fixed지만 스크롤러의 자손이라 wheel이 스크롤러까지 버블링된다
-    fireEvent.wheel(screen.getByRole('dialog', { name: '의견 상세' }), { deltaY: 120 })
+    fireEvent.wheel(await screen.findByRole('dialog', { name: '의견 상세' }), { deltaY: 120 })
     await waitForCollapseAnimation()
 
     // 전환이 아예 일어나지 않아야 한다 — --collapse는 전환이 시작돼야 세팅된다

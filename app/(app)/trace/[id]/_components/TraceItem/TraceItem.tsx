@@ -20,6 +20,11 @@ type TraceItemProps = {
   onSelect?: () => void
   /** 답글 진입 동작. 없으면(이미 답글 화면) 개수는 버튼이 아니라 표시로만 남는다 */
   onOpenComments?: () => void
+  /**
+   * 댓글이 이 카드 아래로 펼쳐져 있는지. 흔적 목록처럼 제자리에서 여닫는 자리에서만 넘긴다 —
+   * 시트로 넘어가는 자리는 펼침이 아니라 이동이라 aria-expanded를 달면 거짓말이 된다
+   */
+  isCommentsOpen?: boolean
 }
 
 const noop = () => undefined
@@ -30,6 +35,7 @@ export function TraceItem({
   isContentClamped = true,
   onSelect,
   onOpenComments,
+  isCommentsOpen,
 }: TraceItemProps) {
   const runWithLogin = useLoginGate()
   const { isLiked, likeCount, toggle } = useOpinionLike(trace.opinionId, trace.likeCount)
@@ -44,7 +50,8 @@ export function TraceItem({
   return (
     <article className="flex flex-col gap-3 py-4">
       <div className="flex items-center justify-between">
-        <button type="button" className="flex items-center gap-0.5 opacity-40">
+        {/* 닉네임 줄과 날짜의 밝기 차이가 시안(202:4568)의 위계다 — 닉네임 50%, 날짜 25% */}
+        <button type="button" className="flex items-center gap-0.5 opacity-50">
           <span className="text-body-14sb text-text-inverse">{trace.nickname}</span>
           <NextIcon width={16} height={16} className="text-icon-active" />
         </button>
@@ -76,7 +83,7 @@ export function TraceItem({
         </p>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-body-14rg text-text-inverse opacity-50">{dateLabel}</span>
+        <span className="text-body-14rg text-text-inverse/25">{dateLabel}</span>
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -99,6 +106,7 @@ export function TraceItem({
               type="button"
               onClick={onOpenComments}
               aria-label="댓글 보기"
+              aria-expanded={isCommentsOpen}
               className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
             >
               <CommentIcon width={20} height={20} className="text-icon-active" />
