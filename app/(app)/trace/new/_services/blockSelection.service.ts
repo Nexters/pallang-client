@@ -73,7 +73,7 @@ export function pickBlockAt(blocks: BlockBox[], point: Point, tolerance: number)
 /**
  * 두 선택이 같은지 본다. 양쪽 모두 읽기 순서로 정렬돼 있어 자리끼리 비교하면 된다.
  *
- * toggleIndices는 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
+ * applySweep은 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
  * 탭하기만 해도 선택이 바뀐 것으로 취급돼, 손으로 고친 발췌문이 되돌릴 수 없이 날아간다.
  */
 export function sameSelection(a: number[], b: number[]): boolean {
@@ -81,17 +81,20 @@ export function sameSelection(a: number[], b: number[]): boolean {
 }
 
 /**
- * 제스처가 시작될 때의 선택에서 지나간 블록을 각각 뒤집는다 — 고른 건 풀리고 안 고른 건 켜진다.
+ * 제스처가 시작될 때의 선택(base)에 지나간 블록(swept)을 적용한다.
  *
- * 매번 시작 시점 선택(base)에 대해 지금 사각형 안의 것을 뒤집으므로, 끌다가 되돌아와 사각형에서
- * 벗어난 블록은 원래대로 돌아간다. 손을 뗄 때 사각형 안에 있는 것만 뒤집힌 채 남는다.
- * 결과는 읽기 순서를 유지한다.
+ * 지나간 것 중 고른 게 하나라도 있으면 **해제만** 한다 — 고른 건 풀리고 안 고른 건 그대로.
+ * 하나도 없을 때만 전부 켠다. 고른 문장을 지우려고 그 앞 안 고른 어절에서부터 훑는 게 자연스러운
+ * 손짓인데, 각자 뒤집으면 앞의 안 고른 어절이 켜져 깨끗하게 지워지지 않는다. 대가는 고른 문장의
+ * 끝 어절 위에서 시작해 이어 붙이면 그 끝 어절이 풀린다는 것 — 끝 어절 바로 뒤에서 시작하면 된다.
+ *
+ * 매번 base에 대해 지금 사각형 안의 것을 적용하므로, 끌다가 되돌아와 사각형에서 벗어난 블록은
+ * 원래대로 돌아간다. 결과는 읽기 순서를 유지한다.
  */
-export function toggleIndices(base: number[], swept: number[]): number[] {
+export function applySweep(base: number[], swept: number[]): number[] {
   const baseSet = new Set(base)
   const sweptSet = new Set(swept)
-  return [
-    ...base.filter((index) => !sweptSet.has(index)),
-    ...swept.filter((index) => !baseSet.has(index)),
-  ].sort((a, b) => a - b)
+  const touchesPicked = swept.some((index) => baseSet.has(index))
+  if (touchesPicked) return base.filter((index) => !sweptSet.has(index))
+  return [...base, ...swept].sort((a, b) => a - b)
 }

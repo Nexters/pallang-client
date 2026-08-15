@@ -6,11 +6,11 @@ import { useRef, useState } from 'react'
 import { TAP_SLOP, TAP_TOLERANCE } from '../_data/gesture.constant'
 import type { BlockBox, Point, Rect } from '../_services/blockSelection.service'
 import {
+  applySweep,
   pickBlockAt,
   rectFromPoints,
   sameSelection,
   selectIndicesInRect,
-  toggleIndices,
 } from '../_services/blockSelection.service'
 
 /**
@@ -25,13 +25,13 @@ function toLocalPoint(surface: HTMLElement, event: ReactPointerEvent, scale: num
 }
 
 /**
- * 사진 위를 끌거나 눌러 OCR 블록을 고른다. 한 제스처가 선택을 교체하지 않고 **뒤집는다** —
- * 지나간 어절은 각자 고른 건 풀리고 안 고른 건 켜진다. 덜 인식된 부분은 이어서 더 고르고,
- * 잘못 잡힌 블록은 다시 훑거나 눌러 뺀다. 모드도 방향도 없다.
+ * 사진 위를 끌거나 눌러 OCR 블록을 고른다. 한 제스처가 선택을 교체하지 않는다 —
+ * 덜 인식된 부분은 이어서 더 고르고, 잘못 잡힌 블록은 다시 훑거나 눌러 뺀다.
  *
- * 탭은 어절 하나를 뒤집고, 슬롭을 넘어 끌면 사각형 안의 어절 전부를 뒤집는다.
- * 뒤집기는 매번 시작 시점 선택에 대해 계산하므로, 끌다가 사각형에서 벗어난 어절은 원래대로 돌아온다 —
- * 손을 뗄 때 사각형 안에 있는 것만 뒤집힌 채 남는다.
+ * 탭은 어절 하나를 뒤집는다. 슬롭을 넘어 끌면 사각형 안의 어절에 **해제 우선**으로 적용한다 —
+ * 고른 게 하나라도 있으면 그것들만 풀고, 하나도 없으면 전부 켠다. 어디서 시작하든 고른 문장을
+ * 지나가면 그 문장만 꺼지고 지나온 안 고른 어절은 켜지지 않는다.
+ * 매번 시작 시점 선택에 대해 계산하므로, 끌다가 사각형에서 벗어난 어절은 원래대로 돌아온다.
  *
  * @param surfaceRef 블록 좌표계의 원점이 되는 요소(사진). 핸들러는 그보다 넓은 스테이지에 걸어도 된다.
  */
@@ -58,7 +58,7 @@ export function useBlockDragSelection(
       ? [pickBlockAt(blocks, gesture.origin, tolerance)].filter((i): i is number => i !== null)
       : selectIndicesInRect(blocks, rect)
     setMarquee(isTap ? null : rect)
-    const next = toggleIndices(gesture.base, swept)
+    const next = applySweep(gesture.base, swept)
     // 고른 게 그대로면 알리지 않는다 — 여백을 탭했을 뿐인데 선택이 바뀐 것으로 읽히면
     // 손으로 고친 발췌문이 새 선택으로 덮여 사라진다
     if (!sameSelection(selected, next)) onChange(next)

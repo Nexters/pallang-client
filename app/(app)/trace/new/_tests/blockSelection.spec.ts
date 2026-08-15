@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  applySweep,
   type BlockBox,
   pickBlockAt,
   rectFromPoints,
   sameSelection,
   selectIndicesInRect,
-  toggleIndices,
 } from '../_services/blockSelection.service'
 
 const blocks: BlockBox[] = [
@@ -111,34 +111,39 @@ describe('sameSelection', () => {
     expect(sameSelection([0, 1], [0, 2])).toBe(false)
   })
 
-  it('toggleIndices가 만든 새 배열이라도 내용이 같으면 같은 선택이다', () => {
+  it('applySweep이 만든 새 배열이라도 내용이 같으면 같은 선택이다', () => {
     // 빈 자리를 탭하면 지나간 블록이 없어 내용이 그대로인 새 배열이 나온다.
     // 이걸 변경으로 읽으면 손으로 고친 발췌문이 날아간다.
     const selected = [0, 1]
-    expect(sameSelection(selected, toggleIndices(selected, []))).toBe(true)
+    expect(sameSelection(selected, applySweep(selected, []))).toBe(true)
   })
 })
 
-describe('toggleIndices', () => {
-  it('고르지 않은 블록을 지나가면 켜지고 읽기 순서를 유지한다', () => {
-    expect(toggleIndices([2], [0, 1])).toEqual([0, 1, 2])
+describe('applySweep', () => {
+  it('고르지 않은 블록만 지나가면 켜지고 읽기 순서를 유지한다', () => {
+    expect(applySweep([2], [0, 1])).toEqual([0, 1, 2])
   })
 
   it('고른 블록을 지나가면 풀린다', () => {
-    expect(toggleIndices([0, 1, 2], [1])).toEqual([0, 2])
+    expect(applySweep([0, 1, 2], [1])).toEqual([0, 2])
   })
 
-  // 지나간 블록은 각자 뒤집힌다 — 고른 건 풀리고 안 고른 건 켜진다
-  it('섞인 영역을 지나가면 각자 뒤집힌다', () => {
-    expect(toggleIndices([0, 2], [0, 1, 2, 3])).toEqual([1, 3])
+  // 고른 문장을 지우려고 그 앞(안 고른 어절)에서부터 훑는 게 자연스러운 손짓이다.
+  // 각자 뒤집으면 앞의 안 고른 어절이 켜져 깨끗하게 지워지지 않는다 — 고른 게 하나라도 있으면 해제만 한다.
+  it('섞인 영역을 지나가면 고른 것만 풀리고 안 고른 것은 켜지지 않는다', () => {
+    expect(applySweep([2, 3], [0, 1, 2, 3])).toEqual([])
+  })
+
+  it('고른 게 하나만 끼어 있어도 해제만 한다', () => {
+    expect(applySweep([3], [0, 1, 2, 3])).toEqual([])
   })
 
   it('아무것도 지나가지 않으면 그대로다', () => {
-    expect(toggleIndices([0, 1], [])).toEqual([0, 1])
+    expect(applySweep([0, 1], [])).toEqual([0, 1])
   })
 
-  // 같은 영역을 두 번 훑으면 원래대로 — 뒤집기의 정의다
-  it('같은 블록을 두 번 뒤집으면 원래대로 돌아온다', () => {
-    expect(toggleIndices(toggleIndices([0], [0, 1]), [0, 1])).toEqual([0])
+  it('블록 하나(탭)는 뒤집는다', () => {
+    expect(applySweep([], [0])).toEqual([0])
+    expect(applySweep([0], [0])).toEqual([])
   })
 })
