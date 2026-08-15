@@ -30,7 +30,7 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
     case 'setQuotedText':
       return { ...state, quotedText: action.quotedText, decorations: [] }
     case 'clearQuote':
-      // BookPicker는 book이 있고 quotedText가 비어 있을 때 방식 선택 시트를 연다.
+      // 대목을 다시 고르러 첫 화면(TraceSourceView)으로 돌아갈 때 쓴다.
       // 페이지·효과·병합 대상은 모두 이 대목에 매인 값이라 함께 비운다.
       return {
         ...state,

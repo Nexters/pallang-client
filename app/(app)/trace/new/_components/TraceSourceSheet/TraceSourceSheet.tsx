@@ -6,6 +6,8 @@ import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 
+import type { SelectedBook } from '../../_types/traceDraft.type'
+
 type SourceOptionProps = {
   description: string
   icon: FC<SVGProps<SVGSVGElement>>
@@ -40,6 +42,7 @@ function SourceOption({ description, icon: Icon, onClick, title }: SourceOptionP
 
 type TraceSourceSheetProps = {
   open: boolean
+  book?: SelectedBook | null
   onClose: () => void
   onSelectPhoto: () => void
   onSelectManual: () => void
@@ -47,12 +50,36 @@ type TraceSourceSheetProps = {
 
 export function TraceSourceSheet({
   open,
+  book,
   onClose,
   onSelectPhoto,
   onSelectManual,
 }: TraceSourceSheetProps) {
   return (
-    <BottomSheet open={open} title="새로운 흔적을 어떻게 남길까요?" onClose={onClose}>
+    <BottomSheet open={open} title="새로운 기록을 어떻게 남길까요?" onClose={onClose}>
+      {book && (
+        <div className="flex flex-col gap-2">
+          <span className="w-fit rounded-lg bg-bg-surface px-2 py-1 text-body-12md text-text-tertiary">
+            지금 기록을 남기는 책
+          </span>
+          <div className="flex items-center gap-3 rounded-lg bg-bg-surface p-3">
+            {book.coverImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다
+              <img
+                src={book.coverImageUrl}
+                alt=""
+                className="h-12 w-9 rounded-[2px] object-cover"
+              />
+            ) : (
+              <span className="h-12 w-9 rounded-[2px] bg-bg-gray" />
+            )}
+            <span className="flex min-w-px flex-col">
+              <span className="truncate text-body-14md text-text-secondary">{book.title}</span>
+              <span className="truncate text-body-12rg text-text-tertiary">{book.author}</span>
+            </span>
+          </div>
+        </div>
+      )}
       <div className="flex items-start gap-2">
         <SourceOption
           title="사진으로 입력"
