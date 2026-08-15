@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
@@ -29,18 +29,18 @@ type FieldSpec = {
 
 const FIELDS: FieldSpec[] = [
   { field: 'title', label: '제목', placeholder: '책 제목을 입력해 주세요.', required: true },
-  { field: 'author', label: '지은이', placeholder: '책 지은이를 입력해 주세요.', required: true },
+  { field: 'author', label: '지은이', placeholder: '지은이를 입력해 주세요.', required: true },
   {
     field: 'publisher',
     label: '출판사',
-    placeholder: '책 출판사를 입력해 주세요.',
+    placeholder: '출판사를 입력해 주세요.',
     required: true,
   },
   {
     field: 'pageCount',
     label: '페이지 수',
     numeric: true,
-    placeholder: '책 페이지를 입력해 주세요.',
+    placeholder: '페이지 수를 입력해주세요.',
     required: true,
   },
   { field: 'isbn', label: 'ISBN', placeholder: 'ISBN을 입력해 주세요.', required: false },
@@ -51,16 +51,41 @@ const MAX_PAGE_DIGITS = 5
 export function BookNewPageView() {
   const router = useRouter()
   const [values, setValues] = useState(emptyBookForm)
+  const [coverImage, setCoverImage] = useState<File | null>(null)
+  const [coverImageUrl, setCoverImageUrl] = useState<null | string>(null)
   const [message, setMessage] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const coverImageUrlRef = useRef<null | string>(null)
   const createBook = useMutation(bookMutations.create())
 
-  const canSubmit = isValidBookForm(values)
+  const canSubmit = isValidBookForm(values) && coverImage !== null
+
+  useEffect(() => {
+    return () => {
+      if (coverImageUrlRef.current) URL.revokeObjectURL(coverImageUrlRef.current)
+    }
+  }, [])
+
+  const handleCoverImageChange = (file: File | null) => {
+    if (coverImageUrlRef.current) URL.revokeObjectURL(coverImageUrlRef.current)
+
+    setCoverImage(file)
+    if (!file) {
+      coverImageUrlRef.current = null
+      setCoverImageUrl(null)
+      return
+    }
+
+    const nextUrl = URL.createObjectURL(file)
+    coverImageUrlRef.current = nextUrl
+    setCoverImageUrl(nextUrl)
+  }
 
   const handleSubmit = () => {
     if (!canSubmit) return
 
     createBook.mutate(
-      { book: toCreateBookInput(values) },
+      { book: toCreateBookInput(values), coverImage },
       {
         onSuccess: (response) => {
           const created = response.data
@@ -68,7 +93,7 @@ export function BookNewPageView() {
             setMessage('책을 등록하지 못했어요. 잠시 후 다시 시도해주세요.')
             return
           }
-          router.replace(`/trace/${String(created.bookId)}`)
+          router.replace('/book/search')
         },
         onError: (error) => {
           if (error instanceof ApiError && error.status === 400) {
@@ -93,12 +118,32 @@ export function BookNewPageView() {
 
       <div className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden">
         <div className="flex shrink-0 items-center justify-center px-4 py-3.5">
-          <div className="h-[120px] w-20 shrink-0 overflow-hidden rounded-[2px] border border-border-book bg-bg-surface shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]">
-            <p className="flex size-full items-center justify-center gap-0.5 px-1 text-center text-body-14md text-text-secondary">
-              <span>이미지</span>
-              <span className="text-text-primary">*</span>
-            </p>
-          </div>
+          <button
+            type="button"
+            aria-label="책 이미지 첨부"
+            className="h-[120px] w-20 shrink-0 cursor-pointer overflow-hidden rounded-[2px] border border-border-book bg-bg-surface shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {coverImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- 사용자가 고른 blob URL은 next/image가 다루지 않는다
+              <img src={coverImageUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="flex size-full items-center justify-center gap-0.5 px-1 text-center text-body-14md text-text-secondary">
+                <span>이미지</span>
+                <span className="font-bold text-interactive-required">*</span>
+              </span>
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={(event) => {
+              handleCoverImageChange(event.target.files?.[0] ?? null)
+              event.currentTarget.value = ''
+            }}
+          />
         </div>
 
         <div className="flex flex-col gap-4 px-4 py-6">

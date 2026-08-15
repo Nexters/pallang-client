@@ -1,7 +1,6 @@
 import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query'
 
 import {
-  createBook,
   getHomeCarouselBooks,
   getPopularBooks,
   getRecentBooks,
@@ -15,6 +14,7 @@ import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentB
 import type { SearchExternalBooksParams } from '../_apis/_generated/models/searchExternalBooksParams'
 import type { SearchInternalBooksParams } from '../_apis/_generated/models/searchInternalBooksParams'
 import { SearchInternalBooksSort } from '../_apis/_generated/models/searchInternalBooksSort'
+import { createBook } from '../_apis/book.api'
 
 export const BOOK_SEARCH_SORT = SearchInternalBooksSort
 export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
