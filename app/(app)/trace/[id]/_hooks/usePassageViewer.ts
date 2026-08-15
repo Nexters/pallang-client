@@ -1,8 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo } from 'react'
 
-import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
-import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
@@ -17,7 +15,6 @@ import { useHighlightViewer } from './useHighlightViewer'
 /** 인용문 무대 흐름 — 대목 페이지 목록 → 페이지 선택 → 페이지별 대목 조회 체인을 소유한다.
     activePassage·isRevealed는 흔적 목록 흐름도 쓰므로 이 훅은 셸(TraceCollapseView)에서 호출한다 */
 export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
-  const runWithLogin = useLoginGate()
   const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
   const pages = useMemo(
     () => pageNumbersQuery.data?.pages.flatMap((page) => page.data?.pageNumbers ?? []) ?? [],
@@ -32,11 +29,7 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
   const bookTitle = bookInfo?.bookTitle ?? ''
   const bookCoverImageUrl = bookInfo?.coverImageUrl ?? null
 
-  // 기본 문구가 범용이라 페이지 탭 게이트는 전용 문구를 명시적으로 넘긴다
   const viewer = useHighlightViewer(
-    (action) => {
-      runWithLogin(action, LOGIN_GATE_MESSAGE.pageView)
-    },
     pages[0],
     // 딥링크는 쪽 번호까지만 실어 올 수 있다 — 그 쪽의 몇 번째 대목인지는 대목이 도착해야 정해진다
     target ? { page: target.pageNumber, cursor: { passageId: target.passageId } } : undefined,

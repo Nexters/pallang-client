@@ -1,5 +1,5 @@
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
-import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
+import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -16,7 +16,6 @@ type TraceListSectionProps = {
   /** 댓글이 펼쳐진 흔적 — 아코디언이라 한 번에 하나만 열린다 */
   openCommentOpinionId: number | null
   onToggleSort: () => void
-  onToggleTraceCreate: () => void
   onSelectTrace: (trace: Trace) => void
   onToggleTraceComment: (trace: Trace) => void
   className?: string
@@ -29,7 +28,6 @@ export function TraceListSection({
   sortType,
   openCommentOpinionId,
   onToggleSort,
-  onToggleTraceCreate,
   onSelectTrace,
   onToggleTraceComment,
   className,
@@ -39,10 +37,9 @@ export function TraceListSection({
       {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
       <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
-          <p className="text-title-16sb text-text-inverse">{traceCount}개의 흔적</p>
-          <button type="button" aria-label="흔적 남기기" onClick={onToggleTraceCreate}>
-            <PencilIcon width={20} height={20} className="text-icon-active" />
-          </button>
+          <p className="text-title-16sb text-text-inverse">{traceCount}개의 의견</p>
+          {/* ponytail: 시안(200:906)의 셰브론은 목적지가 정해지지 않아 장식으로만 둔다 */}
+          <NextIcon width={20} height={20} aria-hidden className="text-icon-active" />
         </div>
         <button
           type="button"

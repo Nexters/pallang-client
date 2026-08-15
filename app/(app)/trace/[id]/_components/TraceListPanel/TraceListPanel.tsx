@@ -26,7 +26,6 @@ type TraceListPanelProps = {
   stageError: { isError: boolean; retry: () => void }
   /** 하단 입력바와 한 번에 하나만 떠야 해서 아코디언 상태는 셸이 든다 */
   openCommentOpinionId: number | null
-  onToggleTraceCreate: () => void
   onToggleTraceComment: (opinionId: number) => void
   /** 상세 오버레이(aria-modal) 노출 여부. 셸이 형제로 든 하단 입력바를 포커스에서 빼는 데 쓴다 */
   onDetailOpenChange: (isOpen: boolean) => void
@@ -43,7 +42,6 @@ export function TraceListPanel({
   scrollerRef,
   stageError,
   openCommentOpinionId,
-  onToggleTraceCreate,
   onToggleTraceComment,
   onDetailOpenChange,
   initialTraceId,
@@ -93,7 +91,6 @@ export function TraceListPanel({
             sortType={list.sortType}
             openCommentOpinionId={openCommentOpinionId}
             onToggleSort={list.toggleSort}
-            onToggleTraceCreate={onToggleTraceCreate}
             onSelectTrace={(trace) => {
               // 상세 오버레이는 인용문을 가림막 없이 그대로 펼친다. inert는 브라우저에만 있는
               // 방어라 여기서 동작으로도 막아야 가림막을 우회해 원문을 볼 수 없다.

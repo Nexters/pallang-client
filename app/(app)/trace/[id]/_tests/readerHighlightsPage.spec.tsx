@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
@@ -187,7 +188,7 @@ function scrollSentinelsIntoView() {
   })
 }
 
-// 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 첫 페이지 탭이 그려질 때까지 기다린다.
+// 대목 페이지 목록/페이지별 대목/대목별 흔적 API 응답을 흉내내고, 헤더 쪽 선택기가 그려질 때까지 기다린다.
 // 반환값은 페이지가 그리는 첫 요소인 스크롤 컨테이너다.
 async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' | 'opinions') {
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
@@ -242,8 +243,21 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' 
       </LoginGateProvider>
     </QueryClientProvider>,
   )
-  await screen.findByRole('button', { name: `${String(pages[0])}p` })
+  await screen.findByLabelText('쪽 선택')
   return container.firstElementChild as HTMLElement
+}
+
+/** 우하단 남기기 버튼을 열고 그 갈래를 누른다 */
+function clickFabAction(name: '의견 남기기' | '기록 남기기') {
+  fireEvent.click(screen.getByRole('button', { name: '남기기' }))
+  fireEvent.click(screen.getByRole('button', { name }))
+}
+
+/** 헤더의 쪽 선택기를 열어 그 쪽을 고른다 — 가로 페이지 탭 줄을 대신한다 */
+async function selectPage(page: number) {
+  // base-ui Select는 포인터 이벤트 시퀀스로 열고 고른다 — fireEvent.click 한 번으로는 선택되지 않는다
+  await userEvent.click(screen.getByLabelText('쪽 선택'))
+  await userEvent.click(await screen.findByRole('option', { name: `${String(page)}p` }))
 }
 
 describe('ReaderHighlightsPage', () => {
@@ -258,11 +272,12 @@ describe('ReaderHighlightsPage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('페이지 탭은 API의 대목 페이지 목록으로 그린다', async () => {
+  it('헤더 쪽 선택기는 API의 대목 페이지 목록으로 채운다', async () => {
     await renderPage([7, 200])
 
-    expect(screen.getByRole('button', { name: '200p' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('쪽 선택'))
+    expect(await screen.findByRole('option', { name: '200p' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: '9p' })).not.toBeInTheDocument()
   })
 
   it('카드 인용문은 페이지별 대목 조회 API로 채우고, 좌우로 스와이프하면 다음 인용문으로 넘어간다', async () => {
@@ -286,14 +301,14 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('두 번째 대목 인용문')).not.toBeInTheDocument()
   })
 
-  it('터치가 없는 환경을 위해 좌우 방향키로도 대목을 옮긴다', async () => {
+  it('터치가 없는 환경을 위해 카드 안 화살표로도 대목을 옮긴다', async () => {
     await renderPage()
 
-    const firstQuote = await screen.findByText('첫 번째 대목 인용문')
-    fireEvent.keyDown(firstQuote, { key: 'ArrowRight' })
+    await screen.findByText('첫 번째 대목 인용문')
+    fireEvent.click(screen.getByRole('button', { name: '다음 대목' }))
     expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
 
-    fireEvent.keyDown(screen.getByText('두 번째 대목 인용문'), { key: 'ArrowLeft' })
+    fireEvent.click(screen.getByRole('button', { name: '이전 대목' }))
     expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
   })
 
@@ -305,20 +320,20 @@ describe('ReaderHighlightsPage', () => {
 
     // 9p의 유일한 대목은 스포일러라 가림막부터 나온다
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '9p' })).toHaveClass('bg-bg-dark')
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
   })
 
   it('페이지의 첫 대목에서 뒤로 넘기면 이전 페이지의 마지막 대목으로 이어진다', async () => {
     await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    await selectPage(9)
     const spoilerCover = await screen.findByText('스포일러가 포함되어있어요!')
 
     swipeCard(spoilerCover, 'prev')
 
     expect(await screen.findByText('두 번째 대목 인용문')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '7p' })).toHaveClass('bg-bg-dark')
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('7p')
   })
 
   it('대목을 넘기면 열려 있던 댓글 입력바가 함께 닫힌다', async () => {
@@ -339,7 +354,7 @@ describe('ReaderHighlightsPage', () => {
   it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
     await renderPage()
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    await selectPage(9)
     // 가림막 문구는 즉시 뜨지만 흔적 목록은 조회가 끝나야 그려진다
     await screen.findByText('스포일러 대목의 흔적')
 
@@ -358,25 +373,25 @@ describe('ReaderHighlightsPage', () => {
     swipeCard(firstQuote, 'prev')
 
     expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '7p' })).toHaveClass('bg-bg-dark')
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('7p')
   })
 
-  it('비로그인 시 스와이프로 페이지를 넘으려 해도 로그인 유도 팝업이 뜬다', async () => {
+  it('열람은 로그인을 요구하지 않는다 — 비로그인도 스와이프로 다음 쪽까지 넘어간다', async () => {
     authState.isAuthenticated = false
     await renderPage()
 
     swipeCard(await screen.findByText('첫 번째 대목 인용문'), 'next')
     swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
 
-    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
-    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
   })
 
   it('흔적 목록은 선택된 대목의 흔적 조회 API 응답으로 그린다', async () => {
     await renderPage()
 
     expect(await screen.findByText('첫 대목의 첫 번째 흔적')).toBeInTheDocument()
-    expect(screen.getByText('2개의 흔적')).toBeInTheDocument()
+    expect(screen.getByText('2개의 의견')).toBeInTheDocument()
     expect(screen.queryByText('두 번째 대목의 흔적')).not.toBeInTheDocument()
   })
 
@@ -384,7 +399,7 @@ describe('ReaderHighlightsPage', () => {
     await renderPage([15])
 
     expect(await screen.findByText('많은 흔적 1')).toBeInTheDocument()
-    expect(screen.getByText('25개의 흔적')).toBeInTheDocument()
+    expect(screen.getByText('25개의 의견')).toBeInTheDocument()
     expect(screen.getByText('많은 흔적 20')).toBeInTheDocument()
     expect(screen.queryByText('많은 흔적 21')).not.toBeInTheDocument()
   })
@@ -399,12 +414,12 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('많은 흔적 1')).toBeInTheDocument()
   })
 
-  it('흔적 조회에 실패하면 "0개의 흔적" 대신 에러 상태를 보여준다', async () => {
+  it('흔적 조회에 실패하면 "0개의 의견" 대신 에러 상태를 보여준다', async () => {
     await renderPage([7, 9], 'opinions')
 
     expect(await screen.findByLabelText('흔적 목록 오류')).toBeInTheDocument()
     expect(screen.getByText(/앗! 흔적들이 도착하지 않았어요!/)).toBeInTheDocument()
-    expect(screen.queryByText('0개의 흔적')).not.toBeInTheDocument()
+    expect(screen.queryByText('0개의 의견')).not.toBeInTheDocument()
   })
 
   it('대목 조회에 실패해도 같은 에러 상태를 보여주고, 다시 시도하면 재조회한다', async () => {
@@ -425,44 +440,49 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('첫 대목의 첫 번째 흔적')).not.toBeInTheDocument()
   })
 
-  it('비로그인 시 다른 페이지 탭을 누르면 로그인 유도 팝업이 뜨고, 로그인 페이지로 이동한다', async () => {
+  it('비로그인 시 흔적을 남기려 하면 로그인 유도 팝업이 뜨고, 로그인 페이지로 이동한다', async () => {
     authState.isAuthenticated = false
     await renderPage()
+    // 대목이 도착해야 붙일 대상이 정해진다
+    await screen.findByText('첫 번째 대목 인용문')
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
+    clickFabAction('의견 남기기')
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
     expect(pushMock).toHaveBeenCalledWith('/login')
     // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 닫지 않으면 로그인 화면을 덮는다.
-    expect(screen.queryByText(LOGIN_GATE_MESSAGE.pageView)).not.toBeInTheDocument()
+    expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
   })
 
   it('앞선 게이트의 문구가 다음 게이트에 남지 않는다', async () => {
     authState.isAuthenticated = false
     await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
 
-    fireEvent.click(await screen.findByRole('button', { name: '흔적 남기기' }))
+    clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.getByText(LOGIN_GATE_MESSAGE.pageView)).toBeInTheDocument()
+    const like = (await screen.findAllByRole('button', { name: '좋아요' }))[0]
+    if (!like) throw new Error('좋아요 버튼을 찾지 못했다')
+    fireEvent.click(like)
+
+    expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()
     expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
   })
 
-  it('로그인 상태에서 다른 페이지 탭을 누르면 바로 이동한다', async () => {
+  it('다른 쪽을 고르면 바로 이동한다', async () => {
     await renderPage()
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
-    expect(screen.queryByText(LOGIN_GATE_MESSAGE.pageView)).not.toBeInTheDocument()
+    await selectPage(9)
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
   it('스포일러 하이라이트는 가림막을 먼저 보여주고, 누르면 내용을 보여준다', async () => {
     await renderPage()
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    await selectPage(9)
     fireEvent.click(await screen.findByText('스포일러가 포함되어있어요!'))
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
     expect(screen.getByText('스포일러 대목 인용문')).toBeInTheDocument()
@@ -471,7 +491,7 @@ describe('ReaderHighlightsPage', () => {
   it('스포일러 대목의 흔적 목록은 가려지고, 가림막을 해제하면 함께 노출된다', async () => {
     await renderPage()
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    await selectPage(9)
     const trace = await screen.findByText('스포일러 대목의 흔적')
     expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
     expect(trace.closest('ul')).toHaveAttribute('inert')
@@ -486,7 +506,7 @@ describe('ReaderHighlightsPage', () => {
   it('가림막 해제 전에는 흔적을 눌러 상세 오버레이를 열 수 없다', async () => {
     await renderPage()
 
-    fireEvent.click(screen.getByRole('button', { name: '9p' }))
+    await selectPage(9)
     const trace = await screen.findByText('스포일러 대목의 흔적')
 
     fireEvent.click(trace)
@@ -496,7 +516,7 @@ describe('ReaderHighlightsPage', () => {
   it('스포일러 대목이 섞인 페이지에서도 일반 대목을 보는 동안에는 가림막이 없다', async () => {
     await renderPage()
 
-    fireEvent.click(screen.getByRole('button', { name: '12p' }))
+    await selectPage(12)
     const normalQuote = await screen.findByText('혼재 페이지의 일반 대목 인용문')
     expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
 
@@ -505,12 +525,12 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
   })
 
-  it('로그인 상태에서 흔적 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
+  it('로그인 상태에서 의견 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
     await renderPage()
     // 대목이 도착해야 붙일 대상이 정해진다
     await screen.findByText('첫 번째 대목 인용문')
 
-    fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
+    clickFabAction('의견 남기기')
 
     const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
     expect(url.pathname).toBe('/trace/new')
@@ -521,12 +541,24 @@ describe('ReaderHighlightsPage', () => {
     expect(url.searchParams.get('bookTitle')).toBe('모순')
   })
 
-  it('비로그인 시 흔적 남기기는 로그인 유도 팝업을 띄우고 이동하지 않는다', async () => {
+  it('기록 남기기는 대목을 물지 않고 새 대목으로 보낸다 — 의견 남기기와 갈리는 지점이다', async () => {
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    clickFabAction('기록 남기기')
+
+    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
+    expect(url.pathname).toBe('/trace/new')
+    expect(url.searchParams.get('bookTitle')).toBe('모순')
+    expect(url.searchParams.get('passageId')).toBeNull()
+  })
+
+  it('비로그인 시 의견 남기기는 로그인 유도 팝업을 띄우고 이동하지 않는다', async () => {
     authState.isAuthenticated = false
     await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
 
-    fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
+    clickFabAction('의견 남기기')
 
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
     expect(pushMock).not.toHaveBeenCalled()
@@ -572,14 +604,13 @@ describe('ReaderHighlightsPage', () => {
     expect(within(dialog).queryByLabelText('다음 의견')).not.toBeInTheDocument()
   })
 
-  it('아래로 스크롤 제스처 한 번에 접힘 전환이 완료되고 페이지 탭이 사라진다', async () => {
+  it('아래로 스크롤 제스처 한 번에 접힘 전환이 완료된다', async () => {
     const scroller = await renderPage()
 
     fireEvent.wheel(scroller, { deltaY: 120 })
     await waitForCollapseAnimation()
 
     expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
-    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
   })
 
   it('접힌 상태에서도 좌우 스와이프로 대목을 넘긴다 — 흔적 목록이 함께 갱신된다', async () => {
@@ -597,7 +628,7 @@ describe('ReaderHighlightsPage', () => {
     expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
   })
 
-  it('접힌 상태에서 페이지를 넘기면 다시 펼쳤을 때 탭이 그 페이지에 맞춰져 있다', async () => {
+  it('접힌 상태에서 페이지를 넘기면 헤더 쪽 선택기도 그 쪽으로 맞춰진다', async () => {
     const scroller = await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
 
@@ -611,10 +642,10 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.wheel(scroller, { deltaY: -120 })
     await waitForCollapseAnimation()
 
-    expect(screen.getByRole('button', { name: '9p' })).toHaveClass('bg-bg-dark')
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
   })
 
-  it('목록 최상단에서 위로 스크롤하면 펼침으로 돌아와 페이지 탭이 다시 보인다', async () => {
+  it('목록 최상단에서 위로 스크롤하면 펼침으로 돌아온다', async () => {
     const scroller = await renderPage()
     fireEvent.wheel(scroller, { deltaY: 120 })
     await waitForCollapseAnimation()
@@ -623,7 +654,6 @@ describe('ReaderHighlightsPage', () => {
     await waitForCollapseAnimation()
 
     expect(scroller.style.getPropertyValue('--collapse')).toBe('0')
-    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 
   it('목록 중간에서는 위로 스크롤해도 펼침으로 돌아가지 않는다', async () => {
@@ -636,7 +666,6 @@ describe('ReaderHighlightsPage', () => {
     await waitForCollapseAnimation()
 
     expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
-    expect(screen.queryByRole('button', { name: '9p' })).not.toBeInTheDocument()
   })
 
   it('상세 오버레이 안의 스크롤은 접힘 전환을 일으키지 않는다', async () => {
@@ -649,6 +678,5 @@ describe('ReaderHighlightsPage', () => {
 
     // 전환이 아예 일어나지 않아야 한다 — --collapse는 전환이 시작돼야 세팅된다
     expect(scroller.style.getPropertyValue('--collapse')).not.toBe('1')
-    expect(screen.getByRole('button', { name: '9p' })).toBeInTheDocument()
   })
 })
