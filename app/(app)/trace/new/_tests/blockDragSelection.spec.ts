@@ -124,18 +124,33 @@ describe('useBlockDragSelection — 드래그', () => {
     expect(onChange).toHaveBeenLastCalledWith([])
   })
 
-  // 지나간 어절은 각자 뒤집힌다 — 고른 건 풀리고 안 고른 건 켜진다. 모드도 방향도 없다.
-  it('섞인 영역을 훑으면 각자 뒤집힌다', () => {
+  // 고른 문장을 지우려고 그 앞 안 고른 어절 위에서 훑기 시작하는 게 자연스러운 손짓이다.
+  // 각자 뒤집으면 앞 어절이 켜져 깨끗하게 지워지지 않는다 — 고른 게 하나라도 걸리면 해제만 한다.
+  it('안 고른 어절 위에서 시작해 고른 어절을 훑으면 고른 것만 풀리고 시작 어절은 켜지지 않는다', () => {
     const { onChange, result } = renderSelection([1])
+
+    act(() => {
+      result.current.handlers.onPointerDown(pointerAt(10, 5)) // 어절 0(안 고름) 위 — 탭이라 잠깐 켜짐
+    })
+    expect(onChange).toHaveBeenLastCalledWith([0, 1])
+    act(() => {
+      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 1(고름)까지 — 0은 도로 꺼지고 1이 풀림
+    })
+
+    expect(onChange).toHaveBeenLastCalledWith([])
+  })
+
+  it('고른 게 하나만 끼어 있어도 해제만 한다', () => {
+    const { onChange, result } = renderSelection([2])
 
     act(() => {
       result.current.handlers.onPointerDown(pointerAt(-20, 5))
     })
     act(() => {
-      result.current.handlers.onPointerMove(pointerAt(50, 6)) // 어절 0(안 고름)·1(고름)
+      result.current.handlers.onPointerMove(pointerAt(50, 25)) // 어절 0·1(안 고름)·2(고름)
     })
 
-    expect(onChange).toHaveBeenLastCalledWith([0])
+    expect(onChange).toHaveBeenLastCalledWith([])
   })
 
   // 뒤집기는 매번 시작 시점 선택에 대해 계산한다. 끌다가 되돌아와 사각형에서 벗어난 어절은
