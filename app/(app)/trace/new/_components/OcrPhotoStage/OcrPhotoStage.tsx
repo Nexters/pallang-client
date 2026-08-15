@@ -10,10 +10,24 @@ type OcrPhotoStageProps = {
   blocks: BlockBox[]
   imageUrl: string
   onSelect: (indices: number[]) => void
+  /** 골랐지만 길이 상한을 넘겨 발췌문에 담기지 않은 블록 */
+  overflow: number[]
   selected: number[]
 }
 
 type Size = { height: number; width: number }
+
+/**
+ * 어절 하나의 표시. 고른 것과 "골랐지만 담기지 않은 것"을 갈라, 상한을 넘긴 뒤로는
+ * 사진만 봐도 어디까지 발췌문에 들어갔는지 알 수 있게 한다.
+ */
+function blockClassName(picked: boolean, overflowed: boolean): string {
+  if (overflowed)
+    return 'absolute rounded-[2px] border border-dashed border-white-a40 bg-ocr-block-overflow'
+  return picked
+    ? 'absolute rounded-[2px] bg-ocr-block-picked'
+    : 'absolute rounded-[2px] bg-ocr-block'
+}
 
 /** 남는 영역 안에 비율을 지키며 사진을 앉힌다. CSS 퍼센트로 풀면 부모 높이가 auto라 순환이 생긴다. */
 function fitInside(natural: Size, stage: Size) {
@@ -21,7 +35,13 @@ function fitInside(natural: Size, stage: Size) {
   return { height: natural.height * scale, scale, width: natural.width * scale }
 }
 
-export function OcrPhotoStage({ blocks, imageUrl, onSelect, selected }: OcrPhotoStageProps) {
+export function OcrPhotoStage({
+  blocks,
+  imageUrl,
+  onSelect,
+  overflow,
+  selected,
+}: OcrPhotoStageProps) {
   const stageRef = useRef<HTMLDivElement>(null)
   const [stageSize, setStageSize] = useState<Size | null>(null)
   // 사진이 바뀌면 이전 크기를 그대로 쓰면 안 된다. 어느 URL을 잰 값인지 함께 들고 다닌다.
@@ -63,8 +83,9 @@ export function OcrPhotoStage({ blocks, imageUrl, onSelect, selected }: OcrPhoto
     top: box.top * scale,
     width: box.width * scale,
   }))
-  const { handlers, marquee } = useBlockDragSelection(scaledBlocks, selected, onSelect)
+  const { handlers, marquee, mode } = useBlockDragSelection(scaledBlocks, selected, onSelect)
   const selectedSet = new Set(selected)
+  const overflowSet = new Set(overflow)
 
   return (
     <div
@@ -84,11 +105,7 @@ export function OcrPhotoStage({ blocks, imageUrl, onSelect, selected }: OcrPhoto
             key={index}
             aria-hidden="true"
             style={{ height: box.height, left: box.left, top: box.top, width: box.width }}
-            className={
-              selectedSet.has(index)
-                ? 'absolute rounded-[2px] bg-orange-400/40'
-                : 'absolute rounded-[2px] bg-white-a20'
-            }
+            className={blockClassName(selectedSet.has(index), overflowSet.has(index))}
           />
         ))}
         {marquee && (
@@ -100,7 +117,12 @@ export function OcrPhotoStage({ blocks, imageUrl, onSelect, selected }: OcrPhoto
               top: marquee.top,
               width: marquee.width,
             }}
-            className="absolute rounded-[2px] border border-interactive-accent bg-interactive-accent/10"
+            // 빼는 제스처는 색을 갈라 보여준다 — 더하려다 해제 모드로 걸린 걸 끄는 중에 알아챌 수 있다
+            className={
+              mode === 'remove'
+                ? 'absolute rounded-[2px] border border-white-a60 bg-white-a10'
+                : 'absolute rounded-[2px] border border-interactive-accent bg-interactive-accent/10'
+            }
           />
         )}
       </div>

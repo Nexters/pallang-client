@@ -108,6 +108,11 @@
   --color-icon-muted: #848484;
   --color-icon-muted-a50: #84848480;
 
+  /* Semantic — OCR 발췌 (사진 위 어절 표시) */
+  --color-ocr-block: #ffffff33; /* white/a20 — 고를 수 있는 어절 */
+  --color-ocr-block-picked: #ff7a2866; /* orange/400 40% — 고른 어절 */
+  --color-ocr-block-overflow: #ff7a281f; /* orange/400 12% — 골랐지만 길이를 넘겨 담기지 않은 어절 */
+
   /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
   --font-suit: 'SUIT Variable', sans-serif;
   --font-galmuri: 'Galmuri11', sans-serif;

@@ -8,6 +8,7 @@ import {
   applyToggle,
   rectFromPoints,
   resolveToggleMode,
+  sameSelection,
   selectIndicesInRect,
 } from '../_services/blockSelection.service'
 
@@ -27,19 +28,22 @@ export function useBlockDragSelection(
   onChange: (indices: number[]) => void,
 ) {
   const gestureRef = useRef<{ base: number[]; mode: ToggleMode; origin: Point } | null>(null)
-  const [marquee, setMarquee] = useState<Rect | null>(null)
+  const [drag, setDrag] = useState<{ marquee: Rect; mode: ToggleMode } | null>(null)
 
   const update = (event: ReactPointerEvent<HTMLElement>) => {
     const gesture = gestureRef.current
     if (!gesture) return
     const rect = rectFromPoints(gesture.origin, toLocalPoint(event))
-    setMarquee(rect)
-    onChange(applyToggle(gesture.base, selectIndicesInRect(blocks, rect), gesture.mode))
+    setDrag({ marquee: rect, mode: gesture.mode })
+    const next = applyToggle(gesture.base, selectIndicesInRect(blocks, rect), gesture.mode)
+    // 고른 게 그대로면 알리지 않는다 — 여백을 탭했을 뿐인데 선택이 바뀐 것으로 읽히면
+    // 손으로 고친 발췌문이 새 선택으로 덮여 사라진다
+    if (!sameSelection(selected, next)) onChange(next)
   }
 
   const end = () => {
     gestureRef.current = null
-    setMarquee(null)
+    setDrag(null)
   }
 
   return {
@@ -62,6 +66,8 @@ export function useBlockDragSelection(
       },
       onPointerUp: end,
     },
-    marquee,
+    marquee: drag?.marquee ?? null,
+    // 끄는 동안 이 제스처가 더하는 중인지 빼는 중인지 — 사각형 색을 갈라 보여준다
+    mode: drag?.mode ?? null,
   }
 }

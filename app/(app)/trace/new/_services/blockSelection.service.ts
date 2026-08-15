@@ -45,6 +45,16 @@ export function resolveToggleMode(selected: number[], touched: number[]): Toggle
   return first !== undefined && selected.includes(first) ? 'remove' : 'add'
 }
 
+/**
+ * 두 선택이 같은지 본다. 양쪽 모두 읽기 순서로 정렬돼 있어 자리끼리 비교하면 된다.
+ *
+ * applyToggle은 지나간 블록이 없어도 새 배열을 만든다. 그걸 변경으로 읽으면 사진 여백을
+ * 탭하기만 해도 선택이 바뀐 것으로 취급돼, 손으로 고친 발췌문이 되돌릴 수 없이 날아간다.
+ */
+export function sameSelection(a: number[], b: number[]): boolean {
+  return a.length === b.length && a.every((index, at) => index === b[at])
+}
+
 /** 제스처가 시작될 때의 선택에 지나간 블록을 더하거나 뺀다. 결과는 읽기 순서를 유지한다. */
 export function applyToggle(base: number[], swept: number[], mode: ToggleMode): number[] {
   const sweptSet = new Set(swept)

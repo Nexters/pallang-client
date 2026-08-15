@@ -5,6 +5,7 @@ import {
   type BlockBox,
   rectFromPoints,
   resolveToggleMode,
+  sameSelection,
   selectIndicesInRect,
 } from '../_services/blockSelection.service'
 
@@ -67,6 +68,31 @@ describe('resolveToggleMode', () => {
 
   it('빈 자리에서 시작하면 추가 모드다', () => {
     expect(resolveToggleMode([0], [])).toBe('add')
+  })
+})
+
+describe('sameSelection', () => {
+  it('같은 인덱스가 같은 순서로 있으면 같은 선택이다', () => {
+    expect(sameSelection([0, 2], [0, 2])).toBe(true)
+  })
+
+  it('빈 선택끼리도 같은 선택이다', () => {
+    expect(sameSelection([], [])).toBe(true)
+  })
+
+  it('개수가 다르면 다른 선택이다', () => {
+    expect(sameSelection([0], [0, 1])).toBe(false)
+  })
+
+  it('내용이 다르면 다른 선택이다', () => {
+    expect(sameSelection([0, 1], [0, 2])).toBe(false)
+  })
+
+  it('applyToggle이 만든 새 배열이라도 내용이 같으면 같은 선택이다', () => {
+    // 빈 자리를 탭하면 지나간 블록이 없어 내용이 그대로인 새 배열이 나온다.
+    // 이걸 변경으로 읽으면 손으로 고친 발췌문이 날아간다.
+    const selected = [0, 1]
+    expect(sameSelection(selected, applyToggle(selected, [], 'add'))).toBe(true)
   })
 })
 

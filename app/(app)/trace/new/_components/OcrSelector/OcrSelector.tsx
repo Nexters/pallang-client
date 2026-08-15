@@ -18,17 +18,18 @@ import { MAX_QUOTE_LENGTH } from '../../_data/quote.constant'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { BlockBox } from '../../_services/blockSelection.service'
-import { clampQuote, joinBlockTexts, type OcrBlock } from '../../_services/ocrText.service'
+import { countWithinLimit, joinBlockTexts, type OcrBlock } from '../../_services/ocrText.service'
 import { OcrPermissionNotice } from '../OcrPermissionNotice/OcrPermissionNotice'
 import { OcrPhotoStage } from '../OcrPhotoStage/OcrPhotoStage'
 import { OcrQuoteSheet } from '../OcrQuoteSheet/OcrQuoteSheet'
 import { OcrScanningOverlay } from '../OcrScanningOverlay/OcrScanningOverlay'
+import { OcrSelectionHint } from '../OcrSelectionHint/OcrSelectionHint'
 
 type PositionedBlock = BlockBox & OcrBlock
 
 const OCR_FAILURE_MESSAGE = '사진에서 글자를 읽지 못했어요.\n다시 찍거나 갤러리에서 골라주세요.'
 
-const QUOTE_LIMIT_MESSAGE = `${String(MAX_QUOTE_LENGTH)}자까지만 담을 수 있어요.`
+const EDIT_REPLACED_MESSAGE = '고쳐 쓴 내용이 새로 고른 문장으로 바뀌었어요.'
 
 export function OcrSelector() {
   const { goBack, goTo } = useTraceNav()
@@ -150,8 +151,13 @@ export function OcrSelector() {
     }
   }, [permissionBlocked, runCapture])
 
-  const selectedText = joinBlockTexts(selected.map((index) => blocks[index]).filter((b) => !!b))
-  const quotedText = editedText ?? clampQuote(selectedText, MAX_QUOTE_LENGTH)
+  const selectedBlocks = selected.map((index) => blocks[index]).filter((b) => !!b)
+  // 상한을 넘긴 어절은 글자 중간을 자르지 않고 통째로 빼둔다. 사진에서도 같은 경계로 갈라 보여준다.
+  const includedCount = countWithinLimit(selectedBlocks, MAX_QUOTE_LENGTH)
+  const overflow = selected.slice(includedCount)
+  const quotedText = editedText ?? joinBlockTexts(selectedBlocks.slice(0, includedCount))
+  // 직접 고쳐 쓴 글은 어느 어절에서 왔는지 따질 수 없다. 그때는 넘침 표시를 걷는다.
+  const hasOverflow = editedText === null && overflow.length > 0
 
   return (
     // min-h-0이 없으면 사진이 세로로 길 때 flex 아이템이 콘텐츠 높이 아래로 줄지 못해
@@ -187,14 +193,11 @@ export function OcrSelector() {
             imageUrl={imageUrl}
             blocks={blocks}
             selected={selected}
+            overflow={overflow}
             onSelect={(indices) => {
-              // 절단은 파생값이라 effect에서 알리면 set-state-in-effect에 걸린다.
-              // 선택이 바뀌는 이 지점에서 직접 알린다.
-              if (
-                joinBlockTexts(indices.map((i) => blocks[i]).filter((b) => !!b)).length >
-                MAX_QUOTE_LENGTH
-              )
-                setMessage(QUOTE_LIMIT_MESSAGE)
+              // 훅이 실제로 달라진 선택만 넘긴다. 여백을 탭했을 뿐이면 여기까지 오지 않는다.
+              // 고쳐 쓴 글이 사라지는 건 되돌릴 수 없으니, 덮이는 순간을 말없이 넘기지 않는다.
+              if (editedText !== null) setMessage(EDIT_REPLACED_MESSAGE)
               setSelected(indices)
               // 새로 끌면 손으로 고친 내용 대신 새 선택을 따른다
               setEditedText(null)
@@ -202,6 +205,10 @@ export function OcrSelector() {
           />
           {/* 사진은 떴지만 아직 글자 인식 중인 구간 — 스테이지 위에 딤+스캔을 얹는다 */}
           {ocr.isPending && <OcrScanningOverlay />}
+          {/* 고를 어절은 있는데 아직 아무것도 고르지 않은 동안에만 길을 알려준다 */}
+          {!ocr.isPending && blocks.length > 0 && selected.length === 0 && editedText === null && (
+            <OcrSelectionHint />
+          )}
         </div>
       ) : (
         <p
@@ -214,7 +221,13 @@ export function OcrSelector() {
 
       <OcrQuoteSheet
         quotedText={quotedText}
+        hasOverflow={hasOverflow}
+        canClear={selected.length > 0 || editedText !== null}
         onChange={setEditedText}
+        onClearAll={() => {
+          setSelected([])
+          setEditedText(null)
+        }}
         onClose={() => {
           goBack()
         }}
