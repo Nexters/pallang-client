@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { BookSearchSheet } from '../_components/BookSearchSheet/BookSearchSheet'
@@ -10,7 +10,12 @@ import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceO
 import { useTraceOverlay } from '../_hooks/useTraceOverlay'
 
 vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
-  createBook: () => Promise.resolve(null),
+  // 저장하기 footer 버튼(BookAddForm의 <form> 밖, HTML form 속성으로만 연결)이 실제로 그
+  // 폼을 제출하는지 검증하는 테스트가 이 응답의 data를 그대로 onSelect까지 흘려보낸다.
+  createBook: () =>
+    Promise.resolve({
+      data: { bookId: 99, title: '새 책', author: '지은이', coverImageUrl: null, pageCount: 100 },
+    }),
   getPopularBooks: () => Promise.resolve({ data: { books: [] } }),
   getRecentBooks: () =>
     Promise.resolve({
@@ -102,5 +107,55 @@ describe('책 검색 시트', () => {
 
     expect(await screen.findByPlaceholderText('책 제목을 입력해 주세요.')).toBeTruthy()
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('폼을 열었다 닫아도 검색어가 그대로 남아 있다', async () => {
+    renderSheet()
+
+    const searchInput = await screen.findByPlaceholderText('책 제목을 입력해 주세요.')
+    fireEvent.change(searchInput, { target: { value: '모순' } })
+    expect(searchInput).toHaveValue('모순')
+
+    fireEvent.click(screen.getByRole('button', { name: '도서 추가' }))
+    expect(await screen.findByText('책 추가하기')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
+
+    expect(await screen.findByPlaceholderText('책 제목을 입력해 주세요.')).toHaveValue('모순')
+  })
+
+  it('도서 추가 폼의 저장하기 버튼이 시트의 고정 footer에 있다', async () => {
+    renderSheet()
+
+    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    expect(await screen.findByText('책 추가하기')).toBeTruthy()
+
+    const saveButton = screen.getByRole('button', { name: '저장하기' })
+    expect(saveButton.getAttribute('form')).toBeTruthy()
+    expect(saveButton.closest('form')).toBeNull()
+  })
+
+  it('폼 밖에 있는 저장하기를 눌러도 폼이 실제로 제출된다', async () => {
+    const { onSelect } = renderSheet()
+
+    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    expect(await screen.findByText('책 추가하기')).toBeTruthy()
+
+    fireEvent.change(screen.getByRole('textbox', { name: '제목' }), { target: { value: '제목' } })
+    fireEvent.change(screen.getByRole('textbox', { name: '지은이' }), {
+      target: { value: '지은이' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: '출판사' }), {
+      target: { value: '출판사' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: '페이지 수' }), {
+      target: { value: '100' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    await waitFor(() => {
+      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ bookId: 99, title: '새 책' }))
+    })
   })
 })

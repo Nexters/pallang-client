@@ -18,6 +18,9 @@ import { type ExternalBook, ExternalBookList } from '../ExternalBookList/Externa
 const PAGE_SIZE = 20
 
 type BookSearchViewProps = {
+  /** 도서 추가 폼이 같은 시트 위에 열려 있는 동안 이 화면을 감춘다. 마운트는 유지해
+   *  검색어·목록·페이지네이션 상태가 폼을 닫고 돌아왔을 때도 그대로 남게 한다. */
+  hidden?: boolean
   onAddManually: () => void
   onPick: (book: SelectedBook) => void
   onSelectExternal: (book: ExternalBook) => void
@@ -26,6 +29,7 @@ type BookSearchViewProps = {
 }
 
 export function BookSearchView({
+  hidden,
   onAddManually,
   onPick,
   onSelectExternal,
@@ -120,7 +124,10 @@ export function BookSearchView({
   const showExternalFallback = shouldSearchExternal && !isError
 
   return (
-    <>
+    // hidden 속성으로 감춘다 — display:none은 레이아웃과 접근성 트리에서 동시에 빠지면서도
+    // 컴포넌트를 마운트된 채로 둬 keyword state와 SearchTextfield의 비제어 입력값을 보존한다.
+    // gap-4는 이 div가 없을 때 bottom-sheet-body(flex flex-col gap-4)가 주던 간격을 그대로 낸다.
+    <div hidden={hidden} className="flex flex-col gap-4">
       <BookSearchBar
         placeholder="책 제목을 입력해 주세요."
         onAddBook={onAddManually}
@@ -193,6 +200,6 @@ export function BookSearchView({
           />
         )}
       </div>
-    </>
+    </div>
   )
 }
