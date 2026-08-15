@@ -74,12 +74,12 @@ describe('마이페이지 셸', () => {
   it('판별이 끝나면 골격 대신 실제 내용이 들어선다', () => {
     renderWith(
       <MyPageView
-        user={{ nickname: '기록광', traceCount: 3, profileImageUrl: null }}
+        user={{ nickname: '기록광', opinionCount: 3, profileImageUrl: null }}
         isPending={false}
       />,
     )
 
     expect(screen.getByText('기록광')).toBeInTheDocument()
-    expect(screen.getByText('지금까지 3개의 흔적을 남겼어요!')).toBeInTheDocument()
+    expect(screen.getByText('지금까지 3개의 생각을 남겼어요!')).toBeInTheDocument()
   })
 })
