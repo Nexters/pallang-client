@@ -39,6 +39,24 @@ it('설명을 생략하면 설명 줄을 그리지 않는다', async () => {
   expect(dialog).toHaveAccessibleDescription('')
 })
 
+it('기본은 마스코트 일러스트를 얹고 그만큼 상단을 비운다', async () => {
+  renderFlatDialog()
+
+  const dialog = await screen.findByRole('dialog')
+  expect(dialog.querySelector('[data-slot="dialog-illustration"]')).toBeInTheDocument()
+  expect(dialog).toHaveClass('pt-[46px]')
+})
+
+it('illustrated=false면 일러스트를 걷고 상단 여백도 함께 줄인다', async () => {
+  renderFlatDialog({ illustrated: false })
+
+  const dialog = await screen.findByRole('dialog')
+  expect(dialog.querySelector('[data-slot="dialog-illustration"]')).toBeNull()
+  // 일러스트 자리로 잡아 둔 여백이 남으면 제목 위가 휑하게 뜬다
+  expect(dialog).toHaveClass('pt-6')
+  expect(dialog).not.toHaveClass('pt-[46px]')
+})
+
 it('취소와 확인이 각자의 핸들러를 부른다', async () => {
   const { onCancel, onConfirm } = renderFlatDialog()
   await screen.findByRole('dialog')
