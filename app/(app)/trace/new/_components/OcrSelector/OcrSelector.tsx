@@ -154,10 +154,10 @@ export function OcrSelector() {
   const selectedBlocks = selected.map((index) => blocks[index]).filter((b) => !!b)
   // 상한을 넘긴 어절은 글자 중간을 자르지 않고 통째로 빼둔다. 사진에서도 같은 경계로 갈라 보여준다.
   const includedCount = countWithinLimit(selectedBlocks, MAX_QUOTE_LENGTH)
-  const overflow = selected.slice(includedCount)
   const quotedText = editedText ?? joinBlockTexts(selectedBlocks.slice(0, includedCount))
-  // 직접 고쳐 쓴 글은 어느 어절에서 왔는지 따질 수 없다. 그때는 넘침 표시를 걷는다.
-  const hasOverflow = editedText === null && overflow.length > 0
+  // 직접 고쳐 쓴 글은 어느 어절에서 왔는지 따질 수 없다. 그때는 사진과 시트 양쪽에서 넘침 표시를 걷는다.
+  const overflow = editedText === null ? selected.slice(includedCount) : []
+  const hasOverflow = overflow.length > 0
 
   return (
     // min-h-0이 없으면 사진이 세로로 길 때 flex 아이템이 콘텐츠 높이 아래로 줄지 못해

@@ -57,6 +57,37 @@ describe('selectIndicesInRect', () => {
   })
 })
 
+describe('selectIndicesInRect의 탭 여유', () => {
+  // 어절은 손가락 끝보다 작아 살짝 빗나가기 쉽다. 빗나간 때만 여유가 일한다.
+  it('살짝 빗나가면 여유 안쪽의 블록을 끌어온다', () => {
+    const justOutside = rectFromPoints({ x: 33, y: 5 }, { x: 33, y: 5 })
+    expect(selectIndicesInRect(blocks, justOutside)).toEqual([])
+    expect(selectIndicesInRect(blocks, justOutside, 6)).toEqual([0])
+  })
+
+  // 늘 여유를 주면 어절 사이를 눌렀을 때 양옆이 함께 잡혀 고르지 않은 말이 끼어든다.
+  it('정확히 닿은 블록이 있으면 여유를 쓰지 않는다', () => {
+    const onEdge = rectFromPoints({ x: 30, y: 5 }, { x: 30, y: 5 })
+    expect(selectIndicesInRect(blocks, onEdge, 12)).toEqual([0])
+  })
+
+  // 어절 사이 간격은 화면맞춤 배율에서 몇 px에 불과해, 여유 안에 양옆이 다 들어오기 쉽다.
+  // 한 번 눌러 두 어절이 잡히면 안 되니 가장 가까운 하나만 고른다.
+  it('여유 안에 여럿이 있어도 가장 가까운 하나만 고른다', () => {
+    // 블록 0은 x≤30, 블록 1은 x≥40. x=33은 0에 3px, 1에 7px
+    const nearerToFirst = rectFromPoints({ x: 33, y: 5 }, { x: 33, y: 5 })
+    expect(selectIndicesInRect(blocks, nearerToFirst, 12)).toEqual([0])
+
+    const nearerToSecond = rectFromPoints({ x: 37, y: 5 }, { x: 37, y: 5 })
+    expect(selectIndicesInRect(blocks, nearerToSecond, 12)).toEqual([1])
+  })
+
+  it('여유 밖은 여전히 잡지 않는다', () => {
+    const farAway = rectFromPoints({ x: 100, y: 100 }, { x: 100, y: 100 })
+    expect(selectIndicesInRect(blocks, farAway, 6)).toEqual([])
+  })
+})
+
 describe('resolveToggleMode', () => {
   it('고르지 않은 블록에서 시작하면 추가 모드다', () => {
     expect(resolveToggleMode([1], [0])).toBe('add')
