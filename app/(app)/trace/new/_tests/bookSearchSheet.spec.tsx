@@ -54,6 +54,15 @@ function BackProbe() {
   )
 }
 
+/** 등록 폼(BookNewForm)은 표지를 필수로 받는다 — 기기에서 고른 것처럼 파일을 넣는다. */
+function attachCoverFile() {
+  const input = document.body.querySelector<HTMLInputElement>('input[type="file"]')
+  if (!input) throw new Error('표지 파일 입력을 찾지 못했다')
+  fireEvent.change(input, {
+    target: { files: [new File(['cover'], 'cover.png', { type: 'image/png' })] },
+  })
+}
+
 function renderSheet({ onClose = vi.fn(), onSelect = vi.fn() } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
@@ -139,6 +148,15 @@ describe('책 검색 시트', () => {
     expect(saveButton.closest('form')).toBeNull()
   })
 
+  it('등록 폼이 아직 덜 찼으면 footer의 저장하기가 눌리지 않는다', async () => {
+    renderSheet()
+
+    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    expect(await screen.findByText('책 추가하기')).toBeTruthy()
+
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+  })
+
   it('폼 밖에 있는 저장하기를 눌러도 폼이 실제로 제출된다', async () => {
     const { onSelect } = renderSheet()
 
@@ -155,6 +173,7 @@ describe('책 검색 시트', () => {
     fireEvent.change(screen.getByRole('textbox', { name: '페이지 수' }), {
       target: { value: '100' },
     })
+    attachCoverFile()
 
     fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
