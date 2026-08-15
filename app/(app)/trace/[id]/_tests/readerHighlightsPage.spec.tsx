@@ -243,7 +243,8 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' 
       </LoginGateProvider>
     </QueryClientProvider>,
   )
-  await screen.findByLabelText('쪽 선택')
+  // 쪽이 하나뿐이면 선택기 대신 라벨만 있는 알약이 서므로, 두 경우 모두 잡히는 첫 쪽 표시를 기다린다
+  await screen.findByText(`${String(pages[0])}p`)
   return container.firstElementChild as HTMLElement
 }
 
