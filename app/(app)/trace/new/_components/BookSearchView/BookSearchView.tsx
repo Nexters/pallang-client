@@ -4,8 +4,6 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
-import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
@@ -21,19 +19,22 @@ const PAGE_SIZE = 20
 
 type BookSearchViewProps = {
   onAddManually: () => void
-  onBack: () => void
-  onSelect: (book: SelectedBook) => void
+  onPick: (book: SelectedBook) => void
   onSelectExternal: (book: ExternalBook) => void
+  /** 시트에서 지금 후보로 고른 책. 목록·캐러셀에 선택 테두리를 그리는 데만 쓴다. */
+  selectedBookId: number | null
 }
 
 export function BookSearchView({
   onAddManually,
-  onBack,
-  onSelect,
+  onPick,
   onSelectExternal,
+  selectedBookId,
 }: BookSearchViewProps) {
   const [keyword, setKeyword] = useState('')
-  const scrollRef = useRef<HTMLDivElement>(null)
+  // 스크롤은 이제 시트(BottomSheet의 fullHeight 본문)가 갖는다. 무한스크롤 관찰자가
+  // 볼 스크롤 컨테이너는 이 뷰의 DOM 바깥에 있어, 여기서는 그 조상을 찾아 담아 둔다.
+  const scrollRootRef = useRef<HTMLElement | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   // 한 글자마다 요청이 나가지 않도록 입력이 멎은 뒤에 검색한다
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
@@ -57,7 +58,7 @@ export function BookSearchView({
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
-    rootRef: scrollRef,
+    rootRef: scrollRootRef,
     // 입력이 이어지는 동안에는 곧 버려질 키워드의 다음 페이지를 당겨오지 않는다
     enabled: isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage,
     onLoadMore: () => {
@@ -119,19 +120,7 @@ export function BookSearchView({
   const showExternalFallback = shouldSearchExternal && !isError
 
   return (
-    <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
-      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
-      <TopBar.Root>
-        <TopBar.Action
-          aria-label="뒤로"
-          onClick={() => {
-            onBack()
-          }}
-        >
-          <BackIcon />
-        </TopBar.Action>
-        <TopBar.Title as="h1">책 검색</TopBar.Title>
-      </TopBar.Root>
+    <>
       <BookSearchBar
         placeholder="책 제목을 입력해 주세요."
         onAddBook={onAddManually}
@@ -139,8 +128,11 @@ export function BookSearchView({
       />
 
       <div
-        ref={scrollRef}
-        className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        ref={(node) => {
+          scrollRootRef.current =
+            node?.closest<HTMLElement>('[data-slot="bottom-sheet-body"]') ?? null
+        }}
+        className="flex flex-col"
       >
         {isSearching ? (
           <>
@@ -154,6 +146,7 @@ export function BookSearchView({
             ) : (
               <BookPickList
                 books={searchResults}
+                selectedBookId={selectedBookId}
                 status={(() => {
                   if (searched.isPending) return 'pending'
                   if (isError && searchResults.length === 0) return 'error'
@@ -162,7 +155,7 @@ export function BookSearchView({
                 onRetry={() => {
                   void searched.refetch()
                 }}
-                onSelect={onSelect}
+                onSelect={onPick}
               />
             )}
             <div ref={loadMoreRef} className="h-6 w-full shrink-0" aria-hidden="true" />
@@ -174,7 +167,8 @@ export function BookSearchView({
                 title={`${me.data?.data?.nickname ?? '나'}님이 최근에 남긴 흔적`}
                 books={recentBooks}
                 isPending={recent.isPending}
-                onSelect={onSelect}
+                selectedBookId={selectedBookId}
+                onSelect={onPick}
               />
             )}
             {showPopular && (
@@ -182,7 +176,8 @@ export function BookSearchView({
                 title="제일 많이 등록된 흔적"
                 books={popularBooks}
                 isPending={popular.isPending}
-                onSelect={onSelect}
+                selectedBookId={selectedBookId}
+                onSelect={onPick}
               />
             )}
           </div>
@@ -198,6 +193,6 @@ export function BookSearchView({
           />
         )}
       </div>
-    </main>
+    </>
   )
 }
