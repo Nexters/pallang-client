@@ -25,6 +25,8 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
 
 const BOOK_ID = 1
 const PAGE = 7
+/** 쪽 선택기는 현재 쪽을 목록에서 빼고 그리므로, 고를 수 있는 다른 쪽을 하나 더 둔다 */
+const OTHER_PAGE = 9
 const PASSAGE_ID = 71
 /** 같은 페이지의 두 번째 대목 — 인용문 카드를 누르면 여기로 넘어간다 */
 const NEXT_PASSAGE_ID = 72
@@ -291,7 +293,7 @@ function stubApi() {
         })
       }
 
-      return json({ data: { pageNumbers: [PAGE] } })
+      return json({ data: { pageNumbers: [PAGE, OTHER_PAGE] } })
     }),
   )
 }
@@ -748,9 +750,9 @@ describe('흔적 댓글 인라인 펼침', () => {
     await screen.findByText('내가 쓴 댓글')
     expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
 
-    // 같은 쪽을 다시 고르면 해제가 풀린다 — passageId는 그대로라 대목 전환 리셋에 걸리지 않는다
+    // 다른 쪽을 고르면 해제가 풀린다 — 대목 응답이 같아 passageId는 그대로라, 대목 전환 리셋에 걸리지 않는다
     await userEvent.click(screen.getByLabelText('쪽 선택'))
-    await userEvent.click(await screen.findByRole('option', { name: `${String(PAGE)}p` }))
+    await userEvent.click(await screen.findByRole('option', { name: `${String(OTHER_PAGE)}p` }))
 
     // 목록만 흐려지고 입력바가 남으면 더는 읽을 수 없는 흔적에 댓글을 쓸 수 있다
     await waitFor(() => {
