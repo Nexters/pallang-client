@@ -2,10 +2,7 @@ import { type CSSProperties, type RefObject, useCallback, useEffect, useRef, use
 
 import { WIDTH_TIMING } from '../_data/widthTiming.constant'
 import {
-  CARD_HEIGHT,
-  CARD_RISE,
-  CARD_SHRINK,
-  CARD_TOP_COLLAPSED,
+  CARD_TOP_EXPANDED,
   CARD_WIDTH,
   COLLAPSE_ANIMATION_MS,
   COLLAPSE_DISTANCE,
@@ -31,10 +28,7 @@ const stageStyle = {
   '--header-height': px(HEADER_HEIGHT),
   '--paper-height': px(PAPER_HEIGHT),
   '--card-width': px(CARD_WIDTH),
-  '--card-height': px(CARD_HEIGHT),
-  '--card-rise': px(CARD_RISE),
-  '--card-shrink': px(CARD_SHRINK),
-  '--card-top-collapsed': px(CARD_TOP_COLLAPSED),
+  '--card-top-expanded': px(CARD_TOP_EXPANDED),
 } as CSSProperties
 
 // 움직임 축소 설정에서는 전환을 즉시 끝낸다

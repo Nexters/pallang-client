@@ -1,7 +1,6 @@
 import {
   CARD_HEIGHT,
-  CARD_RISE,
-  CARD_TOP_COLLAPSED,
+  CARD_TOP_EXPANDED,
   CARD_WIDTH,
   PAPER_HEIGHT,
   STAGE_EXPANDED,
@@ -37,7 +36,7 @@ export function TracePageSkeleton() {
         <div
           className="absolute left-1/2 flex -translate-x-1/2 -rotate-3 flex-col gap-3 rounded-[4px] border border-[#222] bg-bg-book-card px-6 py-10 shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]"
           style={{
-            top: belowSafeArea(CARD_TOP_COLLAPSED + CARD_RISE),
+            top: belowSafeArea(CARD_TOP_EXPANDED),
             width: px(CARD_WIDTH),
             height: px(CARD_HEIGHT),
           }}

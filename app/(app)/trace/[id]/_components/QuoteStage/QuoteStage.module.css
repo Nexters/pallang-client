@@ -13,11 +13,12 @@
   height: calc(var(--safe-top) + var(--stage-expanded) - var(--stage-shift) * var(--collapse));
 }
 
-/* 모눈종이 배경 — 반투명해지며 흐려지지 않도록, 채도를 유지한 채 자기 높이만큼 걷혀 올라간다.
-   노치 뒤까지 종이가 이어지도록 이 층만 인셋만큼 늘리고, 걷힐 때도 늘어난 높이만큼 올라간다 */
+/* 모눈종이 배경 — 전환 중에도 제자리를 지킨다. 걷어 올려봤자 그 자리를 다른 색이 채우게 되고,
+   올라오는 면이 무엇이든(스티커색이든 어두운 면이든) 배경이 차오르는 것처럼 읽혔다.
+   덮는 일은 스티커가 맡는다 — 카드가 헤더 뒤까지 올라오며 이 종이를 통째로 가린다.
+   노치 뒤까지 종이가 이어지도록 이 층만 인셋만큼 늘린다 */
 .paper {
   height: calc(var(--safe-top) + var(--paper-height));
-  transform: translateY(calc(-1 * (var(--safe-top) + var(--paper-height)) * var(--collapse)));
 }
 
 /* 모눈종이 아래 어두운 면 — 목록과 같은 색이라 스티커가 두 면에 걸쳐 놓인 것처럼 보인다.
@@ -27,21 +28,28 @@
 }
 
 /* 기울어진 포스트잇 → 화면 폭 패널.
-   회전·위치·크기·테두리·그림자가 모두 같은 진행률을 따른다 */
+   회전·위치·크기·테두리·그림자가 모두 같은 진행률을 따른다.
+   접히면 상단이 0까지 올라가 노치·헤더 뒤를 파고든다 — 헤더가 놓일 크림 면은 배경이 아니라
+   올라온 스티커 자신이다. 아래 끝은 두 상태 모두 스테이지 하단이라 bottom으로 묶어두면
+   높이는 따로 주지 않아도 맞아떨어진다(quoteCollapse.service) */
 .card {
-  top: calc(var(--safe-top) + var(--card-top-collapsed) + var(--card-rise) * var(--inv));
+  top: calc((var(--safe-top) + var(--card-top-expanded)) * var(--inv));
+  bottom: 0;
   left: calc((100% - var(--card-width)) / 2 * var(--width-inv));
   right: calc((100% - var(--card-width)) / 2 * var(--width-inv));
-  height: calc(var(--card-height) - var(--card-shrink) * var(--collapse));
-  padding-block: calc(40px - 8px * var(--collapse));
+  /* 헤더 뒤로 파고든 만큼 위 여백을 더한다 — 인용문은 두 상태 모두 헤더 아래 같은 자리에서 시작한다 */
+  padding-top: calc(40px + (var(--safe-top) + var(--header-height) - 8px) * var(--collapse));
+  padding-bottom: calc(40px - 8px * var(--collapse));
   border: 1px solid rgb(34 34 34 / var(--inv));
   border-radius: calc(4px * var(--inv));
   transform: rotate(calc(-3deg * var(--inv)));
   box-shadow: 4px 10px 17.5px rgb(0 0 0 / calc(0.2 * var(--inv)));
 }
 
-/* 스포일러 가림막 — 카드 안에 있으므로 회전·크기 변화를 그대로 따라간다 */
+/* 스포일러 가림막 — 카드 안에 있으므로 회전·크기 변화를 그대로 따라간다.
+   카드가 헤더 뒤로 파고든 만큼은 덮지 않는다. 거기까지 덮으면 가림막 문구가 헤더 뒤로 올라가 잘린다 */
 .cover {
+  top: calc((var(--safe-top) + var(--header-height)) * var(--collapse));
   /* 아이콘이 사라지면 간격도 함께 접힌다 */
   gap: calc(12px * var(--inv));
   color: color-mix(in srgb, var(--color-text-secondary) calc(var(--collapse) * 100%), #000000);

@@ -14,7 +14,9 @@ export const PAPER_HEIGHT = 266
 /** 포스트잇 카드 (w-78 / h-80) */
 export const CARD_WIDTH = 312
 export const CARD_HEIGHT = 320
-/** 축소 상태 패널 높이 */
+/** 축소 상태 패널 높이.
+    카드 아래 끝은 두 상태 모두 스테이지 하단과 맞물린다(펼침 44+47+320 = 접힘 0+높이 = 스테이지 높이).
+    그래서 카드는 높이를 따로 받지 않고 bottom으로 스테이지 하단에 묶여 있다 */
 const PANEL_HEIGHT = 270
 
 /** 펼친 상태 스테이지 전체 높이 */
@@ -27,13 +29,12 @@ export const STAGE_COLLAPSED = HEADER_HEIGHT + PANEL_HEIGHT
     두 높이의 차와 같아야 스테이지 하단과 정렬 바 상단이 정확히 붙어 움직인다 */
 export const COLLAPSE_DISTANCE = STAGE_EXPANDED - STAGE_COLLAPSED
 
-/** 축소 상태에서 카드 상단 위치 */
-export const CARD_TOP_COLLAPSED = HEADER_HEIGHT
-/** 카드가 밀려 올라가는 거리 = 펼친 상태 카드 위 여백.
+/** 카드 위 여백 = 카드가 밀려 올라가는 거리.
     스티커 영역은 이 여백과 카드 높이로 정확히 채워진다 */
 export const CARD_RISE = STICKER_HEIGHT - CARD_HEIGHT
-/** 카드 높이 축소량 */
-export const CARD_SHRINK = CARD_HEIGHT - PANEL_HEIGHT
+/** 펼친 상태 카드 상단 위치. 축소 상태에서는 0이다 —
+    카드가 헤더 뒤까지 올라가 헤더가 놓일 크림 면을 스스로 만든다 */
+export const CARD_TOP_EXPANDED = HEADER_HEIGHT + CARD_RISE
 
 /* 전환은 스크롤 스크럽이 아니라 상태 점프 한 번이다(#76).
    스크럽은 관성 세기에 따라 전환이 통째로 건너뛰어지거나(플릭 한 번에 목록 바닥까지)

@@ -46,15 +46,8 @@ export function QuoteStage({
       </div>
       {/* 모눈종이 아래는 목록과 같은 어두운 면이고, 카드가 그 경계에 걸쳐 놓인다 */}
       <div className={cn(styles['underlay'], 'absolute inset-x-0 bottom-0 bg-bg-dark')} />
-      <TraceHeader
-        title={title}
-        pages={pages}
-        activePage={highlight.page}
-        onSelectPage={onSelectPage}
-        onLoadMorePages={onLoadMorePages}
-        className="absolute inset-x-0 top-(--safe-top)"
-      />
-      {/* 대목 이동은 카드 위 좌우 스와이프와 카드 안 화살표가 함께 맡는다 */}
+      {/* 대목 이동은 카드 위 좌우 스와이프와 카드 안 화살표가 함께 맡는다.
+          카드는 접히며 헤더 뒤까지 올라오므로 헤더보다 먼저 그린다 — 순서가 뒤집히면 헤더가 가려진다 */}
       <div
         ref={cardRef}
         className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
@@ -95,7 +88,7 @@ export function QuoteStage({
             onClick={onClickQuote}
             className={cn(
               styles['cover'],
-              'absolute inset-0 flex flex-col items-center justify-center rounded-[inherit] bg-bg-book-card/70 backdrop-blur-[9px]',
+              'absolute inset-x-0 bottom-0 flex flex-col items-center justify-center rounded-[inherit] bg-bg-book-card/70 backdrop-blur-[9px]',
             )}
           >
             {/* ponytail: #3e3e3e는 디자인 변수 미연결 색 — 토큰 추가 시 치환 */}
@@ -123,6 +116,14 @@ export function QuoteStage({
           </button>
         )}
       </div>
+      <TraceHeader
+        title={title}
+        pages={pages}
+        activePage={highlight.page}
+        onSelectPage={onSelectPage}
+        onLoadMorePages={onLoadMorePages}
+        className="absolute inset-x-0 top-(--safe-top) h-[44px] py-0"
+      />
     </div>
   )
 }
