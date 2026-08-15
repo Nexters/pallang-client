@@ -29,9 +29,10 @@ const loggedInSettings: SettingItem[] = [
 ]
 const loggedOutSettings: SettingItem[] = [
   { label: '공지사항', path: '/my/notices' },
-  { label: '고객지원', path: '/support' },
   { label: '개인정보 처리 방침', path: POLICY_META_BY_SLUG.privacy.path },
   { label: '서비스 이용약관', path: POLICY_META_BY_SLUG.service.path },
+  // 디자인에는 없지만 로그인 화면과 같은 이유로 남긴다 — 로그인 못 하는 사용자에게도 문의 통로가 필요하다
+  { label: '고객지원', path: '/support' },
 ]
 
 type MyPageViewProps = {
@@ -158,13 +159,13 @@ function LoggedOutContent({ onLoginClick }: { onLoginClick?: () => void }) {
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <strong className="text-title-18sb font-bold text-text-primary">안녕하세요!</strong>
             <p className="text-body-14md text-text-tertiary">
-              로그인하고 더 많은 흔적을 확인하세요
+              로그인하고 더 많은 의견을 확인해보세요!
             </p>
           </div>
         </section>
         <div className="px-4">
           <Button className="w-full" onClick={onLoginClick}>
-            다음
+            로그인 하기
           </Button>
         </div>
       </div>
