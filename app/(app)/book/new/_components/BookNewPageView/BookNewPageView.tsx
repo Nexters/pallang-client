@@ -93,7 +93,7 @@ export function BookNewPageView() {
             setMessage('책을 등록하지 못했어요. 잠시 후 다시 시도해주세요.')
             return
           }
-          router.replace('/book/search')
+          router.replace('/book/list')
         },
         onError: (error) => {
           if (error instanceof ApiError && error.status === 400) {
@@ -111,9 +111,18 @@ export function BookNewPageView() {
       <TopBar.Root>
         <TopBar.Title as="h1">책 추가하기</TopBar.Title>
         <TopBar.Spacer />
-        <TopBar.LinkAction href="/book/search" aria-label="닫기">
+        <TopBar.Action
+          aria-label="닫기"
+          onClick={() => {
+            if (window.history.length <= 1) {
+              router.replace('/book/list')
+              return
+            }
+            router.back()
+          }}
+        >
           <CloseIcon />
-        </TopBar.LinkAction>
+        </TopBar.Action>
       </TopBar.Root>
 
       <div className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden">

@@ -22,5 +22,5 @@ export default async function BookInternalRedirectPage({
   })
 
   const queryString = params.toString()
-  redirect(`/book/search${queryString ? `?${queryString}` : ''}`)
+  redirect(`/book/list${queryString ? `?${queryString}` : ''}`)
 }

@@ -8,6 +8,7 @@ type BookSearchBarProps = ComponentPropsWithoutRef<'div'> & {
   autoFocus?: boolean
   onKeywordChange?: (keyword: string) => void
   placeholder?: string
+  value?: string
 }
 
 export function BookSearchBar({
@@ -15,6 +16,7 @@ export function BookSearchBar({
   className,
   onKeywordChange,
   placeholder = '도서 검색하기',
+  value,
   ...props
 }: BookSearchBarProps) {
   return (
@@ -23,6 +25,7 @@ export function BookSearchBar({
         <SearchTextfield
           autoFocus={autoFocus}
           placeholder={placeholder}
+          value={value}
           onChange={(event) => {
             onKeywordChange?.(event.target.value)
           }}
