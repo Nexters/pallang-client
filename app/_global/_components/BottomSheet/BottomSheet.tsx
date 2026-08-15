@@ -10,13 +10,16 @@ import CloseIcon from '../Icon/assets/close.svg'
 
 type BottomSheetProps = {
   open: boolean
-  title: string
+  /** 문자열이 기본. 시트 안 화면 전환에 맞춰 제목을 연출해야 하면 노드를 넘긴다 */
+  title: ReactNode
   onClose: () => void
   children: ReactNode
   /** 시트 표면 색. 어두운 화면(흔적 페이지 등) 위에 뜨는 시트는 dark를 쓴다 */
   tone?: 'light' | 'dark'
   /** 넘기면 제목 앞에 뒤로가기 버튼이 붙는다 — 시트 안에서 화면을 겹쳐 쓸 때 상위로 돌아가는 길 */
   onBack?: () => void
+  /** onBack이 사라져도 뒤로가기 자리를 유지한다 — 버튼이 오가며 제목이 좌우로 튀지 않게 */
+  reserveBackSlot?: boolean
   /** 본문 래퍼(flex flex-col gap-4 p-4)를 덮어쓸 때 쓴다 — 시트 안에서 자체 스크롤 영역을 잡는 경우 */
   contentClassName?: string
   /** 시트 패널 자체에 덧붙일 클래스 — 기본은 내용 높이만큼이고, 높이를 고정하고 싶을 때 쓴다 */
@@ -33,6 +36,7 @@ export function BottomSheet({
   children,
   tone = 'light',
   onBack,
+  reserveBackSlot = false,
   contentClassName,
   popupClassName,
 }: BottomSheetProps) {
@@ -74,14 +78,20 @@ export function BottomSheet({
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
           >
             <div className="flex items-center gap-2.5 px-4 py-2.5">
-              {onBack && (
+              {(onBack !== undefined || reserveBackSlot) && (
                 <button
                   type="button"
                   aria-label="뒤로"
+                  // 자리만 지키는 동안에는 보이지도, 포커스·보조기기에 잡히지도 않는다
+                  aria-hidden={onBack ? undefined : true}
+                  tabIndex={onBack ? undefined : -1}
                   onClick={onBack}
+                  // 나타나고 사라지는 opacity 전환은 press 유틸의 transition이 함께 다룬다
+                  // (transition-*을 덧붙이면 press의 transition-property를 덮어 눌림 스케일이 죽는다)
                   className={cn(
                     'press flex size-6 shrink-0 items-center justify-center',
                     isDark ? 'text-icon-active' : 'text-icon-primary',
+                    !onBack && 'pointer-events-none opacity-0',
                   )}
                 >
                   <BackIcon aria-hidden="true" className="size-6" />

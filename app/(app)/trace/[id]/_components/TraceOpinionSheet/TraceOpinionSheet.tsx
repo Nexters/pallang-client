@@ -80,12 +80,33 @@ export function TraceOpinionSheet({
       <BottomSheet
         open={open}
         tone="dark"
+        // 두 제목을 겹쳐 두고 크로스페이드한다 — 즉시 스왑하면 본문 슬라이드(240ms)와 시점이
+        // 어긋나 헤더만 먼저 바뀐 것으로 보인다. 비활성 레이어는 aria-hidden으로 빼서
+        // 다이얼로그의 접근성 이름에는 보이는 제목 하나만 남는다.
         title={
-          isReplyOpen
-            ? `답글 (${String(selectedTrace.commentCount)})`
-            : `의견 (${String(traceCount)})`
+          <span className="relative block">
+            <span
+              aria-hidden={isReplyOpen || undefined}
+              className={cn(
+                'block transition-opacity duration-fast ease-standard',
+                isReplyOpen && 'opacity-0',
+              )}
+            >
+              의견 ({traceCount})
+            </span>
+            <span
+              aria-hidden={!isReplyOpen || undefined}
+              className={cn(
+                'absolute inset-0 transition-opacity duration-fast ease-standard',
+                !isReplyOpen && 'opacity-0',
+              )}
+            >
+              답글 ({shownTrace?.commentCount ?? 0})
+            </span>
+          </span>
         }
         onBack={isReplyOpen ? onShowList : undefined}
+        reserveBackSlot
         onClose={onClose}
         // 상단 54px(디자인 202:7346 — 상태바 44 + 10)만 남기고 화면을 채운다.
         // 고정 54px 대신 인셋 토큰을 쓴다 — 노치가 큰 기기에서 헤더가 노치에 가리지 않게.

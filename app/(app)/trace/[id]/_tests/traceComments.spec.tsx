@@ -369,6 +369,8 @@ describe('의견 바텀시트와 답글 흐름', () => {
     const sheet = await screen.findByRole('dialog', { name: '의견 (2)' })
     expect(within(sheet).getByText('첫 번째 흔적')).toBeInTheDocument()
     expect(within(sheet).getByText('두 번째 흔적')).toBeInTheDocument()
+    // 뒤로가기는 자리만 지킨다(제목이 좌우로 튀지 않게) — 목록 화면에서는 눌리는 대상이 아니다
+    expect(within(sheet).queryByRole('button', { name: '뒤로' })).not.toBeInTheDocument()
   })
 
   it('시트의 의견 카드에서 답글 버튼을 누르면 답글 화면으로 전환된다', async () => {
