@@ -1,7 +1,8 @@
-import { act, render } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { AuthProvider } from '../_providers/AuthProvider/AuthProvider'
+import { AuthProvider, useAuth } from '../_providers/AuthProvider/AuthProvider'
 
 const { replaceMock, hideMock, tokenState, listeners } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
@@ -39,6 +40,16 @@ function emitTokenChange() {
   })
 }
 
+/** 컨텍스트의 signOut을 실제 화면처럼 눌러본다 — 만료와 자발적 로그아웃을 가르는 건 이 경로뿐이다 */
+function SignOutTrigger() {
+  const { signOut } = useAuth()
+  return (
+    <button type="button" onClick={() => void signOut()}>
+      로그아웃
+    </button>
+  )
+}
+
 describe('AuthProvider 세션 만료 처리', () => {
   beforeEach(() => {
     replaceMock.mockClear()
@@ -52,6 +63,44 @@ describe('AuthProvider 세션 만료 처리', () => {
     render(<AuthProvider>{null}</AuthProvider>)
     await act(() => Promise.resolve())
 
+    tokenState.hasTokens = false
+    emitTokenChange()
+
+    expect(replaceMock).toHaveBeenCalledWith('/login')
+  })
+
+  // 만료는 사용자가 원한 게 아니라 로그인 화면으로 되돌리지만, 스스로 누른 로그아웃은 다르다 —
+  // 있던 화면(마이페이지)에 그대로 남아 비로그인 상태로 이어져야 한다.
+  it('사용자가 직접 로그아웃하면 로그인 화면으로 보내지 않는다', async () => {
+    render(
+      <AuthProvider>
+        <SignOutTrigger />
+      </AuthProvider>,
+    )
+    await act(() => Promise.resolve())
+
+    tokenState.hasTokens = false
+    await userEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+    emitTokenChange()
+
+    expect(replaceMock).not.toHaveBeenCalled()
+  })
+
+  // 자발적 로그아웃 예외가 그 뒤의 만료까지 삼키면 안 된다
+  it('로그아웃 뒤 다시 로그인했다가 만료되면 로그인 화면으로 보낸다', async () => {
+    render(
+      <AuthProvider>
+        <SignOutTrigger />
+      </AuthProvider>,
+    )
+    await act(() => Promise.resolve())
+
+    tokenState.hasTokens = false
+    await userEvent.click(screen.getByRole('button', { name: '로그아웃' }))
+    emitTokenChange()
+
+    tokenState.hasTokens = true
+    emitTokenChange()
     tokenState.hasTokens = false
     emitTokenChange()
 
