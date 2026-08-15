@@ -26,6 +26,8 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
 
 const BOOK_ID = 1
 const PAGE = 7
+/** 쪽 선택기는 현재 쪽을 목록에서 빼고 그리므로, 고를 수 있는 다른 쪽을 하나 더 둔다 */
+const OTHER_PAGE = 9
 const PASSAGE_ID = 71
 /** 같은 페이지의 두 번째 대목 — 인용문 카드를 누르면 여기로 넘어간다 */
 const NEXT_PASSAGE_ID = 72
@@ -292,7 +294,7 @@ function stubApi() {
         })
       }
 
-      return json({ data: { pageNumbers: [PAGE] } })
+      return json({ data: { pageNumbers: [PAGE, OTHER_PAGE] } })
     }),
   )
 }
@@ -530,7 +532,7 @@ describe('의견 바텀시트와 답글 흐름', () => {
   it('대목이 바뀌면 열려 있던 시트와 입력바가 함께 닫힌다', async () => {
     await renderView()
     // 시트(모달)가 열리면 뒤 화면이 접근성 트리에서 빠지므로 카드는 열기 전에 잡아 둔다
-    const card = screen.getByRole('button', { name: '첫 번째 대목 인용문' })
+    const card = screen.getByText('첫 번째 대목 인용문')
     fireEvent.click(commentToggle(0))
     await screen.findByText('내가 쓴 댓글')
     expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
@@ -785,16 +787,20 @@ describe('의견 바텀시트와 답글 흐름', () => {
     stageState.isSpoiler = true
     await renderView()
 
-    // 시트(모달)가 열리면 뒤 화면이 접근성 트리에서 빠지므로 탭은 열기 전에 잡아 둔다
-    const pageTab = screen.getByRole('button', { name: `${String(PAGE)}p` })
+    // 시트(모달)가 열리면 뒤 화면이 접근성 트리에서 빠지므로 선택기는 열기 전에 잡아 둔다
+    const pageSelect = screen.getByLabelText('쪽 선택')
     // 가림막을 해제해야 목록을 읽을 수 있다
-    fireEvent.click(screen.getByRole('button', { name: /첫 번째 대목 인용문/ }))
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
     fireEvent.click(commentToggle(0))
     await screen.findByText('내가 쓴 댓글')
     expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
 
-    // 같은 페이지 탭을 다시 누르면 해제가 풀린다 — passageId는 그대로라 대목 전환 리셋에 걸리지 않는다
-    fireEvent.click(pageTab)
+    // 다른 쪽을 고르면 해제가 풀린다 — 대목 응답이 같아 passageId는 그대로라, 대목 전환 리셋에 걸리지 않는다.
+    // 시트 뒤의 요소는 aria-hidden이라 역할 조회에 hidden을 허용하고, 클릭도 fireEvent로 직접 보낸다.
+    fireEvent.click(pageSelect)
+    fireEvent.click(
+      await screen.findByRole('option', { name: `${String(OTHER_PAGE)}p`, hidden: true }),
+    )
 
     // 목록만 흐려지고 입력바가 남으면 더는 읽을 수 없는 흔적에 댓글을 쓸 수 있다
     await waitFor(() => {

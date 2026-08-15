@@ -1,6 +1,5 @@
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
-import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -14,7 +13,6 @@ type TraceListSectionProps = {
   isMasked: boolean
   sortType: OpinionSortType
   onToggleSort: () => void
-  onToggleTraceCreate: () => void
   onSelectTrace: (trace: Trace) => void
   /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 202:3672 주석) */
   onOpenOpinionSheet: () => void
@@ -29,7 +27,6 @@ export function TraceListSection({
   isMasked,
   sortType,
   onToggleSort,
-  onToggleTraceCreate,
   onSelectTrace,
   onOpenOpinionSheet,
   onOpenTraceComments,
@@ -40,16 +37,14 @@ export function TraceListSection({
       {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
       <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
+          {/* 시안(200:906)에서 장식이던 셰브론이 의견 바텀시트라는 목적지를 얻었다(202:3672 주석) */}
           <button
             type="button"
             onClick={onOpenOpinionSheet}
             className="press flex items-center gap-0.5 text-title-16sb text-text-inverse"
           >
             {traceCount}개의 의견
-            <NextIcon width={16} height={16} className="text-icon-active" />
-          </button>
-          <button type="button" aria-label="흔적 남기기" onClick={onToggleTraceCreate}>
-            <PencilIcon width={20} height={20} className="text-icon-active" />
+            <NextIcon width={20} height={20} aria-hidden className="text-icon-active" />
           </button>
         </div>
         <button

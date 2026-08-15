@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
@@ -12,6 +12,7 @@ import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
+import { TraceCreateFab } from '../TraceCreateFab/TraceCreateFab'
 import { TraceListPanel } from '../TraceListPanel/TraceListPanel'
 import styles from './TraceCollapseView.module.css'
 
@@ -31,6 +32,9 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
   const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
   const stage = usePassageViewer(bookId, target)
   const activePassageId = stage.activePassage?.passageId
+  // 상세 오버레이(aria-modal)가 떠 있는 동안 남기기 FAB을 숨긴다.
+  // 오버레이는 목록 흐름 안에, FAB은 셸에 있어 형제로 공존하므로 열림 여부만 셸이 받아 든다
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
 
   // 스포일러는 대목 단위다(#49) — 스테이지 가림막과 같은 조건으로 목록도 가리고, 해제하면 함께 열린다
   const isTraceListMasked = Boolean(stage.activePassage?.isSpoiler) && !stage.isRevealed
@@ -87,10 +91,6 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
             onLoadMorePages={stage.loadMorePages}
             onClickQuote={stage.clickQuote}
             onSwipeQuote={stage.swipeQuote}
-            onAddTrace={() => {
-              // 헤더의 +는 이 책에 '새 대목'을 남기는 자리라 대목을 물리지 않는다
-              goCreateTrace(null)
-            }}
           />
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
@@ -101,10 +101,21 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
           className={styles['listArea']}
           scrollerRef={scrollerRef}
           stageError={{ isError: stage.isError, retry: stage.retry }}
-          onToggleTraceCreate={addTraceToCurrentPassage}
+          onDetailOpenChange={setIsDetailOpen}
           initialTraceId={target?.opinionId}
         />
       </div>
+      {/* 남기기 버튼은 상세 오버레이와 같은 자리를 다투므로 오버레이가 없을 때만 뜬다.
+          답글 입력바는 의견 바텀시트 안으로 들어가 셸에는 더 이상 없다 */}
+      {!isDetailOpen && (
+        <TraceCreateFab
+          onAddOpinion={addTraceToCurrentPassage}
+          onAddRecord={() => {
+            // '기록'은 이 책에 새 대목을 남기는 자리라 보고 있는 대목을 물리지 않는다
+            goCreateTrace(null)
+          }}
+        />
+      )}
     </>
   )
 }

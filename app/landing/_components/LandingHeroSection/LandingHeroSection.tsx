@@ -34,12 +34,12 @@ export function LandingHeroSection() {
       />
 
       <a
-        href="https://naver.me/51u1mr53"
+        href="https://apps.apple.com/us/app/pallang-%ED%8C%94%EB%9E%91/id6796140451"
         target="_blank"
         rel="noreferrer"
         className="press mt-[51px] flex h-10 items-center justify-center rounded-full bg-interactive-accent px-4 py-2 text-[16px] leading-[1.2] font-bold tracking-[-0.02em] text-white md:mt-[74px] md:h-20 md:w-[210px] md:px-6 md:text-[24px]"
       >
-        출시 알람 받기
+        앱 다운로드
       </a>
     </section>
   )

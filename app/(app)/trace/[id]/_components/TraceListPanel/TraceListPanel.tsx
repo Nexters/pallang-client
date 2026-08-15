@@ -1,6 +1,6 @@
 'use client'
 
-import { type RefObject, useRef, useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
@@ -25,7 +25,8 @@ type TraceListPanelProps = {
   scrollerRef: RefObject<HTMLDivElement | null>
   /** 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다 */
   stageError: { isError: boolean; retry: () => void }
-  onToggleTraceCreate: () => void
+  /** 상세 오버레이(aria-modal) 노출 여부. 셸이 형제로 든 남기기 FAB을 숨기는 데 쓴다 */
+  onDetailOpenChange: (isOpen: boolean) => void
   /** 딥링크로 지목된 흔적 — 목록이 도착하면 상세가 열린 채 시작한다 */
   initialTraceId?: number
 }
@@ -41,7 +42,7 @@ export function TraceListPanel({
   className,
   scrollerRef,
   stageError,
-  onToggleTraceCreate,
+  onDetailOpenChange,
   initialTraceId,
 }: TraceListPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -73,6 +74,10 @@ export function TraceListPanel({
   )
   // 퇴장 전환 중에도 오버레이는 aria-modal인 채로 화면에 남아 있어, 언마운트될 때까지 열린 것으로 본다
   const isDetailOpen = detail.shouldRender && shownTrace !== null
+
+  useEffect(() => {
+    onDetailOpenChange(isDetailOpen)
+  }, [isDetailOpen, onDetailOpenChange])
 
   const isListError = stageError.isError || list.isError
   const retry = () => {
@@ -107,7 +112,6 @@ export function TraceListPanel({
             isMasked={isMasked}
             sortType={list.sortType}
             onToggleSort={list.toggleSort}
-            onToggleTraceCreate={onToggleTraceCreate}
             onSelectTrace={(trace) => {
               // 상세 오버레이는 인용문을 가림막 없이 그대로 펼친다. inert는 브라우저에만 있는
               // 방어라 여기서 동작으로도 막아야 가림막을 우회해 원문을 볼 수 없다.
