@@ -423,10 +423,13 @@ describe('의견 바텀시트와 답글 흐름', () => {
   it('펼친 댓글에는 입력바가 딸려 오고, 다시 누르면 함께 접힌다', async () => {
     await openFirstTraceComments()
     expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
+    // 입력바와 남기기 FAB은 화면 하단 같은 자리를 다툰다 — 겹치지 않게 FAB이 물러난다
+    expect(screen.queryByRole('button', { name: '남기기' })).not.toBeInTheDocument()
 
     await collapseComments()
     expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
     expect(screen.queryByText('내가 쓴 댓글')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '남기기' })).toBeInTheDocument()
   })
 
   it('답글 화면에서 뒤로가기를 누르면 의견 목록 화면으로 돌아간다', async () => {

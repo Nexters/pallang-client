@@ -5,12 +5,12 @@ import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opi
 
 import { DEFAULT_OPINION_SORT_TYPE } from '../_data/readerHighlights.constant'
 
-/** 흔적 목록 흐름 — 목록 조회·정렬·상세 선택을 소유한다. 정렬/필터/상세 액션 확장은 여기에 쌓는다 */
+/** 흔적 목록 흐름 — 목록 조회·정렬·딥링크로 지목된 상세를 소유한다. 정렬/필터 확장은 여기에 쌓는다 */
 export function useTraceList(passageId: number | undefined, initialTraceId?: number) {
   // 서버 프리페치가 채운 queryKey와 맞아야 첫 렌더에서 캐시가 그대로 쓰인다
   const [sortType, setSortType] = useState<OpinionSortType>(DEFAULT_OPINION_SORT_TYPE)
-  // 딥링크로 들어오면 그 흔적이 상세로 열린 채 시작한다. 목록에 없으면(다른 대목으로 옮긴 뒤 등)
-  // selectedTrace가 undefined라 아무 일도 일어나지 않는다.
+  // 상세로 들어오는 길은 딥링크뿐이다(목록에서 흔적을 눌러도 상세는 열리지 않는다).
+  // 목록에 없으면(다른 대목으로 옮긴 뒤 등) selectedTrace가 undefined라 아무 일도 일어나지 않는다.
   const [selectedTraceId, setSelectedTraceId] = useState<null | number>(initialTraceId ?? null)
 
   const opinionsQuery = useInfiniteQuery(opinionQueries.listByPassage(passageId, sortType))
@@ -38,9 +38,6 @@ export function useTraceList(passageId: number | undefined, initialTraceId?: num
       setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
     },
     selectedTrace,
-    selectTrace: (traceId: number) => {
-      setSelectedTraceId(traceId)
-    },
     closeTrace: () => {
       setSelectedTraceId(null)
     },

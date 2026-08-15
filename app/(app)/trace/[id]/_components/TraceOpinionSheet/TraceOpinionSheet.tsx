@@ -164,7 +164,7 @@ export function TraceOpinionSheet({
                 <TraceItem trace={shownTrace} isContentClamped={false} />
                 <TraceCommentSection opinionId={shownTrace.opinionId} />
               </div>
-              <TraceCommentComposer opinionId={shownTrace.opinionId} />
+              <TraceCommentComposer opinionId={shownTrace.opinionId} variant="sheet" />
             </div>
           )}
         </div>

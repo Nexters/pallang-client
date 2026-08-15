@@ -6,12 +6,15 @@ import { CommentBar } from '../CommentBar/CommentBar'
 
 type TraceCommentComposerProps = {
   opinionId: number
-  /** sheet는 답글 화면 하단에 붙고, inline은 흔적 아래 펼쳐진 댓글 묶음 끝에 놓인다 */
-  variant?: 'sheet' | 'inline'
+  /** sheet는 답글 화면 안 흐름에 놓이고, floating은 흔적 페이지 하단에 고정으로 뜬다 */
+  variant?: 'sheet' | 'floating'
 }
 
 /** 의견에 원댓글을 남기는 입력바 — 답글 화면 하단과 흔적 목록의 펼침 자리에서 함께 쓴다 */
-export function TraceCommentComposer({ opinionId, variant = 'sheet' }: TraceCommentComposerProps) {
+export function TraceCommentComposer({
+  opinionId,
+  variant = 'floating',
+}: TraceCommentComposerProps) {
   const runWithLogin = useLoginGate()
   const actions = useCommentActions(opinionId)
 

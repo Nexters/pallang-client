@@ -9,6 +9,7 @@ import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 
 import { useTraceList } from '../../_hooks/useTraceList'
 import type { HighlightQuote } from '../../_types/readerHighlights.type'
+import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentComposer'
 import { TraceDetailOverlay } from '../TraceDetailOverlay/TraceDetailOverlay'
 import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
@@ -25,7 +26,10 @@ type TraceListPanelProps = {
   scrollerRef: RefObject<HTMLDivElement | null>
   /** 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다 */
   stageError: { isError: boolean; retry: () => void }
-  /** 상세 오버레이(aria-modal) 노출 여부. 셸이 형제로 든 남기기 FAB을 숨기는 데 쓴다 */
+  /**
+   * 화면 하단을 차지하는 것(상세 오버레이·댓글 입력바)이 떠 있는지.
+   * 셸이 형제로 든 남기기 FAB이 같은 자리를 다투므로 그때는 FAB을 숨긴다.
+   */
   onDetailOpenChange: (isOpen: boolean) => void
   /** 딥링크로 지목된 흔적 — 목록이 도착하면 상세가 열린 채 시작한다 */
   initialTraceId?: number
@@ -70,8 +74,8 @@ export function TraceListPanel({
 
   // 닫히는 동안에도 내용이 남아 있어야 슬라이드 아웃이 빈 화면으로 보이지 않는다
   const shownTrace = useLastPresent(list.selectedTrace ?? null)
-  // 가림막이 씌워져 있으면 상세도 열리지 않는다 — 목록 탭은 onSelectTrace가 막지만
-  // 딥링크로 지목돼 들어온 흔적은 탭을 거치지 않아 여기서도 같은 조건을 건다(#49)
+  // 가림막이 씌워져 있으면 상세도 열리지 않는다 — 상세로 가는 길은 딥링크뿐이라
+  // 목록에서 막을 자리가 없고, 여기서만 조건을 건다(#49)
   const detail = useExitTransition(
     list.selectedTrace !== undefined && !isMasked,
     MOTION_DURATION.slow,
@@ -79,9 +83,11 @@ export function TraceListPanel({
   // 퇴장 전환 중에도 오버레이는 aria-modal인 채로 화면에 남아 있어, 언마운트될 때까지 열린 것으로 본다
   const isDetailOpen = detail.shouldRender && shownTrace !== null
 
+  // 입력바도 FAB과 같은 자리에 뜬다 — 둘이 겹치지 않게 셸에 함께 알린다
+  const isBottomBusy = isDetailOpen || expandedOpinionId !== null
   useEffect(() => {
-    onDetailOpenChange(isDetailOpen)
-  }, [isDetailOpen, onDetailOpenChange])
+    onDetailOpenChange(isBottomBusy)
+  }, [isBottomBusy, onDetailOpenChange])
 
   const isListError = stageError.isError || list.isError
   const retry = () => {
@@ -116,12 +122,6 @@ export function TraceListPanel({
             isMasked={isMasked}
             sortType={list.sortType}
             onToggleSort={list.toggleSort}
-            onSelectTrace={(trace) => {
-              // 상세 오버레이는 인용문을 가림막 없이 그대로 펼친다. inert는 브라우저에만 있는
-              // 방어라 여기서 동작으로도 막아야 가림막을 우회해 원문을 볼 수 없다.
-              if (isMasked) return
-              list.selectTrace(trace.opinionId)
-            }}
             onOpenOpinionSheet={() => {
               openSheet(null)
             }}
@@ -136,6 +136,9 @@ export function TraceListPanel({
           />
           {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
           <div ref={loadMoreRef} aria-hidden className="h-px w-full" />
+          {/* 입력바는 화면 하단 고정이라 목록 바깥에 둔다 — 목록의 블러(filter)가 조상이 되면
+              fixed가 뷰포트가 아니라 그 안에 갇힌다 */}
+          {expandedOpinionId !== null && <TraceCommentComposer opinionId={expandedOpinionId} />}
         </>
       )}
       {isDetailOpen && (
