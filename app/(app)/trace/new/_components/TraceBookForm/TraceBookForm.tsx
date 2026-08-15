@@ -134,18 +134,27 @@ export function TraceBookForm() {
     )
   }
 
+  // min-h-0이 없으면 flex 아이템의 min-height:auto 때문에 셸(h-dvh)보다 커져도 줄지 않는다
   return (
-    <div className="relative flex flex-1 flex-col bg-bg-dark">
+    <div className="relative flex min-h-0 flex-1 flex-col bg-bg-dark">
       {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다.
           시안(3092:14086)은 이 화면도 write/decorate와 같은 밝음/어둠 구성이다 —
           책 카드까지 흰 영역에 넣는다(TraceWriteForm·TraceDecorateForm과 같은 처리). */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepIndicator current={3} />
-        <div className="px-4 pt-2 pb-6">
+      </div>
+
+      {/* 셸이 h-dvh·overflow-hidden이라 넘치는 만큼이 잘린다. 노트(320px)와 책 카드가 고정
+          높이라 의견이 조금만 길어도 '기록 완료'가 화면 밖으로 밀려 저장 자체가 막혔다 —
+          가운데만 스크롤시키고 단계 표시와 버튼 줄은 바깥에 두어 고정한다. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="bg-bg-default px-4 pt-2 pb-6">
           <div className="flex items-start justify-between gap-3 rounded-lg bg-bg-surface p-3">
             {draft.book && (
               <BookItem
-                className="flex-1"
+                // min-w-0이 없으면 BookItem이 최소 내용 너비 아래로 줄지 않아 '편집하기'를
+                // 카드 밖으로 밀어낸다 — 셸이 가리던 것이 스크롤러가 생기며 가로 스크롤로 드러났다.
+                className="min-w-0 flex-1"
                 author={draft.book.author}
                 coverImageUrl={draft.book.coverImageUrl}
                 title={draft.book.title}
@@ -162,22 +171,22 @@ export function TraceBookForm() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운
-          배경이다(TraceWriteForm·TraceDecorateForm과 같은 처리). */}
-      <div className="relative bg-bg-default px-8">
-        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
-        <div className="relative">
-          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+        {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운
+            배경이다(TraceWriteForm·TraceDecorateForm과 같은 처리). */}
+        <div className="relative bg-bg-default px-8">
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+          <div className="relative">
+            <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
+          </div>
+        </div>
+
+        <div className="pt-6 pb-4">
+          <TraceOpinionPreview content={draft.content} nickname={nickname} />
         </div>
       </div>
 
-      <div className="pt-6 pb-4">
-        <TraceOpinionPreview content={draft.content} nickname={nickname} />
-      </div>
-
-      <div className="mt-auto flex gap-2 px-4 pb-safe">
+      <div className="flex gap-2 px-4 pb-safe">
         <Button
           variant="back"
           className="flex-1"

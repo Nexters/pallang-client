@@ -78,19 +78,25 @@ const SEED_BOOK = {
 }
 
 // dispatch는 effect에서만 부른다(렌더 중 부르면 Provider를 렌더 도중 갱신하게 된다)
-function Seeded({ withBook = false }: { withBook?: boolean }) {
+function Seeded({
+  pageNumber = 10,
+  withBook = false,
+}: {
+  pageNumber?: number
+  withBook?: boolean
+}) {
   const { dispatch, draft } = useTraceDraft()
 
   useEffect(() => {
     if (withBook) dispatch({ type: 'selectBook', book: SEED_BOOK })
     dispatch({ type: 'setQuotedText', quotedText: '어떤 문장' })
-    dispatch({ type: 'setPageDetail', pageNumber: 10, isSpoiler: false })
+    dispatch({ type: 'setPageDetail', pageNumber, isSpoiler: false })
     dispatch({ type: 'setContent', content: '좋았다' })
     dispatch({
       type: 'applyDecoration',
       decoration: { startOffset: 0, endOffset: 2, effectType: 'HIGHLIGHT', color: '#FFE81A' },
     })
-  }, [dispatch, withBook])
+  }, [dispatch, pageNumber, withBook])
 
   // 초안이 다 차기 전에는 TraceBookForm을 마운트하지 않는다 — 마운트 시점의 draft.book이
   // 시트를 열지 말지를 정하므로, 씨앗 경로를 흉내 내려면 책이 먼저 들어가 있어야 한다.
@@ -98,7 +104,7 @@ function Seeded({ withBook = false }: { withBook?: boolean }) {
   return <TraceBookForm />
 }
 
-function renderForm({ withBook = false } = {}) {
+function renderForm({ pageNumber = 10, withBook = false } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -107,7 +113,7 @@ function renderForm({ withBook = false } = {}) {
           <TraceDraftProvider>
             <TraceOverlayProvider>
               <TraceNavProvider>
-                <Seeded withBook={withBook} />
+                <Seeded pageNumber={pageNumber} withBook={withBook} />
               </TraceNavProvider>
             </TraceOverlayProvider>
           </TraceDraftProvider>

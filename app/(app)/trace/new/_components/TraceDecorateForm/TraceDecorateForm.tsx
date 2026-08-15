@@ -98,8 +98,9 @@ export function TraceDecorateForm() {
     setActiveEffect(option)
   }
 
+  // min-h-0이 없으면 flex 아이템의 min-height:auto 때문에 셸(h-dvh)보다 커져도 줄지 않는다
   return (
-    <div className="relative flex flex-1 flex-col bg-bg-dark">
+    <div className="relative flex min-h-0 flex-1 flex-col bg-bg-dark">
       {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepIndicator current={2} />
@@ -109,54 +110,58 @@ export function TraceDecorateForm() {
           </h1>
         </div>
       </div>
-      {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
-      <div className="relative bg-bg-default px-8">
-        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
-        <div ref={noteRef} className="relative">
-          <TraceNote
-            quotedText={draft.quotedText}
-            decorations={draft.decorations}
-            pendingRange={range}
-            selectable
-            scrollRef={scrollRef}
-            {...handlers}
-            onPointerDown={handlePointerDown}
-          />
-          {popover.shouldRender && shownEditing && (
-            <DecorationEditPopover
-              color={shownEditing.decoration.color}
-              left={shownEditing.left}
-              top={shownEditing.top}
-              state={popover.state}
-              onClose={() => {
-                setEditing(null)
-              }}
-              onRecolor={(color) => {
-                dispatch({
-                  type: 'recolorDecoration',
-                  startOffset: shownEditing.decoration.startOffset,
-                  color,
-                })
-                setEditing({ ...shownEditing, decoration: { ...shownEditing.decoration, color } })
-              }}
-              onRemove={() => {
-                dispatch({
-                  type: 'removeDecoration',
-                  startOffset: shownEditing.decoration.startOffset,
-                })
-                setEditing(null)
-              }}
+      {/* 셸이 h-dvh·overflow-hidden이라 넘치는 만큼이 잘린다 — 가운데만 스크롤시키고
+          단계 표시와 버튼 줄은 바깥에 두어 고정한다(①·③과 같은 처리). */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
+        <div className="relative bg-bg-default px-8">
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+          <div ref={noteRef} className="relative">
+            <TraceNote
+              quotedText={draft.quotedText}
+              decorations={draft.decorations}
+              pendingRange={range}
+              selectable
+              scrollRef={scrollRef}
+              {...handlers}
+              onPointerDown={handlePointerDown}
             />
-          )}
+            {popover.shouldRender && shownEditing && (
+              <DecorationEditPopover
+                color={shownEditing.decoration.color}
+                left={shownEditing.left}
+                top={shownEditing.top}
+                state={popover.state}
+                onClose={() => {
+                  setEditing(null)
+                }}
+                onRecolor={(color) => {
+                  dispatch({
+                    type: 'recolorDecoration',
+                    startOffset: shownEditing.decoration.startOffset,
+                    color,
+                  })
+                  setEditing({ ...shownEditing, decoration: { ...shownEditing.decoration, color } })
+                }}
+                onRemove={() => {
+                  dispatch({
+                    type: 'removeDecoration',
+                    startOffset: shownEditing.decoration.startOffset,
+                  })
+                  setEditing(null)
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3.5 px-4 py-6">
+          <span className="text-body-16md text-text-inverse opacity-80">효과</span>
+          <EffectPicker onPick={handlePick} disabled={false} selectedKey={activeEffect?.key} />
         </div>
       </div>
 
-      <div className="flex flex-col gap-3.5 px-4 py-6">
-        <span className="text-body-16md text-text-inverse opacity-80">효과</span>
-        <EffectPicker onPick={handlePick} disabled={false} selectedKey={activeEffect?.key} />
-      </div>
-
-      <div className="mt-auto flex gap-2 px-4 pt-4 pb-safe">
+      <div className="flex gap-2 px-4 pt-4 pb-safe">
         <Button
           variant="back"
           className="h-[54px] flex-1"
