@@ -75,4 +75,43 @@ describe('BottomSheet', () => {
       expect(screen.getByRole('dialog')).toHaveFocus()
     })
   })
+
+  it('기본은 닫기 버튼을 보여준다', () => {
+    render(
+      <BottomSheet open title="직접 입력" onClose={vi.fn()}>
+        <p>본문</p>
+      </BottomSheet>,
+    )
+
+    expect(screen.getByRole('button', { name: '닫기' })).toBeTruthy()
+  })
+
+  it('leading이 back이면 뒤로 버튼으로 바뀐다', () => {
+    render(
+      <BottomSheet open title="책 검색" leading="back" onClose={vi.fn()}>
+        <p>본문</p>
+      </BottomSheet>,
+    )
+
+    expect(screen.getByRole('button', { name: '뒤로' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '닫기' })).toBeNull()
+  })
+
+  it('footer는 본문 스크롤 영역 바깥에 그린다', () => {
+    render(
+      <BottomSheet
+        open
+        title="책 검색"
+        fullHeight
+        footer={<button>등록하기</button>}
+        onClose={vi.fn()}
+      >
+        <p>본문</p>
+      </BottomSheet>,
+    )
+
+    const footerButton = screen.getByRole('button', { name: '등록하기' })
+    // 스크롤 컨테이너 안에 들어가면 목록과 함께 밀려 올라간다
+    expect(footerButton.closest('[data-slot="bottom-sheet-body"]')).toBeNull()
+  })
 })

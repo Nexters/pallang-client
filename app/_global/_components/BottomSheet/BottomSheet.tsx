@@ -5,6 +5,7 @@ import { type ReactNode, useRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
+import BackIcon from '../Icon/assets/back.svg'
 import CloseIcon from '../Icon/assets/close.svg'
 
 type BottomSheetProps = {
@@ -12,12 +13,30 @@ type BottomSheetProps = {
   title: string
   onClose: () => void
   children: ReactNode
+  /** 화면 상단 여백만 남기고 채운다. 본문이 안에서 스크롤된다. */
+  fullHeight?: boolean
+  /** 헤더 왼쪽에 뒤로 아이콘을 놓고 제목을 그 옆에 붙인다. 기본 'close'는 지금처럼 오른쪽 닫기(X). */
+  leading?: 'back' | 'close'
+  /** 본문 아래 고정 영역. 스크롤에 딸려 올라가지 않는다. */
+  footer?: ReactNode
 }
+
+// 헤더의 뒤로/닫기 버튼은 아이콘·aria-label만 다르고 크기는 같다
+const HEADER_BUTTON_CLASSNAME =
+  'flex size-6 shrink-0 cursor-pointer items-center justify-center text-icon-primary'
 
 // Dialog와 같은 base-ui 프리미티브 위에 올린다 — 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘을
 // 직접 만들지 않기 위함이다. 바깥에 노출하는 props는 손수 구현하던 시절과 같게 유지한다.
 // 포털로 body 끝에 렌더되므로 z는 Dialog와 같은 z-50으로 맞춘다.
-export function BottomSheet({ open, title, onClose, children }: BottomSheetProps) {
+export function BottomSheet({
+  open,
+  title,
+  onClose,
+  children,
+  fullHeight,
+  leading = 'close',
+  footer,
+}: BottomSheetProps) {
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
   // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
   const popupRef = useRef<HTMLDivElement>(null)
@@ -49,22 +68,36 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
               'transition-transform duration-normal ease-enter',
               'data-starting-style:translate-y-full data-ending-style:translate-y-full',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
+              fullHeight && 'h-[calc(100%-40px)]',
             )}
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
           >
             <div className="flex items-center gap-2.5 px-4 py-2.5">
+              {leading === 'back' && (
+                <BaseDialog.Close aria-label="뒤로" className={HEADER_BUTTON_CLASSNAME}>
+                  <BackIcon aria-hidden="true" className="size-6 text-icon-primary" />
+                </BaseDialog.Close>
+              )}
               <BaseDialog.Title className="min-w-px flex-1 text-title-18bd text-text-secondary">
                 {title}
               </BaseDialog.Title>
-              <BaseDialog.Close
-                aria-label="닫기"
-                className="flex size-6 shrink-0 cursor-pointer items-center justify-center text-icon-primary"
-              >
-                <CloseIcon aria-hidden="true" className="size-6 text-icon-primary" />
-              </BaseDialog.Close>
+              {leading !== 'back' && (
+                <BaseDialog.Close aria-label="닫기" className={HEADER_BUTTON_CLASSNAME}>
+                  <CloseIcon aria-hidden="true" className="size-6 text-icon-primary" />
+                </BaseDialog.Close>
+              )}
             </div>
             {/* 시안의 시트는 본문이 자기 여백을 가진다 — 패널은 가로 여백을 두지 않는다 */}
-            <div className="flex flex-col gap-4 p-4">{children}</div>
+            <div
+              data-slot="bottom-sheet-body"
+              className={cn(
+                'flex flex-col gap-4 p-4',
+                fullHeight && 'min-h-0 flex-1 overflow-y-auto',
+              )}
+            >
+              {children}
+            </div>
+            {footer && <div className="shrink-0 px-4 pb-2">{footer}</div>}
           </BaseDialog.Popup>
         </BaseDialog.Viewport>
       </BaseDialog.Portal>
