@@ -34,8 +34,8 @@ export function useTraceList(passageId: number | undefined, initialTraceId?: num
     traces,
     traceCount,
     sortType,
-    toggleSort: () => {
-      setSortType((prev) => (prev === 'LATEST' ? 'LIKES' : 'LATEST'))
+    changeSort: (nextSortType: OpinionSortType) => {
+      setSortType(nextSortType)
     },
     selectedTrace,
     selectTrace: (traceId: number) => {

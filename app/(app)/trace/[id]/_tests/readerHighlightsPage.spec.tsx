@@ -568,12 +568,21 @@ describe('ReaderHighlightsPage', () => {
     expect(pushMock).not.toHaveBeenCalled()
   })
 
-  it('정렬 버튼을 누르면 라벨이 토글되고 서버 정렬(sortType)로 다시 조회한다', async () => {
+  it('정렬 드롭다운에서 인기순을 고르면 라벨이 바뀌고 서버 정렬(sortType)로 다시 조회한다', async () => {
     await renderPage()
     await screen.findByText('첫 대목의 첫 번째 흔적')
 
-    fireEvent.click(screen.getByRole('button', { name: '최신순' }))
-    expect(screen.getByRole('button', { name: '좋아요순' })).toBeInTheDocument()
+    const sortTrigger = screen.getByRole('combobox', { name: '정렬 기준' })
+    expect(sortTrigger).toHaveTextContent('최신순')
+
+    // base-ui의 Select.Item은 하이라이트된 항목만 클릭으로 커밋한다 — userEvent로 조작해야 한다
+    await userEvent.click(sortTrigger)
+    await screen.findByRole('listbox')
+    await userEvent.click(screen.getByRole('option', { name: '인기순' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox', { name: '정렬 기준' })).toHaveTextContent('인기순')
+    })
 
     const requestedUrls = vi
       .mocked(fetch)

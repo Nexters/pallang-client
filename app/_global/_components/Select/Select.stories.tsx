@@ -18,7 +18,7 @@ const meta = {
     defaultValue: 'latest',
   },
   // 트리거·옵션이 모두 흰 텍스트라 밝은 배경에서는 보이지 않는다 — 어두운 배경 위에 올려 확인한다.
-  // 팝업이 트리거를 덮으며 아래로 펼쳐지므로 세로 여유도 함께 준다.
+  // 열리면 트리거 아래로 목록이 이어 붙어 한 덩어리가 되므로 세로 여유도 함께 준다.
   decorators: [
     (Story) => (
       <div className="flex min-h-[220px] w-[343px] items-start bg-bg-dark p-4">
@@ -33,6 +33,18 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** 밝은 면 위에 얹는 톤(시안 218:8736 Variant3/4) — 채운 회색 대신 유리 질감으로 깔린다 */
+export const Light: Story = {
+  args: { tone: 'light' },
+  decorators: [
+    (Story) => (
+      <div className="flex min-h-[220px] w-[343px] items-start bg-bg-surface p-4">
+        <Story />
+      </div>
+    ),
+  ],
+}
 
 function ControlledSelect({
   label,

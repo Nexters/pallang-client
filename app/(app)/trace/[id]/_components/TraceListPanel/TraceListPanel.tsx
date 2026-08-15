@@ -111,7 +111,7 @@ export function TraceListPanel({
             traceCount={list.traceCount}
             isMasked={isMasked}
             sortType={list.sortType}
-            onToggleSort={list.toggleSort}
+            onChangeSort={list.changeSort}
             onSelectTrace={(trace) => {
               // 상세 오버레이는 인용문을 가림막 없이 그대로 펼친다. inert는 브라우저에만 있는
               // 방어라 여기서 동작으로도 막아야 가림막을 우회해 원문을 볼 수 없다.
