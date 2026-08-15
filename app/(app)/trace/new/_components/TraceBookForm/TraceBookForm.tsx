@@ -39,6 +39,14 @@ export function TraceBookForm() {
   const me = useQuery(userQueries.me())
   const nickname = me.data?.data?.nickname ?? '나'
 
+  // 검색 시트가 떠 있는 동안에는 뒤로가기가 플로우를 나가는 대신 시트만 닫는다.
+  // 가드가 없으면 이탈 확인 다이얼로그가 시트 위에 겹쳐 뜬다(BookSearchSheet의 가드는
+  // 시트 안쪽 도서 추가 폼만 덮는다). 병합 다이얼로그보다 먼저 등록해야 둘이 겹칠 때
+  // 나중에 등록된 안쪽 층부터 걷힌다.
+  useOverlayBackGuard(sheetOpen, () => {
+    setSheetOpen(false)
+  })
+
   // 병합 다이얼로그가 떠 있는 동안에는 뒤로가기가 화면을 나가는 대신 다이얼로그만 닫는다.
   useOverlayBackGuard(candidate !== null, () => {
     setCandidate(null)

@@ -14,6 +14,7 @@ import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraft
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
 import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
 import { useTraceDraft } from '../_hooks/useTraceDraft'
+import { useTraceNav } from '../_hooks/useTraceNav'
 
 // vi.mock 팩토리는 import보다도 먼저(호이스팅되어) 실행된다 — 팩토리 안에서 참조할 목은
 // vi.hoisted로 감싸야 "초기화 전 접근" 참조 오류 없이 값을 공유할 수 있다.
@@ -104,6 +105,23 @@ function Seeded({
   return <TraceBookForm />
 }
 
+// 하드웨어 뒤로가기를 흉내 낸다 — 이 플로우는 하드웨어 back도 닫기(X)와 같은
+// requestExit 판정을 거치므로, 그 판정을 그대로 태워야 실제 동작과 같다
+// (bookSearchSheet.spec.tsx의 BackProbe와 같은 패턴).
+function BackProbe() {
+  const { requestExit } = useTraceNav()
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        requestExit()
+      }}
+    >
+      하드웨어 뒤로가기
+    </button>
+  )
+}
+
 function renderForm({ pageNumber = 10, withBook = false } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -114,6 +132,7 @@ function renderForm({ pageNumber = 10, withBook = false } = {}) {
             <TraceOverlayProvider>
               <TraceNavProvider>
                 <Seeded pageNumber={pageNumber} withBook={withBook} />
+                <BackProbe />
               </TraceNavProvider>
             </TraceOverlayProvider>
           </TraceDraftProvider>
@@ -203,6 +222,21 @@ describe('책 등록 단계', () => {
     await pickBook()
 
     expect(await screen.findByText('나님이 기록한 의견')).toBeTruthy()
+  })
+
+  it('검색 시트가 열려 있으면 하드웨어 뒤로가기가 시트만 닫는다', async () => {
+    // 가드가 없으면 이탈 확인 다이얼로그가 시트 위에 겹쳐 뜬다 — 시트를 닫으려던 사용자가
+    // 플로우를 나갈지 묻는 질문을 받는다.
+    renderForm()
+
+    await screen.findByPlaceholderText('책 제목을 입력해 주세요.')
+    // 프로브는 시트(모달) 바깥 형제라 base-ui가 aria-hidden 처리해 둔다.
+    fireEvent.click(screen.getByRole('button', { name: '하드웨어 뒤로가기', hidden: true }))
+
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('책 제목을 입력해 주세요.')).toBeNull()
+    })
+    expect(screen.queryByText('남긴 문장과 의견은 저장되지 않아요.')).toBeNull()
   })
 
   it('기록 완료를 누르면 흔적을 저장하고 완료로 간다', async () => {
