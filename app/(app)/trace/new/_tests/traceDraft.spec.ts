@@ -34,6 +34,25 @@ describe('traceDraftReducer', () => {
     expect(next.isSpoiler).toBe(true)
   })
 
+  it('setPageDetail은 병합 대상을 비운다', () => {
+    // 페이지가 달라지면 직전 병합 판정은 다른 쪽에 대한 답이다 — 남겨 두면 쪽이 맞지 않는
+    // 대목에 흔적이 합쳐진다.
+    const merged = [
+      { type: 'selectBook', book } as const,
+      { type: 'setQuotedText', quotedText: '어떤 문장' } as const,
+      { type: 'setPageDetail', pageNumber: 87, isSpoiler: false } as const,
+      { type: 'setMergeTarget', passageId: 14 } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    const next = traceDraftReducer(merged, {
+      type: 'setPageDetail',
+      pageNumber: 120,
+      isSpoiler: false,
+    })
+
+    expect(next.passageId).toBeNull()
+  })
+
   it('applyDecoration은 겹치지 않는 범위를 그대로 추가한다', () => {
     const withFirst = traceDraftReducer(initialTraceDraft, {
       type: 'applyDecoration',

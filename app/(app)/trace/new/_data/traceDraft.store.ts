@@ -41,7 +41,14 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
         passageId: null,
       }
     case 'setPageDetail':
-      return { ...state, pageNumber: action.pageNumber, isSpoiler: action.isSpoiler }
+      // 병합 대상은 '이 책 · 이 페이지 · 이 대목'에 매인 판정이다.
+      // 페이지가 바뀌면 그 판정은 다른 쪽에 대한 답이라 무효다 — 비워서 ③이 다시 묻게 한다.
+      return {
+        ...state,
+        pageNumber: action.pageNumber,
+        isSpoiler: action.isSpoiler,
+        passageId: null,
+      }
     case 'applyDecoration':
       return {
         ...state,

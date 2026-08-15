@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
@@ -32,7 +32,7 @@ export function TraceBookForm() {
   const [sheetOpen, setSheetOpen] = useState(draft.book === null)
   const [candidate, setCandidate] = useState<MergeCandidate | null>(null)
   const [message, setMessage] = useState('')
-  const similarCheck = useMutation(passageMutations.similarCheck())
+  const { mutate: checkSimilar } = useMutation(passageMutations.similarCheck())
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
   // 비로그인이면 401이라 me가 비어 있다 — BookSearchView의 처리와 같게 '나'로 떨어뜨린다.
@@ -44,11 +44,24 @@ export function TraceBookForm() {
     setCandidate(null)
   })
 
-  const handleSelectBook = (book: SelectedBook) => {
-    dispatch({ type: 'selectBook', book })
-    setSheetOpen(false)
-    similarCheck.mutate(
-      { bookId: book.bookId, pageNumber: draft.pageNumber ?? 0, quotedText: draft.quotedText },
+  // 유사 대목 검사는 '책을 고르는 동작'이 아니라 '책 · 페이지 · 대목'이라는 조합에 매인다.
+  // 선택 콜백에 매달아 두면 두 곳이 샌다 — 씨앗으로 책을 들고 들어와 시트를 한 번도 열지
+  // 않는 경로(흔적 보기 → 흔적 남기기)에서는 아예 돌지 않고, ①로 돌아가 페이지만 바꿔도
+  // 예전 판정이 그대로 남는다. 그래서 조합을 키로 삼아 effect에서 돌린다.
+  const bookId = draft.book?.bookId ?? null
+  const { pageNumber, quotedText } = draft
+  const checkedKey = useRef<null | string>(null)
+
+  useEffect(() => {
+    if (bookId === null) return
+    // 같은 조합은 두 번 묻지 않는다 — 시트를 여닫거나 다시 렌더돼도 재요청이 없고,
+    // 실패해도 키가 남아 재시도 루프가 생기지 않는다.
+    const key = [bookId, pageNumber ?? 0, quotedText].join(':')
+    if (checkedKey.current === key) return
+    checkedKey.current = key
+
+    checkSimilar(
+      { bookId, pageNumber: pageNumber ?? 0, quotedText },
       {
         onSuccess: (response) => {
           const first = response.data?.passages[0]
@@ -60,6 +73,12 @@ export function TraceBookForm() {
         },
       },
     )
+  }, [bookId, checkSimilar, pageNumber, quotedText])
+
+  const handleSelectBook = (book: SelectedBook) => {
+    // selectBook이 passageId를 비우므로 조합이 달라지고, 위 effect가 새 책으로 다시 묻는다.
+    dispatch({ type: 'selectBook', book })
+    setSheetOpen(false)
   }
 
   const handleSubmit = () => {

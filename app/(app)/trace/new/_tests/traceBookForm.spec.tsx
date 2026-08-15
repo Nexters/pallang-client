@@ -68,11 +68,21 @@ vi.mock('@/app/_global/_apis/_generated/user/user', () => ({
   getMyOpinions: () => Promise.resolve({ data: { opinions: [] } }),
 }))
 
+// 흔적 보기 화면에서 씨앗으로 들어오면 첫 화면이 이미 selectBook을 던진 상태로 ③에 닿는다.
+const SEED_BOOK = {
+  bookId: 3,
+  title: '싯다르타',
+  author: '헤르만 헤세',
+  coverImageUrl: null,
+  pageCount: 200,
+}
+
 // dispatch는 effect에서만 부른다(렌더 중 부르면 Provider를 렌더 도중 갱신하게 된다)
-function Seeded() {
+function Seeded({ withBook = false }: { withBook?: boolean }) {
   const { dispatch, draft } = useTraceDraft()
 
   useEffect(() => {
+    if (withBook) dispatch({ type: 'selectBook', book: SEED_BOOK })
     dispatch({ type: 'setQuotedText', quotedText: '어떤 문장' })
     dispatch({ type: 'setPageDetail', pageNumber: 10, isSpoiler: false })
     dispatch({ type: 'setContent', content: '좋았다' })
@@ -80,13 +90,15 @@ function Seeded() {
       type: 'applyDecoration',
       decoration: { startOffset: 0, endOffset: 2, effectType: 'HIGHLIGHT', color: '#FFE81A' },
     })
-  }, [dispatch])
+  }, [dispatch, withBook])
 
+  // 초안이 다 차기 전에는 TraceBookForm을 마운트하지 않는다 — 마운트 시점의 draft.book이
+  // 시트를 열지 말지를 정하므로, 씨앗 경로를 흉내 내려면 책이 먼저 들어가 있어야 한다.
   if (!draft.quotedText) return null
   return <TraceBookForm />
 }
 
-function renderForm() {
+function renderForm({ withBook = false } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -95,7 +107,7 @@ function renderForm() {
           <TraceDraftProvider>
             <TraceOverlayProvider>
               <TraceNavProvider>
-                <Seeded />
+                <Seeded withBook={withBook} />
               </TraceNavProvider>
             </TraceOverlayProvider>
           </TraceDraftProvider>
@@ -125,6 +137,42 @@ describe('책 등록 단계', () => {
     await waitFor(() => {
       expect(similarCheckMock).toHaveBeenCalled()
     })
+  })
+
+  it('씨앗으로 책을 들고 오면 시트 없이 확인 화면이고 유사 대목 검사도 돈다', async () => {
+    // 중복 대목이 생기던 경로다 — 시트를 한 번도 열지 않아 선택 콜백이 돌지 않는다.
+    similarCheckMock.mockClear()
+    renderForm({ withBook: true })
+
+    expect(await screen.findByText('헤르만 헤세')).toBeTruthy()
+    expect(screen.queryByPlaceholderText('책 제목을 입력해 주세요.')).toBeNull()
+    await waitFor(() => {
+      expect(similarCheckMock).toHaveBeenCalledWith({
+        bookId: 3,
+        pageNumber: 10,
+        quotedText: '어떤 문장',
+      })
+    })
+  })
+
+  it('시트를 열었다 그냥 닫아도 유사 대목 검사를 다시 돌리지 않는다', async () => {
+    similarCheckMock.mockClear()
+    renderForm({ withBook: true })
+
+    await screen.findByText('헤르만 헤세')
+    await waitFor(() => {
+      expect(similarCheckMock).toHaveBeenCalledTimes(1)
+    })
+
+    similarCheckMock.mockClear()
+    fireEvent.click(screen.getByRole('button', { name: '편집하기' }))
+    await screen.findByPlaceholderText('책 제목을 입력해 주세요.')
+    fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
+
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('책 제목을 입력해 주세요.')).toBeNull()
+    })
+    expect(similarCheckMock).not.toHaveBeenCalled()
   })
 
   it('책을 고르면 확인 화면에 책·의견이 보인다', async () => {

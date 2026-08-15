@@ -31,6 +31,17 @@ function Seeded() {
   return <TraceWriteForm />
 }
 
+// '다음'이 화면을 넘기는 것만으로는 부족하다 — 페이지·스포일러가 실제로 초안에 남았는지
+// 읽어야 한다(넘어간 뒤에는 화면이 사라져 입력값으로 확인할 수 없다).
+function DraftProbe() {
+  const { draft } = useTraceDraft()
+  return (
+    <output data-testid="draft-probe">
+      {[draft.pageNumber ?? '', draft.isSpoiler, draft.content].join('/')}
+    </output>
+  )
+}
+
 function renderForm() {
   return render(
     <HardwareBackProvider>
@@ -38,6 +49,7 @@ function renderForm() {
         <TraceOverlayProvider>
           <TraceNavProvider>
             <Seeded />
+            <DraftProbe />
           </TraceNavProvider>
         </TraceOverlayProvider>
       </TraceDraftProvider>
@@ -81,6 +93,7 @@ describe('생각 작성 단계', () => {
     await waitFor(() => {
       expect(replaceMock).toHaveBeenCalledWith('/trace/new/decorate')
     })
+    expect(screen.getByTestId('draft-probe').textContent).toBe('100/true/좋았다')
   })
 
   it('책 쪽수와 무관하게 다섯 자리까지 받는다', async () => {
