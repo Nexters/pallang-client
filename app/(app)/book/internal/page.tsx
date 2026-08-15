@@ -11,6 +11,10 @@ export default async function BookInternalRedirectPage({
   const entries = await searchParams
 
   Object.entries(entries).forEach(([key, value]) => {
+    if (key === 'focus' && value === 'search') {
+      params.set('autofocus', '')
+      return
+    }
     if (typeof value === 'string') {
       params.set(key, value)
       return

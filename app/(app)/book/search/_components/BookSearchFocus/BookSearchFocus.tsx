@@ -6,10 +6,10 @@ type BookSearchFocusProps = {
 
 /**
  * 서버 컴포넌트 — 검색 진입 여부만 읽어 화면에 넘기는 요청 시점 경계.
- * 홈의 검색 버튼은 `?focus=search`를 달고, '모두 보기' 링크는 달지 않는다.
+ * 홈의 검색 버튼은 `?autofocus`를 달고, '모두 보기' 링크는 달지 않는다.
  */
 export async function BookSearchFocus({ searchParams }: BookSearchFocusProps) {
-  const { focus } = await searchParams
+  const { autofocus } = await searchParams
 
-  return <BookSearchPageView shouldFocusSearch={focus === 'search'} />
+  return <BookSearchPageView shouldFocusSearch={autofocus !== undefined} />
 }
