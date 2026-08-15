@@ -5,12 +5,20 @@ import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opi
 
 import { DEFAULT_OPINION_SORT_TYPE } from '../_data/readerHighlights.constant'
 
+type UseTraceListParams = {
+  passageId: number | undefined
+  /** 딥링크로 지목된 흔적 — 목록이 도착하면 상세가 열린 채 시작한다 */
+  initialTraceId?: number
+  /** 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러로 묶는다 */
+  stageError: { isError: boolean; retry: () => void }
+}
+
 /** 흔적 목록 흐름 — 목록 조회·정렬·딥링크로 지목된 상세를 소유한다. 정렬/필터 확장은 여기에 쌓는다 */
-export function useTraceList(passageId: number | undefined, initialTraceId?: number) {
+export function useTraceList({ passageId, initialTraceId, stageError }: UseTraceListParams) {
   // 서버 프리페치가 채운 queryKey와 맞아야 첫 렌더에서 캐시가 그대로 쓰인다
   const [sortType, setSortType] = useState<OpinionSortType>(DEFAULT_OPINION_SORT_TYPE)
   // 상세로 들어오는 길은 딥링크뿐이다(목록에서 흔적을 눌러도 상세는 열리지 않는다).
-  // 목록에 없으면(다른 대목으로 옮긴 뒤 등) selectedTrace가 undefined라 아무 일도 일어나지 않는다.
+  // 목록에 없으면(다른 대목으로 옮긴 뒤 등) selectedTrace가 null이라 아무 일도 일어나지 않는다.
   const [selectedTraceId, setSelectedTraceId] = useState<null | number>(initialTraceId ?? null)
 
   const opinionsQuery = useInfiniteQuery(opinionQueries.listByPassage(passageId, sortType))
@@ -21,7 +29,9 @@ export function useTraceList(passageId: number | undefined, initialTraceId?: num
   // 헤더 숫자는 서버가 알려준 전체 개수라, 목록을 끝까지 불러오면 둘이 맞는다
   const traceCount = opinionsQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
 
-  const selectedTrace = traces.find((trace) => trace.opinionId === selectedTraceId)
+  // 목록에서 의견을 집는 유일한 자리 — 상세도 시트도 이 조회를 함께 쓴다
+  const findTrace = (opinionId: number | null) =>
+    traces.find((trace) => trace.opinionId === opinionId) ?? null
 
   // placeholderData로 이전 대목의 목록이 보이는 동안에는 다음 페이지를 당기지 않는다
   const canFetchMore =
@@ -37,7 +47,8 @@ export function useTraceList(passageId: number | undefined, initialTraceId?: num
     changeSort: (nextSortType: OpinionSortType) => {
       setSortType(nextSortType)
     },
-    selectedTrace,
+    findTrace,
+    selectedTrace: findTrace(selectedTraceId),
     closeTrace: () => {
       setSelectedTraceId(null)
     },
@@ -45,8 +56,10 @@ export function useTraceList(passageId: number | undefined, initialTraceId?: num
     fetchMore: () => {
       void opinionsQuery.fetchNextPage()
     },
-    isError: opinionsQuery.isError,
+    // 대목과 흔적은 한 화면을 이루므로 어느 쪽이 깨져도 같은 에러 화면으로 묶는다
+    isError: stageError.isError || opinionsQuery.isError,
     retry: () => {
+      stageError.retry()
       if (opinionsQuery.isError) void opinionsQuery.refetch()
     },
   }
