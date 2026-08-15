@@ -51,6 +51,15 @@ describe('온보딩 뷰', () => {
     expect(screen.getByRole('heading', { name: /사진을 통해 문장을 편하게/ })).toBeDefined()
   })
 
+  // 전환 중 이전 단계가 DOM에 겹쳐 남으므로, 보조기술에는 현재 단계만 보여야 한다
+  it('다음을 누르면 이전 단계 문구는 접근성 트리에서 숨겨진다', async () => {
+    renderView()
+
+    await userEvent.click(screen.getByRole('button', { name: '다음' }))
+
+    expect(screen.queryByRole('heading', { name: /안녕하세요/ })).toBeNull()
+  })
+
   it('건너뛰기를 누르면 본 것으로 기록하고 홈으로 돌아간다', async () => {
     renderView()
 

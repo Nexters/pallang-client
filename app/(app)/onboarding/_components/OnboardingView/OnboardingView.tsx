@@ -16,7 +16,6 @@ export function OnboardingView() {
   const router = useRouter()
   const [stepIndex, setStepIndex] = useState(0)
 
-  const step = ONBOARDING_STEPS[stepIndex] ?? ONBOARDING_STEPS[0]
   const isLastStep = stepIndex === ONBOARDING_STEPS.length - 1
 
   const finishOnboarding = () => {
@@ -45,27 +44,40 @@ export function OnboardingView() {
     >
       <div className="h-11 shrink-0" />
 
-      <div className="flex h-75 shrink-0 flex-col items-center justify-center gap-2.5 px-6 py-25 text-center">
-        <h1 className="whitespace-nowrap text-[24px] font-bold leading-[1.2] tracking-[-0.02em] text-text-secondary">
-          {step.titleLines.map((line, index) => (
-            <Fragment key={line}>
-              {index > 0 && <br aria-hidden />}
-              {line}
-            </Fragment>
-          ))}
-        </h1>
-        <p className="whitespace-nowrap text-title-18md text-text-tertiary">
-          {step.descriptionLines.map((line, index) => (
-            <Fragment key={line}>
-              {index > 0 && <br aria-hidden />}
-              {line}
-            </Fragment>
-          ))}
-        </p>
+      {/* 단계별 텍스트를 겹쳐 두고 크로스페이드한다 — 나가는 단계가 사라지는 동안 들어오는 단계가 아래에서 떠오른다 */}
+      <div className="relative h-75 shrink-0">
+        {ONBOARDING_STEPS.map((item, index) => (
+          <div
+            key={item.imageSrc}
+            aria-hidden={index !== stepIndex || undefined}
+            className={cn(
+              'absolute inset-0 flex flex-col items-center justify-center gap-2.5 px-6 text-center',
+              'transition-[opacity,translate] duration-normal ease-standard',
+              index === stepIndex ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+            )}
+          >
+            <h1 className="whitespace-nowrap text-[24px] font-bold leading-[1.2] tracking-[-0.02em] text-text-secondary">
+              {item.titleLines.map((line, lineIndex) => (
+                <Fragment key={line}>
+                  {lineIndex > 0 && <br aria-hidden />}
+                  {line}
+                </Fragment>
+              ))}
+            </h1>
+            <p className="whitespace-nowrap text-title-18md text-text-tertiary">
+              {item.descriptionLines.map((line, lineIndex) => (
+                <Fragment key={line}>
+                  {lineIndex > 0 && <br aria-hidden />}
+                  {line}
+                </Fragment>
+              ))}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        {/* 4장을 모두 렌더해 두고 현재 단계만 보인다 — 단계를 넘길 때 이미지 로딩으로 비지 않는다 */}
+      {/* 4장을 모두 렌더해 겹쳐 두고 현재 단계만 보인다 — 미리 로드되어 전환이 비지 않고, 크로스페이드로 이어진다 */}
+      <div className="relative min-h-0 flex-1">
         {ONBOARDING_STEPS.map((item, index) => (
           <Image
             key={item.imageSrc}
@@ -74,30 +86,41 @@ export function OnboardingView() {
             width={item.imageWidth}
             height={item.imageHeight}
             priority={index === 0}
-            className={cn('object-contain', index !== stepIndex && 'hidden')}
+            className={cn(
+              'absolute inset-0 m-auto object-contain',
+              'transition-[opacity,scale] duration-slow ease-standard',
+              index === stepIndex ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
+            )}
           />
         ))}
       </div>
 
       <div className="flex shrink-0 flex-col items-center gap-4 p-4">
-        {isLastStep ? (
-          <Button variant="activated" onClick={finishOnboarding} className="h-13.5 w-full">
-            시작하기
-          </Button>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={finishOnboarding}
-              className="press text-body-16md text-text-primary/80"
-            >
-              건너뛰기
-            </button>
-            <Button onClick={handleNextClick} className="h-13.5 w-full">
-              다음
-            </Button>
-          </>
-        )}
+        {/* 마지막 단계에서도 자리를 유지한 채 페이드아웃한다 — 이미지·버튼 위치가 튀지 않는다.
+            press가 opacity를 duration-instant로 전환하므로 페이드는 래퍼가 맡는다. */}
+        <div
+          aria-hidden={isLastStep || undefined}
+          className={cn(
+            'transition-opacity duration-normal ease-standard',
+            isLastStep && 'pointer-events-none opacity-0',
+          )}
+        >
+          <button
+            type="button"
+            onClick={finishOnboarding}
+            tabIndex={isLastStep ? -1 : undefined}
+            className="press text-body-16md text-text-primary/80"
+          >
+            건너뛰기
+          </button>
+        </div>
+        <Button
+          variant={isLastStep ? 'activated' : 'default'}
+          onClick={handleNextClick}
+          className="h-13.5 w-full"
+        >
+          {isLastStep ? '시작하기' : '다음'}
+        </Button>
       </div>
     </section>
   )
