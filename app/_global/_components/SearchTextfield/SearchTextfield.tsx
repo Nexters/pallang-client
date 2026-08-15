@@ -6,7 +6,7 @@ import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
-type SearchTextfieldProps = Omit<ComponentPropsWithoutRef<'input'>, 'type' | 'size' | 'value'> & {
+type SearchTextfieldProps = Omit<ComponentPropsWithoutRef<'input'>, 'type' | 'size'> & {
   clearButtonLabel?: string
   onClear?: () => void
   searchLabel?: string
@@ -21,21 +21,24 @@ export function SearchTextfield({
   onChange,
   onClear,
   searchLabel = '검색어',
+  value,
   ...props
 }: SearchTextfieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [hasValue, setHasValue] = useState(String(defaultValue ?? '').length > 0)
+  const isControlled = value !== undefined
+  const shouldShowClearButton = isControlled ? String(value).length > 0 : hasValue
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setHasValue(event.target.value.length > 0)
+    if (!isControlled) setHasValue(event.target.value.length > 0)
     onChange?.(event)
   }
 
   const handleClear = () => {
-    if (inputRef.current) {
+    if (!isControlled && inputRef.current) {
       inputRef.current.value = ''
+      setHasValue(false)
     }
-    setHasValue(false)
     onClear?.()
   }
 
@@ -57,10 +60,11 @@ export function SearchTextfield({
         defaultValue={defaultValue}
         disabled={disabled}
         onChange={handleChange}
+        value={value}
         className="min-w-px flex-1 bg-transparent font-pretendard text-body-16md text-text-secondary caret-interactive-accent outline-none [word-break:break-word] placeholder:text-text-placeholder/50 disabled:cursor-not-allowed"
         {...props}
       />
-      {hasValue && (
+      {shouldShowClearButton && (
         <button
           type="button"
           aria-label={clearButtonLabel}

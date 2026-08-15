@@ -1,7 +1,7 @@
 'use client'
 
 import { Select as BaseSelect } from '@base-ui/react/select'
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -68,6 +68,9 @@ export function Select<TValue extends string>({
   className,
 }: SelectProps<TValue>) {
   const toneClass = TONE_CLASS[tone]
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue)
+  const currentValue = value ?? uncontrolledValue
+  const visibleOptions = options.filter((option) => option.value !== currentValue)
 
   return (
     <BaseSelect.Root<TValue>
@@ -77,7 +80,9 @@ export function Select<TValue extends string>({
       disabled={disabled}
       onValueChange={(nextValue) => {
         // 값 해제(null)는 이 셀렉트에서 일어나지 않지만 타입상 올 수 있어 막아둔다.
-        if (nextValue !== null) onValueChange?.(nextValue)
+        if (nextValue === null) return
+        setUncontrolledValue(nextValue)
+        onValueChange?.(nextValue)
       }}
     >
       <BaseSelect.Trigger
@@ -115,8 +120,7 @@ export function Select<TValue extends string>({
       </BaseSelect.Trigger>
 
       <BaseSelect.Portal>
-        {/* Figma 열림 상태는 트리거 행(값 + 위쪽 쉐브론)이 그대로 보이고 그 아래로 옵션이
-            이어지는 한 덩어리 블록이다 — 팝업이 트리거를 덮지 않도록 겹침을 끈다. */}
+        {/* Figma 열림 상태는 트리거를 그대로 두고 옵션 목록만 아래로 펼친다. */}
         <BaseSelect.Positioner
           data-slot="select-positioner"
           alignItemWithTrigger={false}
@@ -138,7 +142,7 @@ export function Select<TValue extends string>({
               toneClass.text,
             )}
           >
-            {options.map((option) => (
+            {visibleOptions.map((option) => (
               <Fragment key={option.value}>
                 {/* 첫 점선은 트리거와 목록 사이 이음매다 — 옵션마다 앞에 두면 간격이 한 규칙으로 맞는다 */}
                 <div aria-hidden className={cn(RULE_CLASS, toneClass.rule)} />

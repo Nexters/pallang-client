@@ -3,14 +3,16 @@ import type { ComponentPropsWithoutRef, FC, SVGProps } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
+import BookFillIcon from '../Icon/assets/book-fill.svg'
 import HomeIcon from '../Icon/assets/home.svg'
 import MyIcon from '../Icon/assets/my.svg'
 import PlusIcon from '../Icon/assets/plus.svg'
 
-type TabBarTab = 'home' | 'my'
+type TabBarTab = 'book' | 'home' | 'my'
 
 type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
   activeTab?: TabBarTab
+  bookHref?: string
   homeHref?: string
   isLoading?: boolean
   /** 흔적 남기기 이동이 진행 중. Button과 같은 규칙으로 색은 유지한 채 pulse로 알리고 중복 탭을 막는다. */
@@ -22,7 +24,7 @@ type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
 }
 
 const TRACE_BUTTON_CLASS =
-  'press flex shrink-0 items-center justify-center gap-2 rounded-full bg-interactive-accent px-4 py-3 text-body-16md text-text-primary'
+  'press flex w-20 shrink-0 items-center justify-center rounded-full bg-interactive-accent px-4 py-3.5 text-text-primary'
 
 type TabLinkProps = {
   href: string
@@ -37,7 +39,7 @@ function TabLink({ href, icon: Icon, isActive, label }: TabLinkProps) {
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'press flex w-12 shrink-0 flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
+        'press flex w-12 shrink-0 cursor-pointer flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
         !isActive && 'opacity-60',
       )}
     >
@@ -65,6 +67,7 @@ function TabBarSkeleton() {
 
 export function TabBar({
   activeTab = 'home',
+  bookHref = '/book/list',
   className,
   homeHref = '/',
   isLoading = false,
@@ -85,16 +88,23 @@ export function TabBar({
       )}
       {...props}
     >
-      <div className="flex items-center gap-8" aria-hidden={isLoading ? 'true' : undefined}>
+      <div className="flex items-center gap-4" aria-hidden={isLoading ? 'true' : undefined}>
         {isLoading ? (
           <TabBarSkeleton />
         ) : (
           <>
-            <TabLink href={homeHref} icon={HomeIcon} isActive={activeTab === 'home'} label="home" />
+            <TabLink href={homeHref} icon={HomeIcon} isActive={activeTab === 'home'} label="홈" />
+            <TabLink
+              href={bookHref}
+              icon={BookFillIcon}
+              isActive={activeTab === 'book'}
+              label="탐색"
+            />
             {/* 흔적 저장은 로그인이 필요하다. 게이트를 받으면 링크 대신 버튼으로 그려 이동 전에 확인한다. */}
             {onTraceClick ? (
               <button
                 type="button"
+                aria-label="흔적 남기기"
                 onClick={onTraceClick}
                 // 이동이 끝나기 전에 또 누르면 같은 화면으로 두 번 밀어 넣는다
                 disabled={isTracePending}
@@ -106,12 +116,10 @@ export function TabBar({
                 )}
               >
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
-                <span>흔적 남기기</span>
               </button>
             ) : (
-              <Link href={traceHref} className={TRACE_BUTTON_CLASS}>
+              <Link href={traceHref} aria-label="흔적 남기기" className={TRACE_BUTTON_CLASS}>
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
-                <span>흔적 남기기</span>
               </Link>
             )}
             <TabLink href={myHref} icon={MyIcon} isActive={activeTab === 'my'} label="MY" />

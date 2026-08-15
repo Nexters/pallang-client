@@ -10,7 +10,7 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { TabBar } from '../TabBar/TabBar'
 
 type TabScreenLayoutProps = ComponentPropsWithoutRef<'section'> & {
-  activeTab?: 'home' | 'my'
+  activeTab?: 'book' | 'home' | 'my'
   isTabBarLoading?: boolean
 }
 

@@ -27,10 +27,7 @@ it('트리거를 누르면 옵션 목록이 열린다', async () => {
   await user.click(screen.getByRole('combobox', { name: '정렬 기준' }))
 
   await screen.findByRole('listbox')
-  expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
-    '최신순',
-    '인기순',
-  ])
+  expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['인기순'])
 })
 
 it('옵션을 고르면 onValueChange가 호출되고 팝업이 닫힌다', async () => {

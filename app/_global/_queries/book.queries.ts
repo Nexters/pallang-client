@@ -1,7 +1,6 @@
 import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query'
 
 import {
-  createBook,
   getHomeCarouselBooks,
   getPopularBooks,
   getRecentBooks,
@@ -14,6 +13,11 @@ import type { GetPopularBooksParams } from '../_apis/_generated/models/getPopula
 import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentBooksParams'
 import type { SearchExternalBooksParams } from '../_apis/_generated/models/searchExternalBooksParams'
 import type { SearchInternalBooksParams } from '../_apis/_generated/models/searchInternalBooksParams'
+import { SearchInternalBooksSort } from '../_apis/_generated/models/searchInternalBooksSort'
+import { createBook } from '../_apis/book.api'
+
+export const BOOK_SEARCH_SORT = SearchInternalBooksSort
+export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
 
 export const bookQueries = {
   all: () => ['book'] as const,
@@ -36,8 +40,13 @@ export const bookQueries = {
     }),
   searchInternal: (params: Omit<SearchInternalBooksParams, 'page'>) =>
     infiniteQueryOptions({
-      queryKey: [...bookQueries.all(), 'internal-search', params],
-      queryFn: ({ pageParam }) => searchInternalBooks({ ...params, page: pageParam }),
+      queryKey: [
+        ...bookQueries.all(),
+        'internal-search',
+        { sort: SearchInternalBooksSort.OPINION, ...params },
+      ],
+      queryFn: ({ pageParam }) =>
+        searchInternalBooks({ sort: SearchInternalBooksSort.OPINION, ...params, page: pageParam }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
