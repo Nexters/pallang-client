@@ -17,6 +17,20 @@ export function joinBlockTexts(blocks: OcrBlock[]): string {
     .join(' ')
 }
 
-export function clampQuote(text: string, max: number): string {
-  return text.length <= max ? text : text.slice(0, max)
+/**
+ * 앞에서부터 몇 블록까지 상한 안에 담기는지 센다.
+ *
+ * 넘긴 글자를 잘라내는 대신 넘기는 블록 앞에서 끊는다 — 어절 중간이 잘린 발췌문이 남지 않고,
+ * "여기까지 담겼다"를 사진 위 블록 단위로 그대로 보여줄 수 있다.
+ * 길이 계산은 joinBlockTexts와 같은 규칙이어야 한다(빈 블록은 빼고 공백 하나로 잇기).
+ */
+export function countWithinLimit(blocks: OcrBlock[], max: number): number {
+  let length = 0
+  for (const [index, block] of blocks.entries()) {
+    if (block.text.length === 0) continue
+    const next = length === 0 ? block.text.length : length + 1 + block.text.length
+    if (next > max) return index
+    length = next
+  }
+  return blocks.length
 }
