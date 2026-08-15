@@ -19,6 +19,8 @@ type BottomSheetProps = {
   onBack?: () => void
   /** 본문 래퍼(flex flex-col gap-4 p-4)를 덮어쓸 때 쓴다 — 시트 안에서 자체 스크롤 영역을 잡는 경우 */
   contentClassName?: string
+  /** 시트 패널 자체에 덧붙일 클래스 — 기본은 내용 높이만큼이고, 높이를 고정하고 싶을 때 쓴다 */
+  popupClassName?: string
 }
 
 // Dialog와 같은 base-ui 프리미티브 위에 올린다 — 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘을
@@ -32,6 +34,7 @@ export function BottomSheet({
   tone = 'light',
   onBack,
   contentClassName,
+  popupClassName,
 }: BottomSheetProps) {
   const isDark = tone === 'dark'
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
@@ -66,6 +69,7 @@ export function BottomSheet({
               'transition-transform duration-normal ease-enter',
               'data-starting-style:translate-y-full data-ending-style:translate-y-full',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
+              popupClassName,
             )}
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
           >

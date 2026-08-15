@@ -87,10 +87,13 @@ export function TraceOpinionSheet({
         }
         onBack={isReplyOpen ? onShowList : undefined}
         onClose={onClose}
-        contentClassName="gap-0 p-0"
+        // 상단 54px(디자인 202:7346 — 상태바 44 + 10)만 남기고 화면을 채운다.
+        // 고정 54px 대신 인셋 토큰을 쓴다 — 노치가 큰 기기에서 헤더가 노치에 가리지 않게.
+        popupClassName="h-[calc(100dvh-var(--safe-top)-10px)]"
+        contentClassName="min-h-0 flex-1 gap-0 p-0"
       >
-        {/* 시트 높이를 고정해 목록↔답글 화면을 오가도 시트가 출렁이지 않게 한다 */}
-        <div className="relative h-[70dvh] overflow-hidden">
+        {/* 시트 높이가 고정이라 목록↔답글 화면을 오가도 시트가 출렁이지 않는다 */}
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           {/* 답글 화면이 덮고 있는 동안 뒤의 목록은 포커스·보조기기에서 뺀다 */}
           <div ref={listScrollRef} inert={isReplyOpen} className="h-full overflow-y-auto px-4">
             <ul className="flex flex-col">
