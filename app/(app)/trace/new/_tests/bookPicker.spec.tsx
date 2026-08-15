@@ -33,7 +33,6 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
-  createBook: () => Promise.resolve(apiState.createResult),
   getPopularBooks: () => Promise.resolve({ data: { books: [] } }),
   getRecentBooks: () => Promise.resolve({ data: { books: [] } }),
   searchExternalBooks: () => Promise.resolve({ data: { books: apiState.externalBooks } }),
@@ -41,6 +40,10 @@ vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
     Promise.resolve({
       data: { books: apiState.internalBooks, pageInfo: { page: 0, hasNext: false } },
     }),
+}))
+
+vi.mock('@/app/_global/_apis/book.api', () => ({
+  createBook: () => Promise.resolve(apiState.createResult),
 }))
 
 vi.mock('@/app/_global/_apis/_generated/user/user', () => ({
@@ -127,7 +130,10 @@ describe('BookPicker 도서 추가', () => {
 
   it('필수 항목이 비면 저장이 막히고 안내가 뜬다', async () => {
     renderPicker()
-    fireEvent.click(screen.getByRole('button', { name: '도서 추가' }))
+    fireEvent.change(screen.getByPlaceholderText('책 제목을 입력해 주세요.'), {
+      target: { value: '없는책' },
+    })
+    fireEvent.click(await screen.findByRole('button', { name: '직접 추가하기' }))
     fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
     await waitFor(() => {
@@ -149,7 +155,10 @@ describe('BookPicker 도서 추가', () => {
     }
 
     renderPicker()
-    fireEvent.click(screen.getByRole('button', { name: '도서 추가' }))
+    fireEvent.change(screen.getByPlaceholderText('책 제목을 입력해 주세요.'), {
+      target: { value: '없는책' },
+    })
+    fireEvent.click(await screen.findByRole('button', { name: '직접 추가하기' }))
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: '채식주의자' } })
     fireEvent.change(screen.getByLabelText(/지은이/), { target: { value: '한강' } })
     fireEvent.change(screen.getByLabelText(/출판사/), { target: { value: '창비' } })

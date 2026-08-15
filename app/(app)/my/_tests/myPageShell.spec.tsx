@@ -36,7 +36,7 @@ function renderWith(children: React.ReactNode) {
 function queryShell() {
   return [
     screen.queryByRole('heading', { name: '마이페이지' }),
-    screen.queryByRole('link', { name: 'home' }),
+    screen.queryByRole('link', { name: '홈' }),
     screen.queryByRole('button', { name: '흔적 남기기' }),
   ]
 }
