@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
-import { mockMyUser, mockRecentTraces } from '../../_data/myUser.constant'
+import { mockMyUser } from '../../_data/myUser.constant'
 import { MyPageView } from './MyPageView'
 
 const meta = {
@@ -24,11 +24,11 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const LoggedIn: Story = {
-  args: { user: mockMyUser, recentTraces: mockRecentTraces, onLogout: () => undefined },
+  args: { user: mockMyUser, onLogout: () => undefined },
 }
 
-export const LoggedInWithoutTraces: Story = {
-  args: { user: { ...mockMyUser, traceCount: 0 }, onLogout: () => undefined },
+export const LoggedInWithoutOpinions: Story = {
+  args: { user: { ...mockMyUser, opinionCount: 0 }, onLogout: () => undefined },
 }
 
 export const LoggedOut: Story = {

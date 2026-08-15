@@ -30,10 +30,6 @@ export function MyPageContent() {
     }
   }, [])
   const { data, isError } = useQuery({ ...userQueries.me(), enabled: isAuthenticated })
-  const { data: opinionsData } = useQuery({
-    ...userQueries.myOpinions(),
-    enabled: isAuthenticated,
-  })
 
   const me = data?.data
 
@@ -44,22 +40,18 @@ export function MyPageContent() {
 
   const user =
     isAuthenticated && me
-      ? { nickname: me.nickname, traceCount: me.opinionCount, profileImageUrl: me.profileImageUrl }
+      ? {
+          nickname: me.nickname,
+          opinionCount: me.opinionCount,
+          profileImageUrl: me.profileImageUrl,
+        }
       : null
-
-  const recentTraces =
-    opinionsData?.data?.opinions.map((opinion) => ({
-      id: opinion.opinionId,
-      title: opinion.bookTitle,
-      coverImageUrl: opinion.bookCoverImageUrl,
-    })) ?? []
 
   return (
     <>
       <MyPageView
         user={user}
         isPending={isPending}
-        recentTraces={recentTraces}
         onLoginClick={() => {
           router.push(LOGIN_PATH)
         }}
