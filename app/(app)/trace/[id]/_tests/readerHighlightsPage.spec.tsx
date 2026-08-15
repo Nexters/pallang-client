@@ -31,13 +31,36 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
 // page는 서버 컴포넌트(프리페치 셸)라 브라우저 테스트에서는 그 안쪽 클라이언트 화면을 그대로 렌더한다.
 const BOOK_ID = 1
 
-const passageSeedByPage: Record<
-  number,
-  { passageId: number; quotedText: string; isSpoiler: boolean }[]
-> = {
+type PassageSeed = {
+  passageId: number
+  quotedText: string
+  isSpoiler: boolean
+  decorations?: {
+    decorationId: number
+    startOffset: number
+    endOffset: number
+    effectType: string
+    color: string
+  }[]
+}
+
+const passageSeedByPage: Record<number, PassageSeed[]> = {
   7: [
     { passageId: 71, quotedText: '첫 번째 대목 인용문', isSpoiler: false },
     { passageId: 72, quotedText: '두 번째 대목 인용문', isSpoiler: false },
+  ],
+  // 효과가 입혀진 대목 — '의견 남기기'가 이 꾸밈을 이어받는다.
+  // 효과는 인용문을 span으로 쪼개므로 본문을 글자로 찾는 테스트와 섞이지 않게 따로 둔다.
+  8: [
+    {
+      passageId: 81,
+      quotedText: '꾸며진 대목 인용문',
+      isSpoiler: false,
+      // 인용문 전체에 건다 — 일부만 걸면 본문이 span으로 쪼개져 글자로 찾을 수 없다
+      decorations: [
+        { decorationId: 9, startOffset: 0, endOffset: 10, effectType: 'WAVY', color: '#06D6A0' },
+      ],
+    },
   ],
   9: [{ passageId: 91, quotedText: '스포일러 대목 인용문', isSpoiler: true }],
   // 스포일러가 대목 단위임을 확인하기 위한 혼재 페이지
@@ -206,7 +229,11 @@ async function renderPage(
       const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
       if (pageMatch) {
         if (failing === 'passages') return Promise.resolve(new Response('{}', { status: 500 }))
-        const passages = passageSeedByPage[Number(pageMatch[1])] ?? []
+        // 서버는 꾸밈을 언제나 배열로 준다(비어 있어도) — 시드에서 생략한 것도 그대로 맞춘다
+        const passages = (passageSeedByPage[Number(pageMatch[1])] ?? []).map((passage) => ({
+          ...passage,
+          decorations: passage.decorations ?? [],
+        }))
         return Promise.resolve(new Response(JSON.stringify({ data: { passages } })))
       }
 
@@ -554,6 +581,28 @@ describe('ReaderHighlightsPage', () => {
     expect(url.searchParams.get('bookTitle')).toBe('모순')
   })
 
+  it('의견 남기기는 대목의 꾸밈까지 함께 넘긴다 — 받는 쪽이 꾸미기를 건너뛰고 의견 작성부터 연다', async () => {
+    await renderPage([8])
+    await screen.findByText('꾸며진 대목 인용문')
+
+    clickFabAction('의견 남기기')
+
+    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
+    expect(url.searchParams.get('passageId')).toBe('81')
+    expect(url.searchParams.get('deco')).toBe('0.10.WAVY.06D6A0')
+  })
+
+  it('꾸밈이 없는 대목에서는 꾸밈을 싣지 않는다 — 받는 쪽이 꾸미기부터 시작한다', async () => {
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    clickFabAction('의견 남기기')
+
+    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
+    expect(url.searchParams.get('passageId')).toBe('71')
+    expect(url.searchParams.has('deco')).toBe(false)
+  })
+
   it('기록 남기기는 대목을 물지 않고 새 대목으로 보낸다 — 의견 남기기와 갈리는 지점이다', async () => {
     await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
@@ -564,6 +613,32 @@ describe('ReaderHighlightsPage', () => {
     expect(url.pathname).toBe('/trace/new')
     expect(url.searchParams.get('bookTitle')).toBe('모순')
     expect(url.searchParams.get('passageId')).toBeNull()
+  })
+
+  it('남기기 버튼은 뷰포트가 아니라 앱 셸에 붙는다 — 넓은 화면에서 창 끝으로 떨어져 나가지 않게', async () => {
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    const fab = screen.getByRole('button', { name: '남기기' }).parentElement
+
+    expect(fab?.className).toContain('absolute')
+    expect(fab?.className).not.toContain('fixed')
+  })
+
+  it('남기기 갈래는 접는 즉시 지워지지 않고 퇴장 전환을 마친 뒤 걷힌다', async () => {
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
+
+    fireEvent.click(screen.getByRole('button', { name: '남기기' }))
+    expect(screen.getByRole('button', { name: '기록 남기기' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '남기기' }))
+    // 접자마자 지우면 펼침만 애니메이션되고 접힘은 툭 끊긴다
+    expect(screen.getByRole('button', { name: '기록 남기기' })).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: '기록 남기기' })).not.toBeInTheDocument()
+    })
   })
 
   it('비로그인 시 의견 남기기는 로그인 유도 팝업을 띄우고 이동하지 않는다', async () => {

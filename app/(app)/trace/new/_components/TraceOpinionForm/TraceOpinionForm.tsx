@@ -94,7 +94,10 @@ export function TraceOpinionForm() {
       </div>
 
       <div className="px-4 pt-6">
+        {/* 이 단계에 할 일은 쓰는 것뿐이라 열리자마자 입력창을 잡는다.
+            흔적 보기의 '의견 남기기'는 곧장 이 자리로 오므로, 웹뷰에서도 키보드가 따라 올라온다 */}
         <Textarea
+          autoFocus
           variant="dark"
           maxLength={300}
           value={draft.content}

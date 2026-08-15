@@ -85,6 +85,13 @@ export function TraceDecorateForm() {
 
   const handleNext = () => {
     if (!draft.book || draft.pageNumber === null) return
+    // 합칠 대목이 이미 정해져 있으면 물을 것이 없다. 흔적 보기에서 '의견 남기기'로 들어온 경우가
+    // 그렇고(그 대목이 곧 합칠 대목이다), 앞서 이 다이얼로그에서 합치기를 고른 뒤
+    // 뒤로 돌아온 경우도 같다 — 다시 물으면 방금 한 선택을 또 시킨다.
+    if (draft.passageId !== null) {
+      goToOpinion()
+      return
+    }
     similarCheck.mutate(
       {
         bookId: draft.book.bookId,
