@@ -1,6 +1,7 @@
 'use client'
 
 import { Select as BaseSelect } from '@base-ui/react/select'
+import { Fragment, useState } from 'react'
 
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -41,6 +42,9 @@ export function Select({
   className,
 }: SelectProps) {
   const isLight = variant === 'light'
+  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue)
+  const currentValue = value ?? uncontrolledValue
+  const visibleOptions = options.filter((option) => option.value !== currentValue)
 
   return (
     <BaseSelect.Root<string>
@@ -50,19 +54,21 @@ export function Select({
       disabled={disabled}
       onValueChange={(nextValue) => {
         // 값 해제(null)는 이 셀렉트에서 일어나지 않지만 타입상 올 수 있어 막아둔다.
-        if (nextValue !== null) onValueChange?.(nextValue)
+        if (nextValue === null) return
+        setUncontrolledValue(nextValue)
+        onValueChange?.(nextValue)
       }}
     >
       <BaseSelect.Trigger
         aria-label={label}
         data-slot="select-trigger"
         className={cn(
-          'flex h-8 w-fit cursor-pointer items-center gap-0.5 rounded-full px-2 py-1',
+          'flex h-8 w-fit cursor-pointer items-center justify-center gap-0.5 rounded-full px-2 py-1.5',
           // 배경 없이 뒤를 살짝 흐리게 눌러 텍스트 가독성을 확보한다(Figma: fill 없음 + blur 1)
           'backdrop-blur-[1px] outline-none disabled:cursor-not-allowed disabled:opacity-50',
           isLight
-            ? 'text-text-primary data-popup-open:bg-bg-default'
-            : 'text-text-inverse data-popup-open:rounded-none data-popup-open:bg-bg-overlay',
+            ? 'text-text-primary data-popup-open:rounded-b-none data-popup-open:rounded-t-lg data-popup-open:bg-black/10 data-popup-open:backdrop-blur-[9px]'
+            : 'text-text-inverse data-popup-open:rounded-b-none data-popup-open:rounded-t-lg data-popup-open:bg-[#323232]',
           BASE_TEXT_CLASS,
           className,
         )}
@@ -74,16 +80,15 @@ export function Select({
           className="flex size-5 shrink-0 items-center justify-center transition-transform duration-fast ease-standard data-popup-open:rotate-180"
         >
           <ChevronDownIcon
-            width={20}
-            height={20}
-            className={cn('size-5', isLight ? 'text-icon-primary' : 'text-text-inverse')}
+            width={16}
+            height={16}
+            className={cn('size-4', isLight ? 'text-icon-primary' : 'text-text-inverse')}
           />
         </BaseSelect.Icon>
       </BaseSelect.Trigger>
 
       <BaseSelect.Portal>
-        {/* Figma 열림 상태는 트리거 행(값 + 위쪽 쉐브론)이 그대로 보이고 그 아래로 옵션이
-            이어지는 한 덩어리 블록이다 — 팝업이 트리거를 덮지 않도록 겹침을 끈다. */}
+        {/* Figma 열림 상태는 트리거를 그대로 두고 옵션 목록만 아래로 펼친다. */}
         <BaseSelect.Positioner
           data-slot="select-positioner"
           alignItemWithTrigger={false}
@@ -98,20 +103,28 @@ export function Select({
               'transition-opacity duration-fast ease-enter data-ending-style:ease-exit',
               'data-ending-style:opacity-0 data-starting-style:opacity-0',
               isLight
-                ? 'rounded-2xl bg-bg-default py-1 text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.16)]'
-                : 'bg-bg-overlay text-text-inverse',
+                ? 'rounded-b-lg bg-black/10 text-text-primary backdrop-blur-[9px]'
+                : 'rounded-b-lg bg-[#323232] text-text-inverse',
               BASE_TEXT_CLASS,
             )}
           >
-            {options.map((option) => (
-              <BaseSelect.Item
-                key={option.value}
-                value={option.value}
-                data-slot="select-item"
-                className="flex h-8 cursor-pointer items-center px-2 py-1 whitespace-nowrap outline-none"
-              >
-                <BaseSelect.ItemText>{option.label}</BaseSelect.ItemText>
-              </BaseSelect.Item>
+            {visibleOptions.map((option) => (
+              <Fragment key={option.value}>
+                <div
+                  aria-hidden="true"
+                  className={cn(
+                    'mx-auto w-[50px] border-t border-dashed',
+                    isLight ? 'border-black/20' : 'border-white/10',
+                  )}
+                />
+                <BaseSelect.Item
+                  value={option.value}
+                  data-slot="select-item"
+                  className="flex h-8 cursor-pointer items-center justify-center rounded-full px-2 py-1.5 whitespace-nowrap outline-none"
+                >
+                  <BaseSelect.ItemText>{option.label}</BaseSelect.ItemText>
+                </BaseSelect.Item>
+              </Fragment>
             ))}
           </BaseSelect.Popup>
         </BaseSelect.Positioner>
