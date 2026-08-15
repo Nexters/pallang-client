@@ -162,6 +162,10 @@
   --text-body-20md--line-height: 1.5;
   --text-body-20md--letter-spacing: -0.04em;
   --text-body-20md--font-weight: 500;
+  --text-body-18rg: 18px; /* 공지 목록 날짜 — Figma 18px/1.2/-2% Regular */
+  --text-body-18rg--line-height: 1.2;
+  --text-body-18rg--letter-spacing: -0.02em;
+  --text-body-18rg--font-weight: 400;
   --text-body-16md: 16px; /* Reader Title/Body/M/medium 기준으로 lh·ls 갱신 */
   --text-body-16md--line-height: 1.4;
   --text-body-16md--letter-spacing: -0.02em;

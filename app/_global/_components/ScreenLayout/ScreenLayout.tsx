@@ -8,7 +8,8 @@ import { cn } from '@/app/_global/_services/cn.service'
 import BackIcon from '../Icon/assets/back.svg'
 import { TopBar } from '../TopBar/TopBar'
 
-type ScreenLayoutProps = ComponentPropsWithoutRef<'main'> & {
+// HTML title 속성(string)과 교차되면 ReactNode 제목(로딩 골격 등)을 못 받는다
+type ScreenLayoutProps = Omit<ComponentPropsWithoutRef<'main'>, 'title'> & {
   title: ReactNode
   /** 생략하면 router.back() — 흐름을 직접 되돌려야 하는 화면만 넘긴다 */
   onBack?: () => void

@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
+import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 
 import { NoticeDetailBoundary } from './_components/NoticeDetailBoundary/NoticeDetailBoundary'
 import { NoticeDetailSkeleton } from './_components/NoticeDetailSkeleton/NoticeDetailSkeleton'
@@ -15,7 +16,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   return (
     <Suspense
       fallback={
-        <ScreenLayout title="공지사항" bodyClassName="px-4">
+        <ScreenLayout title={<Skeleton className="h-6 w-40" />} bodyClassName="p-6">
           <NoticeDetailSkeleton />
         </ScreenLayout>
       }

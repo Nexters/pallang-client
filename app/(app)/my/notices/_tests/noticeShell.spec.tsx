@@ -58,14 +58,16 @@ describe('공지사항 상세', () => {
   it('목록 캐시에 본문이 있으면 다시 받지 않고 바로 그린다', () => {
     renderWith(<NoticeDetailView noticeId={7} />, [NOTICE])
 
-    expect(screen.getByRole('heading', { level: 2, name: '서비스 점검 안내' })).toBeInTheDocument()
+    // 상단바 제목이 곧 공지 제목이다 (Figma 202:7763)
+    expect(screen.getByRole('heading', { level: 1, name: '서비스 점검 안내' })).toBeInTheDocument()
     expect(screen.getByText('8월 10일 새벽에 점검이 있어요.')).toBeInTheDocument()
   })
 
-  it('직접 진입해 캐시가 비면 셸만 남기고 본문 자리를 골격으로 채운다', () => {
+  it('직접 진입해 캐시가 비면 셸만 남기고 제목·본문 자리를 골격으로 채운다', () => {
     renderWith(<NoticeDetailView noticeId={7} />)
 
-    expect(screen.getByRole('heading', { name: '공지사항' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '뒤로 가기' })).toBeInTheDocument()
+    expect(screen.queryByText('서비스 점검 안내')).not.toBeInTheDocument()
     expect(screen.queryByText('8월 10일 새벽에 점검이 있어요.')).not.toBeInTheDocument()
   })
 })
