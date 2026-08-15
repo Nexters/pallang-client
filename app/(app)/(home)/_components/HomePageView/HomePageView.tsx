@@ -9,6 +9,7 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
+import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
 import { BookListSection } from '../BookListSection/BookListSection'
 
 function HomeHeaderSkeleton() {
@@ -21,6 +22,8 @@ function HomeHeaderSkeleton() {
 }
 
 export function HomePageView() {
+  useOnboardingGate()
+
   const [isBookListLoading, setIsBookListLoading] = useState(true)
 
   const handleBookListLoadingChange = useCallback((isLoading: boolean) => {
