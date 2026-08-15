@@ -1,10 +1,3 @@
-// ⚠️ 임시 skip — develop 병합(#228)이 들고 온 스펙이다. 원래 겨누던 화면
-// (TraceOpinionForm, /trace/new/opinion)이 이 브랜치에서 사라졌다: 의견 입력은 ①생각 작성
-// (TraceWriteForm)으로 흡수됐고, 대목·페이지·스포일러를 같은 화면에서 함께 받는다.
-// 그래서 지금은 열자마자 의견 입력창을 잡을 수 없다 — 위에 있는 페이지 입력이 먼저다.
-// phase 2('의견 남기기' 지름길 재배치)가 "씨앗이 대목을 물고 오면 ①은 대목·페이지를
-// 읽기 전용으로 보여주고 의견만 받는다"를 구현하면 그때 이 스펙의 .skip을 걷는다.
-// 레포 규칙은 .skip 커밋을 금지한다 — 여기서만 한시적으로 예외를 둔다.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { useEffect } from 'react'
@@ -28,9 +21,14 @@ vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
   useAuth: () => ({ status: 'authenticated', isAuthenticated: true, signOut: vi.fn() }),
 }))
 
-/** 씨앗이 대목·페이지까지 물고 들어온 초안으로 ①에 서 있게 한다 */
-function Harness() {
-  const { dispatch } = useTraceDraft()
+const OPINION_PLACEHOLDER = '문장에 대한 생각이나 의견을 작성해보세요.'
+
+/**
+ * 흔적 보기의 '의견 남기기'로 들어온 초안 — TraceSourceView가 씨앗을 소비한 결과와 같은 모양이다.
+ * seeded=false면 사진·직접 입력으로 대목만 얻어 ①에 선 평소 초안이다.
+ */
+function Harness({ seeded }: { seeded: boolean }) {
+  const { dispatch, draft } = useTraceDraft()
 
   useEffect(() => {
     dispatch({
@@ -38,34 +36,53 @@ function Harness() {
       book: { bookId: 7, title: '모순', author: '', coverImageUrl: null, pageCount: null },
     })
     dispatch({ type: 'setQuotedText', quotedText: '문장이 오래 남았다' })
+    if (!seeded) {
+      dispatch({ type: 'setSource', source: 'photo' })
+      return
+    }
     dispatch({ type: 'setPageDetail', pageNumber: 122, isSpoiler: false })
+    dispatch({
+      type: 'applyDecoration',
+      decoration: { startOffset: 0, endOffset: 2, effectType: 'WAVY', color: '#06D6A0' },
+    })
     dispatch({ type: 'setMergeTarget', passageId: 42 })
-  }, [dispatch])
+    dispatch({ type: 'setSource', source: 'passage' })
+  }, [dispatch, seeded])
 
+  // 초안이 다 차기 전에 마운트하면 autoFocus가 평소 경로 기준으로 한 번 결정돼 버린다
+  if (!draft.source) return null
   return <TraceWriteForm />
 }
 
-describe.skip('의견 작성 단계', () => {
-  it('열리자마자 입력창을 잡는다 — 흔적 보기의 의견 남기기가 곧장 이 자리로 보낸다', async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    render(
-      <QueryClientProvider client={queryClient}>
-        <HardwareBackProvider>
-          <LoginGateProvider>
-            <TraceDraftProvider>
-              <TraceOverlayProvider>
-                <TraceNavProvider>
-                  <Harness />
-                </TraceNavProvider>
-              </TraceOverlayProvider>
-            </TraceDraftProvider>
-          </LoginGateProvider>
-        </HardwareBackProvider>
-      </QueryClientProvider>,
-    )
+function renderForm(seeded: boolean) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <TraceDraftProvider>
+            <TraceOverlayProvider>
+              <TraceNavProvider>
+                <Harness seeded={seeded} />
+              </TraceNavProvider>
+            </TraceOverlayProvider>
+          </TraceDraftProvider>
+        </LoginGateProvider>
+      </HardwareBackProvider>
+    </QueryClientProvider>,
+  )
+}
 
-    expect(
-      await screen.findByPlaceholderText('문장에 대한 생각이나 의견을 작성해보세요.'),
-    ).toHaveFocus()
+describe('생각 작성 단계의 의견 입력창 초점', () => {
+  it('대목을 물고 들어오면 열리자마자 입력창을 잡는다 — 흔적 보기의 의견 남기기가 곧장 이 자리로 보낸다', async () => {
+    renderForm(true)
+
+    expect(await screen.findByPlaceholderText(OPINION_PLACEHOLDER)).toHaveFocus()
+  })
+
+  it('평소 경로에서는 잡지 않는다 — OCR·직접 입력에서 막 온 사용자는 페이지부터 채워야 한다', async () => {
+    renderForm(false)
+
+    expect(await screen.findByPlaceholderText(OPINION_PLACEHOLDER)).not.toHaveFocus()
   })
 })

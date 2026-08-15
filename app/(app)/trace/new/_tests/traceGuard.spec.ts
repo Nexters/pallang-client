@@ -33,6 +33,20 @@ describe('resolveGuardRedirect', () => {
     expect(resolveGuardRedirect('/trace/new/write', draftWith({ quotedText: '문장' }))).toBeNull()
   })
 
+  it('흔적 보기에서 대목을 물고 들어온 초안은 의견을 쓰기 전에도 생각 작성을 통과한다', () => {
+    // 이 경로는 ①이 마지막 화면이라 여기서 의견을 받아 바로 저장한다.
+    // 생각 작성의 선행 조건은 대목뿐이므로 가드를 느슨하게 풀 필요가 없다 —
+    // 페이지·의견을 요구하는 것은 그 다음 단계(꾸미기)이고, 이 경로는 거기 가지 않는다.
+    const fromPassage = draftWith({
+      source: 'passage',
+      quotedText: '문장',
+      pageNumber: 122,
+      passageId: 42,
+      decorations: [{ startOffset: 0, endOffset: 2, effectType: 'WAVY', color: '#06D6A0' }],
+    })
+    expect(resolveGuardRedirect('/trace/new/write', fromPassage)).toBeNull()
+  })
+
   it('페이지나 의견이 비면 꾸미기에서 생각 작성으로 되돌린다', () => {
     expect(resolveGuardRedirect('/trace/new/decorate', draftWith({ quotedText: '문장' }))).toBe(
       '/trace/new/write',

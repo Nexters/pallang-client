@@ -8,6 +8,7 @@ import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import { ManualQuoteSheet } from '../ManualQuoteSheet/ManualQuoteSheet'
+import { TraceNewSkeleton } from '../TraceNewSkeleton/TraceNewSkeleton'
 import { TraceSourceSheet } from '../TraceSourceSheet/TraceSourceSheet'
 
 type TraceSourceViewProps = {
@@ -19,8 +20,11 @@ type TraceSourceViewProps = {
 export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
   const { draft, dispatch } = useTraceDraft()
   const { goTo, requestExit } = useTraceNav()
-  // 씨앗 유무와 무관하게 이 화면은 방식 선택 시트 그 자체다 — 마운트하면 항상 연다.
-  const [sheet, setSheet] = useState<'manual' | 'none' | 'source'>('source')
+  // 이 화면은 방식 선택 시트 그 자체다 — 마운트하면 연다. 다만 씨앗이 대목까지 물고 왔으면
+  // 고를 방식이 없다(대목이 이미 있다). 그때는 열지 않고 곧장 ①로 넘어간다.
+  const [sheet, setSheet] = useState<'manual' | 'none' | 'source'>(
+    seed?.passage ? 'none' : 'source',
+  )
 
   // 씨앗은 첫 마운트의 것만 쓴다 — 초안을 채우면 리렌더되지만 다시 소비하면 안 된다
   const pendingSeedRef = useRef(seed)
@@ -41,7 +45,26 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
         pageCount: null,
       },
     })
-  }, [dispatch])
+
+    const { passage } = pending
+    if (!passage) return
+
+    // 순서가 중요하다 — setQuotedText가 꾸밈을 비우고 selectBook이 합칠 대목을 지우므로,
+    // 꾸밈 이어받기와 setMergeTarget이 반드시 뒤에 와야 한다.
+    dispatch({ type: 'setQuotedText', quotedText: passage.quotedText })
+    dispatch({
+      type: 'setPageDetail',
+      pageNumber: passage.pageNumber,
+      isSpoiler: passage.isSpoiler,
+    })
+    for (const decoration of passage.decorations) {
+      dispatch({ type: 'applyDecoration', decoration })
+    }
+    dispatch({ type: 'setMergeTarget', passageId: passage.passageId })
+    // 대목의 출처를 남긴다 — ①이 이 값을 보고 "받을 것은 의견뿐"임을 안다(seededPassage.service).
+    dispatch({ type: 'setSource', source: 'passage' })
+    goTo('write')
+  }, [dispatch, goTo])
 
   // 직접 입력 시트는 방식 선택 시트 위에 얹힌 한 층이다 — 뒤로가기는 화면을 떠나는 대신
   // 방식 선택 시트로 한 층만 걷어낸다. 방식 선택 시트 자체는 이 화면 그 자체라 별도 가드가 없다
@@ -49,6 +72,10 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
   useOverlayBackGuard(sheet === 'manual', () => {
     setSheet('source')
   })
+
+  // ①로 넘어가는 사이 이 화면이 한 프레임 스치지 않게 가린다(삭제된 BookPicker가 쓰던 처리).
+  // 훅을 모두 부른 뒤에 빠져나간다 — 호출 순서가 렌더마다 같아야 한다.
+  if (seed?.passage && !draft.quotedText) return <TraceNewSkeleton />
 
   return (
     <>

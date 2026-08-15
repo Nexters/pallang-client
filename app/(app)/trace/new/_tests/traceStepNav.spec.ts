@@ -33,9 +33,12 @@ describe('stepPath', () => {
 describe('nextStepPaths', () => {
   it('각 단계에서 이어질 다음 단계 경로를 준다 — 프리페치 대상', () => {
     expect(nextStepPaths('photo')).toEqual(['/trace/new/write'])
-    expect(nextStepPaths('write')).toEqual(['/trace/new/decorate'])
     expect(nextStepPaths('decorate')).toEqual(['/trace/new/book'])
     expect(nextStepPaths('book')).toEqual(['/trace/new/done'])
+  })
+
+  it('생각 작성은 출구가 둘이다 — 대목을 물고 들어온 경로는 여기서 저장해 완료로 간다', () => {
+    expect(nextStepPaths('write')).toEqual(['/trace/new/decorate', '/trace/new/done'])
   })
 
   it('첫 화면은 방식 선택에 따라 사진·직접입력 어느 쪽으로도 가므로 둘 다 미리 받는다', () => {

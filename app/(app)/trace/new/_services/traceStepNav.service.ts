@@ -25,11 +25,13 @@ export function stepPath(step: TraceStep): string {
  * 각 단계에서 이어질 다음 단계(들). 미리 route를 프리페치해 '다음'을 눌렀을 때의
  * RSC 왕복을 없앤다. 이 왕복이 웹뷰(원격 URL)에서 단계 전환마다 버벅이는 원인이다.
  * source는 방식 선택에 따라 photo·write 어느 쪽으로도 가므로 둘 다 미리 받는다.
+ * write도 출구가 둘이다 — 평소에는 decorate로 가지만, 흔적 보기에서 대목을 물고 들어온
+ * 경로에서는 ②·③을 건너뛰고 여기서 저장해 곧장 done으로 간다.
  */
 const NEXT_STEPS: Record<TraceStep, TraceStep[]> = {
   source: ['photo', 'write'],
   photo: ['write'],
-  write: ['decorate'],
+  write: ['decorate', 'done'],
   decorate: ['book'],
   book: ['done'],
   done: ['source'],

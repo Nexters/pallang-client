@@ -12,9 +12,17 @@ export type SelectedBook = {
 export type DraftEffectType = EffectType
 export type DraftDecoration = Decoration
 
+/**
+ * 지금 초안에 담긴 대목을 어디서 얻었는지.
+ * - `photo` 카메라·OCR · `manual` 직접 입력 — 대목만 얻고 페이지·꾸밈은 그 뒤 단계에서 채운다
+ * - `passage` 흔적 보기 화면이 씨앗으로 넘긴 기존 대목 — 페이지·스포일러·꾸밈·합칠 대목까지 함께 온다.
+ *   이 경우 ①에서 받을 것이 의견 하나뿐이라 ②·③을 건너뛰고 ①이 곧 저장 화면이 된다.
+ */
+export type TraceQuoteSource = 'manual' | 'passage' | 'photo'
+
 export type TraceDraft = {
   book: SelectedBook | null
-  source: 'manual' | 'photo' | null
+  source: TraceQuoteSource | null
   quotedText: string
   pageNumber: number | null
   isSpoiler: boolean
@@ -26,7 +34,7 @@ export type TraceDraft = {
 
 export type TraceDraftAction =
   | { type: 'selectBook'; book: SelectedBook }
-  | { type: 'setSource'; source: 'manual' | 'photo' }
+  | { type: 'setSource'; source: TraceQuoteSource }
   | { type: 'setQuotedText'; quotedText: string }
   /** 대목을 다시 고르러 첫 화면으로 되돌아갈 때. 책과 입력 방식은 남긴다. */
   | { type: 'clearQuote' }
