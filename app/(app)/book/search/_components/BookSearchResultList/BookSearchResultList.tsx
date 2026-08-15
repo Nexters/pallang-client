@@ -7,8 +7,6 @@ type BookSearchResultItem = {
   author: string
   bookId: number
   coverImageUrl?: null | string
-  opinionCount: number
-  passageCount: number
   publisher?: string
   title: string
 }
@@ -94,8 +92,6 @@ export function BookSearchResultList({
             <BookItem
               author={book.author}
               coverImageUrl={book.coverImageUrl}
-              opinionCount={book.opinionCount}
-              passageCount={book.passageCount}
               publisher={book.publisher}
               title={book.title}
             />
