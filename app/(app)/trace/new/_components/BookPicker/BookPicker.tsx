@@ -17,7 +17,6 @@ import { BookAddForm } from '../BookAddForm/BookAddForm'
 import { BookSearchView } from '../BookSearchView/BookSearchView'
 import type { ExternalBook } from '../ExternalBookList/ExternalBookList'
 import { ManualQuoteSheet } from '../ManualQuoteSheet/ManualQuoteSheet'
-import { TraceNewSkeleton } from '../TraceNewSkeleton/TraceNewSkeleton'
 import { TraceSourceSheet } from '../TraceSourceSheet/TraceSourceSheet'
 
 type PickerView =
@@ -33,10 +32,10 @@ export function BookPicker({ seed = null }: BookPickerProps) {
   const { goTo, requestExit } = useTraceNav()
   const [view, setView] = useState<PickerView>({ type: 'search' })
   // 완료 화면에서 '흔적 남기기'로 돌아오면 책이 유지된 채 이 화면으로 다시 진입한다(리마운트).
-  // 마운트 시점에 draft.book은 있고 quotedText가 비어 있으면 방식 선택 시트를 바로 연다.
-  // 책만 담긴 씨앗으로 들어온 경우도 같다 — 초안은 아직 비어 있으니 씨앗을 보고 판단한다.
+  // 마운트 시점에 draft.book이 있고 quotedText가 비어 있으면 방식 선택 시트를 바로 연다.
+  // 책만 담긴 씨앗으로 들어온 경우도 같다 — 대목은 늘 새로 입력하므로 바로 시트를 연다.
   const [sheet, setSheet] = useState<'manual' | 'none' | 'source'>(() => {
-    if (seed) return seed.passage ? 'none' : 'source'
+    if (seed) return 'source'
     return draft.book && !draft.quotedText ? 'source' : 'none'
   })
 
@@ -59,19 +58,7 @@ export function BookPicker({ seed = null }: BookPickerProps) {
         pageCount: null,
       },
     })
-    if (!pending.passage) return
-
-    // 대목까지 물고 왔으면 꾸미기부터 시작한다. setQuotedText가 꾸밈을 비우고,
-    // selectBook이 병합 대상을 지우므로 setMergeTarget이 마지막이어야 한다.
-    dispatch({ type: 'setQuotedText', quotedText: pending.passage.quotedText })
-    dispatch({
-      type: 'setPageDetail',
-      pageNumber: pending.passage.pageNumber,
-      isSpoiler: pending.passage.isSpoiler,
-    })
-    dispatch({ type: 'setMergeTarget', passageId: pending.passage.passageId })
-    goTo('decorate')
-  }, [dispatch, goTo])
+  }, [dispatch])
 
   const closeForm = () => {
     setView({ type: 'search' })
@@ -82,10 +69,6 @@ export function BookPicker({ seed = null }: BookPickerProps) {
   useOverlayBackGuard(sheet !== 'none', () => {
     setSheet('none')
   })
-
-  // 꾸미기로 넘어가는 사이 책 검색 화면이 한 프레임 스치지 않게 한다.
-  // 훅을 모두 부른 뒤에 빠져나간다 — 호출 순서가 렌더마다 같아야 한다.
-  if (seed?.passage && !draft.quotedText) return <TraceNewSkeleton />
 
   const handleSelect = (book: SelectedBook) => {
     dispatch({ type: 'selectBook', book })

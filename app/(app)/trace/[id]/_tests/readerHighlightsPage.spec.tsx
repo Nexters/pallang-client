@@ -505,20 +505,19 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
   })
 
-  it('로그인 상태에서 흔적 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
+  it('로그인 상태에서 흔적 남기기를 누르면 책 정보만 실어 작성 화면으로 간다', async () => {
     await renderPage()
-    // 대목이 도착해야 붙일 대상이 정해진다
+    // 대목이 도착한 뒤에도 대목 정보는 씨앗에 실리지 않는다 — 대목은 작성 플로우에서 새로 입력한다
     await screen.findByText('첫 번째 대목 인용문')
 
     fireEvent.click(screen.getByRole('button', { name: '흔적 남기기' }))
 
     const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
     expect(url.pathname).toBe('/trace/new')
-    // 이 대목에 병합되도록 대목 정보가 함께 실린다
-    expect(url.searchParams.get('passageId')).toBe('71')
-    expect(url.searchParams.get('page')).toBe('7')
-    expect(url.searchParams.get('quote')).toBe('첫 번째 대목 인용문')
+    expect(url.searchParams.get('bookId')).toBe(String(BOOK_ID))
     expect(url.searchParams.get('bookTitle')).toBe('모순')
+    expect(url.searchParams.get('passageId')).toBeNull()
+    expect(url.searchParams.get('quote')).toBeNull()
   })
 
   it('비로그인 시 흔적 남기기는 로그인 유도 팝업을 띄우고 이동하지 않는다', async () => {

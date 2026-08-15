@@ -61,30 +61,18 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
   /**
    * 흔적 작성은 꾸밈을 반드시 하나 이상 요구해서(createOpinion) 이 화면에서 바로 등록할 수 없다.
    * 작성 플로우로 보내되, 초안은 그 route 안에서만 사는 Context라 씨앗을 URL로 넘긴다.
-   * passage를 함께 넘기면 그 대목에 붙고(병합), 넘기지 않으면 새 대목을 만든다.
+   * 씨앗은 책만 나른다 — 대목은 어느 진입이든 작성 플로우 안에서 새로 입력한다.
    */
-  const goCreateTrace = (passage: Parameters<typeof buildTraceSeedHref>[0]['passage']) => {
+  const goCreateTrace = () => {
     runWithLogin(() => {
       router.push(
         buildTraceSeedHref({
           bookId,
           bookTitle: stage.bookTitle,
           bookCoverImageUrl: stage.bookCoverImageUrl,
-          passage,
         }),
       )
     }, LOGIN_GATE_MESSAGE.traceCreate)
-  }
-
-  const addTraceToCurrentPassage = () => {
-    const passage = stage.activePassage
-    if (!passage) return
-    goCreateTrace({
-      passageId: passage.passageId,
-      pageNumber: stage.highlight.page,
-      quotedText: passage.quotedText,
-      isSpoiler: passage.isSpoiler,
-    })
   }
 
   // 댓글 열람은 로그인 없이도 된다(기획서 2-a) — 작성만 게이트로 막는다
@@ -115,10 +103,7 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
             onLoadMorePages={stage.loadMorePages}
             onClickQuote={stage.clickQuote}
             onSwipeQuote={stage.swipeQuote}
-            onAddTrace={() => {
-              // 헤더의 +는 이 책에 '새 대목'을 남기는 자리라 대목을 물리지 않는다
-              goCreateTrace(null)
-            }}
+            onAddTrace={goCreateTrace}
           />
         </div>
         <div aria-hidden className={styles['stageSpacer']} />
@@ -130,7 +115,7 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
           scrollerRef={scrollerRef}
           stageError={{ isError: stage.isError, retry: stage.retry }}
           openCommentOpinionId={openCommentOpinionId}
-          onToggleTraceCreate={addTraceToCurrentPassage}
+          onToggleTraceCreate={goCreateTrace}
           onToggleTraceComment={toggleTraceComment}
           onDetailOpenChange={setIsDetailOpen}
           initialTraceId={target?.opinionId}
