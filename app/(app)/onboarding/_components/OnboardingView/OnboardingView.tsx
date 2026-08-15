@@ -44,7 +44,7 @@ export function OnboardingView() {
     >
       <div className="h-11 shrink-0" />
 
-      {/* 단계별 텍스트를 겹쳐 두고 크로스페이드한다 — 나가는 단계가 사라지는 동안 들어오는 단계가 아래에서 떠오른다 */}
+      {/* 단계별 텍스트를 겹쳐 두고 크로스페이드한다 */}
       <div className="relative h-75 shrink-0">
         {ONBOARDING_STEPS.map((item, index) => (
           <div
@@ -52,8 +52,8 @@ export function OnboardingView() {
             aria-hidden={index !== stepIndex || undefined}
             className={cn(
               'absolute inset-0 flex flex-col items-center justify-center gap-2.5 px-6 text-center',
-              'transition-[opacity,translate] duration-normal ease-standard',
-              index === stepIndex ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+              'transition-opacity duration-normal ease-standard',
+              index === stepIndex ? 'opacity-100' : 'opacity-0',
             )}
           >
             <h1 className="whitespace-nowrap text-[24px] font-bold leading-[1.2] tracking-[-0.02em] text-text-secondary">
