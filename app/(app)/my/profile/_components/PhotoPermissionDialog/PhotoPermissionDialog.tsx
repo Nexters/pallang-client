@@ -25,7 +25,7 @@ export function PhotoPermissionDialog({ open, onClose }: PhotoPermissionDialogPr
         <Dialog.Illustration />
         <Dialog.Header>
           <Dialog.Title>사진 권한이 꺼져 있어요</Dialog.Title>
-          <Dialog.Description className="whitespace-pre-line">
+          <Dialog.Description>
             {'설정에서 사진 접근을 허용하면\n프로필 이미지를 바꿀 수 있어요.'}
           </Dialog.Description>
         </Dialog.Header>
