@@ -6,25 +6,25 @@ import { CommentBar } from '../CommentBar/CommentBar'
 
 type TraceCommentComposerProps = {
   opinionId: number
-  /** 상세 오버레이가 떠 있는 동안 입력바를 포커스 대상에서 뺀다 */
-  isInert?: boolean
 }
 
-/** 댓글이 펼쳐진 흔적에 원댓글을 남기는 하단 고정 입력바 */
-export function TraceCommentComposer({ opinionId, isInert }: TraceCommentComposerProps) {
+/** 답글 화면(의견 바텀시트) 하단에서 원댓글을 남기는 입력바 */
+export function TraceCommentComposer({ opinionId }: TraceCommentComposerProps) {
   const runWithLogin = useLoginGate()
   const actions = useCommentActions(opinionId)
 
   return (
     <CommentBar
-      isInert={isInert}
+      variant="sheet"
+      placeholder="답글을 입력해주세요"
+      submitLabel="답글 등록"
       onSubmit={(content) =>
         new Promise<boolean>((resolve) => {
           const isStarted = runWithLogin(() => {
             actions.create.mutate(
               { content },
               {
-                // 목록 갱신까지 끝난 뒤에 true다 — 새 댓글이 보이고 나서 입력창이 비워진다
+                // 목록 갱신까지 끝난 뒤에 true다 — 새 답글이 보이고 나서 입력창이 비워진다
                 onSuccess: () => {
                   resolve(true)
                 },

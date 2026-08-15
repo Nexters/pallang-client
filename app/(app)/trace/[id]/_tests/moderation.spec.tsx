@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
@@ -148,9 +149,11 @@ async function renderView() {
   // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   render(
     <QueryClientProvider client={client}>
-      <LoginGateProvider>
-        <TraceCollapseView bookId={BOOK_ID} />
-      </LoginGateProvider>
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <TraceCollapseView bookId={BOOK_ID} />
+        </LoginGateProvider>
+      </HardwareBackProvider>
     </QueryClientProvider>,
   )
   await screen.findByText('남의 흔적')

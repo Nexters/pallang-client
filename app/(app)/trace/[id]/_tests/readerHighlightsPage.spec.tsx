@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
@@ -238,9 +239,11 @@ async function renderPage(pages = [7, 9, 12, 23, 34, 123], failing?: 'passages' 
   // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   const { container } = render(
     <QueryClientProvider client={client}>
-      <LoginGateProvider>
-        <TraceCollapseView bookId={BOOK_ID} />
-      </LoginGateProvider>
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <TraceCollapseView bookId={BOOK_ID} />
+        </LoginGateProvider>
+      </HardwareBackProvider>
     </QueryClientProvider>,
   )
   // 쪽이 하나뿐이면 선택기 대신 라벨만 있는 알약이 서므로, 두 경우 모두 잡히는 첫 쪽 표시를 기다린다
@@ -344,12 +347,12 @@ describe('ReaderHighlightsPage', () => {
     const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
     if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
     fireEvent.click(toggle)
-    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
 
     swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
 
     // 입력바는 blur 바깥의 fixed라, 남으면 목록에 없는 흔적에 댓글을 달 수 있다
-    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
@@ -364,7 +367,7 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(toggle)
 
     // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
-    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('책의 첫 대목에서 뒤로 넘겨도 끝으로 돌아가지 않는다', async () => {
