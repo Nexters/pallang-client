@@ -19,10 +19,36 @@ const googleAnalyticsMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 const shouldEnableGoogleAnalytics =
   process.env.VERCEL_ENV === 'production' && Boolean(googleAnalyticsMeasurementId)
 
+const siteUrl = 'https://www.pallang.co.kr'
+const siteTitle = '팔랑'
+const siteDescription = '흔적을 넘기면, 다른 생각이 팔랑'
+const ogImage = {
+  url: '/images/meta_og.png',
+  width: 1200,
+  height: 630,
+  alt: siteTitle,
+}
+
 export const metadata: Metadata = {
-  title: '팔랑',
-  description: '흔적을 넘기면, 다른 생각이 팔랑',
+  metadataBase: new URL(siteUrl),
+  title: siteTitle,
+  description: siteDescription,
   manifest: '/favicon/manifest.json',
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    url: '/',
+    siteName: siteTitle,
+    images: [ogImage],
+    locale: 'ko_KR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteTitle,
+    description: siteDescription,
+    images: [ogImage],
+  },
   icons: {
     icon: [
       { url: '/favicon/favicon.ico', sizes: 'any' },
