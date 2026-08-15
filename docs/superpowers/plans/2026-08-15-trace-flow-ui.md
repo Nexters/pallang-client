@@ -1757,6 +1757,91 @@ git commit -m "refactor: 단계 가드를 새 순서로 조이고 옛 화면 잔
 
 ---
 
+---
+
+### Task 11: 갱신된 시안 반영
+
+Task 1~10을 마친 뒤 디자인이 갱신되어 세 화면의 문구·요소가 달라졌다. 기능은 그대로 두고 표면만 맞춘다.
+
+**Figma**
+
+- 방식 선택 시트: [3077-16085](https://www.figma.com/design/4ffaEtjCoV2r2P2ZCVLOls/?node-id=3077-16085)
+- OCR 발췌 시트: [3077-15994](https://www.figma.com/design/4ffaEtjCoV2r2P2ZCVLOls/?node-id=3077-15994)
+- ③ 확인 화면: [3092-14086](https://www.figma.com/design/4ffaEtjCoV2r2P2ZCVLOls/?node-id=3092-14086)
+
+**Files:**
+
+- Modify: `app/(app)/trace/new/_components/TraceSourceSheet/TraceSourceSheet.tsx`
+- Modify: `app/(app)/trace/new/_components/OcrQuoteSheet/OcrQuoteSheet.tsx`
+- Modify: `app/(app)/trace/new/_components/TraceBookForm/TraceBookForm.tsx`
+- Modify: `app/(app)/trace/new/_components/TraceOpinionPreview/TraceOpinionPreview.tsx`
+- Create: `app/_global/_components/Icon/assets/refresh.svg` (다시 찍기 아이콘)
+- Test: `app/(app)/trace/new/_tests/traceBookForm.spec.tsx`, `traceSourceView.spec.tsx` (문구 변경 반영)
+
+**바뀌는 것**
+
+| 화면           | 지금                                             | 시안                                      |
+| -------------- | ------------------------------------------------ | ----------------------------------------- |
+| 방식 선택 시트 | `지금 기록을 남기는 책` 배지가 회색 위 회색 글씨 | **오렌지 pill + 흰 글씨**                 |
+| OCR 발췌 시트  | 제목 `사진으로 입력`                             | **`발췌된 문장은 직접 수정할 수 있어요`** |
+| OCR 발췌 시트  | 다시 찍기 = 카메라 아이콘                        | **회전(↻) 아이콘**                        |
+| ③ 확인 화면    | 책 카드 전체가 `책 다시 고르기` 버튼             | **카드 우측에 `편집하기` 버튼**           |
+| ③ 확인 화면    | 의견 라벨 `의견`                                 | **`{닉네임}님이 기록한 의견`**            |
+| ③ 확인 화면    | CTA `등록하기`                                   | **`기록 완료`**                           |
+
+글자수 카운터(`100 / 150`)는 `Textarea`가 이미 그리고 `MAX_QUOTE_LENGTH`도 이미 150이라 손댈 것이 없다.
+
+- [ ] **Step 1: 문구 변경을 테스트에 먼저 반영해 실패를 확인한다**
+
+`traceBookForm.spec.tsx`의 `등록하기` → `기록 완료`로 바꾸고, 책 편집 진입을 `getByRole('button', { name: '편집하기' })`로 바꾼다. 의견 헤딩 검증도 더한다.
+
+```tsx
+it('의견 헤딩에 닉네임이 들어간다', async () => {
+  renderForm()
+  await pickBook()
+
+  expect(await screen.findByText('나님이 기록한 의견')).toBeTruthy()
+})
+```
+
+닉네임은 `userQueries.me()`에서 오고, 기존 목이 `getMe: () => Promise.resolve({ data: { nickname: '나' } })`를 돌려준다.
+
+Run: `pnpm test -- traceBookForm` → FAIL
+
+- [ ] **Step 2: 확인 화면을 시안대로 고친다**
+
+- 책 카드: 카드 전체 버튼을 걷어내고 `BookItem` 옆에 `편집하기` 버튼을 둔다. 시트를 여는 동작은 그대로.
+- `TraceOpinionPreview`가 `nickname`을 받아 `{nickname}님이 기록한 의견`을 헤딩으로 그린다. 닉네임은 `TraceBookForm`이 `useQuery(userQueries.me())`로 읽어 넘기고, 없으면 `나`로 떨어진다(`BookSearchView`의 기존 처리와 같게).
+- CTA 문구를 `기록 완료`로 바꾼다.
+
+- [ ] **Step 3: 통과 확인**
+
+Run: `pnpm test -- traceBookForm` → PASS
+
+- [ ] **Step 4: OCR 시트 제목과 아이콘을 바꾼다**
+
+제목을 `발췌된 문장은 직접 수정할 수 있어요`로 바꾼다. 다시 찍기 버튼의 `CameraIcon`을 회전 아이콘으로 교체하되, `aria-label="다시 찍기"`는 유지한다.
+
+아이콘은 `.agents/icons.md` 절차를 따라 `app/_global/_components/Icon/assets/refresh.svg`로 추가한다(kebab-case, 색은 `currentColor`). Figma에서 에셋을 받을 수 없으면 규칙에 맞는 단순한 회전 화살표를 직접 만들고 그 사실을 리포트에 남긴다.
+
+- [ ] **Step 5: 방식 선택 시트 배지를 오렌지 pill로 바꾼다**
+
+`지금 기록을 남기는 책` 배지의 배경·글자색만 바꾼다(실제 존재하는 토큰만 사용). 문구와 구조는 그대로다.
+
+- [ ] **Step 6: 전체 검증**
+
+Run: `pnpm lint && pnpm typecheck && pnpm test`
+Expected: 전부 PASS
+
+- [ ] **Step 7: 커밋**
+
+```bash
+git add -A
+git commit -m "feat: 갱신된 시안에 맞춰 흔적 남기기 화면 문구와 요소 조정"
+```
+
+---
+
 ## 남은 확인거리
 
 - **효과 미리보기**: 드래그 중에는 선택 하이라이트만 보인다. 시안이 효과 모양 미리보기를 요구하면 `DecoratedQuote`에 임시 decoration을 합성해 넘기는 방식으로 별도 처리한다(겹침 처리 때문에 `splitByDecorations` 동작을 먼저 확인해야 한다).
