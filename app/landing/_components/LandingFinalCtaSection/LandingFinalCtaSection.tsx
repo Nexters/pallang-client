@@ -1,5 +1,7 @@
 import Image from 'next/image'
 
+import AppleIcon from '@/app/_global/_components/Icon/assets/apple.svg'
+
 export function LandingFinalCtaSection() {
   return (
     <section className="relative h-[719px] overflow-hidden bg-bg-default font-pretendard md:h-[748px]">
@@ -22,14 +24,25 @@ export function LandingFinalCtaSection() {
             </p>
           </div>
 
-          <a
-            href="https://naver.me/51u1mr53"
-            target="_blank"
-            rel="noreferrer"
-            className="press mt-10 flex h-10 items-center justify-center rounded-full bg-interactive-accent px-4 py-2 text-[16px] leading-[1.2] font-bold tracking-[-0.02em] text-white md:mt-[65px] md:h-20 md:w-[210px] md:px-6 md:text-[24px]"
-          >
-            출시 알람 받기
-          </a>
+          <div className="mt-10 flex w-[180px] flex-col items-start gap-3 md:mt-[65px] md:w-auto md:flex-row md:gap-6">
+            <a
+              href="https://apps.apple.com/us/app/pallang-%ED%8C%94%EB%9E%91/id6796140451"
+              target="_blank"
+              rel="noreferrer"
+              className="press flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#111] px-4 py-2 text-[16px] leading-[1.2] font-bold tracking-[-0.02em] whitespace-nowrap text-white md:h-20 md:w-[210px] md:px-6 md:text-[24px]"
+            >
+              <AppleIcon className="size-4 text-white md:h-6 md:w-5" aria-hidden="true" />
+              App Store
+            </a>
+            <a
+              href="https://naver.me/51u1mr53"
+              target="_blank"
+              rel="noreferrer"
+              className="press flex h-10 w-full items-center justify-center rounded-full bg-interactive-accent px-4 py-2 text-[16px] leading-[1.2] font-bold tracking-[-0.02em] whitespace-nowrap text-white md:h-20 md:w-auto md:px-6 md:text-[24px]"
+            >
+              안드로이드 출시 알림 받기
+            </a>
+          </div>
         </div>
 
         <Image
