@@ -91,6 +91,15 @@ export function TraceBookForm() {
 
   const handleSubmit = () => {
     if (!draft.book) return
+    // 페이지 상한은 ①에서 볼 수 없다 — 책을 여기서 고르기 때문이다. 그래서 쪽수를 아는
+    // 이 자리에서 막는다. 그냥 보내면 서버가 거절하고 "잠시 후 다시 시도" 안내가 뜨는데,
+    // 다시 눌러도 계속 실패하고 무엇을 고쳐야 하는지도 알 수 없다.
+    // 인기 목록 책은 쪽수를 모른다(pageCount가 null) — 그때는 검사를 건너뛴다.
+    const maxPage = draft.book.pageCount
+    if (draft.pageNumber !== null && maxPage !== null && draft.pageNumber > maxPage) {
+      setMessage('페이지 번호가 이 책의 쪽수를 넘어요. 뒤로 가서 페이지를 확인해주세요.')
+      return
+    }
     createOpinion.mutate(
       {
         bookId: draft.book.bookId,

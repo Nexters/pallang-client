@@ -239,6 +239,19 @@ describe('책 등록 단계', () => {
     expect(screen.queryByText('남긴 문장과 의견은 저장되지 않아요.')).toBeNull()
   })
 
+  it('페이지가 책 쪽수를 넘으면 저장하지 않고 이유를 알린다', async () => {
+    // 재시도해도 계속 실패하는 실패다 — "잠시 후 다시 시도"로 뭉개면 손쓸 방법이 없다.
+    // ①에는 아직 책이 없어 상한을 볼 수 없으니, 쪽수를 아는 이 화면이 막는다.
+    createOpinionMock.mockClear()
+    // 씨앗 책은 pageCount가 200이다.
+    renderForm({ withBook: true, pageNumber: 500 })
+
+    fireEvent.click(await screen.findByRole('button', { name: '기록 완료' }))
+
+    expect(await screen.findByText(/쪽수를 넘어요/)).toBeTruthy()
+    expect(createOpinionMock).not.toHaveBeenCalled()
+  })
+
   it('기록 완료를 누르면 흔적을 저장하고 완료로 간다', async () => {
     replaceMock.mockClear()
     createOpinionMock.mockClear()
