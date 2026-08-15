@@ -9,6 +9,7 @@ import {
   resolveQuoteIndex,
   resolveSwipeTarget,
 } from '../_services/passageSwipe.service'
+import { isSpoilerCovered } from '../_services/spoiler.service'
 import type { SwipeDirection } from '../_types/readerHighlights.type'
 import { useHighlightViewer } from './useHighlightViewer'
 
@@ -69,18 +70,35 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
   }, [canLoadMorePages, pageIndex, pages.length, fetchNextPage])
 
   const failedQueries = [pageNumbersQuery, passagesQuery].filter((query) => query.isError)
+  const loadMorePages = canLoadMorePages
+    ? () => {
+        void fetchNextPage()
+      }
+    : undefined
 
   return {
     bookTitle,
     bookCoverImageUrl,
-    pages,
     highlight,
     quoteIndex,
     isRevealed: viewer.isRevealed,
-    selectPage: viewer.select,
+    // 쪽 선택기는 고를 쪽이 도착한 뒤에 선다 — 빈 목록으로 세우면 아직 없는 쪽이 표시된다
+    pageNav:
+      pages.length > 0
+        ? {
+            pages,
+            activePage: viewer.activePage,
+            onSelectPage: viewer.select,
+            onLoadMorePages: loadMorePages,
+          }
+        : undefined,
     // 카드 탭은 가림막 해제만 한다 — 대목 이동은 스와이프가 맡는다
     clickQuote: () => {
-      if (activePassage?.isSpoiler && !viewer.isRevealed) viewer.reveal()
+      if (
+        isSpoilerCovered({ isSpoiler: activePassage?.isSpoiler, isRevealed: viewer.isRevealed })
+      ) {
+        viewer.reveal()
+      }
     },
     swipeQuote: (direction: SwipeDirection) => {
       const target = resolveSwipeTarget({
@@ -97,11 +115,6 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
       }
       viewer.goToPage(target.page, target.cursor)
     },
-    loadMorePages: canLoadMorePages
-      ? () => {
-          void fetchNextPage()
-        }
-      : undefined,
     activePassage,
     isError: failedQueries.length > 0,
     retry: () => {

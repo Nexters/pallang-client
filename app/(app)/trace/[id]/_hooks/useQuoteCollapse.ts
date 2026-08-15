@@ -10,14 +10,13 @@ import {
   getTransitionIntent,
   HEADER_HEIGHT,
   PAPER_HEIGHT,
+  px,
   STAGE_COLLAPSED,
   STAGE_EXPANDED,
   TOUCH_COLLAPSE_DRAG,
   TOUCH_EXPAND_DRAG,
   WHEEL_TRIGGER_DELTA,
 } from '../_services/quoteCollapse.service'
-
-const px = (value: number) => `${String(value)}px`
 
 // 시안 수치를 한 번만 CSS로 내보내 TS와 CSS의 값이 어긋나지 않게 한다
 const stageStyle = {
