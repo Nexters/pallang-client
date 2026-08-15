@@ -14,24 +14,24 @@ import { cn } from '@/app/_global/_services/cn.service'
 // 팝업 배경 #383838도 --color-bg-overlay와 일치해 토큰을 그대로 쓴다.
 const BASE_TEXT_CLASS = 'font-pretendard text-body-14rg'
 
-type SelectOption = { label: string; value: string }
+type SelectOption<T extends string> = { label: string; value: T }
 type SelectVariant = 'dark' | 'light'
 
-type SelectProps = {
+type SelectProps<T extends string> = {
   /** 트리거의 접근성 이름. 시각적 라벨이 없는 컴팩트 셀렉트라 필수다. */
   label: string
-  options: readonly SelectOption[]
+  options: readonly SelectOption<T>[]
   /** controlled로 쓸 때 지정한다. */
-  value?: string
+  value?: T
   /** uncontrolled 초기값. 없으면 첫 옵션이 아니라 빈 값으로 시작한다. */
-  defaultValue?: string
-  onValueChange?: (value: string) => void
+  defaultValue?: T
+  onValueChange?: (value: T) => void
   disabled?: boolean
   variant?: SelectVariant
   className?: string
 }
 
-export function Select({
+export function Select<T extends string>({
   label,
   options,
   value,
@@ -40,14 +40,14 @@ export function Select({
   disabled,
   variant = 'dark',
   className,
-}: SelectProps) {
+}: SelectProps<T>) {
   const isLight = variant === 'light'
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue)
   const currentValue = value ?? uncontrolledValue
   const visibleOptions = options.filter((option) => option.value !== currentValue)
 
   return (
-    <BaseSelect.Root<string>
+    <BaseSelect.Root<T>
       items={options}
       value={value}
       defaultValue={defaultValue}
