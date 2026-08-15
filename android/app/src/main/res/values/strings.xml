@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">pallang</string>
-    <string name="title_activity_main">pallang</string>
+    <string name="app_name">Pallang</string>
+    <string name="title_activity_main">Pallang</string>
     <string name="package_name">kr.co.pallang.app</string>
     <string name="custom_url_scheme">kr.co.pallang.app</string>
 </resources>

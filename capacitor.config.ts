@@ -10,7 +10,10 @@ const serverUrl = process.env['CAP_SERVER_URL'] ?? PROD_SERVER_URL
 
 const config: CapacitorConfig = {
   appId: APP_ID,
-  appName: 'pallang',
+  // 네이티브 프로젝트를 재생성할 때 표시명의 출처가 된다. 실제 기기 표시명은
+  // Android strings.xml의 app_name과 iOS Info.plist의 CFBundleDisplayName이 갖고 있으니
+  // 셋을 같이 맞춘다. 스토어 노출명(Pallang - 팔랑)은 별개다.
+  appName: 'Pallang',
   // 원격 로드라도 존재해야 함 → 기존 public을 최소 fallback으로 사용
   webDir: 'public',
   server: {
