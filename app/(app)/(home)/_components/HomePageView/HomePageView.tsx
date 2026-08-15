@@ -43,9 +43,8 @@ export function HomePageView() {
         ) : (
           <header className="flex items-center justify-between">
             <Logo aria-label="Pallang" className="h-7 w-18.75" />
-            {/* 검색으로 들어왔을 때만 검색창에 포커스를 준다 — '모두 보기'로 들어오면 키보드가 열리지 않아야 한다 */}
             <Link
-              href="/book/search?autofocus"
+              href="/book/search"
               aria-label="검색"
               className="flex size-8 items-center justify-center text-icon-primary"
             >

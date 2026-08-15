@@ -63,7 +63,7 @@ export function BookSearchPageView({ shouldFocusSearch }: BookSearchPageViewProp
     <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
       <TopBar.Root>
         <TopBar.Title>
-          도서 목록
+          전체
           {shouldShowTotalCount && <span className="text-text-placeholder-a50">{totalCount}</span>}
         </TopBar.Title>
         <TopBar.Spacer />
