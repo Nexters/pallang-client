@@ -31,6 +31,8 @@ const OCR_FAILURE_MESSAGE = '사진에서 글자를 읽지 못했어요.\n다시
 
 const EDIT_REPLACED_MESSAGE = '고쳐 쓴 내용이 새로 고른 문장으로 바뀌었어요.'
 
+const QUOTE_LIMIT_MESSAGE = `${String(MAX_QUOTE_LENGTH)}자를 넘는 부분은 담기지 않아요.`
+
 export function OcrSelector() {
   const { goBack, goTo } = useTraceNav()
   const { dispatch } = useTraceDraft()
@@ -197,7 +199,14 @@ export function OcrSelector() {
             onSelect={(indices) => {
               // 훅이 실제로 달라진 선택만 넘긴다. 여백을 탭했을 뿐이면 여기까지 오지 않는다.
               // 고쳐 쓴 글이 사라지는 건 되돌릴 수 없으니, 덮이는 순간을 말없이 넘기지 않는다.
+              // 상한은 사진의 점선과 카운터가 계속 보여주지만, 넘어서는 그 순간은 알려야 손이 멈춘다.
+              // 넘어선 채로 더 끄는 동안 매번 띄우면 시끄러우니 경계를 건너는 순간에만.
+              const nextBlocks = indices.map((i) => blocks[i]).filter((b) => !!b)
+              const crossesLimit =
+                overflow.length === 0 &&
+                countWithinLimit(nextBlocks, MAX_QUOTE_LENGTH) < nextBlocks.length
               if (editedText !== null) setMessage(EDIT_REPLACED_MESSAGE)
+              else if (crossesLimit) setMessage(QUOTE_LIMIT_MESSAGE)
               setSelected(indices)
               // 새로 끌면 손으로 고친 내용 대신 새 선택을 따른다
               setEditedText(null)

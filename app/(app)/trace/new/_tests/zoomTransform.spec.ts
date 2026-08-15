@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from '../_data/zoom.constant'
+import { MAX_ZOOM_SCALE, MIN_ZOOM_SCALE } from '../_data/gesture.constant'
 import {
   anchoredOffset,
   clampOffset,

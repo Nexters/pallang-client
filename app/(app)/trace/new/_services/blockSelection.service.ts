@@ -25,40 +25,49 @@ function overlaps(box: BlockBox, rect: Rect): boolean {
   )
 }
 
-function indicesTouching(blocks: BlockBox[], rect: Rect): number[] {
+/** 사각형(드래그)에 걸친 블록들의 인덱스를 읽기 순서(배열 순서)대로 반환한다. */
+export function selectIndicesInRect(blocks: BlockBox[], rect: Rect): number[] {
   return blocks.reduce<number[]>((indices, box, index) => {
     if (overlaps(box, rect)) indices.push(index)
     return indices
   }, [])
 }
 
-/** 사각형과 블록 사이의 빈 간격. 축마다 잰 뒤 큰 쪽을 쓴다 — 여유 판정(축별 확장)과 같은 잣대다. */
-function gapBetween(box: BlockBox, rect: Rect): number {
-  const gapX = Math.max(0, box.left - (rect.left + rect.width), rect.left - (box.left + box.width))
-  const gapY = Math.max(0, box.top - (rect.top + rect.height), rect.top - (box.top + box.height))
+/** 점과 블록 사이의 빈 간격. 축마다 잰 뒤 큰 쪽을 쓴다. 안에 있으면 0이다. */
+function gapFrom(box: BlockBox, point: Point): number {
+  const gapX = Math.max(0, box.left - point.x, point.x - (box.left + box.width))
+  const gapY = Math.max(0, box.top - point.y, point.y - (box.top + box.height))
   return Math.max(gapX, gapY)
 }
 
-/** 여유 안에서 가장 가까운 블록 하나. 같은 거리면 읽기 순서가 앞선 쪽이다. */
-function nearestWithin(blocks: BlockBox[], rect: Rect, tolerance: number): number[] {
-  const nearest = blocks.reduce<{ gap: number; index: number } | null>((best, box, index) => {
-    const gap = gapBetween(box, rect)
-    return gap <= tolerance && (!best || gap < best.gap) ? { gap, index } : best
-  }, null)
-  return nearest ? [nearest.index] : []
+/** 점에서 블록 중심까지의 거리. 겹친 상자 가운데 어느 쪽을 눌렀는지 가른다. */
+function distanceToCenter(box: BlockBox, point: Point): number {
+  return Math.hypot(box.left + box.width / 2 - point.x, box.top + box.height / 2 - point.y)
 }
 
 /**
- * 사각형에 걸친 블록들의 인덱스를 읽기 순서(배열 순서)대로 반환한다.
+ * 한 점(탭)이 가리키는 블록 하나. 없으면 null.
  *
- * tolerance는 빗나갔을 때만 쓰는 여유다. 정확히 닿은 블록이 있으면 그것만 돌려주고,
- * 없을 때만 여유 안에서 가장 가까운 하나를 고른다. 어절 사이 간격은 여유보다 좁기 일쑤라,
- * 여유 안의 것을 다 주면 사이를 한 번 눌렀을 때 양옆 두 어절이 함께 발췌문에 낀다.
+ * 안에 든 블록이 있으면 그중 중심이 가장 가까운 것 — OCR 상자는 넉넉해서 윗줄·아랫줄이 겹치는데,
+ * 읽기 순서 첫 번째를 잡으면 늘 윗줄만 걸려 빼려던 어절 대신 엉뚱한 게 더해진다.
+ * 안에 든 게 없으면 tolerance 안에서 가장 가까운 것 — 어절은 손가락 끝보다 작아 살짝 빗나가기 쉽다.
+ * 어느 쪽이든 하나만 돌려준다. 어절 사이 간격은 tolerance보다 좁기 일쑤라, 여유 안의 것을 다 주면
+ * 사이를 한 번 눌렀을 때 양옆 두 어절이 함께 발췌문에 낀다.
  */
-export function selectIndicesInRect(blocks: BlockBox[], rect: Rect, tolerance = 0): number[] {
-  const touching = indicesTouching(blocks, rect)
-  if (touching.length > 0 || tolerance <= 0) return touching
-  return nearestWithin(blocks, rect, tolerance)
+export function pickBlockAt(blocks: BlockBox[], point: Point, tolerance: number): number | null {
+  const best = blocks.reduce<{ gap: number; index: number; toCenter: number } | null>(
+    (current, box, index) => {
+      const gap = gapFrom(box, point)
+      if (gap > tolerance) return current
+      const toCenter = distanceToCenter(box, point)
+      // 간격이 0(안에 듦)인 쪽이 늘 우선이고, 같은 간격끼리는 중심이 가까운 쪽
+      const better =
+        !current || gap < current.gap || (gap === current.gap && toCenter < current.toCenter)
+      return better ? { gap, index, toCenter } : current
+    },
+    null,
+  )
+  return best ? best.index : null
 }
 
 export type ToggleMode = 'add' | 'remove'

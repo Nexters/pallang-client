@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   applyToggle,
   type BlockBox,
+  pickBlockAt,
   rectFromPoints,
   resolveToggleMode,
   sameSelection,
@@ -57,34 +58,40 @@ describe('selectIndicesInRect', () => {
   })
 })
 
-describe('selectIndicesInRect의 탭 여유', () => {
-  // 어절은 손가락 끝보다 작아 살짝 빗나가기 쉽다. 빗나간 때만 여유가 일한다.
-  it('살짝 빗나가면 여유 안쪽의 블록을 끌어온다', () => {
-    const justOutside = rectFromPoints({ x: 33, y: 5 }, { x: 33, y: 5 })
-    expect(selectIndicesInRect(blocks, justOutside)).toEqual([])
-    expect(selectIndicesInRect(blocks, justOutside, 6)).toEqual([0])
+describe('pickBlockAt', () => {
+  it('블록 안을 누르면 그 블록이다', () => {
+    expect(pickBlockAt(blocks, { x: 45, y: 5 }, 6)).toBe(1)
   })
 
-  // 늘 여유를 주면 어절 사이를 눌렀을 때 양옆이 함께 잡혀 고르지 않은 말이 끼어든다.
-  it('정확히 닿은 블록이 있으면 여유를 쓰지 않는다', () => {
-    const onEdge = rectFromPoints({ x: 30, y: 5 }, { x: 30, y: 5 })
-    expect(selectIndicesInRect(blocks, onEdge, 12)).toEqual([0])
+  // 어절은 손가락 끝보다 작아 살짝 빗나가기 쉽다. 빗나간 때만 여유가 일한다.
+  it('살짝 빗나가면 여유 안쪽의 블록을 끌어온다', () => {
+    expect(pickBlockAt(blocks, { x: 33, y: 5 }, 0)).toBeNull()
+    expect(pickBlockAt(blocks, { x: 33, y: 5 }, 6)).toBe(0)
   })
 
   // 어절 사이 간격은 화면맞춤 배율에서 몇 px에 불과해, 여유 안에 양옆이 다 들어오기 쉽다.
   // 한 번 눌러 두 어절이 잡히면 안 되니 가장 가까운 하나만 고른다.
   it('여유 안에 여럿이 있어도 가장 가까운 하나만 고른다', () => {
     // 블록 0은 x≤30, 블록 1은 x≥40. x=33은 0에 3px, 1에 7px
-    const nearerToFirst = rectFromPoints({ x: 33, y: 5 }, { x: 33, y: 5 })
-    expect(selectIndicesInRect(blocks, nearerToFirst, 12)).toEqual([0])
-
-    const nearerToSecond = rectFromPoints({ x: 37, y: 5 }, { x: 37, y: 5 })
-    expect(selectIndicesInRect(blocks, nearerToSecond, 12)).toEqual([1])
+    expect(pickBlockAt(blocks, { x: 33, y: 5 }, 12)).toBe(0)
+    expect(pickBlockAt(blocks, { x: 37, y: 5 }, 12)).toBe(1)
   })
 
-  it('여유 밖은 여전히 잡지 않는다', () => {
-    const farAway = rectFromPoints({ x: 100, y: 100 }, { x: 100, y: 100 })
-    expect(selectIndicesInRect(blocks, farAway, 6)).toEqual([])
+  // OCR 상자는 넉넉해서 윗줄과 아랫줄이 살짝 겹친다. 겹친 자리를 눌렀을 때 읽기 순서 첫 번째를
+  // 잡으면 늘 윗줄만 걸린다 — 빼려던 아랫줄 어절 대신 윗줄이 더해지는 식으로 엇나간다.
+  it('겹친 자리를 누르면 중심이 가장 가까운 블록 하나다', () => {
+    const overlapping: BlockBox[] = [
+      { height: 12, left: 0, top: 0, width: 30 }, // 0: 윗줄, y 0~12
+      { height: 12, left: 0, top: 10, width: 30 }, // 1: 아랫줄, y 10~22 (2px 겹침)
+    ]
+    // y=11.5는 둘 다 안이지만 아랫줄 중심(16)에 더 가깝다
+    expect(pickBlockAt(overlapping, { x: 10, y: 11.5 }, 0)).toBe(1)
+    // y=10.5는 윗줄 중심(6)에 더 가깝다
+    expect(pickBlockAt(overlapping, { x: 10, y: 10.5 }, 0)).toBe(0)
+  })
+
+  it('여유 밖은 잡지 않는다', () => {
+    expect(pickBlockAt(blocks, { x: 100, y: 100 }, 6)).toBeNull()
   })
 })
 

@@ -45,6 +45,8 @@ export function OcrPhotoStage({
   selected,
 }: OcrPhotoStageProps) {
   const stageRef = useRef<HTMLDivElement>(null)
+  // 사진 요소. 블록 좌표계의 원점이자 확대가 걸리는 대상이다.
+  const surfaceRef = useRef<HTMLDivElement>(null)
   const [stageSize, setStageSize] = useState<Size | null>(null)
   // 사진이 바뀌면 이전 크기를 그대로 쓰면 안 된다. 어느 URL을 잰 값인지 함께 들고 다닌다.
   const [measured, setMeasured] = useState<{ size: Size; url: string } | null>(null)
@@ -87,7 +89,8 @@ export function OcrPhotoStage({
   }))
   const zoom = usePinchZoom(fitted && { height: fitted.height, width: fitted.width })
   const { offset, scale } = zoom.transform
-  const { handlers, marquee, mode } = useBlockDragSelection(scaledBlocks, selected, onSelect, scale)
+  const selection = useBlockDragSelection(scaledBlocks, selected, onSelect, surfaceRef, scale)
+  const { marquee, mode } = selection
   const selectedSet = new Set(selected)
   const overflowSet = new Set(overflow)
 
@@ -97,52 +100,87 @@ export function OcrPhotoStage({
     resetZoom()
   }, [imageUrl, resetZoom])
 
-  // 손가락 하나는 문장을 고르고, 둘부터는 사진을 확대하거나 민다.
-  // 두 번째 손가락이 닿으면 고르던 것을 그 자리에서 확정한다 — 되돌리면 확대하려다 고른 게 사라진다.
-  const activePointers = useRef(new Set<number>())
-  const routed = {
+  // 손가락이 둘 이상 닿아 있는 동안. 이때 포인터 이벤트는 흘려보낸다.
+  const pinchingRef = useRef(false)
+  // 매 렌더마다 최신 값을 ref에 반영 — 네이티브 리스너를 한 번만 걸고도 최신 클로저를 부르기 위함
+  // (Snackbar.tsx의 onCloseRef와 같은 패턴)
+  const latestRef = useRef({ cancelSelection: selection.cancel, onTouches: zoom.onTouches })
+  useEffect(() => {
+    latestRef.current = { cancelSelection: selection.cancel, onTouches: zoom.onTouches }
+  })
+
+  // 확대는 TouchEvent로 받는다. iOS WebKit은 둘째 손가락이 닿을 때 포인터를 끊거나 둘째 포인터의
+  // move를 안 주는 일이 있고, 네이티브 핀치를 막으려면 non-passive preventDefault가 필요한데
+  // React의 touch 이벤트는 passive라 여기서 직접 건다. 스테이지 전체에 걸어 사진 옆 여백에 닿는
+  // 손가락도 잡는다.
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+    const onTouch = (event: TouchEvent) => {
+      const points = Array.from(event.touches, (touch) => ({ x: touch.clientX, y: touch.clientY }))
+      const pinching = points.length >= 2
+      if (pinching) {
+        // 브라우저가 페이지 확대로 가져가지 못하게 막고, 고르던 것은 그 자리에서 확정한다 —
+        // 되돌리면 확대하려다 고른 게 사라진다
+        event.preventDefault()
+        if (!pinchingRef.current) latestRef.current.cancelSelection()
+      }
+      pinchingRef.current = pinching
+      latestRef.current.onTouches(points, stage)
+    }
+    // WebKit 고유 핀치 이벤트. 이걸 막지 않으면 touch-action: none이어도 페이지가 확대된다.
+    const blockGesture = (event: Event) => {
+      event.preventDefault()
+    }
+    stage.addEventListener('touchstart', onTouch, { passive: false })
+    stage.addEventListener('touchmove', onTouch, { passive: false })
+    stage.addEventListener('touchend', onTouch)
+    stage.addEventListener('touchcancel', onTouch)
+    stage.addEventListener('gesturestart', blockGesture)
+    return () => {
+      stage.removeEventListener('touchstart', onTouch)
+      stage.removeEventListener('touchmove', onTouch)
+      stage.removeEventListener('touchend', onTouch)
+      stage.removeEventListener('touchcancel', onTouch)
+      stage.removeEventListener('gesturestart', blockGesture)
+    }
+  }, [])
+
+  // 선택은 포인터 이벤트로. 첫 손가락(isPrimary)만, 확대 중이 아닐 때만 받는다 —
+  // 둘째 손가락의 pointerdown이 touchstart보다 먼저 와도 새 선택을 시작하지 않는다.
+  const { handlers } = selection
+  const pointerHandlers = {
     onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => {
-      activePointers.current.delete(event.pointerId)
-      zoom.onPointerCancel(event)
-      handlers.onPointerCancel()
+      if (event.isPrimary) handlers.onPointerCancel()
     },
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
-      // 손가락마다 따로 캡처해야 사진 밖으로 벗어나도 핀치가 끊기지 않는다
-      event.currentTarget.setPointerCapture(event.pointerId)
-      activePointers.current.add(event.pointerId)
-      zoom.onPointerDown(event)
-      if (activePointers.current.size === 1) handlers.onPointerDown(event)
-      else handlers.onPointerUp()
+      if (event.isPrimary && !pinchingRef.current) handlers.onPointerDown(event)
     },
     onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
-      // 줌에는 항상 흘린다 — 손가락 하나일 때 위치를 낡게 두면 둘째가 닿는 순간 기준 간격이
-      // 처음 닿은 자리로 잡혀, 실제보다 훨씬 더 벌려야 겨우 확대가 시작된다.
-      // 훅 스스로 손가락이 둘일 때만 움직이므로 하나일 땐 위치만 갱신하고 끝난다.
-      zoom.onPointerMove(event)
-      if (activePointers.current.size === 1) handlers.onPointerMove(event)
+      if (event.isPrimary && !pinchingRef.current) handlers.onPointerMove(event)
     },
     onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
-      activePointers.current.delete(event.pointerId)
-      zoom.onPointerUp(event)
-      handlers.onPointerUp()
+      if (event.isPrimary) handlers.onPointerUp()
     },
   }
 
   return (
+    // touch-none이라야 끄는 동안 화면이 따라 스크롤되지 않는다. 사진 옆 여백에서 시작하는
+    // 손짓도 받아야 하므로 핸들러는 사진이 아니라 스테이지에 건다.
     <div
       ref={stageRef}
-      className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-bg-black"
+      className="flex min-h-0 flex-1 touch-none items-center justify-center overflow-hidden bg-bg-black select-none"
+      {...pointerHandlers}
     >
-      {/* 드래그로 고르는 영역 — touch-none이라야 끄는 동안 화면이 따라 스크롤되지 않는다 */}
       <div
-        className="relative touch-none select-none"
+        ref={surfaceRef}
+        className="relative"
         style={{
           ...(fitted && { height: fitted.height, width: fitted.width }),
           // 확대는 손가락을 따라와야 해서 전환을 걸지 않는다.
           // scale이 먼저, translate가 나중에 먹어 이동량은 화면 px 그대로다.
           transform: `translate(${String(offset.x)}px, ${String(offset.y)}px) scale(${String(scale)})`,
         }}
-        {...routed}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- blob URL은 next/image가 다루지 않는다 */}
         <img src={imageUrl} alt="촬영한 책 페이지" className="block size-full" />
