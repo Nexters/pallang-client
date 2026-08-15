@@ -1,5 +1,5 @@
-import { TraceDetailForm } from '../_components/TraceDetailForm/TraceDetailForm'
+import { TraceWriteForm } from '../_components/TraceWriteForm/TraceWriteForm'
 
 export default function TraceWritePage() {
-  return <TraceDetailForm />
+  return <TraceWriteForm />
 }
