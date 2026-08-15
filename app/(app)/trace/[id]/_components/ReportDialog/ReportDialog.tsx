@@ -7,11 +7,13 @@ import { Dialog } from '@/app/_global/_components/Dialog/Dialog'
 import type { ReportRequest } from '@/app/_global/_queries/report.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
+import { REPORT_DIALOG_LAYOUT } from '../../_data/moderation.constant'
 import {
   REPORT_DETAIL_MAX_LENGTH,
   REPORT_REASON_OPTIONS,
   type ReportReasonOption,
 } from '../../_data/reportReason.constant'
+import { canDismissDialog } from '../../_services/moderation.service'
 import { buildReportRequest, canSubmitReport } from '../../_services/reportForm.service'
 
 type ReportDialogProps = {
@@ -45,7 +47,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
       open={open}
       onOpenChange={(nextOpen) => {
         // 요청이 나간 뒤에는 백드롭·Esc로 닫지 못한다 — 결과 스낵바를 보고 닫힌다
-        if (!nextOpen && !loading) onClose()
+        if (canDismissDialog(nextOpen, loading)) onClose()
       }}
     >
       <Dialog.Content>
@@ -54,7 +56,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
         </Dialog.Header>
 
         <div className="flex w-full flex-col gap-2">
-          <fieldset className="grid grid-cols-2 gap-x-6 gap-y-2">
+          <fieldset className={cn('grid gap-x-6 gap-y-2', REPORT_DIALOG_LAYOUT.reasonGrid)}>
             <legend className="sr-only">신고 사유</legend>
             {REPORT_REASON_OPTIONS.map((option) => (
               <label
@@ -80,7 +82,9 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
                     'flex size-4 shrink-0 items-center justify-center rounded-full',
                     'transition-colors duration-instant ease-standard',
                     'peer-focus-visible:ring-2 peer-focus-visible:ring-interactive-accent/50',
-                    selected?.id === option.id ? 'bg-interactive-accent' : 'bg-[#e5e5e5]',
+                    selected?.id === option.id
+                      ? 'bg-interactive-accent'
+                      : REPORT_DIALOG_LAYOUT.radioOff,
                   )}
                 >
                   <span className="size-2 rounded-full bg-white" />
@@ -102,7 +106,8 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
               setDetail(event.target.value)
             }}
             className={cn(
-              'h-20 w-full resize-none rounded bg-bg-surface px-4 py-3',
+              REPORT_DIALOG_LAYOUT.detailInput,
+              'w-full resize-none rounded bg-bg-surface px-4 py-3',
               'text-body-14md text-text-placeholder outline-none',
               'caret-interactive-accent placeholder:text-text-placeholder-a50',
               'disabled:cursor-not-allowed',
@@ -111,12 +116,17 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
         </div>
 
         <Dialog.Footer>
-          <Button variant="back" className="h-[54px]" disabled={loading} onClick={onClose}>
+          <Button
+            variant="back"
+            className={REPORT_DIALOG_LAYOUT.actionButton}
+            disabled={loading}
+            onClick={onClose}
+          >
             뒤로
           </Button>
           <Button
             variant="activated"
-            className="h-[54px]"
+            className={REPORT_DIALOG_LAYOUT.actionButton}
             loading={loading}
             disabled={!canSubmitReport(selected, detail)}
             onClick={() => {
