@@ -64,4 +64,32 @@ describe('흔적 작성 첫 화면', () => {
       expect(replaceMock).toHaveBeenCalledWith('/trace/new/photo')
     })
   })
+
+  it('직접 입력을 고르고 문장을 적어 제출하면 대목을 담아 작성 단계로 간다', async () => {
+    replaceMock.mockClear()
+    renderView()
+
+    fireEvent.click(await screen.findByRole('button', { name: /직접 입력/ }))
+
+    const textarea = await screen.findByPlaceholderText('문장을 입력해주세요.')
+    fireEvent.change(textarea, { target: { value: '흔적을 남깁니다' } })
+    fireEvent.click(screen.getByRole('button', { name: '다음' }))
+
+    await waitFor(() => {
+      expect(replaceMock).toHaveBeenCalledWith('/trace/new/write')
+    })
+  })
+
+  it('직접 입력 시트를 닫으면 플로우를 벗어나지 않고 방식 선택 시트로 돌아온다', async () => {
+    replaceMock.mockClear()
+    renderView()
+
+    fireEvent.click(await screen.findByRole('button', { name: /직접 입력/ }))
+    await screen.findByPlaceholderText('문장을 입력해주세요.')
+
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+
+    expect(await screen.findByText('새로운 기록을 어떻게 남길까요?')).toBeTruthy()
+    expect(replaceMock).not.toHaveBeenCalledWith('/')
+  })
 })

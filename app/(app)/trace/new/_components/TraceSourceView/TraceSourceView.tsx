@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { TraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
+import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import { ManualQuoteSheet } from '../ManualQuoteSheet/ManualQuoteSheet'
@@ -42,6 +43,13 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
     })
   }, [dispatch])
 
+  // 직접 입력 시트는 방식 선택 시트 위에 얹힌 한 층이다 — 뒤로가기는 화면을 떠나는 대신
+  // 방식 선택 시트로 한 층만 걷어낸다. 방식 선택 시트 자체는 이 화면 그 자체라 별도 가드가 없다
+  // — 닫히면 onClose(requestExit)가 바로 이탈 판정을 받는다.
+  useOverlayBackGuard(sheet === 'manual', () => {
+    setSheet('source')
+  })
+
   return (
     <>
       {/* 시트 뒤가 루트 배경(bg-bg-dark)으로 비지 않게 한다 */}
@@ -62,7 +70,9 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
       />
       <ManualQuoteSheet
         open={sheet === 'manual'}
-        onClose={requestExit}
+        onClose={() => {
+          setSheet('source')
+        }}
         onSubmit={(quotedText) => {
           dispatch({ type: 'setQuotedText', quotedText })
           setSheet('none')
