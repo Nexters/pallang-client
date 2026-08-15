@@ -1,3 +1,6 @@
+/** 게이트 제목은 액션과 무관하게 고정이다 — 액션별 사정은 설명 문구가 말한다 */
+export const LOGIN_GATE_TITLE = '로그인이 필요해요'
+
 /** 문구를 지정하지 않은 게이트의 범용 기본 문구 — 액션 전용 문구가 없을 때의 안전망 */
 export const DEFAULT_LOGIN_GATE_MESSAGE = '로그인하면 이용할 수 있어요!'
 

@@ -46,6 +46,26 @@ it('열려도 첫 버튼이 아니라 다이얼로그 자신이 포커스를 갖
   })
 })
 
+it('제목·설명은 문구가 적은 자리에서 줄을 바꾼다', async () => {
+  render(
+    <Dialog.Root open>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>{'지금 나가면\n작성 중이던 흔적이 사라져요'}</Dialog.Title>
+          <Dialog.Description>{'남긴 문장과\n의견은 저장되지 않아요.'}</Dialog.Description>
+        </Dialog.Header>
+      </Dialog.Content>
+    </Dialog.Root>,
+  )
+
+  const dialog = await screen.findByRole('dialog')
+  // happy-dom은 CSS를 계산하지 않아 클래스로 확인한다 — 빠지면 \n이 공백으로 접혀 한 줄로 붙는다
+  expect(dialog.querySelector('[data-slot="dialog-title"]')).toHaveClass('whitespace-pre-line')
+  expect(dialog.querySelector('[data-slot="dialog-description"]')).toHaveClass(
+    'whitespace-pre-line',
+  )
+})
+
 it('Close 파트를 누르면 닫힌다', async () => {
   render(<LoginDialog />)
 

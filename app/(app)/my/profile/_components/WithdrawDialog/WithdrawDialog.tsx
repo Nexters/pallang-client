@@ -36,7 +36,7 @@ export function WithdrawDialog({ loading, onCancel, onConfirm, open }: WithdrawD
         </Dialog.Illustration>
         <Dialog.Header>
           <Dialog.Title>회원 탈퇴하시겠어요?</Dialog.Title>
-          <Dialog.Description className="whitespace-pre-line">
+          <Dialog.Description>
             {'회원 탈퇴 시 지금까지 기록한 내용들이 사라지며,\n복구가 불가능합니다.'}
           </Dialog.Description>
         </Dialog.Header>

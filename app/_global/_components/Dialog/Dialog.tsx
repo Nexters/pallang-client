@@ -154,11 +154,17 @@ function Header({ className, ...props }: ComponentProps<'div'>) {
   )
 }
 
+// 제목·설명 문구는 디자인이 정한 자리에서 줄을 바꾼다("지금 나가면\n작성 중이던 흔적이 사라져요").
+// 기본값이 normal이면 그 \n이 공백으로 접혀 호출부마다 whitespace-pre-line을 덧붙이게 되고,
+// 빠뜨린 곳은 조용히 한 줄로 붙어 버린다 — 여기서 한 번에 켠다. 줄바꿈이 없는 문구는 영향이 없다.
 function Title({ className, ...props }: ComponentProps<typeof BaseDialog.Title>) {
   return (
     <BaseDialog.Title
       data-slot="dialog-title"
-      className={cn('w-full text-title-20sb font-bold leading-[1.4]', className)}
+      className={cn(
+        'w-full text-title-20sb font-bold leading-[1.4] whitespace-pre-line',
+        className,
+      )}
       {...props}
     />
   )
@@ -168,7 +174,10 @@ function Description({ className, ...props }: ComponentProps<typeof BaseDialog.D
   return (
     <BaseDialog.Description
       data-slot="dialog-description"
-      className={cn('w-full text-body-14md leading-[1.3] tracking-[-0.04em]', className)}
+      className={cn(
+        'w-full text-body-14md leading-[1.3] tracking-[-0.04em] whitespace-pre-line',
+        className,
+      )}
       {...props}
     />
   )

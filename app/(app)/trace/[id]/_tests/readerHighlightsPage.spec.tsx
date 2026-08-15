@@ -474,7 +474,7 @@ describe('ReaderHighlightsPage', () => {
 
     clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+    fireEvent.click(screen.getByRole('button', { name: '취소' }))
 
     const like = (await screen.findAllByRole('button', { name: '좋아요' }))[0]
     if (!like) throw new Error('좋아요 버튼을 찾지 못했다')
