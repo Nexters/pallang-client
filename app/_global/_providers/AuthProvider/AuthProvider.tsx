@@ -1,7 +1,15 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react'
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { initAuthSession, signOut as signOutSession } from '@/app/_global/_queries/auth.queries'
@@ -23,18 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [status, setStatus] = useState<AuthStatus>('loading')
   const prevStatusRef = useRef<AuthStatus>('loading')
+  // 스스로 누른 로그아웃인지 표시한다. 토큰이 비는 모습만 보면 만료와 구분되지 않는다.
+  const isManualSignOutRef = useRef(false)
 
-  // 세션 만료 처리: 로그인 상태였다가 풀리면(refresh 실패·로그아웃) 로그인 화면으로 보낸다.
+  // 세션 만료 처리: 로그인 상태였다가 풀리면(refresh 실패) 로그인 화면으로 보낸다.
   // 처음부터 비로그인인 사용자는 대상이 아니다(공개 페이지 탐색 허용).
-  // 회원 탈퇴로 토큰이 비었을 때는 예외다 — 탈퇴 흐름이 비로그인 마이페이지로 보내고
-  // 거기서 완료 스낵바를 띄우므로, 로그인 화면으로 가로채지 않는다.
+  // 토큰이 비어도 로그인 화면으로 가로채지 않는 두 경우:
+  //  - 회원 탈퇴 — 탈퇴 흐름이 비로그인 마이페이지로 보내 거기서 완료 스낵바를 띄운다.
+  //  - 사용자가 직접 누른 로그아웃 — 만료와 달리 사용자가 원한 결과라, 보던 화면(마이페이지)에
+  //    그대로 두고 비로그인 상태로만 바꾼다. 로그인 화면으로 되돌리면 나가려는 사람을 붙잡는 꼴이다.
   useEffect(() => {
-    if (
-      prevStatusRef.current === 'authenticated' &&
-      status === 'unauthenticated' &&
-      !hasPendingWithdrawalNotice()
-    ) {
-      router.replace(LOGIN_PATH)
+    if (prevStatusRef.current === 'authenticated' && status === 'unauthenticated') {
+      const isIntended = isManualSignOutRef.current || hasPendingWithdrawalNotice()
+      // 이번 전환에서만 유효한 표시다. 남겨두면 다음 만료까지 삼킨다.
+      isManualSignOutRef.current = false
+      if (!isIntended) router.replace(LOGIN_PATH)
     }
     prevStatusRef.current = status
   }, [status, router])
@@ -61,10 +72,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // 토큰을 비우기 전에 표시해둔다 — 토큰 구독이 동기로 상태를 바꾸므로 뒤에 두면 늦는다.
+  const signOut = useCallback(async () => {
+    isManualSignOutRef.current = true
+    try {
+      await signOutSession()
+    } catch (error) {
+      // 토큰이 남아 상태가 안 바뀌면 표시만 남아 다음 만료를 삼킨다
+      isManualSignOutRef.current = false
+      throw error
+    }
+  }, [])
+
   const value: AuthContextValue = {
     status,
     isAuthenticated: status === 'authenticated',
-    signOut: signOutSession,
+    signOut,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
