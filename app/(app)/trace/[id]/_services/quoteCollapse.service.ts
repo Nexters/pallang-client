@@ -4,6 +4,12 @@
 
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 
+/** 좌표 상수를 CSS 길이로. 여기 수치를 읽는 쪽(useQuoteCollapse·TracePageSkeleton·QuotePanel)이
+    각자 문자열을 만들면 단위를 빠뜨려도 타입으로는 걸리지 않는다 */
+export function px(value: number): string {
+  return `${String(value)}px`
+}
+
 /** TraceHeader: py-2.5(20) + 아이콘 24 */
 export const HEADER_HEIGHT = 44
 /** 펼친 상태 스티커 영역 — 헤더 아래로 고정된 높이. 비율이 아니라 이 수치 그대로다 */
@@ -16,8 +22,9 @@ export const CARD_WIDTH = 312
 export const CARD_HEIGHT = 320
 /** 축소 상태 패널 높이.
     카드 아래 끝은 두 상태 모두 스테이지 하단과 맞물린다(펼침 44+47+320 = 접힘 0+높이 = 스테이지 높이).
-    그래서 카드는 높이를 따로 받지 않고 bottom으로 스테이지 하단에 묶여 있다 */
-const PANEL_HEIGHT = 270
+    그래서 카드는 높이를 따로 받지 않고 bottom으로 스테이지 하단에 묶여 있다.
+    의견 상세의 고정 패널(QuotePanel)도 같은 높이라 이 값을 그대로 가져다 쓴다 */
+export const PANEL_HEIGHT = 270
 
 /** 펼친 상태 스테이지 전체 높이 */
 export const STAGE_EXPANDED = HEADER_HEIGHT + STICKER_HEIGHT
