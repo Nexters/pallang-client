@@ -46,7 +46,7 @@ export function PagePicker(nav: PageNav) {
 
   return (
     <BaseSelect.Root<string>
-      items={toPageOptions(nav.pages)}
+      items={toPageOptions(nav.pages, nav.activePage)}
       value={toSelectedValue(nav.activePage)}
       onValueChange={(nextValue) => {
         if (nextValue !== null) nav.onSelectPage(parsePageValue(nextValue))

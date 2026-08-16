@@ -1,13 +1,13 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import {
-  PAGE_PRELOAD_MARGIN,
   resolveQuoteIndex,
   resolveSwipeTarget,
+  shouldLoadMorePages,
 } from '../_services/passageSwipe.service'
 import { isSpoilerCovered } from '../_services/spoiler.service'
 import type { SwipeDirection } from '../_types/readerHighlights.type'
@@ -64,12 +64,27 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
 
   const { fetchNextPage } = pageNumbersQuery
   const pageIndex = viewer.activePage === undefined ? -1 : pages.indexOf(viewer.activePage)
+  // 딥링크는 아직 안 받은 묶음의 쪽을 가리킬 수 있다 — 그 쪽이 목록에 없으면 이웃 쪽을 특정할 수 없어
+  // 쪽 이동이 통째로 막힌다. 나올 때까지 이어 받되(상한까지), 헛되이 반복하지 않게 횟수를 센다
+  const isActivePageMissing = viewer.activePage !== undefined && pageIndex < 0
+  const missingPageFetchesRef = useRef(0)
+  useEffect(() => {
+    if (!isActivePageMissing) missingPageFetchesRef.current = 0
+  }, [isActivePageMissing])
+
   // 목록 끝에 다가가면 미리 채워둔다 — 탭을 스크롤하지 않고 스와이프로만 이동해도 경계에서 막히지 않도록
   useEffect(() => {
-    if (!canLoadMorePages || pageIndex < 0) return
-    if (pages.length - pageIndex > PAGE_PRELOAD_MARGIN) return
+    const shouldLoad = shouldLoadMorePages({
+      canLoadMore: canLoadMorePages,
+      isActivePageMissing,
+      missingPageFetches: missingPageFetchesRef.current,
+      pageIndex,
+      loadedCount: pages.length,
+    })
+    if (!shouldLoad) return
+    if (isActivePageMissing) missingPageFetchesRef.current += 1
     void fetchNextPage()
-  }, [canLoadMorePages, pageIndex, pages.length, fetchNextPage])
+  }, [canLoadMorePages, isActivePageMissing, pageIndex, pages.length, fetchNextPage])
 
   const failedQueries = [pageNumbersQuery, passagesQuery].filter((query) => query.isError)
   const loadMorePages = canLoadMorePages

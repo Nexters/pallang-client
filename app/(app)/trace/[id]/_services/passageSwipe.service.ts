@@ -17,6 +17,31 @@ const BACK_GESTURE_EDGE = 24
 /** 활성 페이지 뒤로 남은 목록이 이만큼 이하면 다음 목록을 미리 불러온다 — 경계에서 스와이프가 막히지 않도록 */
 export const PAGE_PRELOAD_MARGIN = 2
 
+/** 목록에 없는 쪽을 찾으려고 쪽 목록을 더 받아 볼 횟수.
+    딥링크는 첫 묶음 밖의 쪽을 가리킬 수 있고, 목록에 없는 쪽에서는 이웃 쪽을 특정할 수 없어
+    쪽 이동이 통째로 막힌다(resolveAdjacentPage). 한 묶음이 100쪽이라 5번이면 500쪽 분량이다 —
+    그보다 뒤면 포기하고 보고 있는 쪽에 머문다. 읽는 것과 대목 스와이프는 그대로 된다 */
+export const MISSING_PAGE_FETCH_LIMIT = 5
+
+/** 쪽 목록을 더 받아야 하는지. 미리 채우기와 '목록에 없는 쪽 찾기'가 같은 자리에서 갈린다 */
+export function shouldLoadMorePages(input: {
+  canLoadMore: boolean
+  /** 보고 있는 쪽이 목록에 아예 없는지 — 쪽이 아직 안 정해졌으면 false다 */
+  isActivePageMissing: boolean
+  /** 그 쪽을 찾으려고 이미 더 받아 본 횟수 */
+  missingPageFetches: number
+  /** 보고 있는 쪽이 목록의 몇 번째인지 */
+  pageIndex: number
+  loadedCount: number
+}): boolean {
+  const { canLoadMore, isActivePageMissing, missingPageFetches, pageIndex, loadedCount } = input
+  if (!canLoadMore) return false
+  if (isActivePageMissing) return missingPageFetches < MISSING_PAGE_FETCH_LIMIT
+  // 쪽이 아직 안 정해졌으면 미리 채울 기준도 없다
+  if (pageIndex < 0) return false
+  return loadedCount - pageIndex <= PAGE_PRELOAD_MARGIN
+}
+
 export type GestureAxis = 'horizontal' | 'vertical'
 
 export type SwipeTarget =

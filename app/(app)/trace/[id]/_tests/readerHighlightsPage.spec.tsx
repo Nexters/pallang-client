@@ -76,6 +76,9 @@ const passageSeedByPage: Record<number, PassageSeed[]> = {
     { passageId: 132, quotedText: '연속 스포일러 둘째 대목 인용문', isSpoiler: true },
   ],
   15: [{ passageId: 151, quotedText: '흔적이 많은 대목 인용문', isSpoiler: false }],
+  // 쪽 목록 첫 묶음(100개) 밖에 있는 쪽 — 딥링크가 여기를 가리키는 경우를 만든다
+  130: [{ passageId: 1301, quotedText: '먼 쪽의 대목 인용문', isSpoiler: false }],
+  131: [{ passageId: 1311, quotedText: '먼 쪽 다음 쪽의 대목 인용문', isSpoiler: false }],
 }
 
 // 흔적 한 페이지(20개)를 넘겨 페이지네이션을 태우기 위한 시드
@@ -270,9 +273,28 @@ async function renderPage(
         )
       }
 
-      // 책 제목·표지는 대목 페이지 목록 응답에 함께 실려 온다
+      // 책 제목·표지는 대목 페이지 목록 응답에 함께 실려 온다.
+      // 쪽 목록도 페이지네이션된다 — 딥링크가 아직 안 받은 묶음의 쪽을 가리키는 경우를 만들려면 필요하다
+      const pageQuery = new URLSearchParams(url.split('?')[1] ?? '')
+      const pageSize = Number(pageQuery.get('size') ?? '100')
+      const pageIndex = Number(pageQuery.get('page') ?? '0')
+      const pageOffset = pageIndex * pageSize
       return Promise.resolve(
-        new Response(JSON.stringify({ data: { bookTitle: '모순', pageNumbers: pages } })),
+        new Response(
+          JSON.stringify({
+            data: {
+              bookTitle: '모순',
+              pageNumbers: pages.slice(pageOffset, pageOffset + pageSize),
+              pageInfo: {
+                page: pageIndex,
+                size: pageSize,
+                totalElements: pages.length,
+                totalPages: Math.ceil(pages.length / pageSize),
+                hasNext: pageOffset + pageSize < pages.length,
+              },
+            },
+          }),
+        ),
       )
     }),
   )
@@ -410,6 +432,18 @@ describe('ReaderHighlightsPage', () => {
 
     // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
     expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
+  })
+
+  it('딥링크가 아직 안 받은 묶음의 쪽을 가리키면 그 쪽이 나올 때까지 쪽 목록을 이어 받는다', async () => {
+    // 쪽 목록은 100개씩 온다 — 130쪽은 첫 묶음에 없다
+    const manyPages = Array.from({ length: 150 }, (_, index) => index + 1)
+    await renderPage(manyPages, undefined, { pageNumber: 130, passageId: 1301, opinionId: 9001 })
+
+    // 보고 있는 쪽이 목록에 없으면 이웃 쪽을 특정할 수 없어 쪽 이동이 통째로 막힌다
+    const quote = await screen.findByText('먼 쪽의 대목 인용문')
+    swipeCard(quote, 'next')
+
+    expect(await screen.findByText('먼 쪽 다음 쪽의 대목 인용문')).toBeInTheDocument()
   })
 
   it('책의 첫 대목에서 뒤로 넘겨도 끝으로 돌아가지 않는다', async () => {
