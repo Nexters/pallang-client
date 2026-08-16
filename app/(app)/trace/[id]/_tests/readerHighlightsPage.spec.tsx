@@ -68,6 +68,13 @@ const passageSeedByPage: Record<number, PassageSeed[]> = {
     { passageId: 121, quotedText: '혼재 페이지의 일반 대목 인용문', isSpoiler: false },
     { passageId: 122, quotedText: '혼재 페이지의 스포일러 대목 인용문', isSpoiler: true },
   ],
+  // 해제가 대목 단위인지 보려면 한 쪽에 스포일러가 둘 있어야 한다.
+  // 첫 대목부터 스포일러라 스와이프 없이 바로 해제할 수 있다 —
+  // 스와이프 뒤의 탭은 useQuoteSwipe가 삼켜(제스처 한 번 = 이동 한 번) 해제가 일어나지 않는다
+  13: [
+    { passageId: 131, quotedText: '연속 스포일러 첫 대목 인용문', isSpoiler: true },
+    { passageId: 132, quotedText: '연속 스포일러 둘째 대목 인용문', isSpoiler: true },
+  ],
   15: [{ passageId: 151, quotedText: '흔적이 많은 대목 인용문', isSpoiler: false }],
 }
 
@@ -218,7 +225,7 @@ function scrollSentinelsIntoView() {
 type DeepLinkTarget = { pageNumber: number; passageId: number; opinionId: number }
 
 async function renderPage(
-  pages = [7, 9, 12, 23, 34, 123],
+  pages = [7, 9, 12, 13, 23, 34, 123],
   failing?: 'passages' | 'opinions',
   target?: DeepLinkTarget,
 ) {
@@ -571,6 +578,48 @@ describe('ReaderHighlightsPage', () => {
     swipeCard(normalQuote, 'next')
     expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
     expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('한 대목의 가림막을 해제해도 같은 쪽의 다른 스포일러 대목은 그대로 가려져 있다', async () => {
+    await renderPage()
+
+    await selectPage(13)
+    await screen.findByText('스포일러가 포함되어있어요!')
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+    expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
+
+    // 해제가 쪽 단위로 남으면 아직 열어본 적 없는 다음 스포일러가 열린 채로 나온다
+    swipeCard(screen.getByText('연속 스포일러 첫 대목 인용문'), 'next')
+
+    expect(screen.getByText('연속 스포일러 둘째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+  })
+
+  it('한 번 해제한 대목으로 되돌아오면 다시 묻지 않는다', async () => {
+    await renderPage()
+
+    await selectPage(13)
+    await screen.findByText('스포일러가 포함되어있어요!')
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+
+    // 다음 대목에 갔다가 되돌아온다 — 한 번 연 대목을 다시 잠그면 오가기가 성가시다
+    swipeCard(screen.getByText('연속 스포일러 첫 대목 인용문'), 'next')
+    swipeCard(screen.getByText('연속 스포일러 둘째 대목 인용문'), 'prev')
+
+    expect(screen.getByText('연속 스포일러 첫 대목 인용문')).toBeInTheDocument()
+    expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
+  })
+
+  it('쪽을 옮기면 해제가 풀린다 — 다른 쪽의 스포일러는 다시 묻는다', async () => {
+    await renderPage()
+
+    await selectPage(13)
+    await screen.findByText('스포일러가 포함되어있어요!')
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+
+    await selectPage(9)
+
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
   it('로그인 상태에서 의견 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {

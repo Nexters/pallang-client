@@ -59,6 +59,8 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
   )
   // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
   const activePassage = passages[quoteIndex]
+  // 해제는 대목 단위라 지금 보고 있는 대목을 열어본 적 있는지만 본다
+  const isRevealed = viewer.isRevealed(activePassage?.passageId)
 
   const { fetchNextPage } = pageNumbersQuery
   const pageIndex = viewer.activePage === undefined ? -1 : pages.indexOf(viewer.activePage)
@@ -81,7 +83,7 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
     bookCoverImageUrl,
     highlight,
     quoteIndex,
-    isRevealed: viewer.isRevealed,
+    isRevealed,
     // 쪽 선택기는 고를 쪽이 도착한 뒤에 선다 — 빈 목록으로 세우면 아직 없는 쪽이 표시된다
     pageNav:
       pages.length > 0
@@ -94,10 +96,9 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
         : undefined,
     // 카드 탭은 가림막 해제만 한다 — 대목 이동은 스와이프가 맡는다
     clickQuote: () => {
-      if (
-        isSpoilerCovered({ isSpoiler: activePassage?.isSpoiler, isRevealed: viewer.isRevealed })
-      ) {
-        viewer.reveal()
+      if (!activePassage) return
+      if (isSpoilerCovered({ isSpoiler: activePassage.isSpoiler, isRevealed })) {
+        viewer.reveal(activePassage.passageId)
       }
     },
     swipeQuote: (direction: SwipeDirection) => {
