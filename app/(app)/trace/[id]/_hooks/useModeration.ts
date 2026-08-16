@@ -12,6 +12,7 @@ import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { MODERATION_MESSAGE } from '../_data/moderation.constant'
 import { isMine, resolveReportErrorMessage } from '../_services/moderation.service'
+import { useModerationMessage } from './useModerationMessage'
 
 /** 신고 대상 — 흔적이면 opinionId, 댓글이면 commentId */
 export type ModerationTarget = { type: 'opinion' | 'comment'; id: number }
@@ -32,7 +33,9 @@ export function useModeration({ target, authorUserId }: UseModerationOptions) {
   const queryClient = useQueryClient()
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isBlockOpen, setIsBlockOpen] = useState(false)
-  const [message, setMessage] = useState('')
+  // 결과 문구는 이 훅 바깥(ModerationMessageHost)에 맡긴다 — 차단이 성공하면 이 훅을 든
+  // 카드가 목록에서 걷히므로, 여기에 들고 있으면 문구도 함께 사라진다
+  const { show } = useModerationMessage()
 
   // 비로그인이면 me가 없어 모두 남의 글로 본다 — 액션은 어차피 로그인 게이트가 막는다
   const { data: meData } = useQuery(userQueries.me())
@@ -44,12 +47,12 @@ export function useModeration({ target, authorUserId }: UseModerationOptions) {
       : reportMutations.comment(target.id)),
     onSuccess: () => {
       setIsReportOpen(false)
-      setMessage(MODERATION_MESSAGE.reportSuccess)
+      show(MODERATION_MESSAGE.reportSuccess)
     },
     onError: (error) => {
       // 실패 안내는 스낵바가 맡는데 시트(z-50)가 남아 있으면 스낵바가 백드롭에 가린다 — 함께 닫는다
       setIsReportOpen(false)
-      setMessage(resolveReportErrorMessage(error))
+      show(resolveReportErrorMessage(error))
     },
   })
 
@@ -57,7 +60,7 @@ export function useModeration({ target, authorUserId }: UseModerationOptions) {
     ...blockMutations.block(),
     onSuccess: async () => {
       setIsBlockOpen(false)
-      setMessage(MODERATION_MESSAGE.blockSuccess)
+      show(MODERATION_MESSAGE.blockSuccess)
       // 로그인 상태의 흔적·댓글 목록은 서버가 차단 사용자의 글을 걸러 준다 — 다시 받아와야 사라진다
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: opinionQueries.all() }),
@@ -67,7 +70,7 @@ export function useModeration({ target, authorUserId }: UseModerationOptions) {
     },
     onError: () => {
       setIsBlockOpen(false)
-      setMessage(MODERATION_MESSAGE.blockFailure)
+      show(MODERATION_MESSAGE.blockFailure)
     },
   })
 
@@ -98,12 +101,6 @@ export function useModeration({ target, authorUserId }: UseModerationOptions) {
       },
       confirm: () => {
         block.mutate(authorUserId)
-      },
-    },
-    message: {
-      text: message,
-      clear: () => {
-        setMessage('')
       },
     },
   }

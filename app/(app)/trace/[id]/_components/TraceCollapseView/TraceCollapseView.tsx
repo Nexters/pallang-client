@@ -10,6 +10,7 @@ import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useQuoteCollapse } from '../../_hooks/useQuoteCollapse'
 import { useTraceCreateNav } from '../../_hooks/useTraceCreateNav'
 import { isSpoilerCovered } from '../../_services/spoiler.service'
+import { ModerationMessageHost } from '../ModerationMessageHost/ModerationMessageHost'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
 import { TraceCreateFab } from '../TraceCreateFab/TraceCreateFab'
 import { TraceListPanel } from '../TraceListPanel/TraceListPanel'
@@ -49,7 +50,9 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
   })
 
   return (
-    <>
+    // 신고·차단 결과 스낵바는 목록 바깥인 여기서 그린다 — 차단하면 그 사람의 카드가
+    // 목록에서 걷혀, 카드 안에서 그리면 결과를 알리기 전에 함께 사라진다
+    <ModerationMessageHost>
       <div
         ref={scrollerRef}
         style={stageStyle}
@@ -91,6 +94,6 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
       {!isDetailOpen && (
         <TraceCreateFab onAddOpinion={createNav.addOpinion} onAddRecord={createNav.addRecord} />
       )}
-    </>
+    </ModerationMessageHost>
   )
 }
