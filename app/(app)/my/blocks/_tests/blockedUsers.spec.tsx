@@ -87,7 +87,7 @@ describe('차단 유저 관리', () => {
     const dialog = await screen.findByRole('dialog')
     fireEvent.click(within(dialog).getByRole('button', { name: '차단 해제' }))
 
-    expect(await screen.findByText('차단을 해제했어요.')).toBeInTheDocument()
+    expect(await screen.findByText('차단이 해제되었습니다.')).toBeInTheDocument()
     expect(unblocked).toEqual(['/api/users/7/block'])
   })
 

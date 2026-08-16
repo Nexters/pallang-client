@@ -33,7 +33,7 @@ export function BlockedUsersView() {
     ...blockMutations.unblock(),
     onSuccess: async () => {
       setTarget(null)
-      setMessage('차단을 해제했어요.')
+      setMessage('차단이 해제되었습니다.')
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: blockQueries.all() }),
         // 해제한 사용자의 흔적·댓글이 목록에 다시 보이려면 새로 받아와야 한다

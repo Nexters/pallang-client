@@ -1,7 +1,7 @@
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 
-const RECORD_ROWS = [0, 1, 2] as const
-const SETTING_ROWS = [0, 1, 2, 3, 4] as const
+const RECORD_ROWS = [0] as const
+const SETTING_ROWS = [0, 1, 2, 3, 4, 5, 6] as const
 
 /**
  * 마이페이지 본문 골격 — 인증 판별과 프로필 조회가 끝날 때까지 선다.
@@ -9,7 +9,7 @@ const SETTING_ROWS = [0, 1, 2, 3, 4] as const
  *
  * 로그인·비로그인 어느 쪽으로 결정될지 모르는 시점이라, 두 화면이 공유하는 뼈대만 둔다
  * (프로필 줄 + 목록 섹션). 항목 수는 실제 화면과 자리가 어긋나지 않게 로그인 쪽에 맞춘다
- * (내 기록 3개 + 설정 5개).
+ * (내 기록 1개 + 설정 7개).
  */
 export function MyPageSkeleton() {
   return (
