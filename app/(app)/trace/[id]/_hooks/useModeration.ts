@@ -12,7 +12,7 @@ import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { MODERATION_MESSAGE } from '../_data/moderation.constant'
 import { isMine, resolveReportErrorMessage } from '../_services/moderation.service'
-import { useModerationMessage } from './useModerationMessage'
+import { useTraceMessage } from './useTraceMessage'
 
 /** 신고 대상 — 흔적이면 opinionId, 댓글이면 commentId */
 export type ModerationTarget = { type: 'opinion' | 'comment'; id: number }
@@ -33,9 +33,9 @@ export function useModeration({ target, authorUserId }: UseModerationOptions) {
   const queryClient = useQueryClient()
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isBlockOpen, setIsBlockOpen] = useState(false)
-  // 결과 문구는 이 훅 바깥(ModerationMessageHost)에 맡긴다 — 차단이 성공하면 이 훅을 든
+  // 결과 문구는 이 훅 바깥(TraceMessageHost)에 맡긴다 — 차단이 성공하면 이 훅을 든
   // 카드가 목록에서 걷히므로, 여기에 들고 있으면 문구도 함께 사라진다
-  const { show } = useModerationMessage()
+  const { show } = useTraceMessage()
 
   // 비로그인이면 me가 없어 모두 남의 글로 본다 — 액션은 어차피 로그인 게이트가 막는다
   const { data: meData } = useQuery(userQueries.me())

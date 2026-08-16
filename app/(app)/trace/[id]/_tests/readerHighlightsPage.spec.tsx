@@ -781,6 +781,24 @@ describe('ReaderHighlightsPage', () => {
     })
   })
 
+  it('딥링크가 첫 묶음 밖의 의견을 가리키면 그 의견이 나올 때까지 목록을 이어 받아 상세로 연다', async () => {
+    // 흔적은 20개씩 온다 — 21번째(opinionId 120)는 첫 묶음에 없다
+    await renderPage([15], undefined, { pageNumber: 15, passageId: 151, opinionId: 120 })
+
+    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
+
+    expect(within(dialog).getByText('많은 흔적 21')).toBeInTheDocument()
+  })
+
+  it('딥링크가 가리킨 의견이 끝까지 없으면 조용히 넘어가지 않고 알린다', async () => {
+    await renderPage([15], undefined, { pageNumber: 15, passageId: 151, opinionId: 9999 })
+
+    expect(
+      await screen.findByText('그 흔적을 찾지 못했어요. 지워졌을 수 있어요.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+  })
+
   it('상세 오버레이에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록 스크롤로만 한다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 1 })
 
