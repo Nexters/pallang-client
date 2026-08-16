@@ -79,7 +79,7 @@ export const getLoginWithKakaoUrl = () => {
 }
 
 /**
- * 모바일 앱이 카카오 SDK로 로그인해 받은 카카오 액세스 토큰을 전달하면, 카카오 사용자 정보 API로 직접 검증한 뒤 가입/로그인을 처리하고 서비스 자체 JWT를 발급합니다. 처음 로그인하는 사용자는 닉네임이 자동 생성되며(isNewUser=true), 약관 동의는 별도로 POST /api/auth/terms를 호출해야 합니다.
+ * 모바일 앱이 카카오 SDK로 로그인해 받은 카카오 액세스 토큰을 전달하면, 카카오 사용자 정보 API로 직접 검증한 뒤 가입/로그인을 처리하고 서비스 자체 JWT를 발급합니다. 처음 로그인하는 사용자는 닉네임이 자동 생성되며(isNewUser=true), 약관 동의는 별도로 POST /api/auth/terms를 호출해야 합니다. 탈퇴했던 계정으로 다시 로그인하면 예전 계정이 되살아나지 않고 완전히 새로운 계정으로 가입됩니다(isNewUser=true) — 예전 계정과 거기 남긴 콘텐츠는 탈퇴 상태로 그대로 남습니다.
  * @summary 카카오 로그인
  */
 export const loginWithKakao = async (
@@ -99,7 +99,7 @@ export const getLoginWithAppleUrl = () => {
 }
 
 /**
- * 웹(Apple JS SDK) 또는 iOS 앱(네이티브 Sign in with Apple)에서 발급받은 identity token(JWT)을 전달하면, Apple 공개키(JWKS)로 서명을 직접 검증한 뒤 가입/로그인을 처리하고 서비스 자체 JWT를 발급합니다. aud 클레임은 설정된 웹 Service ID 또는 앱 Bundle ID 중 하나와 일치해야 합니다. authorizationCode를 함께 전달하면 회원탈퇴 시 애플 연동 해제(revoke)에 쓸 refresh token을 미리 확보해둡니다(실패해도 로그인은 계속 진행됩니다). givenName/familyName은 애플이 최초 로그인 시에만 내려주는 값으로, 이후 로그인엔 null이어도 됩니다. 처음 로그인하는 사용자는 닉네임이 자동 생성되며(isNewUser=true), 약관 동의는 별도로 POST /api/auth/terms를 호출해야 합니다.
+ * 웹(Apple JS SDK) 또는 iOS 앱(네이티브 Sign in with Apple)에서 발급받은 identity token(JWT)을 전달하면, Apple 공개키(JWKS)로 서명을 직접 검증한 뒤 가입/로그인을 처리하고 서비스 자체 JWT를 발급합니다. aud 클레임은 설정된 웹 Service ID 또는 앱 Bundle ID 중 하나와 일치해야 합니다. authorizationCode를 함께 전달하면 회원탈퇴 시 애플 연동 해제(revoke)에 쓸 refresh token을 미리 확보해둡니다(실패해도 로그인은 계속 진행됩니다). givenName/familyName은 애플이 최초 로그인 시에만 내려주는 값으로, 이후 로그인엔 null이어도 됩니다. 처음 로그인하는 사용자는 닉네임이 자동 생성되며(isNewUser=true), 약관 동의는 별도로 POST /api/auth/terms를 호출해야 합니다. 탈퇴했던 계정으로 다시 로그인하면 예전 계정이 되살아나지 않고 완전히 새로운 계정으로 가입됩니다(isNewUser=true) — 예전 계정과 거기 남긴 콘텐츠는 탈퇴 상태로 그대로 남습니다.
  * @summary 애플 로그인
  */
 export const loginWithApple = async (

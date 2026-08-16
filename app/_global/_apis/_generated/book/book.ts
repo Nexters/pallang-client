@@ -17,6 +17,8 @@ import type { DataResponseExternalBookListResponse } from '../models/dataRespons
 
 import type { GetHomeCarouselBooksParams } from '../models/getHomeCarouselBooksParams'
 
+import type { GetMyLibraryBooksParams } from '../models/getMyLibraryBooksParams'
+
 import type { GetPopularBooksParams } from '../models/getPopularBooksParams'
 
 import type { GetRecentBooksParams } from '../models/getRecentBooksParams'
@@ -99,7 +101,7 @@ export const getSearchExternalBooksUrl = (params: SearchExternalBooksParams) => 
 }
 
 /**
- * 알라딘 Open API로 도서를 검색합니다. 응답 속도를 위해 pageCount는 내려주지 않으며, 등록 시 사용자가 직접 입력합니다.
+ * 알라딘 Open API로 도서를 검색합니다. 응답 속도를 위해 pageCount는 내려주지 않으며, 등록 시 사용자가 직접 입력합니다. 타이핑 중 자동완성 미리보기 용도로도 재사용되므로, keyword가 공백 제거 후 2글자 미만이면 알라딘을 호출하지 않고 빈 목록을 반환합니다. 동일 keyword+size 조합은 최대 12시간 캐싱되어 결과가 즉시 반영되지 않을 수 있습니다.
  * @summary 도서 외부 검색
  */
 export const searchExternalBooks = async (
@@ -172,6 +174,36 @@ export const getPopularBooks = async (
   })
 }
 
+export const getGetMyLibraryBooksUrl = (params?: GetMyLibraryBooksParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/books/my-library?${stringifiedParams}`
+    : `/api/books/my-library`
+}
+
+/**
+ * 현재 로그인한 사용자가 흔적을 남긴 도서만 대상으로, 대목/흔적 수와 함께 조회합니다. 가장 최근에 흔적을 남긴 도서부터 내림차순으로 정렬되며, offset을 생략하면 0부터(=가장 최근 도서부터) 조회합니다. 더 과거 도서를 이어서 보려면 응답으로 받은 pageInfo를 참고해 offset + size로 다시 요청하면 됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * @summary 내 서재 도서 목록
+ */
+export const getMyLibraryBooks = async (
+  params?: GetMyLibraryBooksParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseBookCarouselListResponse> => {
+  return customFetch<DataResponseBookCarouselListResponse>(getGetMyLibraryBooksUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
 export const getSearchInternalBooksUrl = (params: SearchInternalBooksParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -189,7 +221,7 @@ export const getSearchInternalBooksUrl = (params: SearchInternalBooksParams) => 
 }
 
 /**
- * 서비스 DB에 이미 등록된 도서를 제목으로 검색하며, 도서별 대목/흔적 수를 함께 반환합니다. 제목과 검색어의 띄어쓰기 차이는 무시하고 매칭합니다. keyword에 빈 문자열을 넘기면 전체 목록을 반환합니다.
+ * 서비스 DB에 등록된 도서 전체를 흔적(Opinion) 유무와 무관하게 제목으로 검색하며, 도서별 대목/흔적 수를 함께 반환합니다(흔적이 없으면 0). 제목과 검색어의 띄어쓰기 차이는 무시하고 매칭합니다. keyword에 빈 문자열을 넘기면 전체 목록을 반환합니다.
  * @summary 도서 내부 검색
  */
 export const searchInternalBooks = async (
