@@ -434,6 +434,14 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('두 번째 대목의 흔적')).not.toBeInTheDocument()
   })
 
+  it('닉네임은 눌러도 갈 곳이 없어 조작 대상으로 내놓지 않는다', async () => {
+    await renderPage()
+
+    expect(await screen.findByText('책책책을읽자')).toBeInTheDocument()
+    // 버튼으로 두면 키보드·보조기기가 누를 것을 권하는데 눌러도 아무 일도 일어나지 않는다
+    expect(screen.queryByRole('button', { name: '책책책을읽자' })).not.toBeInTheDocument()
+  })
+
   it('흔적이 한 페이지를 넘으면 헤더는 전체 개수를 보여주고 목록은 첫 페이지만 그린다', async () => {
     await renderPage([15])
 
