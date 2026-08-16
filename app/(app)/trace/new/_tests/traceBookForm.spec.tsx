@@ -208,6 +208,22 @@ describe('책 등록 단계', () => {
     expect(screen.getByText('좋았다')).toBeTruthy()
   })
 
+  it('책을 고르지 않고 시트를 닫아도 편집하기로 다시 열 수 있다', async () => {
+    // 책 카드는 고른 책이 있을 때만 내용을 채우지만, 카드 자체와 '편집하기'는 늘 남아야 한다 —
+    // 없으면 시트를 그냥 닫은 사용자에게 책을 고를 길이 사라진다.
+    renderForm()
+
+    await screen.findByPlaceholderText('책 제목을 입력해 주세요.')
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
+
+    await waitFor(() => {
+      expect(screen.queryByPlaceholderText('책 제목을 입력해 주세요.')).toBeNull()
+    })
+    fireEvent.click(screen.getByRole('button', { name: '편집하기' }))
+
+    expect(await screen.findByPlaceholderText('책 제목을 입력해 주세요.')).toBeTruthy()
+  })
+
   it('편집하기를 누르면 검색 시트가 다시 열린다', async () => {
     renderForm()
     await pickBook()

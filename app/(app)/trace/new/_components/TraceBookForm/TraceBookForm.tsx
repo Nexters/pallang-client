@@ -7,7 +7,6 @@ import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
-import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
@@ -16,6 +15,7 @@ import { useTraceSubmit } from '../../_hooks/useTraceSubmit'
 import type { SelectedBook } from '../../_types/traceDraft.type'
 import { BookSearchSheet } from '../BookSearchSheet/BookSearchSheet'
 import { MergeDialog } from '../MergeDialog/MergeDialog'
+import { SelectedBookCard } from '../SelectedBookCard/SelectedBookCard'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceOpinionPreview } from '../TraceOpinionPreview/TraceOpinionPreview'
 import { TraceStepIndicator } from '../TraceStepIndicator/TraceStepIndicator'
@@ -104,27 +104,12 @@ export function TraceBookForm() {
           가운데만 스크롤시키고 단계 표시와 버튼 줄은 바깥에 두어 고정한다. */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="bg-bg-default px-4 pt-2 pb-6">
-          <div className="flex items-start justify-between gap-3 rounded-lg bg-bg-surface p-3">
-            {draft.book && (
-              <BookItem
-                // min-w-0이 없으면 BookItem이 최소 내용 너비 아래로 줄지 않아 '편집하기'를
-                // 카드 밖으로 밀어낸다 — 셸이 가리던 것이 스크롤러가 생기며 가로 스크롤로 드러났다.
-                className="min-w-0 flex-1"
-                author={draft.book.author}
-                coverImageUrl={draft.book.coverImageUrl}
-                title={draft.book.title}
-              />
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setSheetOpen(true)
-              }}
-              className="press shrink-0 cursor-pointer rounded-full border border-border-default px-3 py-1.5 text-body-14md text-text-secondary"
-            >
-              편집하기
-            </button>
-          </div>
+          <SelectedBookCard
+            book={draft.book}
+            onEdit={() => {
+              setSheetOpen(true)
+            }}
+          />
         </div>
 
         {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운
