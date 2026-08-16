@@ -9,8 +9,6 @@ import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { TRACE_FAB_OPINION_LABEL, TRACE_FAB_RECORD_LABEL } from '../../_data/traceCard.constant'
-
 type TraceCreateFabProps = {
   /** 보고 있는 대목에 의견을 붙이러 간다 */
   onAddOpinion: () => void
@@ -27,8 +25,8 @@ export function TraceCreateFab({ onAddOpinion, onAddRecord }: TraceCreateFabProp
 
   // 두 갈래는 아이콘·라벨·목적지만 다르다
   const branchItems = [
-    { label: TRACE_FAB_OPINION_LABEL, Icon: CommentIcon, onSelect: onAddOpinion },
-    { label: TRACE_FAB_RECORD_LABEL, Icon: PencilIcon, onSelect: onAddRecord },
+    { label: '의견 남기기', Icon: CommentIcon, onSelect: onAddOpinion },
+    { label: '기록 남기기', Icon: PencilIcon, onSelect: onAddRecord },
   ]
 
   /* ponytail: #c6c6c6는 디자인 변수 미연결 색 — 토큰 추가 시 치환. 46px 라운드·10px 블러도 같은 시안 값이다 */

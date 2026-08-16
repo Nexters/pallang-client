@@ -1,12 +1,6 @@
 import { Button } from '@/app/_global/_components/Button/Button'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import {
-  TRACE_LIST_ERROR_GUIDE,
-  TRACE_LIST_ERROR_MESSAGE,
-  TRACE_LIST_ERROR_RETRY_LABEL,
-} from '../../_data/traceCard.constant'
-
 type TraceListErrorProps = {
   onRetry: () => void
   className?: string
@@ -21,13 +15,13 @@ export function TraceListError({ onRetry, className }: TraceListErrorProps) {
       className={cn('flex flex-col items-center gap-6 px-4 py-19', className)}
     >
       <p className="text-center font-pretendard text-title-18md text-text-inverse">
-        {TRACE_LIST_ERROR_MESSAGE}
+        앗! 흔적들이 도착하지 않았어요!
         <br />
-        {TRACE_LIST_ERROR_GUIDE}
+        다시 시도해주세요.
       </p>
       {/* 54×167은 시안의 고정 치수 — 문구 길이에 따라 버튼이 늘었다 줄었다 하지 않게 못 박는다 */}
       <Button className="h-[54px] w-[167px]" onClick={onRetry}>
-        {TRACE_LIST_ERROR_RETRY_LABEL}
+        다시 시도하기
       </Button>
     </section>
   )
