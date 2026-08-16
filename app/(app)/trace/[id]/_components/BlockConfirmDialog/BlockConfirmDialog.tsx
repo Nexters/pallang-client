@@ -2,8 +2,6 @@
 
 import { FlatDialog } from '@/app/_global/_components/FlatDialog/FlatDialog'
 
-import { BLOCK_CONFIRM_TEXT } from '../../_data/moderation.constant'
-
 type BlockConfirmDialogProps = {
   open: boolean
   nickname: string
@@ -23,10 +21,10 @@ export function BlockConfirmDialog({
   return (
     <FlatDialog
       open={open}
-      title={`${nickname}${BLOCK_CONFIRM_TEXT.titleSuffix}`}
-      description={BLOCK_CONFIRM_TEXT.description}
-      cancelLabel={BLOCK_CONFIRM_TEXT.cancelLabel}
-      confirmLabel={BLOCK_CONFIRM_TEXT.confirmLabel}
+      title={`${nickname}님을 차단할까요?`}
+      description="차단하면 이 사용자의 흔적과 댓글이 더 이상 보이지 않아요."
+      cancelLabel="취소"
+      confirmLabel="차단"
       loading={loading}
       onCancel={onClose}
       onConfirm={onConfirm}

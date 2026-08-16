@@ -7,7 +7,6 @@ import { Dialog } from '@/app/_global/_components/Dialog/Dialog'
 import type { ReportRequest } from '@/app/_global/_queries/report.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { REPORT_DIALOG_LAYOUT } from '../../_data/moderation.constant'
 import {
   REPORT_DETAIL_MAX_LENGTH,
   REPORT_REASON_OPTIONS,
@@ -56,7 +55,8 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
         </Dialog.Header>
 
         <div className="flex w-full flex-col gap-2">
-          <fieldset className={cn('grid gap-x-6 gap-y-2', REPORT_DIALOG_LAYOUT.reasonGrid)}>
+          {/* 2열 — _data/reportReason.constant.ts의 선택지 순서(좌→우, 위→아래)가 기대는 규격이다 */}
+          <fieldset className="grid grid-cols-2 gap-x-6 gap-y-2">
             <legend className="sr-only">신고 사유</legend>
             {REPORT_REASON_OPTIONS.map((option) => (
               <label
@@ -82,9 +82,8 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
                     'flex size-4 shrink-0 items-center justify-center rounded-full',
                     'transition-colors duration-instant ease-standard',
                     'peer-focus-visible:ring-2 peer-focus-visible:ring-interactive-accent/50',
-                    selected?.id === option.id
-                      ? 'bg-interactive-accent'
-                      : REPORT_DIALOG_LAYOUT.radioOff,
+                    // off 회색은 시안 radioButton off의 값이라 토큰에 짝이 없다
+                    selected?.id === option.id ? 'bg-interactive-accent' : 'bg-[#e5e5e5]',
                   )}
                 >
                   <span className="size-2 rounded-full bg-white" />
@@ -106,8 +105,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
               setDetail(event.target.value)
             }}
             className={cn(
-              REPORT_DIALOG_LAYOUT.detailInput,
-              'w-full resize-none rounded bg-bg-surface px-4 py-3',
+              'h-20 w-full resize-none rounded bg-bg-surface px-4 py-3',
               'text-body-14md text-text-placeholder outline-none',
               'caret-interactive-accent placeholder:text-text-placeholder-a50',
               'disabled:cursor-not-allowed',
@@ -115,18 +113,14 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
           />
         </div>
 
+        {/* 버튼 높이 54px는 시안(Figma 2872:16761)의 고정 치수다 */}
         <Dialog.Footer>
-          <Button
-            variant="back"
-            className={REPORT_DIALOG_LAYOUT.actionButton}
-            disabled={loading}
-            onClick={onClose}
-          >
+          <Button variant="back" className="h-[54px]" disabled={loading} onClick={onClose}>
             뒤로
           </Button>
           <Button
             variant="activated"
-            className={REPORT_DIALOG_LAYOUT.actionButton}
+            className="h-[54px]"
             loading={loading}
             disabled={!canSubmitReport(selected, detail)}
             onClick={() => {

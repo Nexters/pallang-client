@@ -13,24 +13,3 @@ export const CLIENT_ERROR_STATUS = {
   min: 400,
   maxExclusive: 500,
 } as const
-
-/** 차단 확인 다이얼로그의 고정 문구 — 제목만 닉네임을 앞에 붙여 만든다 */
-export const BLOCK_CONFIRM_TEXT = {
-  titleSuffix: '님을 차단할까요?',
-  description: '차단하면 이 사용자의 흔적과 댓글이 더 이상 보이지 않아요.',
-  cancelLabel: '취소',
-  confirmLabel: '차단',
-} as const
-
-/**
- * 신고 모달의 치수 — Figma 2872:16761.
- * 사유 그리드가 2열인 것은 _data/reportReason.constant.ts의 선택지 순서(좌→우, 위→아래)가 기대는 규격이다.
- */
-export const REPORT_DIALOG_LAYOUT = {
-  reasonGrid: 'grid-cols-2',
-  /** 상세 입력 칸 80px — 공용 Textarea(카운터가 붙은 큰 입력)와 다른 이 모달만의 높이 */
-  detailInput: 'h-20',
-  actionButton: 'h-[54px]',
-  /** 라디오 off 원의 회색 — 시안 radioButton off의 값이라 토큰에 짝이 없다 */
-  radioOff: 'bg-[#e5e5e5]',
-} as const
