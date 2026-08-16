@@ -1,6 +1,5 @@
 import type { RootCommentResponse } from '@/app/_global/_queries/comment.queries'
 
-import { REPLY_MORE_TEXT, REPLY_RETRY_TEXT } from '../../_data/commentList.constant'
 import { useReplyThread } from '../../_hooks/useReplyThread'
 import { CommentItem } from '../CommentItem/CommentItem'
 
@@ -44,7 +43,7 @@ export function CommentThread({ comment, myUserId, onUpdate, onRemove }: Comment
           onClick={revealMore}
           className="bg-bg-overlay py-3 pl-8 text-left text-body-14rg text-text-inverse/50"
         >
-          {hasError ? REPLY_RETRY_TEXT : REPLY_MORE_TEXT}
+          {hasError ? '답글 다시 불러오기' : '답글 더보기'}
         </button>
       )}
     </div>
