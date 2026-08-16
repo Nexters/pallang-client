@@ -2,7 +2,7 @@ import { Button } from '@/app/_global/_components/Button/Button'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { COMMENT_INPUT_TEXT, COMMENT_MAX_LENGTH } from '../../_data/commentInput.constant'
+import { COMMENT_MAX_LENGTH } from '../../_data/commentInput.constant'
 import { useAsyncCommentField } from '../../_hooks/useAsyncCommentField'
 
 type CommentBarProps = {
@@ -21,8 +21,8 @@ type CommentBarProps = {
 export function CommentBar({
   onSubmit,
   variant = 'floating',
-  placeholder = COMMENT_INPUT_TEXT.placeholder,
-  submitLabel = COMMENT_INPUT_TEXT.submitLabel,
+  placeholder = '댓글을 입력해주세요',
+  submitLabel = '댓글 등록',
 }: CommentBarProps) {
   const field = useAsyncCommentField(onSubmit)
 

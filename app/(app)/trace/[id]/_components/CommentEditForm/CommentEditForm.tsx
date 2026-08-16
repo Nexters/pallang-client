@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { COMMENT_EDIT_INPUT_LABEL, COMMENT_MAX_LENGTH } from '../../_data/commentInput.constant'
+import { COMMENT_MAX_LENGTH } from '../../_data/commentInput.constant'
 
 type CommentEditFormProps = {
   /** 폼이 뜰 때의 원문 — 마운트 시점의 값으로 시작하고, 그 뒤 편집 중에는 이 폼이 값을 쥔다 */
@@ -22,9 +22,10 @@ export function CommentEditForm({ initialContent, onSubmit, onCancel }: CommentE
         onSubmit(draft)
       }}
     >
+      {/* aria-label은 목록에 수정 폼이 여러 개 떠 있어도 이름으로 집어낼 수 있게 둔다 */}
       <input
         type="text"
-        aria-label={COMMENT_EDIT_INPUT_LABEL}
+        aria-label="댓글 수정 입력"
         value={draft}
         maxLength={COMMENT_MAX_LENGTH}
         onChange={(event) => {
