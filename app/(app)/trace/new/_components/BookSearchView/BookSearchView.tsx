@@ -4,7 +4,6 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import BookAddIcon from '@/app/_global/_components/Icon/assets/book-add.svg'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
@@ -22,6 +21,7 @@ type BookSearchViewProps = {
   /** 도서 추가 폼이 같은 시트 위에 열려 있는 동안 이 화면을 감춘다. 마운트는 유지해
    *  검색어·목록·페이지네이션 상태가 폼을 닫고 돌아왔을 때도 그대로 남게 한다. */
   hidden?: boolean
+  /** 알라딘 결과의 '직접 추가하기'가 부른다 — 검색바 옆 버튼이 사라진 뒤로는 이 자리뿐이다. */
   onAddManually: () => void
   onPick: (book: SelectedBook) => void
   onSelectExternal: (book: ExternalBook) => void
@@ -77,9 +77,7 @@ export function BookSearchView({
         author: book.author,
         bookId: book.bookId,
         coverImageUrl: book.coverImageUrl ?? null,
-        opinionCount: book.opinionCount,
         pageCount: book.pageCount,
-        passageCount: book.passageCount,
         publisher: book.publisher,
         title: book.title,
       })),
@@ -127,26 +125,12 @@ export function BookSearchView({
   return (
     // hidden 속성으로 감춘다 — display:none은 레이아웃과 접근성 트리에서 동시에 빠지면서도
     // 컴포넌트를 마운트된 채로 둬 keyword state와 SearchTextfield의 비제어 입력값을 보존한다.
-    // gap-4는 이 div가 없을 때 bottom-sheet-body(flex flex-col gap-4)가 주던 간격을 그대로 낸다.
-    <div hidden={hidden} className="flex flex-col gap-4">
-      {/* 도서 직접 등록 버튼은 공용 BookSearchBar에 있었지만 도서 검색 지면 개편(#211)에서
-          빠졌다. 검색 지면은 결과가 없을 때만 등록을 권하면 되지만, 이 시트는 흔적을 남기다
-          들른 자리라 검색 전에도 등록으로 빠져나갈 길이 늘 보여야 한다 — 여기에 따로 둔다. */}
-      <div className="flex items-center gap-2 px-4 py-2.5">
-        <BookSearchBar
-          className="min-w-px flex-1 px-0 py-0"
-          placeholder="책 제목을 입력해 주세요."
-          onKeywordChange={setKeyword}
-        />
-        <button
-          type="button"
-          aria-label="도서 추가"
-          onClick={onAddManually}
-          className="press flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[#555555] text-icon-active backdrop-blur-[1px]"
-        >
-          <BookAddIcon className="size-6 text-icon-active" aria-hidden="true" />
-        </button>
-      </div>
+    // 간격은 여기서 gap으로 주지 않는다 — 검색바(py-2.5)와 목록(py-6)이 각자 가진 여백이
+    // 곧 시안의 간격이라, gap을 더하면 그만큼 벌어진다.
+    <div hidden={hidden} className="flex flex-col">
+      {/* 검색바 옆에 있던 '도서 추가' 버튼은 시안(3077:16108·3077:16138)에서 빠졌다 —
+          등록으로 빠져나가는 길은 시트 footer의 '새 책 등록하기'가 대신 든다. */}
+      <BookSearchBar placeholder="책 제목을 입력해 주세요." onKeywordChange={setKeyword} />
 
       <div
         ref={(node) => {

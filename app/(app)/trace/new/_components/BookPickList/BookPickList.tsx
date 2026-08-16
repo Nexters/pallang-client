@@ -6,9 +6,9 @@ import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 
 import type { SelectedBook } from '../../_types/traceDraft.type'
 
+// 시안(3077:16142)의 결과 항목은 표지·제목·'출판사 · 저자' 세 줄뿐이다 — 대목/의견 수 배지는
+// 없다. BookItem은 두 값을 함께 받아야 배지를 그리므로, 넘기지 않는 것으로 배지를 끈다.
 export type PickableBook = SelectedBook & {
-  opinionCount: number
-  passageCount: number
   publisher: string
 }
 
@@ -101,8 +101,6 @@ export function BookPickList({
               <BookItem
                 author={book.author}
                 coverImageUrl={book.coverImageUrl}
-                opinionCount={book.opinionCount}
-                passageCount={book.passageCount}
                 publisher={book.publisher}
                 title={book.title}
               />

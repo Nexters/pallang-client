@@ -76,12 +76,37 @@ function renderSheet({ onClose = vi.fn(), onSelect = vi.fn() } = {}) {
   return { onClose, onSelect }
 }
 
-describe('책 검색 시트', () => {
+describe('책 등록 시트', () => {
   it('시트 안에서 뒤로 버튼과 검색창을 보여준다', async () => {
     renderSheet()
 
     expect(await screen.findByRole('button', { name: '뒤로' })).toBeTruthy()
     expect(screen.getByPlaceholderText('책 제목을 입력해 주세요.')).toBeTruthy()
+  })
+
+  it('제목이 책 등록하기이고 검색창 옆에는 아무 버튼도 없다', async () => {
+    // 검색바 옆 '도서 추가' 버튼은 시안에서 빠졌다 — 등록으로 가는 길은 footer 하나뿐이다.
+    renderSheet()
+
+    expect(await screen.findByText('책 등록하기')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '도서 추가' })).toBeNull()
+  })
+
+  it('검색 전에도 새 책 등록하기로 등록 폼에 닿는다', async () => {
+    renderSheet()
+
+    fireEvent.click(await screen.findByRole('button', { name: '새 책 등록하기' }))
+
+    expect(await screen.findByText('책 추가하기')).toBeTruthy()
+  })
+
+  it('등록 폼이 열리면 새 책 등록하기 줄은 사라진다', async () => {
+    renderSheet()
+
+    fireEvent.click(await screen.findByRole('button', { name: '새 책 등록하기' }))
+    await screen.findByText('책 추가하기')
+
+    expect(screen.queryByText(/찾는 책이 없나요/)).toBeNull()
   })
 
   it('책을 고르는 것만으로는 확정되지 않는다', async () => {
@@ -111,7 +136,7 @@ describe('책 검색 시트', () => {
   it('폼이 열린 채로 하드웨어 뒤로가기를 누르면 폼만 닫히고 시트는 유지된다', async () => {
     const { onClose } = renderSheet()
 
-    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    fireEvent.click(await screen.findByRole('button', { name: '새 책 등록하기' }))
     expect(await screen.findByText('책 추가하기')).toBeTruthy()
 
     // 프로브 버튼은 시트(모달) 바깥의 형제라 base-ui가 aria-hidden 처리해 둔다 — 접근성 트리
@@ -129,7 +154,7 @@ describe('책 검색 시트', () => {
     fireEvent.change(searchInput, { target: { value: '모순' } })
     expect(searchInput).toHaveValue('모순')
 
-    fireEvent.click(screen.getByRole('button', { name: '도서 추가' }))
+    fireEvent.click(screen.getByRole('button', { name: '새 책 등록하기' }))
     expect(await screen.findByText('책 추가하기')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
@@ -137,10 +162,10 @@ describe('책 검색 시트', () => {
     expect(await screen.findByPlaceholderText('책 제목을 입력해 주세요.')).toHaveValue('모순')
   })
 
-  it('도서 추가 폼의 저장하기 버튼이 시트의 고정 footer에 있다', async () => {
+  it('새 책 등록 폼의 저장하기 버튼이 시트의 고정 footer에 있다', async () => {
     renderSheet()
 
-    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    fireEvent.click(await screen.findByRole('button', { name: '새 책 등록하기' }))
     expect(await screen.findByText('책 추가하기')).toBeTruthy()
 
     const saveButton = screen.getByRole('button', { name: '저장하기' })
@@ -151,7 +176,7 @@ describe('책 검색 시트', () => {
   it('등록 폼이 아직 덜 찼으면 footer의 저장하기가 눌리지 않는다', async () => {
     renderSheet()
 
-    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    fireEvent.click(await screen.findByRole('button', { name: '새 책 등록하기' }))
     expect(await screen.findByText('책 추가하기')).toBeTruthy()
 
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
@@ -160,7 +185,7 @@ describe('책 검색 시트', () => {
   it('폼 밖에 있는 저장하기를 눌러도 폼이 실제로 제출된다', async () => {
     const { onSelect } = renderSheet()
 
-    fireEvent.click(await screen.findByRole('button', { name: '도서 추가' }))
+    fireEvent.click(await screen.findByRole('button', { name: '새 책 등록하기' }))
     expect(await screen.findByText('책 추가하기')).toBeTruthy()
 
     fireEvent.change(screen.getByRole('textbox', { name: '제목' }), { target: { value: '제목' } })

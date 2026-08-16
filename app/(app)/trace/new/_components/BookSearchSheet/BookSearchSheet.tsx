@@ -45,6 +45,10 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
   // BookNewForm의 저장 버튼이 footer로 옮겨가 폼 밖에 있다 — disabled 판단에 쓸 상태를 받아 둔다.
   const [formStatus, setFormStatus] = useState<BookNewFormStatus>(IDLE_FORM_STATUS)
 
+  const openBlankForm = () => {
+    setForm({ coverImageUrl: null, values: emptyBookForm })
+  }
+
   const closeForm = () => {
     setForm(null)
     // 다음에 폼을 다시 열 때 직전 세션의 disabled 상태가 한 프레임이라도 새어 나오지 않게 한다.
@@ -74,10 +78,12 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
   return (
     <BottomSheet
       open={open}
-      title={form ? '책 추가하기' : '책 검색'}
+      title={form ? '책 추가하기' : '책 등록하기'}
       // 화면 상단 여백만 남기고 채운다 — 본문이 시트 안에서 스크롤되고 footer는 바닥에 붙는다
       popupClassName="h-[calc(100%-40px)]"
-      contentClassName="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4"
+      // 여백은 본문 대신 안쪽 조각(검색바·목록·등록 폼)이 각자 px-4로 갖는다 — 여기서 p-4를 주면
+      // 그 위에 겹쳐 시안의 16px가 32px가 된다. 도서 등록 지면(BookNewPageView)도 같은 구성이다.
+      contentClassName="flex min-h-0 flex-1 flex-col overflow-y-auto"
       onBack={closeTopLayer}
       onClose={closeTopLayer}
       footer={
@@ -92,16 +98,30 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
             저장하기
           </Button>
         ) : (
-          <Button
-            variant="activated"
-            className="w-full"
-            disabled={!picked}
-            onClick={() => {
-              if (picked) onSelect(picked)
-            }}
-          >
-            등록하기
-          </Button>
+          <>
+            {/* 도서 등록으로 빠져나가는 유일한 길이다 — 검색바 옆 '도서 추가' 버튼을 대신한다(시안 3140:27686).
+                본문이 아니라 footer에 두어 검색 전·검색 결과 어느 쪽에서도 같은 자리에 늘 보인다. */}
+            <p className="flex items-center justify-center gap-1.5 py-6 text-body-14md text-neutral-500">
+              찾는 책이 없나요?
+              <button
+                type="button"
+                onClick={openBlankForm}
+                className="press text-title-14bd text-text-accent underline"
+              >
+                새 책 등록하기
+              </button>
+            </p>
+            <Button
+              variant="activated"
+              className="w-full"
+              disabled={!picked}
+              onClick={() => {
+                if (picked) onSelect(picked)
+              }}
+            >
+              등록하기
+            </Button>
+          </>
         )
       }
     >
@@ -111,9 +131,7 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
         hidden={form !== null}
         selectedBookId={picked?.bookId ?? null}
         onPick={setPicked}
-        onAddManually={() => {
-          setForm({ coverImageUrl: null, values: emptyBookForm })
-        }}
+        onAddManually={openBlankForm}
         onSelectExternal={(book: ExternalBook) => {
           // 알라딘은 쪽수를 주지 않는다. 나머지만 채우고 페이지 수는 사용자가 입력한다.
           setForm({
