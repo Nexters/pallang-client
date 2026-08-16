@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { SORT_BAR_HEIGHT } from '../../_data/stage.constant'
 import {
   CARD_HEIGHT,
   CARD_TOP_EXPANDED,
@@ -66,7 +65,8 @@ export function TracePageSkeleton() {
         </div>
       </div>
       {/* 흔적 목록 정렬 바 자리 — 실제 목록도 같은 높이로 시작한다 */}
-      <div className={cn('flex items-center justify-between px-4', SORT_BAR_HEIGHT)}>
+      {/* h-15는 TraceListSection의 정렬 바 높이 — 같아야 도착했을 때 자리가 튀지 않는다 */}
+      <div className="flex h-15 items-center justify-between px-4">
         <div className="h-5 w-20 rounded bg-white/15" />
         <div className="h-5 w-14 rounded bg-white/15" />
       </div>

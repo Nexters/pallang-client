@@ -1,7 +1,6 @@
 import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { SPOILER_COVER_BLUR, SPOILER_ICON_COLOR } from '../../_data/stage.constant'
 import styles from '../QuoteStage/QuoteStage.module.css'
 
 type QuoteSpoilerCoverProps = {
@@ -20,10 +19,12 @@ export function QuoteSpoilerCover({ isCollapsed, onReveal }: QuoteSpoilerCoverPr
       className={cn(
         styles['cover'],
         'absolute inset-x-0 bottom-0 flex flex-col items-center justify-center rounded-[inherit] bg-bg-book-card/70',
-        SPOILER_COVER_BLUR,
+        // 흐림은 쪽 선택기 유리와 같은 세기를 쓴다
+        'backdrop-blur-[9px]',
       )}
     >
-      <CautionIcon className={cn(styles['coverIcon'], SPOILER_ICON_COLOR)} />
+      {/* ponytail: #3e3e3e는 디자인 변수 미연결 색 — 토큰 추가 시 치환 */}
+      <CautionIcon className={cn(styles['coverIcon'], 'text-[#3e3e3e]')} />
       <span className="flex flex-col gap-1 text-center">
         {/* 가변 폰트가 아니라 굵기는 보간되지 않는다 — 전환이 끝난 시점에만 바꾼다 */}
         <span

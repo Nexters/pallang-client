@@ -5,7 +5,6 @@ import { Select as BaseSelect } from '@base-ui/react/select'
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { DASHED_RULE, GLASS_SURFACE, PAGE_LIST_MAX_HEIGHT } from '../../_data/stage.constant'
 import { usePagePicker } from '../../_hooks/usePagePicker'
 import {
   formatPageLabel,
@@ -15,6 +14,12 @@ import {
   toSelectedValue,
 } from '../../_services/pageOption.service'
 import type { PageNav } from '../../_types/readerHighlights.type'
+
+/** 트리거와 열린 목록이 하나의 알약으로 이어져 보여야 해서 유리 질감은 두 곳이 똑같이 쓴다 */
+const GLASS_SURFACE = 'bg-black/10 backdrop-blur-[9px]'
+
+/** 항목을 가르는 점선 — SVG 대신 CSS 테두리라 목록 너비가 바뀌어도 따라 늘어난다 */
+const DASHED_RULE = 'border-t border-dashed border-black/10'
 
 /** 헤더의 쪽 선택(디자인 202:7776의 상단 탭).
     가로 탭 줄을 대신하므로 페이지 수가 많아도 열리는 목록 안에서 이어 불러온다. */
@@ -77,7 +82,8 @@ export function PagePicker(nav: PageNav) {
           <BaseSelect.Popup
             ref={popupRef}
             className={cn(
-              PAGE_LIST_MAX_HEIGHT,
+              // 넘치면 목록 안에서 스크롤하며 이어 불러온다
+              'max-h-60',
               'min-w-(--anchor-width) overflow-y-auto rounded-t-none rounded-b-[8px]',
               GLASS_SURFACE,
               // 트리거와 목록 사이의 점선 — 스크롤해도 자리를 지키도록 목록 상자에 건다

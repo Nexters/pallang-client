@@ -1,6 +1,5 @@
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { GRID_PAPER_SIZE } from '../../_data/stage.constant'
 import styles from '../QuoteStage/QuoteStage.module.css'
 
 /** 무대 뒤에 깔리는 배경 아트 — 크림 면 · 모눈종이 · 그 아래 어두운 면 세 겹.
@@ -13,11 +12,12 @@ export function QuoteStageBackdrop() {
       {/* 모눈종이 — 아래로 갈수록 배경색으로 걷힌다 */}
       <div className={cn(styles['paper'], 'absolute inset-x-0 top-0 overflow-hidden')}>
         <div className="absolute inset-0 bg-neutral-200" />
+        {/* 820×530은 시안(200:939)의 고정 크기 — 화면 폭과 무관한 정적 그림이다 */}
         {/* eslint-disable-next-line @next/next/no-img-element -- 고정 크기 정적 배경이라 next/image의 최적화가 붙을 자리가 없다 */}
         <img
           src="/images/trace-grid-paper.png"
           alt=""
-          className={cn('absolute top-1/2 left-1/2 max-w-none -translate-1/2', GRID_PAPER_SIZE)}
+          className="absolute top-1/2 left-1/2 h-[820px] w-[530px] max-w-none -translate-1/2"
         />
         <div className="absolute inset-0 bg-linear-to-b from-transparent to-neutral-200" />
       </div>
