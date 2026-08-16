@@ -29,13 +29,15 @@ type FetchOptions = Parameters<typeof getOpinions>[2]
 
 export const opinionQueries = {
   all: () => ['opinion'] as const,
+  /** 대목별 흔적 목록 전체 — 어느 대목·정렬인지 가리지 않고 함께 무효화할 때 쓴다 */
+  listAll: () => [...opinionQueries.all(), 'by-passage'] as const,
   listByPassage: (
     passageId: number | undefined,
     sortType: OpinionSortType,
     options?: FetchOptions,
   ) =>
     infiniteQueryOptions({
-      queryKey: [...opinionQueries.all(), 'by-passage', passageId, sortType],
+      queryKey: [...opinionQueries.listAll(), passageId, sortType],
       // 정렬·대목 전환 시 이전 목록을 유지해 "0개의 흔적" 깜빡임을 막는다
       placeholderData: keepPreviousData,
       queryFn:
