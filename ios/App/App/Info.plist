@@ -46,8 +46,11 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<!-- 홈 화면 아이콘 라벨과 권한 팝업("Pallang"이(가) 카메라에 접근하려고 합니다)에 쓰인다.
-	     스토어 노출명(Pallang - 팔랑)과 다르다 — 홈 화면 라벨은 11자쯤에서 잘리기 때문이다. -->
-	<string>Pallang</string>
+	     스토어 노출명(Pallang - 팔랑)과 다르다 — 홈 화면 라벨은 11자쯤에서 잘리기 때문이다.
+	     값을 여기 직접 쓰지 않고 빌드 설정(pbxproj의 BUNDLE_DISPLAY_NAME, 기본 Pallang)에서 받는다 —
+	     dev 서버를 로드하는 아카이브만 xcodebuild 인자로 "Pallang DEV"를 덮어써 기기에서 구분하기 위해서다.
+	     이 파일을 건드리지 않으므로 아카이브가 중간에 실패해도 원복할 것이 없다(scripts/ios-archive.sh). -->
+	<string>$(BUNDLE_DISPLAY_NAME)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
