@@ -2,6 +2,7 @@ import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/r
 
 import type { ModifyProfileImageBody } from '../_apis/_generated/models/modifyProfileImageBody'
 import type { MyOpinionResponse } from '../_apis/_generated/models/myOpinionResponse'
+import type { PageInfo } from '../_apis/_generated/models/pageInfo'
 import type { UpdateNicknameRequest } from '../_apis/_generated/models/updateNicknameRequest'
 import {
   getLikedOpinions,
@@ -18,8 +19,12 @@ import { markWithdrawalCompleted } from '../_services/withdrawal.service'
 export type UserOpinionScope = 'liked' | 'mine'
 
 /** feature 코드는 _apis를 직접 import할 수 없어 목록 항목 타입을 여기서 재노출한다.
-    좋아요 목록은 `likedAt`이 더 붙을 뿐 목록 UI가 쓰는 필드는 같다. */
-export type UserOpinion = MyOpinionResponse
+    두 응답이 완전히 같지는 않다 — 좋아요 목록에만 `likedAt`이, 내 흔적 목록에만 `author`가 온다.
+    목록 UI가 쓰는 필드는 겹치는 쪽이라, 다른 한쪽에만 있는 필드를 optional로 낮춰 하나로 합친다. */
+export type UserOpinion = Omit<MyOpinionResponse, 'author'> & { author?: string }
+
+/** 두 응답을 한 쿼리로 묶기 위한 공통 페이지 형태 — 응답 봉투(`data`)는 그대로 둔다. */
+type UserOpinionPage = { data?: { opinions: UserOpinion[]; pageInfo: PageInfo } }
 
 const USER_OPINION_PAGE_SIZE = 20
 
@@ -33,13 +38,13 @@ export const userQueries = {
       retry: false,
     }),
   /**
-   * 내가 남긴 / 좋아요 누른 흔적 전체 목록. 두 응답은 `likedAt` 하나만 다르고 목록 UI가 쓰는 필드는
-   * 같아서, 화면을 공유하는 만큼 쿼리도 scope 하나로 가른다.
+   * 내가 남긴 / 좋아요 누른 흔적 전체 목록. 목록 UI가 쓰는 필드가 두 응답에 모두 있어서,
+   * 화면을 공유하는 만큼 쿼리도 scope 하나로 가른다.
    */
   opinionList: (scope: UserOpinionScope) =>
     infiniteQueryOptions({
       queryKey: [...userQueries.all(), 'opinion-list', scope],
-      queryFn: ({ pageParam }) =>
+      queryFn: ({ pageParam }): Promise<UserOpinionPage> =>
         scope === 'mine'
           ? getMyOpinions({ page: pageParam, size: USER_OPINION_PAGE_SIZE })
           : getLikedOpinions({ page: pageParam, size: USER_OPINION_PAGE_SIZE }),
