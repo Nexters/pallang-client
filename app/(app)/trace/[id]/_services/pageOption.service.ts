@@ -23,7 +23,14 @@ export function toSelectedValue(page: number | undefined): string | null {
 }
 
 /** 라벨은 렌더된 항목이 아니라 이 목록에서 찾는다 —
-    현재 쪽을 목록에서 빼고 그려도 트리거 표시는 그대로다 */
-export function toPageOptions(pages: readonly number[]): { label: string; value: string }[] {
-  return pages.map((page) => ({ label: formatPageLabel(page), value: toPageValue(page) }))
+    현재 쪽을 목록에서 빼고 그려도 트리거 표시는 그대로다.
+    보고 있는 쪽이 아직 안 받은 묶음에 있어 목록에 없을 수도 있다(딥링크) —
+    그때도 트리거가 빈 칸으로 서지 않도록 앞에 끼워 넣는다. */
+export function toPageOptions(
+  pages: readonly number[],
+  activePage?: number,
+): { label: string; value: string }[] {
+  const listed =
+    activePage !== undefined && !pages.includes(activePage) ? [activePage, ...pages] : pages
+  return listed.map((page) => ({ label: formatPageLabel(page), value: toPageValue(page) }))
 }

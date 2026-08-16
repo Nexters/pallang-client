@@ -1,13 +1,13 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import {
-  PAGE_PRELOAD_MARGIN,
   resolveQuoteIndex,
   resolveSwipeTarget,
+  shouldLoadMorePages,
 } from '../_services/passageSwipe.service'
 import { isSpoilerCovered } from '../_services/spoiler.service'
 import type { SwipeDirection } from '../_types/readerHighlights.type'
@@ -59,15 +59,32 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
   )
   // 선택된 대목 — quoteIndex가 바뀌면 passageId도 함께 바뀌어 흔적 목록이 갱신된다
   const activePassage = passages[quoteIndex]
+  // 해제는 대목 단위라 지금 보고 있는 대목을 열어본 적 있는지만 본다
+  const isRevealed = viewer.isRevealed(activePassage?.passageId)
 
   const { fetchNextPage } = pageNumbersQuery
   const pageIndex = viewer.activePage === undefined ? -1 : pages.indexOf(viewer.activePage)
+  // 딥링크는 아직 안 받은 묶음의 쪽을 가리킬 수 있다 — 그 쪽이 목록에 없으면 이웃 쪽을 특정할 수 없어
+  // 쪽 이동이 통째로 막힌다. 나올 때까지 이어 받되(상한까지), 헛되이 반복하지 않게 횟수를 센다
+  const isActivePageMissing = viewer.activePage !== undefined && pageIndex < 0
+  const missingPageFetchesRef = useRef(0)
+  useEffect(() => {
+    if (!isActivePageMissing) missingPageFetchesRef.current = 0
+  }, [isActivePageMissing])
+
   // 목록 끝에 다가가면 미리 채워둔다 — 탭을 스크롤하지 않고 스와이프로만 이동해도 경계에서 막히지 않도록
   useEffect(() => {
-    if (!canLoadMorePages || pageIndex < 0) return
-    if (pages.length - pageIndex > PAGE_PRELOAD_MARGIN) return
+    const shouldLoad = shouldLoadMorePages({
+      canLoadMore: canLoadMorePages,
+      isActivePageMissing,
+      missingPageFetches: missingPageFetchesRef.current,
+      pageIndex,
+      loadedCount: pages.length,
+    })
+    if (!shouldLoad) return
+    if (isActivePageMissing) missingPageFetchesRef.current += 1
     void fetchNextPage()
-  }, [canLoadMorePages, pageIndex, pages.length, fetchNextPage])
+  }, [canLoadMorePages, isActivePageMissing, pageIndex, pages.length, fetchNextPage])
 
   const failedQueries = [pageNumbersQuery, passagesQuery].filter((query) => query.isError)
   const loadMorePages = canLoadMorePages
@@ -81,7 +98,7 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
     bookCoverImageUrl,
     highlight,
     quoteIndex,
-    isRevealed: viewer.isRevealed,
+    isRevealed,
     // 쪽 선택기는 고를 쪽이 도착한 뒤에 선다 — 빈 목록으로 세우면 아직 없는 쪽이 표시된다
     pageNav:
       pages.length > 0
@@ -94,10 +111,9 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
         : undefined,
     // 카드 탭은 가림막 해제만 한다 — 대목 이동은 스와이프가 맡는다
     clickQuote: () => {
-      if (
-        isSpoilerCovered({ isSpoiler: activePassage?.isSpoiler, isRevealed: viewer.isRevealed })
-      ) {
-        viewer.reveal()
+      if (!activePassage) return
+      if (isSpoilerCovered({ isSpoiler: activePassage.isSpoiler, isRevealed })) {
+        viewer.reveal(activePassage.passageId)
       }
     },
     swipeQuote: (direction: SwipeDirection) => {

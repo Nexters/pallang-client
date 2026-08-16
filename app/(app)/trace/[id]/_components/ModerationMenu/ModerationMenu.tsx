@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react'
 
 import MeatballsMenuIcon from '@/app/_global/_components/Icon/assets/meatballs-menu.svg'
-import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useDismissOnOutside } from '@/app/_global/_hooks/useDismissOnOutside'
@@ -32,7 +31,7 @@ export function ModerationMenu({ target, authorUserId, authorNickname }: Moderat
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const menu = useExitTransition(isMenuOpen, MOTION_DURATION.fast)
-  const { canModerate, report, block, message } = useModeration({ target, authorUserId })
+  const { canModerate, report, block } = useModeration({ target, authorUserId })
 
   useDismissOnOutside({
     ref: rootRef,
@@ -111,11 +110,6 @@ export function ModerationMenu({ target, authorUserId, authorNickname }: Moderat
         onClose={block.close}
         onConfirm={block.confirm}
       />
-      {/* 스낵바는 화면 하단 기준으로 떠야 한다 — 팝오버의 relative 래퍼에 잡히지 않게
-          높이 0의 fixed 앵커를 깔고 그 안에서 absolute로 자리를 잡는다 */}
-      <div className="fixed inset-x-0 bottom-0 z-40">
-        <Snackbar message={message.text} onClose={message.clear} />
-      </div>
     </div>
   )
 }

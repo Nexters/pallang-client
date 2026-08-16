@@ -1,9 +1,14 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { opinionQueries, type OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 
-import { DEFAULT_OPINION_SORT_TYPE } from '../_data/readerHighlights.constant'
+import {
+  DEFAULT_OPINION_SORT_TYPE,
+  TRACE_NOT_FOUND_MESSAGE,
+} from '../_data/readerHighlights.constant'
+import { resolveTraceHunt } from '../_services/traceHunt.service'
+import { useTraceMessage } from './useTraceMessage'
 
 type UseTraceListParams = {
   passageId: number | undefined
@@ -39,6 +44,39 @@ export function useTraceList({ passageId, initialTraceId, stageError }: UseTrace
     !opinionsQuery.isError &&
     !opinionsQuery.isFetchingNextPage &&
     !opinionsQuery.isPlaceholderData
+
+  /**
+   * 딥링크가 지목한 흔적은 첫 묶음(20개) 밖에 있을 수 있다 — 그대로 두면 상세가 열리지도,
+   * 아무 안내가 뜨지도 않아 링크를 눌렀는데 아무 일도 없는 것처럼 보인다.
+   * 나올 때까지 이어 받고(상한까지), 끝까지 없으면 못 찾았다고 알린다.
+   */
+  const { show } = useTraceMessage()
+  const huntAttemptsRef = useRef(0)
+  const hasGivenUpRef = useRef(false)
+  const { fetchNextPage } = opinionsQuery
+  const isTargetFound = findTrace(selectedTraceId) !== null
+  const isListLoading =
+    opinionsQuery.isPending || opinionsQuery.isFetching || opinionsQuery.isPlaceholderData
+  // 판정 자체는 순수 함수지만 부르는 자리는 effect 안이다 — 횟수를 든 ref는 렌더 중에 읽지 않는다
+  useEffect(() => {
+    const action = resolveTraceHunt({
+      targetTraceId: selectedTraceId,
+      isFound: isTargetFound,
+      isLoading: isListLoading,
+      canFetchMore,
+      attempts: huntAttemptsRef.current,
+    })
+    if (action === 'fetchMore') {
+      huntAttemptsRef.current += 1
+      void fetchNextPage()
+      return
+    }
+    // 못 찾았다는 안내는 한 번이면 된다. 지목은 그대로 둬도 목록에 없으니 상세는 열리지 않는다
+    if (action === 'giveUp' && !hasGivenUpRef.current) {
+      hasGivenUpRef.current = true
+      show(TRACE_NOT_FOUND_MESSAGE)
+    }
+  }, [selectedTraceId, isTargetFound, isListLoading, canFetchMore, fetchNextPage, show])
 
   return {
     traces,

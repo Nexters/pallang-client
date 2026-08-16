@@ -43,4 +43,19 @@ describe('toPageOptions', () => {
   it('빈 목록은 빈 목록이다 — 고를 쪽이 없으면 선택기 자체가 서지 않는다', () => {
     expect(toPageOptions([])).toEqual([])
   })
+
+  it('보고 있는 쪽이 목록에 없으면 앞에 끼워 넣는다 — 트리거 라벨은 여기서 찾는다', () => {
+    expect(toPageOptions([7, 9], 130)).toEqual([
+      { label: '130p', value: '130' },
+      { label: '7p', value: '7' },
+      { label: '9p', value: '9' },
+    ])
+  })
+
+  it('이미 목록에 있는 쪽은 두 번 넣지 않는다', () => {
+    expect(toPageOptions([7, 9], 9)).toEqual([
+      { label: '7p', value: '7' },
+      { label: '9p', value: '9' },
+    ])
+  })
 })

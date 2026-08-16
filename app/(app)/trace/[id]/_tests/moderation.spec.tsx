@@ -76,6 +76,10 @@ type RecordedCall = { url: string; body: unknown }
 
 function stubApi() {
   const recorded: { reports: RecordedCall[]; blocks: string[] } = { reports: [], blocks: [] }
+  // 로그인 상태의 목록에서 차단한 사용자의 글은 서버가 걸러 준다 — 그 동작을 그대로 흉내낸다
+  const blockedUserIds = new Set<number>()
+  const visible = <T extends { userId: number }>(rows: T[]) =>
+    rows.filter((row) => !blockedUserIds.has(row.userId))
 
   vi.stubGlobal(
     'fetch',
@@ -107,23 +111,38 @@ function stubApi() {
       const blockMatch = /\/users\/(\d+)\/block/.exec(url)
       if (blockMatch && method === 'POST') {
         recorded.blocks.push(url)
+        blockedUserIds.add(Number(blockMatch[1]))
         return json({ data: null })
       }
 
       if (/\/passages\/\d+\/opinions/.test(url)) {
+        const opinions = visible(opinionSeed)
         return json({
           data: {
-            opinions: opinionSeed,
-            pageInfo: { page: 0, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
+            opinions,
+            pageInfo: {
+              page: 0,
+              size: 20,
+              totalElements: opinions.length,
+              totalPages: 1,
+              hasNext: false,
+            },
           },
         })
       }
 
       if (/\/opinions\/\d+\/comments/.test(url)) {
+        const comments = visible(commentSeed)
         return json({
           data: {
-            comments: commentSeed,
-            pageInfo: { page: 0, size: 5, totalElements: 3, totalPages: 1, hasNext: false },
+            comments,
+            pageInfo: {
+              page: 0,
+              size: 5,
+              totalElements: comments.length,
+              totalPages: 1,
+              hasNext: false,
+            },
           },
         })
       }
@@ -294,6 +313,20 @@ describe('흔적·댓글 신고와 사용자 차단', () => {
     await waitFor(() => {
       expect(opinionListCalls()).toBeGreaterThan(callsBefore)
     })
+  })
+
+  it('차단한 사람의 흔적이 목록에서 사라져도 확인 스낵바는 남는다', async () => {
+    await renderView()
+
+    await openMenuItem('차단하기')
+    fireEvent.click(await screen.findByRole('button', { name: '차단' }))
+
+    // 서버가 걸러 준 목록이 도착하면 그 흔적은 화면에서 사라진다
+    await waitFor(() => {
+      expect(screen.queryByText('남의 흔적')).not.toBeInTheDocument()
+    })
+    // 스낵바가 사라진 흔적에 얹혀 있으면 함께 언마운트돼 결과를 알릴 자리가 없어진다
+    expect(screen.getByText('차단했어요.')).toBeInTheDocument()
   })
 
   it('비로그인이면 신고하기가 로그인 게이트에 막힌다', async () => {

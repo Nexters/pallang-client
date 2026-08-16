@@ -59,7 +59,7 @@ describe('resolveGuardRedirect', () => {
     expect(
       resolveGuardRedirect(
         '/trace/new/done',
-        draftWith({ result: { opinionId: 1, merged: false } }),
+        draftWith({ result: { opinionId: 1, passageId: 71, merged: false } }),
       ),
     ).toBeNull()
   })
@@ -71,7 +71,7 @@ describe('resolveGuardRedirect', () => {
       pageNumber: 87,
       decorations: [{ startOffset: 0, endOffset: 2, effectType: 'UNDERLINE', color: '#fff' }],
       content: '의견',
-      result: { opinionId: 1, merged: false },
+      result: { opinionId: 1, passageId: 71, merged: false },
     })
 
     expect(resolveGuardRedirect('/trace/new/decorate', saved)).toBe('/trace/new/done')
@@ -86,7 +86,7 @@ describe('resolveGuardRedirect', () => {
       quotedText: '문장',
       pageNumber: 87,
       content: '의견',
-      result: { opinionId: 1, merged: false },
+      result: { opinionId: 1, passageId: 71, merged: false },
     })
 
     expect(resolveGuardRedirect('/trace/new', saved)).toBeNull()

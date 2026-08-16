@@ -195,9 +195,13 @@ function stubApi() {
 
       const opinionMatch = /\/passages\/(\d+)\/opinions/.exec(url)
       if (opinionMatch) {
+        // 댓글 수는 서버가 그때그때 세어 준다 — 댓글을 달면 다음 목록 응답부터 늘어난다
+        const opinions = opinionSeed.map((opinion) =>
+          opinion.opinionId === 1 ? { ...opinion, commentCount: comments.length } : opinion,
+        )
         return json({
           data: {
-            opinions: opinionSeed,
+            opinions,
             pageInfo: {
               page: 0,
               size: 20,
@@ -515,6 +519,21 @@ describe('의견 바텀시트와 답글 흐름', () => {
     // 입력창은 등록이 끝난 뒤에 비워진다
     await waitFor(() => {
       expect(screen.getByPlaceholderText('답글을 입력해주세요')).toHaveValue('')
+    })
+  })
+
+  it('댓글을 등록하면 흔적 카드의 댓글 수도 함께 오른다', async () => {
+    await openFirstTraceComments()
+    expect(commentToggle(0)).toHaveTextContent('7')
+
+    fireEvent.change(screen.getByPlaceholderText('답글을 입력해주세요'), {
+      target: { value: '새 댓글' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '답글 등록' }))
+
+    // 댓글 수는 흔적 목록 응답에서 오므로 댓글 캐시만 갱신하면 옛 숫자가 그대로 남는다
+    await waitFor(() => {
+      expect(commentToggle(0)).toHaveTextContent('8')
     })
   })
 

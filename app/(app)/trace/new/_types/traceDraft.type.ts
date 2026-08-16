@@ -21,7 +21,15 @@ export type TraceDraft = {
   decorations: DraftDecoration[]
   content: string
   passageId: number | null
-  result: { opinionId: number; merged: boolean } | null
+  result: TraceCreateResult | null
+}
+
+/** 저장이 끝난 흔적. 완료 화면이 이 값으로 흔적 보기의 좌표를 만든다 — 쪽 번호는 초안에서 온다. */
+export type TraceCreateResult = {
+  opinionId: number
+  /** 서버가 정해 준 대목 — 합쳐졌으면 합쳐진 쪽의 id다 */
+  passageId: number
+  merged: boolean
 }
 
 export type TraceDraftAction =
@@ -36,6 +44,6 @@ export type TraceDraftAction =
   | { type: 'removeDecoration'; startOffset: number }
   | { type: 'setContent'; content: string }
   | { type: 'setMergeTarget'; passageId: number | null }
-  | { type: 'setResult'; result: { opinionId: number; merged: boolean } }
+  | { type: 'setResult'; result: TraceCreateResult }
   | { type: 'resetKeepingBook' }
   | { type: 'reset' }

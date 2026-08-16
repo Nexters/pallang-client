@@ -36,11 +36,14 @@ export function TraceItem({
   return (
     <article className="flex flex-col gap-3 py-4">
       <div className="flex items-center justify-between">
-        {/* 닉네임 줄과 날짜의 밝기 차이가 시안(202:4568)의 위계다 — 닉네임 50%, 날짜 25% */}
-        <button type="button" className="flex items-center gap-0.5 opacity-50">
+        {/* 닉네임 줄과 날짜의 밝기 차이가 시안(202:4568)의 위계다 — 닉네임 50%, 날짜 25%.
+            ponytail: 시안의 셰브론은 작성자 프로필로 가는 자리인데 그 화면이 아직 없다.
+            버튼으로 두면 키보드·보조기기에 누를 것을 권하고도 아무 일이 없어, 글자로만 세우고
+            셰브론은 장식으로 남긴다 — 프로필 화면이 생기면 여기를 링크로 바꾼다 */}
+        <span className="flex items-center gap-0.5 opacity-50">
           <span className="text-body-14sb text-text-inverse">{trace.nickname}</span>
-          <NextIcon width={16} height={16} className="text-icon-active" />
-        </button>
+          <NextIcon aria-hidden width={16} height={16} className="text-icon-active" />
+        </span>
         <ModerationMenu
           target={{ type: 'opinion', id: trace.opinionId }}
           authorUserId={trace.userId}
@@ -73,7 +76,11 @@ export function TraceItem({
           {formatTraceDate(trace.createdAt, { isHydrated })}
         </span>
         <div className="flex items-center gap-4">
-          <TraceLikeButton opinionId={trace.opinionId} likeCount={trace.likeCount} />
+          <TraceLikeButton
+            opinionId={trace.opinionId}
+            likeCount={trace.likeCount}
+            liked={trace.liked}
+          />
           {onOpenComments ? (
             <button
               type="button"

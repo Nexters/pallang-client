@@ -57,5 +57,7 @@ export type Trace = {
   content: string
   createdAt: string
   likeCount: number
+  /** 내가 이미 좋아요했는지 — 서버가 로그인 사용자 기준으로 계산해 준다 */
+  liked: boolean
   commentCount: number
 }
