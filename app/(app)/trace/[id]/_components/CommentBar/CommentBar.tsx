@@ -1,8 +1,9 @@
-import { useState } from 'react'
-
 import { Button } from '@/app/_global/_components/Button/Button'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { cn } from '@/app/_global/_services/cn.service'
+
+import { COMMENT_MAX_LENGTH } from '../../_data/commentInput.constant'
+import { useAsyncCommentField } from '../../_hooks/useAsyncCommentField'
 
 type CommentBarProps = {
   /**
@@ -23,27 +24,13 @@ export function CommentBar({
   placeholder = '댓글을 입력해주세요',
   submitLabel = '댓글 등록',
 }: CommentBarProps) {
-  const [content, setContent] = useState('')
-  const [isSending, setIsSending] = useState(false)
-  const isEmpty = content.trim().length === 0
+  const field = useAsyncCommentField(onSubmit)
 
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault()
-        // 응답 전에 한 번 더 누르면 같은 댓글이 두 번 등록된다 — 전송이 도는 동안은 제출을 흘린다
-        if (isSending) return
-        const trimmed = content.trim()
-        if (!trimmed) return
-        setIsSending(true)
-        // 로그인 게이트가 막았거나 전송이 실패하면 등록이 안 된 것이라 입력을 남긴다 —
-        // 지워버리면 로그인 후 처음부터 다시 써야 한다
-        void Promise.resolve(onSubmit?.(trimmed)).then((isRegistered) => {
-          setIsSending(false)
-          if (!isRegistered) return
-          // 전송이 도는 동안 이어 쓴 내용은 아직 등록되지 않았다 — 보낸 것과 같을 때만 비운다
-          setContent((current) => (current.trim() === trimmed ? '' : current))
-        })
+        field.submit()
       }}
       /* 색은 두 자리에서 같다(디자인 202:4910) — 바는 bg-black, 그 위 입력은 한 단 밝은 bg-dark.
          floating: 스크롤 컨테이너 안에서는 sticky가 뷰포트 하단에 붙지 않아 fixed로 띄운다.
@@ -60,10 +47,10 @@ export function CommentBar({
       <div className="flex items-center gap-2">
         <input
           type="text"
-          value={content}
-          maxLength={500}
+          value={field.content}
+          maxLength={COMMENT_MAX_LENGTH}
           onChange={(event) => {
-            setContent(event.target.value)
+            field.setContent(event.target.value)
           }}
           placeholder={placeholder}
           className="h-9 min-w-0 flex-1 rounded-full bg-bg-dark px-4 text-body-14rg text-text-inverse outline-none placeholder:text-text-inverse/50"
@@ -74,8 +61,8 @@ export function CommentBar({
           type="submit"
           variant="activated"
           aria-label={submitLabel}
-          loading={isSending}
-          disabled={isEmpty}
+          loading={field.isSending}
+          disabled={field.isEmpty}
           className="size-9.5 shrink-0 rounded-full p-0 disabled:bg-interactive-accent disabled:opacity-40"
         >
           <PencilIcon width={20} height={20} className="text-icon-active" />
