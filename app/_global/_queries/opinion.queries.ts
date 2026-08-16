@@ -54,9 +54,11 @@ export const opinionQueries = {
       },
     }),
   /**
-   * 좋아요 상태 전용 캐시. 목록 응답(OpinionSummaryResponse)에 `liked`가 없어 서버에서 읽어올 수
-   * 없으므로, 조회 없이(skipToken) 토글 응답만 담아 목록과 상세가 같은 값을 보게 한다.
-   * ponytail: 목록에 liked가 추가되면 이 캐시를 없애고 목록 응답을 그대로 쓰는 편이 낫다.
+   * 이 화면에서 누른 좋아요를 담아두는 캐시. 조회는 하지 않고(skipToken) 토글 응답만 담아,
+   * 목록 카드와 상세 오버레이가 같은 값을 보게 한다.
+   *
+   * 처음 그릴 때의 기준은 이 캐시가 아니라 목록 응답의 `liked`/`likeCount`다(useOpinionLike).
+   * 여기 없으면 '아직 안 눌렀다'가 아니라 '이 화면에서 아직 안 눌렀다'는 뜻일 뿐이다.
    */
   likeState: (opinionId: number) =>
     queryOptions<OpinionLikeState>({

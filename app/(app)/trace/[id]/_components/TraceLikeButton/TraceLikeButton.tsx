@@ -10,6 +10,8 @@ type TraceLikeButtonProps = {
   opinionId: number
   /** 서버 목록이 준 좋아요 수 — 아직 눌러본 적 없는 흔적의 기준값이다 */
   likeCount: number
+  /** 서버 목록이 준 내 좋아요 여부 — 같은 기준값의 나머지 반쪽이다 */
+  liked: boolean
   /** 수 앞에 붙는 말. 상세 오버레이만 '공감'을 붙인다 */
   countLabel?: string
   className?: string
@@ -22,11 +24,12 @@ type TraceLikeButtonProps = {
 export function TraceLikeButton({
   opinionId,
   likeCount,
+  liked,
   countLabel,
   className,
 }: TraceLikeButtonProps) {
   const runWithLogin = useLoginGate()
-  const like = useOpinionLike(opinionId, likeCount)
+  const like = useOpinionLike(opinionId, { liked, likeCount })
 
   return (
     <button

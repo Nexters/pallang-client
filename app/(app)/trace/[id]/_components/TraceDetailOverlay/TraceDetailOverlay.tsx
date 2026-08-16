@@ -54,6 +54,7 @@ export function TraceDetailOverlay({ trace, quote, state, onClose }: TraceDetail
           <TraceLikeButton
             opinionId={trace.opinionId}
             likeCount={trace.likeCount}
+            liked={trace.liked}
             countLabel="공감"
           />
         </div>

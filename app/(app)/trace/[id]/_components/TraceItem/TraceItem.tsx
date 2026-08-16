@@ -73,7 +73,11 @@ export function TraceItem({
           {formatTraceDate(trace.createdAt, { isHydrated })}
         </span>
         <div className="flex items-center gap-4">
-          <TraceLikeButton opinionId={trace.opinionId} likeCount={trace.likeCount} />
+          <TraceLikeButton
+            opinionId={trace.opinionId}
+            likeCount={trace.likeCount}
+            liked={trace.liked}
+          />
           {onOpenComments ? (
             <button
               type="button"
