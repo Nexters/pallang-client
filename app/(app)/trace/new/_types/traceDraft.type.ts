@@ -34,6 +34,13 @@ export type TraceDraft = {
 
 export type TraceDraftAction =
   | { type: 'selectBook'; book: SelectedBook }
+  /**
+   * 이미 담긴 책의 빈 자리(저자·쪽수)만 뒤늦게 채운다. selectBook과 나누는 이유는 뜻이 달라서다 —
+   * selectBook은 '새 흔적의 시작'이라 합칠 대목과 저장 결과를 지우는데, 이 경로의 책은 이미
+   * 골라 둔 그 책이라 지울 것이 없다. bookId를 함께 받아, 응답이 늦게 도착하는 사이 책이
+   * 바뀌었으면 아무것도 하지 않는다.
+   */
+  | { type: 'fillBookDetail'; bookId: number; author: string; pageCount: number }
   | { type: 'setSource'; source: TraceQuoteSource }
   | { type: 'setQuotedText'; quotedText: string }
   /** 대목을 다시 고르러 첫 화면으로 되돌아갈 때. 책과 입력 방식은 남긴다. */

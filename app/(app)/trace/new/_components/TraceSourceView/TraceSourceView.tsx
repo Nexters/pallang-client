@@ -39,7 +39,9 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
       book: {
         bookId: pending.bookId,
         title: pending.bookTitle,
-        // 흔적 보기 화면은 이 둘을 모른다. 작성 플로우에서는 도서 직접 등록 폼에서만 쓰이는 값이다.
+        // 흔적 보기 화면은 이 둘을 모른다 — 그 화면의 책 정보는 PageNumbers 응답에서 오고
+        // 제목·표지밖에 없다. 빈 채로 두면 ③의 책 카드에 저자 줄이 비고 쪽수 검사도 건너뛰므로,
+        // layout의 BookDetailFiller가 내부 검색으로 뒤이어 채운다.
         author: '',
         coverImageUrl: pending.bookCoverImageUrl,
         pageCount: null,

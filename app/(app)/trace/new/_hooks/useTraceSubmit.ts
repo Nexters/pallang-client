@@ -30,7 +30,8 @@ export function useTraceSubmit() {
     // 페이지 상한은 ①에서 볼 수 없다 — 책을 ③에서 고르기 때문이다. 그래서 쪽수를 아는
     // 시점에 막는다. 그냥 보내면 서버가 거절하고 "잠시 후 다시 시도" 안내가 뜨는데,
     // 다시 눌러도 계속 실패하고 무엇을 고쳐야 하는지도 알 수 없다.
-    // 인기 목록 책과 씨앗으로 받은 책은 쪽수를 모른다(pageCount가 null) — 그때는 검사를 건너뛴다.
+    // 쪽수를 끝내 모르는 책도 있다(인기 목록 책, 내부 검색에서 못 찾은 씨앗 책) — 그때는
+    // 검사를 건너뛴다. 씨앗 책의 쪽수는 useBookDetailFill이 미리 채워 준다.
     const maxPage = draft.book.pageCount
     if (draft.pageNumber !== null && maxPage !== null && draft.pageNumber > maxPage) {
       setMessage('페이지 번호가 이 책의 쪽수를 넘어요. 뒤로 가서 페이지를 확인해주세요.')

@@ -24,6 +24,69 @@ describe('traceDraftReducer', () => {
     expect(next.book).toEqual(book)
   })
 
+  it('fillBookDetail은 비어 있던 저자·쪽수만 채운다', () => {
+    const seeded = traceDraftReducer(initialTraceDraft, {
+      type: 'selectBook',
+      book: { ...book, author: '', pageCount: null },
+    })
+
+    const next = traceDraftReducer(seeded, {
+      type: 'fillBookDetail',
+      bookId: book.bookId,
+      author: '한강',
+      pageCount: 268,
+    })
+
+    expect(next.book).toEqual(book)
+  })
+
+  it('fillBookDetail은 씨앗이 정해 준 합칠 대목과 저장 결과를 건드리지 않는다', () => {
+    // selectBook으로 채우면 passageId·result가 지워진다 — 씨앗 경로에서는 그게 곧 합칠 대상
+    // 소실이라 별도 액션을 둔 이유가 여기 있다.
+    const seeded = [
+      { type: 'selectBook', book: { ...book, author: '', pageCount: null } } as const,
+      { type: 'setMergeTarget', passageId: 42 } as const,
+      { type: 'setResult', result: { opinionId: 7, merged: true } } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    const next = traceDraftReducer(seeded, {
+      type: 'fillBookDetail',
+      bookId: book.bookId,
+      author: '한강',
+      pageCount: 268,
+    })
+
+    expect(next.passageId).toBe(42)
+    expect(next.result).toEqual({ opinionId: 7, merged: true })
+  })
+
+  it('fillBookDetail은 이미 채워진 값을 덮지 않는다', () => {
+    const picked = traceDraftReducer(initialTraceDraft, { type: 'selectBook', book })
+
+    const next = traceDraftReducer(picked, {
+      type: 'fillBookDetail',
+      bookId: book.bookId,
+      author: '다른 저자',
+      pageCount: 999,
+    })
+
+    expect(next.book).toEqual(book)
+  })
+
+  it('fillBookDetail은 다른 책의 응답이면 상태를 그대로 둔다', () => {
+    // 응답이 오는 사이 사용자가 시트에서 책을 바꿀 수 있다 — 늦게 온 값이 새 책을 덮으면 안 된다.
+    const picked = traceDraftReducer(initialTraceDraft, { type: 'selectBook', book })
+
+    const next = traceDraftReducer(picked, {
+      type: 'fillBookDetail',
+      bookId: book.bookId + 1,
+      author: '엉뚱한 저자',
+      pageCount: 1,
+    })
+
+    expect(next).toBe(picked)
+  })
+
   it('setPageDetail은 페이지와 스포일러를 함께 담는다', () => {
     const next = traceDraftReducer(initialTraceDraft, {
       type: 'setPageDetail',
