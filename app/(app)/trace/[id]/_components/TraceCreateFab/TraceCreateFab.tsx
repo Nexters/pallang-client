@@ -23,19 +23,21 @@ export function TraceCreateFab({ onAddOpinion, onAddRecord }: TraceCreateFabProp
   // 갈래는 접자마자 사라지지 않는다 — 퇴장 전환이 보이도록 수명을 늘려 잡는다
   const branches = useExitTransition(isOpen, MOTION_DURATION.fast)
 
-  const run = (action: () => void) => () => {
-    setIsOpen(false)
-    action()
-  }
+  // 두 갈래는 아이콘·라벨·목적지만 다르다
+  const branchItems = [
+    { label: '의견 남기기', Icon: CommentIcon, onSelect: onAddOpinion },
+    { label: '기록 남기기', Icon: PencilIcon, onSelect: onAddRecord },
+  ]
 
-  /* ponytail: #c6c6c6는 디자인 변수 미연결 색 — 토큰 추가 시 치환 */
+  /* ponytail: #c6c6c6는 디자인 변수 미연결 색 — 토큰 추가 시 치환. 46px 라운드·10px 블러도 같은 시안 값이다 */
   const branchClassName =
     'press flex w-full items-center justify-center gap-2 rounded-[46px] bg-[#c6c6c6]/50 p-4 text-title-16sb text-text-inverse backdrop-blur-[10px]'
 
   return (
     /* 뷰포트가 아니라 앱 셸(layout의 relative main, max-w-132.5)에 붙는다 —
        fixed로 두면 넓은 화면에서 창 오른쪽 끝으로 떨어져 나가 앱 화면 밖에 뜬다.
-       main이 h-dvh라 세로 위치는 fixed일 때와 같고, 스크롤은 안쪽 컨테이너가 맡아 함께 밀리지 않는다 */
+       main이 h-dvh라 세로 위치는 fixed일 때와 같고, 스크롤은 안쪽 컨테이너가 맡아 함께 밀리지 않는다.
+       하단은 기본 24px, 인셋이 그보다 크면 인셋만큼 올라간다 */
     <div className="absolute right-6 bottom-[max(24px,var(--safe-bottom))] z-40 flex w-[137px] flex-col items-end gap-2">
       {branches.shouldRender && (
         <div
@@ -52,14 +54,20 @@ export function TraceCreateFab({ onAddOpinion, onAddRecord }: TraceCreateFabProp
             'data-[state=exiting]:pointer-events-none',
           )}
         >
-          <button type="button" onClick={run(onAddOpinion)} className={branchClassName}>
-            <CommentIcon width={24} height={24} className="text-icon-active" />
-            의견 남기기
-          </button>
-          <button type="button" onClick={run(onAddRecord)} className={branchClassName}>
-            <PencilIcon width={24} height={24} className="text-icon-active" />
-            기록 남기기
-          </button>
+          {branchItems.map(({ label, Icon, onSelect }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => {
+                setIsOpen(false)
+                onSelect()
+              }}
+              className={branchClassName}
+            >
+              <Icon width={24} height={24} className="text-icon-active" />
+              {label}
+            </button>
+          ))}
         </div>
       )}
       <button
@@ -69,7 +77,7 @@ export function TraceCreateFab({ onAddOpinion, onAddRecord }: TraceCreateFabProp
         onClick={() => {
           setIsOpen((prev) => !prev)
         }}
-        className="press flex size-14 items-center justify-center rounded-2xl bg-orange-500 p-4"
+        className="press flex size-14 items-center justify-center rounded-2xl bg-interactive-accent p-4"
       >
         {/* 시안의 열림 상태 아이콘은 +를 √2배로 키운 크기다 = 45° 회전한 같은 글리프 */}
         <PlusIcon

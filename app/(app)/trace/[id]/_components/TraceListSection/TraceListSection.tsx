@@ -37,7 +37,7 @@ export function TraceListSection({
 }: TraceListSectionProps) {
   return (
     <section className={cn('flex flex-col', className)}>
-      {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다 */}
+      {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다. h-15는 시안(202:3672) 헤더 높이 */}
       <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
           {/* 시안(200:906)에서 장식이던 셰브론이 의견 바텀시트라는 목적지를 얻었다(202:3672 주석) */}
@@ -64,8 +64,9 @@ export function TraceListSection({
         inert={isMasked}
         className={cn(
           'flex flex-col px-4',
-          // 입력바가 화면 하단에 고정으로 뜨는 동안에는 그 높이(입력 38 + 상하 여백)만큼 더 비운다
-          // — 그러지 않으면 마지막 댓글이 바 뒤에 깔려 읽을 수도 스크롤할 수도 없다
+          // 입력바가 화면 하단에 고정으로 뜨는 동안에는 그 높이만큼 더 비운다 —
+          // pb-32(128px)는 CommentBar(입력 h-9 + pt-4 + 하단 인셋)를 손으로 계산해 예약한 값이다.
+          // 그러지 않으면 마지막 댓글이 바 뒤에 깔려 읽을 수도 스크롤할 수도 없다
           expandedOpinionId === null ? 'pb-10' : 'pb-32',
           isMasked && 'blur-md select-none',
         )}
@@ -73,7 +74,8 @@ export function TraceListSection({
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
-            // 구분선 양옆으로 24px씩(디자인 202:7290 Content gap) — 흔적끼리 붙어 보이지 않게 한다
+            // 구분선 양옆으로 24px씩(디자인 202:7290 Content gap) — 흔적끼리 붙어 보이지 않게 한다.
+            // 첫 흔적 위에는 두지 않는다 — 헤더와 붙어 두 줄로 보인다
             className={index > 0 ? 'mt-6 border-t border-dashed border-white/30 pt-6' : undefined}
           >
             {/* 본문은 탭 대상이 아니다 — 열어 볼 곳이 없으니 자르지 않고 전부 보여준다 */}
