@@ -5,6 +5,27 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# 두 빌드는 번들 ID가 같아 App Store Connect의 한 앱에 같이 쌓인다. 심사 제출 화면에서
+# 고를 때 보이는 건 표시 버전과 빌드 번호뿐이므로(로드 URL도 표시명도 안 보인다),
+# 아카이브가 스스로 두 가지 표식을 붙인다.
+#   ① 표시명 — 기기 홈 화면·권한 팝업에서 구분한다. Info.plist가 아니라 빌드 설정을 덮어쓰므로
+#      파일이 더러워지지 않고, 아카이브가 실패해도 원복할 것이 없다.
+#   ② 빌드 번호 홀짝 — App Store Connect에서 유일하게 보이는 구분자다. 운영=짝수, dev=홀수.
+#      MARKETING_VERSION은 Apple이 정수와 마침표만 받아 '1.2.0-dev' 같은 접미사를 못 쓴다.
+# 심사에는 짝수 빌드만 제출한다.
+if [ -n "${CAP_SERVER_URL:-}" ]; then
+  BUILD_KIND="dev (${CAP_SERVER_URL})"
+  DISPLAY_NAME='Pallang DEV'
+  BUILD_PARITY=1
+else
+  BUILD_KIND='운영 (capacitor.config.ts의 PROD_SERVER_URL)'
+  DISPLAY_NAME='Pallang'
+  BUILD_PARITY=0
+fi
+
+echo "▶ 빌드 종류: ${BUILD_KIND}"
+echo "▶ 표시명: ${DISPLAY_NAME}"
+
 # 운영 URL을 여기 다시 적지 않는다 — capacitor.config.ts와 어긋나기 시작한다
 echo "▶ cap sync ios (server.url = ${CAP_SERVER_URL:-capacitor.config.ts의 운영 기본값})"
 npx cap sync ios
@@ -19,10 +40,12 @@ perl -pi -e "s/(MARKETING_VERSION = ).*;/\${1}${MARKETING_VERSION};/" "$PBXPROJ"
 echo "▶ 표시 버전 ← package.json: ${MARKETING_VERSION}"
 
 # App Store Connect는 같은 빌드 번호를 두 번 받지 않는다. 아카이브마다 올려 둔다.
+# 위 ②의 홀짝을 맞추느라 한 번에 1이 아니라 2가 오를 수 있다 — 값은 언제나 커지기만 하므로
+# 두 빌드가 한 카운터를 나눠 써도 번호가 겹치거나 되돌아가지 않는다.
 # ponytail: pbxproj를 직접 치환 — agvtool은 프로젝트 설정을 따로 요구한다. 값이 여러 개라도
-# 각각 제 값에서 1씩 오르므로 Debug/Release가 갈라져도 견딘다.
-perl -pi -e 's/(CURRENT_PROJECT_VERSION = )(\d+)/$1 . ($2 + 1)/e' "$PBXPROJ"
-echo "▶ 빌드 번호 올림 → $(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ") (pbxproj 변경 — 커밋할 것)"
+# 각각 제 값에서 오르므로 Debug/Release가 갈라져도 견딘다.
+perl -pi -e "s/(CURRENT_PROJECT_VERSION = )(\d+)/\$1 . do { my \$n = \$2 + 1; \$n++ if \$n % 2 != ${BUILD_PARITY}; \$n }/e" "$PBXPROJ"
+echo "▶ 빌드 번호 올림 → $(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ") ($([ "$BUILD_PARITY" -eq 0 ] && echo '짝수 = 운영, 심사 제출 가능' || echo '홀수 = dev, 심사 제출 금지')) (pbxproj 변경 — 커밋할 것)"
 
 ARCHIVE=build-ios/App.xcarchive
 EXPORT_DIR=build-ios/export
@@ -30,7 +53,8 @@ EXPORT_DIR=build-ios/export
 echo "▶ archive"
 xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
   -destination 'generic/platform=iOS' -allowProvisioningUpdates \
-  archive -archivePath "$ARCHIVE"
+  archive -archivePath "$ARCHIVE" \
+  BUNDLE_DISPLAY_NAME="$DISPLAY_NAME"
 
 echo "▶ export .ipa"
 xcodebuild -exportArchive -archivePath "$ARCHIVE" \
