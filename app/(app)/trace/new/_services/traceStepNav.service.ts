@@ -1,4 +1,4 @@
-export type TraceStep = 'decorate' | 'detail' | 'done' | 'opinion' | 'photo' | 'search'
+export type TraceStep = 'book' | 'decorate' | 'done' | 'photo' | 'source' | 'write'
 
 /** 뒤로가기가 향할 곳. exit는 플로우 자체를 벗어나는 것이라 이탈 판정을 한 번 더 거친다. */
 export type TraceBackTarget =
@@ -7,12 +7,12 @@ export type TraceBackTarget =
 const START = '/trace/new'
 
 const STEP_PATH: Record<TraceStep, string> = {
+  book: `${START}/book`,
   decorate: `${START}/decorate`,
-  detail: `${START}/detail`,
   done: `${START}/done`,
-  opinion: `${START}/opinion`,
   photo: `${START}/photo`,
-  search: START,
+  source: START,
+  write: `${START}/write`,
 }
 
 const STEPS = Object.keys(STEP_PATH) as TraceStep[]
@@ -24,15 +24,17 @@ export function stepPath(step: TraceStep): string {
 /**
  * 각 단계에서 이어질 다음 단계(들). 미리 route를 프리페치해 '다음'을 눌렀을 때의
  * RSC 왕복을 없앤다. 이 왕복이 웹뷰(원격 URL)에서 단계 전환마다 버벅이는 원인이다.
- * search는 방식 선택에 따라 photo·detail 어느 쪽으로도 가므로 둘 다 미리 받는다.
+ * source는 방식 선택에 따라 photo·write 어느 쪽으로도 가므로 둘 다 미리 받는다.
+ * write도 출구가 둘이다 — 평소에는 decorate로 가지만, 흔적 보기에서 대목을 물고 들어온
+ * 경로에서는 ②·③을 건너뛰고 여기서 저장해 곧장 done으로 간다.
  */
 const NEXT_STEPS: Record<TraceStep, TraceStep[]> = {
-  search: ['photo', 'detail'],
-  photo: ['detail'],
-  detail: ['decorate'],
-  decorate: ['opinion'],
-  opinion: ['done'],
-  done: ['search'],
+  source: ['photo', 'write'],
+  photo: ['write'],
+  write: ['decorate', 'done'],
+  decorate: ['book'],
+  book: ['done'],
+  done: ['source'],
 }
 
 export function nextStepPaths(step: TraceStep): string[] {
@@ -45,16 +47,16 @@ export function resolveStep(pathname: string): TraceStep | null {
 
 export function resolveBackTarget(step: TraceStep): TraceBackTarget {
   switch (step) {
-    // 사진·직접입력 어느 쪽이든 방식 선택으로 되돌린다. photo로 되돌리면 카메라가 다시 열린다.
-    case 'detail':
+    // 대목은 사진·직접입력 어느 쪽으로 얻었든 다시 받아야 한다. photo로 되돌리면 카메라가 다시 열린다.
     case 'photo':
-      return { clearQuote: true, step: 'search', type: 'step' }
+    case 'write':
+      return { clearQuote: true, step: 'source', type: 'step' }
     case 'decorate':
-      return { clearQuote: false, step: 'detail', type: 'step' }
-    case 'opinion':
+      return { clearQuote: false, step: 'write', type: 'step' }
+    case 'book':
       return { clearQuote: false, step: 'decorate', type: 'step' }
     case 'done':
-    case 'search':
+    case 'source':
       return { type: 'exit' }
   }
 }

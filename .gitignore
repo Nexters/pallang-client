@@ -47,6 +47,9 @@ storybook-static
 # superpowers sdd scratch
 .superpowers/
 
+# claude code 워크트리
+.claude/worktrees/
+
 # playwright mcp artifacts
 .playwright-mcp/
 

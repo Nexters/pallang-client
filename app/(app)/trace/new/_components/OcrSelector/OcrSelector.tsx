@@ -15,10 +15,12 @@ import { useCamera } from '@/app/_global/_hooks/useCamera'
 import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
 import { MAX_QUOTE_LENGTH } from '../../_data/quote.constant'
+import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { BlockBox } from '../../_services/blockSelection.service'
 import { countWithinLimit, joinBlockTexts, type OcrBlock } from '../../_services/ocrText.service'
+import { ManualQuoteSheet } from '../ManualQuoteSheet/ManualQuoteSheet'
 import { OcrPermissionNotice } from '../OcrPermissionNotice/OcrPermissionNotice'
 import { OcrPhotoStage } from '../OcrPhotoStage/OcrPhotoStage'
 import { OcrQuoteSheet } from '../OcrQuoteSheet/OcrQuoteSheet'
@@ -47,6 +49,8 @@ export function OcrSelector() {
   const [failure, setFailure] = useState<null | string>(null)
   // 이미 거부된 권한. 재시도로는 풀리지 않아 실패와 다른 안내를 띄운다.
   const [permissionBlocked, setPermissionBlocked] = useState<CameraPermissionKind | null>(null)
+  // 실패·권한 안내 화면에서 카메라 대신 글로 대목을 남기는 대안. 이 화면 위 한 층일 뿐이다.
+  const [manualOpen, setManualOpen] = useState(false)
   const [message, setMessage] = useState('')
   const started = useRef(false)
   const objectUrlRef = useRef<string | null>(null)
@@ -153,6 +157,12 @@ export function OcrSelector() {
     }
   }, [permissionBlocked, runCapture])
 
+  // 직접 입력 시트는 실패·권한 안내 화면 위에 얹힌 한 층이다 — 뒤로가기는 이 화면을 떠나는 대신
+  // 시트만 닫는다.
+  useOverlayBackGuard(manualOpen, () => {
+    setManualOpen(false)
+  })
+
   const selectedBlocks = selected.map((index) => blocks[index]).filter((b) => !!b)
   // 상한을 넘긴 어절은 글자 중간을 자르지 않고 통째로 빼둔다. 사진에서도 같은 경계로 갈라 보여준다.
   const includedCount = countWithinLimit(selectedBlocks, MAX_QUOTE_LENGTH)
@@ -171,6 +181,9 @@ export function OcrSelector() {
           onPickFromGallery={() => {
             void runCapture(false, 'gallery')
           }}
+          onManualInput={() => {
+            setManualOpen(true)
+          }}
         />
       ) : failure ? (
         <div
@@ -180,14 +193,26 @@ export function OcrSelector() {
           <p className="whitespace-pre-line text-body-16md text-text-inverse opacity-80">
             {failure}
           </p>
-          <Button
-            className="h-[54px] px-6"
-            onClick={() => {
-              void runCapture(false, 'gallery')
-            }}
-          >
-            갤러리에서 선택하기
-          </Button>
+          <div className="flex w-full max-w-[311px] flex-col gap-2">
+            <Button
+              className="h-[54px] px-6"
+              onClick={() => {
+                void runCapture(false, 'gallery')
+              }}
+            >
+              갤러리에서 선택하기
+            </Button>
+            {/* 카메라·갤러리 모두 막혀도 글로 대목을 남길 수 있는 대안 */}
+            <Button
+              variant="back"
+              className="h-[54px] px-6"
+              onClick={() => {
+                setManualOpen(true)
+              }}
+            >
+              직접 입력하기
+            </Button>
+          </div>
         </div>
       ) : imageUrl ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
@@ -245,7 +270,7 @@ export function OcrSelector() {
         }}
         onSubmit={() => {
           dispatch({ type: 'setQuotedText', quotedText })
-          goTo('detail')
+          goTo('write')
         }}
       />
 
@@ -253,6 +278,19 @@ export function OcrSelector() {
         message={message}
         onClose={() => {
           setMessage('')
+        }}
+      />
+
+      <ManualQuoteSheet
+        open={manualOpen}
+        onClose={() => {
+          setManualOpen(false)
+        }}
+        onSubmit={(manualQuotedText) => {
+          // 사진으로 시작했더라도 실제로 대목을 얻은 방식은 직접 입력이다
+          dispatch({ type: 'setSource', source: 'manual' })
+          dispatch({ type: 'setQuotedText', quotedText: manualQuotedText })
+          goTo('write')
         }}
       />
     </div>

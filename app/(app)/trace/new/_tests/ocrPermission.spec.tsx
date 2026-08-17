@@ -7,6 +7,7 @@ import { CameraPermissionDeniedError } from '@/app/_global/_data/camera.model'
 import { openAppSettings } from '@/app/_global/_services/appSettings.service'
 
 import { OcrSelector } from '../_components/OcrSelector/OcrSelector'
+import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
 
 type AppStateHandler = (state: { isActive: boolean }) => void
 
@@ -58,7 +59,9 @@ function renderSelector() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={client}>
-      <OcrSelector />
+      <TraceOverlayProvider>
+        <OcrSelector />
+      </TraceOverlayProvider>
     </QueryClientProvider>,
   )
 }

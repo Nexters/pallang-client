@@ -15,6 +15,8 @@ import { EFFECT_OPTIONS, type EffectOption } from '../../_data/effect.constant'
 type EffectPickerProps = {
   disabled: boolean
   onPick: (option: EffectOption) => void
+  /** 고른 효과. 활성으로 표시한다. */
+  selectedKey?: EffectOption['key'] | null
 }
 
 const iconByKey: Record<EffectOption['key'], FC<SVGProps<SVGSVGElement>>> = {
@@ -26,16 +28,18 @@ const iconByKey: Record<EffectOption['key'], FC<SVGProps<SVGSVGElement>>> = {
   wave: EffectWaveIcon,
 }
 
-export function EffectPicker({ disabled, onPick }: EffectPickerProps) {
+export function EffectPicker({ disabled, onPick, selectedKey }: EffectPickerProps) {
   return (
     <div className="grid grid-cols-3 gap-2 px-2">
       {EFFECT_OPTIONS.map((option) => {
         const Icon = iconByKey[option.key]
+        const isSelected = option.key === selectedKey
         return (
           <button
             key={option.key}
             type="button"
             disabled={disabled}
+            aria-pressed={isSelected}
             onClick={() => {
               onPick(option)
             }}
@@ -44,6 +48,8 @@ export function EffectPicker({ disabled, onPick }: EffectPickerProps) {
               // 시안 2209:16281(꾸미기 버튼 클릭) — 누르는 동안 흰 배경에 진한 글자로 뒤집힌다.
               // 아이콘은 에셋에 색이 박혀 있어(효과 오렌지 + A 회색) 양쪽 상태에서 그대로 쓴다.
               'active:bg-bg-default active:text-text-primary',
+              // 고른 효과는 누르는 동안과 같은 반전 스타일로 계속 활성 표시한다
+              isSelected && 'bg-bg-default text-text-primary',
               disabled && 'cursor-not-allowed opacity-40',
             )}
           >

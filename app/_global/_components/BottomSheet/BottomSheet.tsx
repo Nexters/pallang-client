@@ -24,6 +24,8 @@ type BottomSheetProps = {
   contentClassName?: string
   /** 시트 패널 자체에 덧붙일 클래스 — 기본은 내용 높이만큼이고, 높이를 고정하고 싶을 때 쓴다 */
   popupClassName?: string
+  /** 본문 아래 고정 영역. 본문이 안에서 스크롤돼도 딸려 올라가지 않는다 */
+  footer?: ReactNode
 }
 
 // Dialog와 같은 base-ui 프리미티브 위에 올린다 — 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘을
@@ -39,6 +41,7 @@ export function BottomSheet({
   reserveBackSlot = false,
   contentClassName,
   popupClassName,
+  footer,
 }: BottomSheetProps) {
   const isDark = tone === 'dark'
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
@@ -120,7 +123,14 @@ export function BottomSheet({
               </BaseDialog.Close>
             </div>
             {/* 시안의 시트는 본문이 자기 여백을 가진다 — 패널은 가로 여백을 두지 않는다 */}
-            <div className={cn('flex flex-col gap-4 p-4', contentClassName)}>{children}</div>
+            <div
+              data-slot="bottom-sheet-body"
+              className={cn('flex flex-col gap-4 p-4', contentClassName)}
+            >
+              {children}
+            </div>
+            {/* 스크롤 영역 바깥이라 본문이 밀려 올라가도 그대로 붙어 있다 */}
+            {footer && <div className="shrink-0 px-4 pb-2">{footer}</div>}
           </BaseDialog.Popup>
         </BaseDialog.Viewport>
       </BaseDialog.Portal>

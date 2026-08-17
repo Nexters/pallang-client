@@ -4,8 +4,6 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { useRef, useState } from 'react'
 
 import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
-import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
@@ -20,20 +18,28 @@ import { type ExternalBook, ExternalBookList } from '../ExternalBookList/Externa
 const PAGE_SIZE = 20
 
 type BookSearchViewProps = {
+  /** 도서 추가 폼이 같은 시트 위에 열려 있는 동안 이 화면을 감춘다. 마운트는 유지해
+   *  검색어·목록·페이지네이션 상태가 폼을 닫고 돌아왔을 때도 그대로 남게 한다. */
+  hidden?: boolean
+  /** 알라딘 결과의 '직접 추가하기'가 부른다 — 검색바 옆 버튼이 사라진 뒤로는 이 자리뿐이다. */
   onAddManually: () => void
-  onBack: () => void
-  onSelect: (book: SelectedBook) => void
+  onPick: (book: SelectedBook) => void
   onSelectExternal: (book: ExternalBook) => void
+  /** 시트에서 지금 후보로 고른 책. 목록·캐러셀에 선택 테두리를 그리는 데만 쓴다. */
+  selectedBookId: number | null
 }
 
 export function BookSearchView({
+  hidden,
   onAddManually,
-  onBack,
-  onSelect,
+  onPick,
   onSelectExternal,
+  selectedBookId,
 }: BookSearchViewProps) {
   const [keyword, setKeyword] = useState('')
-  const scrollRef = useRef<HTMLDivElement>(null)
+  // 스크롤은 이제 시트(BookSearchSheet가 contentClassName으로 잡는 본문)가 갖는다. 무한스크롤 관찰자가
+  // 볼 스크롤 컨테이너는 이 뷰의 DOM 바깥에 있어, 여기서는 그 조상을 찾아 담아 둔다.
+  const scrollRootRef = useRef<HTMLElement | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   // 한 글자마다 요청이 나가지 않도록 입력이 멎은 뒤에 검색한다
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
@@ -57,7 +63,7 @@ export function BookSearchView({
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
-    rootRef: scrollRef,
+    rootRef: scrollRootRef,
     // 입력이 이어지는 동안에는 곧 버려질 키워드의 다음 페이지를 당겨오지 않는다
     enabled: isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage,
     onLoadMore: () => {
@@ -71,9 +77,7 @@ export function BookSearchView({
         author: book.author,
         bookId: book.bookId,
         coverImageUrl: book.coverImageUrl ?? null,
-        opinionCount: book.opinionCount,
         pageCount: book.pageCount,
-        passageCount: book.passageCount,
         publisher: book.publisher,
         title: book.title,
       })),
@@ -119,24 +123,21 @@ export function BookSearchView({
   const showExternalFallback = shouldSearchExternal && !isError
 
   return (
-    <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
-      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
-      <TopBar.Root>
-        <TopBar.Action
-          aria-label="뒤로"
-          onClick={() => {
-            onBack()
-          }}
-        >
-          <BackIcon />
-        </TopBar.Action>
-        <TopBar.Title as="h1">책 검색</TopBar.Title>
-      </TopBar.Root>
+    // hidden 속성으로 감춘다 — display:none은 레이아웃과 접근성 트리에서 동시에 빠지면서도
+    // 컴포넌트를 마운트된 채로 둬 keyword state와 SearchTextfield의 비제어 입력값을 보존한다.
+    // 간격은 여기서 gap으로 주지 않는다 — 검색바(py-2.5)와 목록(py-6)이 각자 가진 여백이
+    // 곧 시안의 간격이라, gap을 더하면 그만큼 벌어진다.
+    <div hidden={hidden} className="flex flex-col">
+      {/* 검색바 옆에 있던 '도서 추가' 버튼은 시안(3077:16108·3077:16138)에서 빠졌다 —
+          등록으로 빠져나가는 길은 시트 footer의 '새 책 등록하기'가 대신 든다. */}
       <BookSearchBar placeholder="책 제목을 입력해 주세요." onKeywordChange={setKeyword} />
 
       <div
-        ref={scrollRef}
-        className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        ref={(node) => {
+          scrollRootRef.current =
+            node?.closest<HTMLElement>('[data-slot="bottom-sheet-body"]') ?? null
+        }}
+        className="flex flex-col"
       >
         {isSearching ? (
           <>
@@ -150,6 +151,7 @@ export function BookSearchView({
             ) : (
               <BookPickList
                 books={searchResults}
+                selectedBookId={selectedBookId}
                 status={(() => {
                   if (searched.isPending) return 'pending'
                   if (isError && searchResults.length === 0) return 'error'
@@ -158,7 +160,7 @@ export function BookSearchView({
                 onRetry={() => {
                   void searched.refetch()
                 }}
-                onSelect={onSelect}
+                onSelect={onPick}
               />
             )}
             <div ref={loadMoreRef} className="h-6 w-full shrink-0" aria-hidden="true" />
@@ -170,7 +172,8 @@ export function BookSearchView({
                 title={`${me.data?.data?.nickname ?? '나'}님이 최근에 남긴 흔적`}
                 books={recentBooks}
                 isPending={recent.isPending}
-                onSelect={onSelect}
+                selectedBookId={selectedBookId}
+                onSelect={onPick}
               />
             )}
             {showPopular && (
@@ -178,7 +181,8 @@ export function BookSearchView({
                 title="제일 많이 등록된 흔적"
                 books={popularBooks}
                 isPending={popular.isPending}
-                onSelect={onSelect}
+                selectedBookId={selectedBookId}
+                onSelect={onPick}
               />
             )}
           </div>
@@ -194,6 +198,6 @@ export function BookSearchView({
           />
         )}
       </div>
-    </main>
+    </div>
   )
 }

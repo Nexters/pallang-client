@@ -3,28 +3,40 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { Button } from '@/app/_global/_components/Button/Button'
-import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
-import { Textarea } from '@/app/_global/_components/Textarea/Textarea'
 import { ApiError } from '@/app/_global/_data/api.model'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
 
-import { useTraceDraft } from '../../_hooks/useTraceDraft'
-import { useTraceNav } from '../../_hooks/useTraceNav'
-import { TraceNote } from '../TraceNote/TraceNote'
-import { TraceStepHeader } from '../TraceStepHeader/TraceStepHeader'
+import { useTraceDraft } from './useTraceDraft'
+import { useTraceNav } from './useTraceNav'
 
-export function TraceOpinionForm() {
+/**
+ * 초안 하나를 흔적으로 저장한다. 저장이 두 화면에 있어(③ 책 등록하기, 그리고 흔적 보기에서
+ * 대목을 물고 들어온 경우의 ① 생각 작성) 화면마다 베끼면 한쪽에서만 조용히 빠지는 분기가 생긴다
+ * — 로그인 게이트·합칠 대목 소실 처리가 그렇다. 그래서 한곳에 모은다.
+ *
+ * 어떤 실패에서도 초안을 버리지 않는다. 이 시점의 유실 비용이 플로우 전체에서 가장 크다.
+ */
+export function useTraceSubmit() {
   const { draft, dispatch } = useTraceDraft()
-  const { goBack, goTo } = useTraceNav()
-  const [message, setMessage] = useState('')
+  const { goTo } = useTraceNav()
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
+  const [message, setMessage] = useState('')
 
-  const handleSubmit = () => {
+  const save = () => {
     if (!draft.book) return
+    // 페이지 상한은 ①에서 볼 수 없다 — 책을 ③에서 고르기 때문이다. 그래서 쪽수를 아는
+    // 시점에 막는다. 그냥 보내면 서버가 거절하고 "잠시 후 다시 시도" 안내가 뜨는데,
+    // 다시 눌러도 계속 실패하고 무엇을 고쳐야 하는지도 알 수 없다.
+    // 쪽수를 끝내 모르는 책도 있다(인기 목록 책, 내부 검색에서 못 찾은 씨앗 책) — 그때는
+    // 검사를 건너뛴다. 씨앗 책의 쪽수는 useBookDetailFill이 미리 채워 준다.
+    const maxPage = draft.book.pageCount
+    if (draft.pageNumber !== null && maxPage !== null && draft.pageNumber > maxPage) {
+      setMessage('페이지 번호가 이 책의 쪽수를 넘어요. 뒤로 가서 페이지를 확인해주세요.')
+      return
+    }
     createOpinion.mutate(
       {
         bookId: draft.book.bookId,
@@ -81,65 +93,12 @@ export function TraceOpinionForm() {
     )
   }
 
-  return (
-    <div className="relative flex flex-1 flex-col bg-bg-dark">
-      {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
-      <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
-        <TraceStepHeader
-          step={3}
-          title={'해당 대목에 남기고 싶은 흔적을\n자유롭게 작성해 주세요.'}
-        />
-      </div>
-      {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
-      <div className="relative bg-bg-default px-8">
-        <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
-        <div className="relative">
-          <TraceNote quotedText={draft.quotedText} decorations={draft.decorations} />
-        </div>
-      </div>
-
-      <div className="px-4 pt-6">
-        {/* 이 단계에 할 일은 쓰는 것뿐이라 열리자마자 입력창을 잡는다.
-            흔적 보기의 '의견 남기기'는 곧장 이 자리로 오므로, 웹뷰에서도 키보드가 따라 올라온다 */}
-        <Textarea
-          autoFocus
-          variant="dark"
-          maxLength={300}
-          value={draft.content}
-          placeholder="의견을 작성해주세요."
-          onChange={(event) => {
-            dispatch({ type: 'setContent', content: event.target.value })
-          }}
-        />
-      </div>
-
-      <div className="mt-auto flex gap-2 px-4 pb-safe">
-        <Button
-          variant="back"
-          className="flex-1"
-          onClick={() => {
-            goBack()
-          }}
-        >
-          뒤로
-        </Button>
-        <Button
-          variant="activated"
-          className="flex-1"
-          disabled={draft.content.trim().length === 0}
-          loading={createOpinion.isPending}
-          onClick={handleSubmit}
-        >
-          흔적 남기기
-        </Button>
-      </div>
-
-      <Snackbar
-        message={message}
-        onClose={() => {
-          setMessage('')
-        }}
-      />
-    </div>
-  )
+  return {
+    closeMessage: () => {
+      setMessage('')
+    },
+    isSaving: createOpinion.isPending,
+    message,
+    save,
+  }
 }

@@ -8,6 +8,8 @@ type OcrPermissionNoticeProps = {
   kind: CameraPermissionKind
   /** 카메라만 막혔을 때의 대안. 사진 권한까지 막혔으면 호출되지 않는다. */
   onPickFromGallery: () => void
+  /** 카메라·사진 권한과 무관하게 항상 열 수 있는 대안. */
+  onManualInput: () => void
 }
 
 const NOTICE = {
@@ -19,7 +21,11 @@ const NOTICE = {
  * 권한이 이미 거부된 상태의 안내. 촬영 실패 안내와 같은 자리를 쓴다 —
  * 카메라가 열리지 않아 화면이 비어 있는데 그 위에 모달을 또 얹으면 막이 두 겹이 된다.
  */
-export function OcrPermissionNotice({ kind, onPickFromGallery }: OcrPermissionNoticeProps) {
+export function OcrPermissionNotice({
+  kind,
+  onPickFromGallery,
+  onManualInput,
+}: OcrPermissionNoticeProps) {
   return (
     <div
       role="alert"
@@ -44,6 +50,10 @@ export function OcrPermissionNotice({ kind, onPickFromGallery }: OcrPermissionNo
             갤러리에서 선택하기
           </Button>
         )}
+        {/* 권한과 무관하게 항상 열리는 대안 — 카메라·사진 어느 쪽이 막혀도 글로 대목을 남길 수 있다. */}
+        <Button variant="back" className="h-[54px] px-6" onClick={onManualInput}>
+          직접 입력하기
+        </Button>
       </div>
     </div>
   )

@@ -1,17 +1,27 @@
 'use client'
 
+import { cn } from '@/app/_global/_services/cn.service'
+
 import type { SelectedBook } from '../../_types/traceDraft.type'
 
 type BookCoverCarouselProps = {
   books: SelectedBook[]
   isPending: boolean
   onSelect: (book: SelectedBook) => void
+  /** 지금 후보로 고른 책. 시트에서 선택 테두리를 그리는 데만 쓴다. */
+  selectedBookId?: number | null
   title: string
 }
 
 const SKELETON_KEYS = ['a', 'b', 'c', 'd', 'e']
 
-export function BookCoverCarousel({ books, isPending, onSelect, title }: BookCoverCarouselProps) {
+export function BookCoverCarousel({
+  books,
+  isPending,
+  onSelect,
+  selectedBookId = null,
+  title,
+}: BookCoverCarouselProps) {
   return (
     <section className="flex flex-col gap-3.5" aria-label={title}>
       <h2 className="text-body-16bd text-text-primary">{title}</h2>
@@ -33,7 +43,11 @@ export function BookCoverCarousel({ books, isPending, onSelect, title }: BookCov
                     onSelect(book)
                   }}
                   aria-label={`${book.title} 선택`}
-                  className="block h-[108px] w-[72px] cursor-pointer overflow-hidden rounded-[2px] bg-bg-surface"
+                  aria-pressed={selectedBookId === book.bookId}
+                  className={cn(
+                    'block h-[108px] w-[72px] cursor-pointer overflow-hidden rounded-[2px] bg-bg-surface',
+                    selectedBookId === book.bookId && 'ring-2 ring-interactive-accent',
+                  )}
                 >
                   {book.coverImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다

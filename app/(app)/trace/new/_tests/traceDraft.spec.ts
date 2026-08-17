@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { initialTraceDraft, traceDraftReducer } from '../_data/traceDraft.store'
-import type { DraftDecoration, SelectedBook } from '../_types/traceDraft.type'
+import type { DraftDecoration, SelectedBook, TraceDraft } from '../_types/traceDraft.type'
 
 const book: SelectedBook = {
   bookId: 1,
@@ -24,6 +24,69 @@ describe('traceDraftReducer', () => {
     expect(next.book).toEqual(book)
   })
 
+  it('fillBookDetail은 비어 있던 저자·쪽수만 채운다', () => {
+    const seeded = traceDraftReducer(initialTraceDraft, {
+      type: 'selectBook',
+      book: { ...book, author: '', pageCount: null },
+    })
+
+    const next = traceDraftReducer(seeded, {
+      type: 'fillBookDetail',
+      bookId: book.bookId,
+      author: '한강',
+      pageCount: 268,
+    })
+
+    expect(next.book).toEqual(book)
+  })
+
+  it('fillBookDetail은 씨앗이 정해 준 합칠 대목과 저장 결과를 건드리지 않는다', () => {
+    // selectBook으로 채우면 passageId·result가 지워진다 — 씨앗 경로에서는 그게 곧 합칠 대상
+    // 소실이라 별도 액션을 둔 이유가 여기 있다.
+    const seeded = [
+      { type: 'selectBook', book: { ...book, author: '', pageCount: null } } as const,
+      { type: 'setMergeTarget', passageId: 42 } as const,
+      { type: 'setResult', result: { opinionId: 7, passageId: 42, merged: true } } as const,
+    ].reduce<TraceDraft>(traceDraftReducer, initialTraceDraft)
+
+    const next = traceDraftReducer(seeded, {
+      type: 'fillBookDetail',
+      bookId: book.bookId,
+      author: '한강',
+      pageCount: 268,
+    })
+
+    expect(next.passageId).toBe(42)
+    expect(next.result).toEqual({ opinionId: 7, passageId: 42, merged: true })
+  })
+
+  it('fillBookDetail은 이미 채워진 값을 덮지 않는다', () => {
+    const picked = traceDraftReducer(initialTraceDraft, { type: 'selectBook', book })
+
+    const next = traceDraftReducer(picked, {
+      type: 'fillBookDetail',
+      bookId: book.bookId,
+      author: '다른 저자',
+      pageCount: 999,
+    })
+
+    expect(next.book).toEqual(book)
+  })
+
+  it('fillBookDetail은 다른 책의 응답이면 상태를 그대로 둔다', () => {
+    // 응답이 오는 사이 사용자가 시트에서 책을 바꿀 수 있다 — 늦게 온 값이 새 책을 덮으면 안 된다.
+    const picked = traceDraftReducer(initialTraceDraft, { type: 'selectBook', book })
+
+    const next = traceDraftReducer(picked, {
+      type: 'fillBookDetail',
+      bookId: book.bookId + 1,
+      author: '엉뚱한 저자',
+      pageCount: 1,
+    })
+
+    expect(next).toBe(picked)
+  })
+
   it('setPageDetail은 페이지와 스포일러를 함께 담는다', () => {
     const next = traceDraftReducer(initialTraceDraft, {
       type: 'setPageDetail',
@@ -32,6 +95,25 @@ describe('traceDraftReducer', () => {
     })
     expect(next.pageNumber).toBe(87)
     expect(next.isSpoiler).toBe(true)
+  })
+
+  it('setPageDetail은 병합 대상을 비운다', () => {
+    // 페이지가 달라지면 직전 병합 판정은 다른 쪽에 대한 답이다 — 남겨 두면 쪽이 맞지 않는
+    // 대목에 흔적이 합쳐진다.
+    const merged = [
+      { type: 'selectBook', book } as const,
+      { type: 'setQuotedText', quotedText: '어떤 문장' } as const,
+      { type: 'setPageDetail', pageNumber: 87, isSpoiler: false } as const,
+      { type: 'setMergeTarget', passageId: 14 } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    const next = traceDraftReducer(merged, {
+      type: 'setPageDetail',
+      pageNumber: 120,
+      isSpoiler: false,
+    })
+
+    expect(next.passageId).toBeNull()
   })
 
   it('applyDecoration은 겹치지 않는 범위를 그대로 추가한다', () => {

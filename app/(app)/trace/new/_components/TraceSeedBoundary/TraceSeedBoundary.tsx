@@ -1,6 +1,6 @@
 import { parseTraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
-import { BookPicker } from '../BookPicker/BookPicker'
+import { TraceSourceView } from '../TraceSourceView/TraceSourceView'
 
 type TraceSeedBoundaryProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -11,5 +11,5 @@ type TraceSeedBoundaryProps = {
  * searchParams를 여기서만 읽으므로 page 셸은 그대로 프리렌더된다.
  */
 export async function TraceSeedBoundary({ searchParams }: TraceSeedBoundaryProps) {
-  return <BookPicker seed={parseTraceSeed(await searchParams)} />
+  return <TraceSourceView seed={parseTraceSeed(await searchParams)} />
 }

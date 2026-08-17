@@ -1,8 +1,8 @@
 'use client'
 
 import { Button } from '@/app/_global/_components/Button/Button'
-import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
+import ResetIcon from '@/app/_global/_components/Icon/assets/reset.svg'
 import { Textarea } from '@/app/_global/_components/Textarea/Textarea'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 
@@ -38,7 +38,7 @@ export function OcrQuoteSheet({
     >
       <div className="flex flex-col gap-4 pt-6">
         <TopBar.Root>
-          <TopBar.Title as="h1">사진으로 입력</TopBar.Title>
+          <TopBar.Title as="h1">발췌된 문장은 직접 수정할 수 있어요</TopBar.Title>
           <TopBar.Spacer />
           <TopBar.Action aria-label="닫기" onClick={onClose}>
             <CloseIcon />
@@ -88,7 +88,7 @@ export function OcrQuoteSheet({
             onClick={onRetake}
             className="flex size-14 shrink-0 cursor-pointer items-center justify-center rounded-2xl bg-interactive-btn-primary text-icon-active"
           >
-            <CameraIcon aria-hidden="true" className="size-6 text-icon-active" />
+            <ResetIcon aria-hidden="true" className="size-6 text-icon-active" />
           </button>
           <Button
             className="h-[54px] flex-1 disabled:bg-interactive-btn-secondary disabled:opacity-40"
