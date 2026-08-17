@@ -1,16 +1,19 @@
 'use client'
 
-import Link from 'next/link'
-import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { cn } from '@/app/_global/_services/cn.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
 import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
 import { BookListSection } from '../BookListSection/BookListSection'
+
+const BOOK_SEARCH_PATH = '/book/search'
 
 function HomeHeaderSkeleton() {
   return (
@@ -24,11 +27,23 @@ function HomeHeaderSkeleton() {
 export function HomePageView() {
   useOnboardingGate()
 
+  const router = useRouter()
+  const runWithLogin = useLoginGate()
   const [isBookListLoading, setIsBookListLoading] = useState(true)
 
   const handleBookListLoadingChange = useCallback((isLoading: boolean) => {
     setIsBookListLoading(isLoading)
   }, [])
+
+  useEffect(() => {
+    router.prefetch(BOOK_SEARCH_PATH)
+  }, [router])
+
+  const handleSearchClick = () => {
+    runWithLogin(() => {
+      router.push(BOOK_SEARCH_PATH)
+    })
+  }
 
   return (
     <TabScreenLayout
@@ -46,13 +61,14 @@ export function HomePageView() {
         ) : (
           <header className="flex items-center justify-between">
             <Logo aria-label="Pallang" className="h-7 w-18.75" />
-            <Link
-              href="/book/search"
+            <button
+              type="button"
               aria-label="검색"
               className="flex size-8 items-center justify-center text-icon-primary"
+              onClick={handleSearchClick}
             >
               <SearchIcon aria-hidden="true" className="size-8" />
-            </Link>
+            </button>
           </header>
         )}
       </div>
