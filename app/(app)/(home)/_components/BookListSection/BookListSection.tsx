@@ -7,7 +7,6 @@ import type { ReactNode, UIEvent } from 'react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import ContentIcon from '@/app/_global/_components/Icon/assets/content.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
@@ -38,30 +37,19 @@ const HOME_SECTION_TABS = [
 ] as const satisfies readonly { value: HomeSectionTab; label: string }[]
 
 const PAGE_SIZE = 5
-const FIRST_BOOK_CENTER_X = 122
-const BOOK_GAP = 184
+const FIRST_BOOK_CENTER_X = 110
+const BOOK_GAP = 214
 const BOOK_TRACK_START_PADDING = `calc(50% - ${String(FIRST_BOOK_CENTER_X)}px)`
-// 기울기는 인덱스별 고정값이 아니라 "중앙에서 몇 칸 떨어졌나"의 함수다. 중앙에 스냅되면 항상 0deg,
-// 멀어질수록 최대 15deg까지 기운다. 스크롤 중에는 --scroll-index가 소수라 손가락을 따라 연속으로 바뀐다.
-// CSS calc로 계산해 스크롤 프레임마다 리렌더가 나지 않는다 — JS는 컨테이너에 숫자 하나만 써준다.
-const MAX_BOOK_TILT_DEG = 15
-const BOOK_TILT_PER_STEP_DEG = 12
-// 크기도 같은 함수를 탄다 — 중앙 책만 CENTER_BOOK_SCALE로 커지고 멀어질수록 MIN_BOOK_SCALE까지 줄어든다.
-const CENTER_BOOK_SCALE = 1.08
-const MIN_BOOK_SCALE = 0.86
-const BOOK_SCALE_PER_STEP = 0.11
-// 회전한 카드(274×177)의 15deg 바운딩 박스. 중앙 책이 1.08배여도 296×191이라 이 안에 들어온다.
-const BOOK_SLOT_CLASS_NAME = 'top-1.5 h-77.5 w-60.5'
+const CENTER_BOOK_SCALE = 1
+const MIN_BOOK_SCALE = 0.792
+const BOOK_SCALE_PER_STEP = 0.208
+const BOOK_SLOT_CLASS_NAME = 'top-0 h-[340px] w-[220px]'
 const SECTION_TITLE_CLASS_NAME =
   'font-pretendard text-[22px] leading-[1.3] font-bold tracking-[-0.88px] text-text-secondary'
 
 // abs()는 구형 웹뷰(Chromium < 125)에 없다. max(d, -d)로 같은 값을 얻는다.
 function getDistanceFromCenter(index: number): string {
   return `max((${String(index)} - var(--scroll-index, 0)), (var(--scroll-index, 0) - ${String(index)}))`
-}
-
-function getBookTilt(index: number): string {
-  return `clamp(-${String(MAX_BOOK_TILT_DEG)}deg, calc((${String(index)} - var(--scroll-index, 0)) * ${String(BOOK_TILT_PER_STEP_DEG)}deg), ${String(MAX_BOOK_TILT_DEG)}deg)`
 }
 
 function getBookScale(index: number): string {
@@ -75,20 +63,17 @@ function syncScrollIndex(scrollContainer: HTMLDivElement): void {
 type BookStatisticLinkProps = {
   count: number
   href: string
-  icon: typeof ContentIcon
-  label: string
 }
 
-function BookStatisticLink({ count, href, icon: Icon, label }: BookStatisticLinkProps) {
+function BookStatisticLink({ count, href }: BookStatisticLinkProps) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-1 rounded-full bg-white px-3.5 py-2 text-body-14md text-text-primary"
+      aria-label={`${String(count)}개의 흔적 보기`}
+      className="flex shrink-0 items-center gap-1 rounded-2xl bg-bg-default px-2 py-1.5 font-pretendard text-[12px] leading-[1.3] font-medium tracking-[-0.48px] whitespace-nowrap text-text-primary"
     >
-      <Icon aria-hidden="true" className="size-5 opacity-20" />
-      <span>
-        {count}개의 {label}
-      </span>
+      <PencilIcon aria-hidden="true" className="size-3.5 text-icon-primary" />
+      <span>{count}</span>
     </Link>
   )
 }
@@ -116,9 +101,6 @@ function SectionTitle({
 }
 
 function BookListSectionSkeleton() {
-  // 도착했을 때 자리가 튀지 않도록 실제 캐러셀과 같은 좌표를 쓴다 — 첫 페이지가 중앙 정렬된 상태,
-  // 즉 --scroll-index가 가운데 책일 때의 모습이다. getBookTilt는 var 폴백 0을 쓰므로
-  // 중앙 기준 오프셋을 그대로 넘기면 실제와 같은 각도가 나온다.
   const centerIndex = getInitialBookIndex(PAGE_SIZE)
 
   return (
@@ -137,7 +119,7 @@ function BookListSectionSkeleton() {
           >
             <Skeleton
               className="h-68.5 w-44.25 rounded-sm"
-              style={{ rotate: getBookTilt(offset), scale: getBookScale(offset) }}
+              style={{ scale: getBookScale(offset) }}
             />
           </div>
         ))}
@@ -229,8 +211,10 @@ export function BookListSection({ onLoadingChange, searchAction }: BookListSecti
   )
   const activeBookIndex =
     activeBookId === null ? -1 : books.findIndex((book) => book.bookId === activeBookId)
+  const selectedBookIndex =
+    activeBookIndex >= 0 ? activeBookIndex : getInitialBookIndex(books.length)
   const activeBookIdRef = useRef<null | number>(null)
-  const activeBook = books[activeBookIndex] ?? books[getInitialBookIndex(books.length)] ?? books[0]
+  const activeBook = books[selectedBookIndex] ?? books[0]
 
   useEffect(() => {
     activeBookIdRef.current = activeBookId
@@ -378,33 +362,38 @@ export function BookListSection({ onLoadingChange, searchAction }: BookListSecti
         </div>
       ) : (
         activeBook && (
-          <>
-            <div className="relative h-82.25 w-full overflow-visible">
+          <div className="flex flex-col gap-5">
+            <div className="relative h-[340px] w-full overflow-visible">
               <div
                 ref={bookListRef}
                 onScroll={handleBookListScroll}
-                className="absolute -top-2 left-0 h-91.25 w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pt-2 pb-7 scrollbar-none [&::-webkit-scrollbar]:hidden"
+                className="absolute left-0 h-[396px] w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pb-14 scrollbar-none [&::-webkit-scrollbar]:hidden"
               >
                 <div
-                  className="relative h-82.25 w-max"
+                  className="relative h-[340px] w-max"
                   style={{
                     paddingLeft: BOOK_TRACK_START_PADDING,
                     paddingRight: '50%',
                   }}
                 >
-                  <div className="relative h-82.25" style={{ width: getTrackWidth(books.length) }}>
+                  <div
+                    className="relative h-[340px]"
+                    style={{ width: getTrackWidth(books.length) }}
+                  >
                     {books.map((book, index) => (
                       <div
                         key={book.bookId}
                         className={`absolute flex -translate-x-1/2 snap-center items-center justify-center ${BOOK_SLOT_CLASS_NAME}`}
-                        style={{ left: `${String(getBookCenterX(index))}px` }}
+                        style={{
+                          left: `${String(getBookCenterX(index))}px`,
+                          zIndex: books.length - Math.abs(index - selectedBookIndex),
+                        }}
                       >
                         <Link
                           href={`/trace/${String(book.bookId)}`}
                           aria-label={`${book.title} 흔적 보기`}
-                          className="relative h-68.5 w-44.25 overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
+                          className="relative h-[340px] w-[220px] overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
                           style={{
-                            rotate: getBookTilt(index),
                             scale: getBookScale(index),
                             ...(book.coverImageUrl && {
                               backgroundImage: `url(${book.coverImageUrl})`,
@@ -422,32 +411,24 @@ export function BookListSection({ onLoadingChange, searchAction }: BookListSecti
               </div>
             </div>
 
-            <div className="flex w-full flex-col items-center gap-4">
-              <div className="flex w-full flex-col items-center gap-2 text-center">
-                <h2 className="line-clamp-2 w-full px-6 text-title-24bd text-text-primary">
+            <div className="flex w-full justify-center">
+              <div className="flex w-[220px] flex-col items-start justify-center rounded-2xl">
+                <h2 className="line-clamp-2 w-full text-title-18bd text-text-primary">
                   {activeBook.title}
                 </h2>
-                <p className="w-full truncate px-6 text-body-16md text-text-secondary">
-                  {activeBook.author}
-                </p>
-              </div>
 
-              <div className="flex items-center justify-center gap-2">
-                <BookStatisticLink
-                  count={activeBook.passageCount}
-                  href={`/trace/${String(activeBook.bookId)}`}
-                  icon={ContentIcon}
-                  label="대목"
-                />
-                <BookStatisticLink
-                  count={activeBook.opinionCount}
-                  href={`/trace/${String(activeBook.bookId)}`}
-                  icon={PencilIcon}
-                  label="흔적"
-                />
+                <div className="flex w-full items-center justify-between px-0.5">
+                  <p className="min-w-0 flex-1 truncate font-pretendard text-[16px] leading-[1.2] font-normal tracking-[-0.32px] text-text-tertiary">
+                    {activeBook.author}
+                  </p>
+                  <BookStatisticLink
+                    count={activeBook.opinionCount}
+                    href={`/trace/${String(activeBook.bookId)}`}
+                  />
+                </div>
               </div>
             </div>
-          </>
+          </div>
         )
       )}
     </section>
