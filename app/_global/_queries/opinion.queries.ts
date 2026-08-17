@@ -29,13 +29,15 @@ type FetchOptions = Parameters<typeof getOpinions>[2]
 
 export const opinionQueries = {
   all: () => ['opinion'] as const,
+  /** 대목별 흔적 목록 전체 — 어느 대목·정렬인지 가리지 않고 함께 무효화할 때 쓴다 */
+  listAll: () => [...opinionQueries.all(), 'by-passage'] as const,
   listByPassage: (
     passageId: number | undefined,
     sortType: OpinionSortType,
     options?: FetchOptions,
   ) =>
     infiniteQueryOptions({
-      queryKey: [...opinionQueries.all(), 'by-passage', passageId, sortType],
+      queryKey: [...opinionQueries.listAll(), passageId, sortType],
       // 정렬·대목 전환 시 이전 목록을 유지해 "0개의 흔적" 깜빡임을 막는다
       placeholderData: keepPreviousData,
       queryFn:
@@ -54,9 +56,11 @@ export const opinionQueries = {
       },
     }),
   /**
-   * 좋아요 상태 전용 캐시. 목록 응답(OpinionSummaryResponse)에 `liked`가 없어 서버에서 읽어올 수
-   * 없으므로, 조회 없이(skipToken) 토글 응답만 담아 목록과 상세가 같은 값을 보게 한다.
-   * ponytail: 목록에 liked가 추가되면 이 캐시를 없애고 목록 응답을 그대로 쓰는 편이 낫다.
+   * 이 화면에서 누른 좋아요를 담아두는 캐시. 조회는 하지 않고(skipToken) 토글 응답만 담아,
+   * 목록 카드와 상세 오버레이가 같은 값을 보게 한다.
+   *
+   * 처음 그릴 때의 기준은 이 캐시가 아니라 목록 응답의 `liked`/`likeCount`다(useOpinionLike).
+   * 여기 없으면 '아직 안 눌렀다'가 아니라 '이 화면에서 아직 안 눌렀다'는 뜻일 뿐이다.
    */
   likeState: (opinionId: number) =>
     queryOptions<OpinionLikeState>({

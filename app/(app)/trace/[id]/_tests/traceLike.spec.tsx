@@ -33,6 +33,7 @@ const opinion = {
   nickname: '책책책을읽자',
   content: '첫 번째 흔적',
   likeCount: 4,
+  liked: false,
   commentCount: 0,
   createdAt: '2026-07-23T02:00:00.000Z',
 }
@@ -44,6 +45,8 @@ type RenderOptions = {
   holdLike?: boolean
   /** 상세 오버레이가 열린 채로 시작한다 — 상세로 가는 길은 딥링크뿐이다 */
   withDetail?: boolean
+  /** 목록 응답이 '내가 이미 좋아요한 흔적'으로 온다 */
+  likedByMe?: boolean
 }
 
 /** 좋아요 토글을 상태를 가진 목으로 흉내낸다. 반환한 releaseLike로 응답 시점을 제어한다. */
@@ -51,8 +54,9 @@ async function renderPage({
   shouldFail = false,
   holdLike = false,
   withDetail = false,
+  likedByMe = false,
 }: RenderOptions = {}) {
-  const likeState = { liked: false, likeCount: opinion.likeCount }
+  const likeState = { liked: likedByMe, likeCount: opinion.likeCount }
   let pendingLike: (() => void) | null = null
 
   vi.stubGlobal(
@@ -82,7 +86,7 @@ async function renderPage({
       if (/\/passages\/\d+\/opinions/.test(url)) {
         return json({
           data: {
-            opinions: [opinion],
+            opinions: [{ ...opinion, liked: likedByMe }],
             pageInfo: { page: 0, size: 100, totalElements: 1, totalPages: 1, hasNext: false },
           },
         })
@@ -180,6 +184,24 @@ describe('흔적 좋아요', () => {
     fireEvent.click(likeButton())
     await expectLike(false, '4')
     expect(postLikeCalls()).toHaveLength(2)
+  })
+
+  it('이미 좋아요한 흔적은 서버가 알려준 대로 켜진 채 그려진다 — 다시 열어도 상태가 남는다', async () => {
+    await renderPage({ likedByMe: true })
+
+    await expectLike(true, '4')
+    // 화면을 그리려고 좋아요를 건드리지 않는다 — 상태는 목록 응답에 이미 실려 온다
+    expect(postLikeCalls()).toHaveLength(0)
+  })
+
+  it('이미 좋아요한 흔적을 누르면 좋아요가 취소된다 — 켜는 쪽으로 되감기지 않는다', async () => {
+    await renderPage({ likedByMe: true })
+    await expectLike(true, '4')
+
+    fireEvent.click(likeButton())
+
+    await expectLike(false, '4')
+    expect(postLikeCalls()).toHaveLength(1)
   })
 
   it('좋아요 수는 낙관적으로 먼저 오르고 서버 응답 값으로 맞춰진다', async () => {

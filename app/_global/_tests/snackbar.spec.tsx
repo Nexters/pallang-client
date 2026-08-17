@@ -85,6 +85,19 @@ describe('Snackbar', () => {
     expect(onClose3).toHaveBeenCalledOnce()
   })
 
+  // 흰 화면(마이페이지 계열)에 기본 흰 바를 얹으면 배경과 붙어 읽히지 않는다
+  it('밝은 면에 얹으면 어두운 바로 뒤집힌다', () => {
+    render(<Snackbar tone="light" message="차단이 해제되었습니다." onClose={vi.fn()} />)
+
+    expect(screen.getByRole('status')).toHaveClass('bg-bg-black')
+  })
+
+  it('기본은 어두운 면에 얹는 흰 바다', () => {
+    render(<Snackbar message="저장했어요" onClose={vi.fn()} />)
+
+    expect(screen.getByRole('status')).toHaveClass('bg-bg-default')
+  })
+
   it('message가 비면 곧바로 사라지지 않고 문구를 유지한 채 퇴장한다', () => {
     const { rerender } = render(<Snackbar message="저장했어요" onClose={vi.fn()} />)
 

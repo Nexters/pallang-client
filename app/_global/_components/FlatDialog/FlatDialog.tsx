@@ -14,6 +14,8 @@ type FlatDialogProps = {
   confirmLabel: string
   /** 확정 요청이 처리 중인 동안 확인 버튼을 스피너로 잠근다 */
   loading?: boolean
+  /** 마스코트를 카드 위로 얹을지. 문구만으로 서는 확인 다이얼로그(218:12135)는 걷어 낸다. */
+  illustrated?: boolean
   /**
    * 백드롭·Esc로 닫을 수 있는지. 두 선택지 중 하나를 반드시 골라야 하는 다이얼로그는 false로 막는다.
    * 닫힘은 취소로 취급한다 — 백드롭을 눌러 빠져나가는 건 '아니오'와 같다.
@@ -35,6 +37,7 @@ export function FlatDialog({
   cancelLabel,
   confirmLabel,
   loading = false,
+  illustrated = true,
   dismissible = true,
   onCancel,
   onConfirm,
@@ -51,8 +54,8 @@ export function FlatDialog({
           : undefined
       }
     >
-      <Dialog.Content>
-        <Dialog.Illustration />
+      <Dialog.Content illustrated={illustrated}>
+        {illustrated && <Dialog.Illustration />}
         <Dialog.Header>
           <Dialog.Title>{title}</Dialog.Title>
           {description !== undefined && description !== null && (

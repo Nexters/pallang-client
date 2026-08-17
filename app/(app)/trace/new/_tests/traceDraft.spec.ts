@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { initialTraceDraft, traceDraftReducer } from '../_data/traceDraft.store'
-import type { DraftDecoration, SelectedBook } from '../_types/traceDraft.type'
+import type { DraftDecoration, SelectedBook, TraceDraft } from '../_types/traceDraft.type'
 
 const book: SelectedBook = {
   bookId: 1,
@@ -46,8 +46,8 @@ describe('traceDraftReducer', () => {
     const seeded = [
       { type: 'selectBook', book: { ...book, author: '', pageCount: null } } as const,
       { type: 'setMergeTarget', passageId: 42 } as const,
-      { type: 'setResult', result: { opinionId: 7, merged: true } } as const,
-    ].reduce(traceDraftReducer, initialTraceDraft)
+      { type: 'setResult', result: { opinionId: 7, passageId: 42, merged: true } } as const,
+    ].reduce<TraceDraft>(traceDraftReducer, initialTraceDraft)
 
     const next = traceDraftReducer(seeded, {
       type: 'fillBookDetail',
@@ -57,7 +57,7 @@ describe('traceDraftReducer', () => {
     })
 
     expect(next.passageId).toBe(42)
-    expect(next.result).toEqual({ opinionId: 7, merged: true })
+    expect(next.result).toEqual({ opinionId: 7, passageId: 42, merged: true })
   })
 
   it('fillBookDetail은 이미 채워진 값을 덮지 않는다', () => {

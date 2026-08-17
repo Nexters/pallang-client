@@ -1,7 +1,10 @@
 /* 모든 전환은 스크롤 진행률 --collapse(0~1) 하나로만 구동한다.
    좌표 수치(--stage-*, --card-* 등)는 useQuoteCollapse가 스크롤 컨테이너에 내려준다.
    정적 스타일은 QuoteStage.tsx의 Tailwind 유틸리티에 있고, 여기에는 진행률로 계산되는 선언과
-   그 계산에 쓰이는 커스텀 프로퍼티만 남긴다. */
+   그 계산에 쓰이는 커스텀 프로퍼티만 남긴다.
+
+   무대를 나눠 그리는 컴포넌트(QuoteStageBackdrop·QuoteSpoilerCover)와 로딩 골격(TracePageSkeleton)도
+   이 파일을 함께 읽는다 — 진행률로 굴러가는 좌표계는 한 벌뿐이어야 하기 때문이다. */
 
 .stage {
   --inv: calc(1 - var(--collapse));
@@ -40,10 +43,16 @@
   /* 헤더 뒤로 파고든 만큼 위 여백을 더한다 — 인용문은 두 상태 모두 헤더 아래 같은 자리에서 시작한다 */
   padding-top: calc(40px + (var(--safe-top) + var(--header-height) - 8px) * var(--collapse));
   padding-bottom: calc(40px - 8px * var(--collapse));
-  border: 1px solid rgb(34 34 34 / var(--inv));
-  border-radius: calc(4px * var(--inv));
-  transform: rotate(calc(-3deg * var(--inv)));
-  box-shadow: 4px 10px 17.5px rgb(0 0 0 / calc(0.2 * var(--inv)));
+}
+
+/* 포스트잇의 겉모습만 — 회전·테두리·모서리·그림자가 모두 같은 진행률을 따라 펴진다.
+   로딩 골격(TracePageSkeleton)도 이 클래스를 쓴다. 골격에는 --inv가 없어 기본값 1,
+   즉 펼친 상태(--collapse: 0)로 떨어진다 — 값을 TSX로 베껴 두면 여기만 바뀌어도 골격이 조용히 어긋난다 */
+.cardSurface {
+  border: 1px solid rgb(34 34 34 / var(--inv, 1));
+  border-radius: calc(4px * var(--inv, 1));
+  transform: rotate(calc(-3deg * var(--inv, 1)));
+  box-shadow: 4px 10px 17.5px rgb(0 0 0 / calc(0.2 * var(--inv, 1)));
 }
 
 /* 스포일러 가림막 — 카드 안에 있으므로 회전·크기 변화를 그대로 따라간다.

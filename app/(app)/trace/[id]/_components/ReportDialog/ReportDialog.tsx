@@ -12,6 +12,7 @@ import {
   REPORT_REASON_OPTIONS,
   type ReportReasonOption,
 } from '../../_data/reportReason.constant'
+import { canDismissDialog } from '../../_services/moderation.service'
 import { buildReportRequest, canSubmitReport } from '../../_services/reportForm.service'
 
 type ReportDialogProps = {
@@ -45,7 +46,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
       open={open}
       onOpenChange={(nextOpen) => {
         // 요청이 나간 뒤에는 백드롭·Esc로 닫지 못한다 — 결과 스낵바를 보고 닫힌다
-        if (!nextOpen && !loading) onClose()
+        if (canDismissDialog(nextOpen, loading)) onClose()
       }}
     >
       <Dialog.Content>
@@ -54,6 +55,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
         </Dialog.Header>
 
         <div className="flex w-full flex-col gap-2">
+          {/* 2열 — _data/reportReason.constant.ts의 선택지 순서(좌→우, 위→아래)가 기대는 규격이다 */}
           <fieldset className="grid grid-cols-2 gap-x-6 gap-y-2">
             <legend className="sr-only">신고 사유</legend>
             {REPORT_REASON_OPTIONS.map((option) => (
@@ -80,6 +82,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
                     'flex size-4 shrink-0 items-center justify-center rounded-full',
                     'transition-colors duration-instant ease-standard',
                     'peer-focus-visible:ring-2 peer-focus-visible:ring-interactive-accent/50',
+                    // off 회색은 시안 radioButton off의 값이라 토큰에 짝이 없다
                     selected?.id === option.id ? 'bg-interactive-accent' : 'bg-[#e5e5e5]',
                   )}
                 >
@@ -110,6 +113,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
           />
         </div>
 
+        {/* 버튼 높이 54px는 시안(Figma 2872:16761)의 고정 치수다 */}
         <Dialog.Footer>
           <Button variant="back" className="h-[54px]" disabled={loading} onClick={onClose}>
             뒤로

@@ -31,7 +31,7 @@ describe('resolveExitDecision', () => {
   it('완료 화면은 확인 없이 나간다', () => {
     expect(
       resolveExitDecision({
-        draft: draftWith({ result: { opinionId: 1, merged: false } }),
+        draft: draftWith({ result: { opinionId: 1, passageId: 71, merged: false } }),
         hasOverlay: false,
         step: 'done',
       }),
@@ -91,7 +91,7 @@ describe('resolveExitDecision', () => {
           book,
           quotedText: '문장',
           content: '내 의견',
-          result: { opinionId: 1, merged: false },
+          result: { opinionId: 1, passageId: 71, merged: false },
         }),
         hasOverlay: false,
         step: 'book',

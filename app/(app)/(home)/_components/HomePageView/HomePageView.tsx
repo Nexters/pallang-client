@@ -1,63 +1,59 @@
 'use client'
 
-import Link from 'next/link'
-import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
-import { cn } from '@/app/_global/_services/cn.service'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
 import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
-import { BookListSection } from '../BookListSection/BookListSection'
+import { HomeSection } from '../HomeSection/HomeSection'
 
-function HomeHeaderSkeleton() {
-  return (
-    <header className="flex h-8 items-center justify-between" aria-hidden="true">
-      <div className="h-7 w-[100px] rounded bg-bg-surface" />
-      <div className="size-8 rounded-full bg-bg-surface" />
-    </header>
-  )
-}
+const BOOK_SEARCH_PATH = '/book/search'
 
 export function HomePageView() {
   useOnboardingGate()
 
-  const [isBookListLoading, setIsBookListLoading] = useState(true)
+  const router = useRouter()
+  const runWithLogin = useLoginGate()
 
-  const handleBookListLoadingChange = useCallback((isLoading: boolean) => {
-    setIsBookListLoading(isLoading)
-  }, [])
+  useEffect(() => {
+    router.prefetch(BOOK_SEARCH_PATH)
+  }, [router])
+
+  const handleSearchClick = () => {
+    runWithLogin(() => {
+      router.push(BOOK_SEARCH_PATH)
+    })
+  }
 
   return (
     <TabScreenLayout
       aria-label="홈"
       activeTab="home"
-      className={cn(
-        'overflow-y-auto bg-bg-default',
-        !isBookListLoading && GRID_BACKGROUND_CLASS_NAME,
-      )}
-      isTabBarLoading={isBookListLoading}
+      className={`overflow-y-auto bg-bg-default ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="px-4 pt-4">
-        {isBookListLoading ? (
-          <HomeHeaderSkeleton />
-        ) : (
-          <header className="flex items-center justify-between">
-            <Logo aria-label="Pallang" className="h-7 w-18.75" />
-            <Link
-              href="/book/search"
-              aria-label="검색"
-              className="flex size-8 items-center justify-center text-icon-primary"
-            >
-              <SearchIcon aria-hidden="true" className="size-8" />
-            </Link>
-          </header>
-        )}
+        <header className="flex items-center">
+          <Logo aria-label="Pallang" className="h-7 w-18.75" />
+        </header>
       </div>
 
-      <BookListSection onLoadingChange={handleBookListLoadingChange} />
+      <HomeSection
+        searchAction={
+          <button
+            type="button"
+            aria-label="검색"
+            className="press flex size-[42px] shrink-0 items-center justify-center rounded-[100px] bg-bg-default text-icon-primary backdrop-blur-[4px] transition-[background-color,scale] duration-instant ease-standard"
+            onClick={handleSearchClick}
+          >
+            <SearchIcon aria-hidden="true" className="size-6" />
+          </button>
+        }
+      />
     </TabScreenLayout>
   )
 }

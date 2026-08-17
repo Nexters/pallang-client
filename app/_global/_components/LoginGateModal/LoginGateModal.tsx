@@ -20,8 +20,8 @@ export function LoginGateModal({ message, onLogin, onClose }: LoginGateModalProp
       open={message !== null}
       title={LOGIN_GATE_TITLE}
       description={shownMessage}
-      cancelLabel="취소"
-      confirmLabel="로그인 하러가기"
+      cancelLabel="닫기"
+      confirmLabel="로그인 하기"
       onCancel={onClose}
       onConfirm={onLogin}
     />

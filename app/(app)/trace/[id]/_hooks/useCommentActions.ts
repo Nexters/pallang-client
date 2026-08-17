@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { commentMutations, commentQueries } from '@/app/_global/_queries/comment.queries'
+import { opinionQueries } from '@/app/_global/_queries/opinion.queries'
 
 /**
  * 댓글 작성·수정·삭제 후 댓글 목록/답글 쿼리를 함께 갱신하는 mutation 묶음.
@@ -28,6 +29,9 @@ export function useCommentActions(opinionId: number) {
       // 전체 무효화라도 비싸지 않다 — invalidateQueries의 기본 refetchType은 'active'라
       // 관찰자 없는 쿼리는 stale로 표시만 되고 재조회는 다음에 다시 볼 때 일어난다.
       queryClient.invalidateQueries({ queryKey: commentQueries.repliesAll() }),
+      // 카드에 붙은 댓글 수는 댓글 쿼리가 아니라 흔적 목록 응답에서 온다 — 함께 받아오지 않으면
+      // 댓글을 달아도 지워도 숫자가 그대로다. 어느 대목·정렬을 보고 있는지 알 필요가 없어 목록 키 전체를 턴다
+      queryClient.invalidateQueries({ queryKey: opinionQueries.listAll() }),
     ])
 
   const create = useMutation({ ...commentMutations.create(opinionId), onSuccess: invalidate })

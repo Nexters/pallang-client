@@ -21,17 +21,28 @@ export type QuoteCursor = number | 'last' | { passageId: number }
 /** 좌우 스와이프 방향 — next는 다음 대목(끝이면 다음 페이지) 쪽 */
 export type SwipeDirection = 'next' | 'prev'
 
+/** 헤더 쪽 선택 한 벌.
+    무대(usePassageViewer) → 셸 → QuoteStage → TraceHeader → PagePicker로 내려가므로
+    낱개로 풀면 중간 두 홉이 순수 릴레이가 된다. 고를 쪽이 아직 없으면 이 묶음 자체가 오지 않는다. */
+export type PageNav = {
+  pages: number[]
+  /** 아직 정해지지 않았으면 undefined — 목록의 첫 쪽으로 떨어진다 */
+  activePage: number | undefined
+  onSelectPage: (page: number) => void
+  /** 더 불러올 대목 페이지가 있을 때만 전달된다 — 선택기 목록을 끝까지 스크롤하면 호출된다 */
+  onLoadMorePages?: () => void
+}
+
 /** 상단 스테이지(QuoteStage)가 받는 props */
 export type QuoteStageProps = {
   title: string
-  pages: number[]
+  /** 없으면 헤더에 쪽 선택기를 세우지 않는다 */
+  pageNav?: PageNav
   highlight: Highlight
   quoteIndex: number
   isRevealed: boolean
   isCollapsed: boolean
-  onSelectPage: (page: number) => void
-  /** 더 불러올 대목 페이지가 있을 때만 전달된다 — 헤더 쪽 선택기를 끝까지 스크롤하면 호출된다 */
-  onLoadMorePages?: () => void
+  onBack: () => void
   onClickQuote: () => void
   /** 카드 위 좌우 스와이프와 카드 안 화살표로 대목·페이지를 옮긴다 */
   onSwipeQuote: (direction: SwipeDirection) => void
@@ -46,5 +57,7 @@ export type Trace = {
   content: string
   createdAt: string
   likeCount: number
+  /** 내가 이미 좋아요했는지 — 서버가 로그인 사용자 기준으로 계산해 준다 */
+  liked: boolean
   commentCount: number
 }

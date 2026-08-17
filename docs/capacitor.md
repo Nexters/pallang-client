@@ -270,13 +270,19 @@ adb shell am start -n kr.co.pallang.app/.MainActivity
 |             | `pnpm ios:archive:dev`             | `pnpm ios:archive`                 |
 | ----------- | ---------------------------------- | ---------------------------------- |
 | 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `www.pallang.co.kr` (release 배포) |
+| 그 웹의 API | `api-dev.pallang.co.kr`            | `api.pallang.co.kr`                |
+| 표시명      | `Pallang DEV`                      | `Pallang`                          |
+| 빌드 번호   | **홀수**                           | **짝수**                           |
 | 용도        | TestFlight 내부 테스트             | **심사 제출·정식 배포 전용**       |
+
+API 서버는 앱이 고르지 않는다. 앱은 웹을 로드할 뿐이고, 그 웹(Vercel)의 `NEXT_PUBLIC_API_URL`이 백엔드를 정한다 — 어느 웹을 로드하느냐가 곧 어느 API인지를 결정한다.
 
 이 구조에서 헷갈리기 쉬운 것들:
 
 - **웹 코드 변경은 앱을 다시 올릴 필요가 없다.** dev 빌드를 TestFlight에 한 번 올려두면 이후 develop에 배포되는 변경은 앱을 다시 열기만 해도 반영된다. 재아카이브가 필요한 건 네이티브가 바뀔 때뿐 — 플러그인 추가, 아이콘·권한 문구, 로드 URL 전환.
 - 두 빌드는 **같은 번들 ID의 같은 앱**이고 TestFlight에는 빌드 번호로만 구분되어 쌓인다. 어떤 빌드가 어느 서버를 보는지 TestFlight "테스트 세부사항" 메모에 적어둘 것.
 - **dev 빌드를 심사에 제출하면 안 된다** — 심사관이 dev 서버를 보게 된다. 심사는 반드시 `pnpm ios:archive`(운영)로.
+- **두 빌드는 번들 ID가 같아 App Store Connect의 한 앱에 섞여 쌓인다.** 제출 화면에서 보이는 건 표시 버전과 빌드 번호뿐이라 로드 URL로는 고를 수 없다. 그래서 아카이브가 **빌드 번호를 홀짝으로 갈라 둔다 — 짝수만 제출한다.** 기기에 깔고 나면 홈 화면 라벨(`Pallang DEV`)로도 구분된다. 번들 ID를 나누면 더 확실하지만, 카카오 로그인 URL scheme(`kakao<네이티브앱키>`)이 앱 키에 묶여 있어 두 앱이 같은 scheme을 등록하면 복귀가 어느 앱으로 갈지 보장되지 않는다 — dev용 카카오 앱·키와 별도 Apple App ID까지 만들어야 해서 택하지 않았다.
 - 흐름: dev 빌드로 테스트 → 기능이 release까지 운영 배포되면 → 운영 빌드 아카이브 → 그걸 심사 제출.
 
 1. **App Store Connect 앱 생성(1회)**: appstoreconnect.apple.com → 앱 → `+` → 번들 ID `kr.co.pallang.app` 선택.

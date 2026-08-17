@@ -68,7 +68,17 @@ const passageSeedByPage: Record<number, PassageSeed[]> = {
     { passageId: 121, quotedText: '혼재 페이지의 일반 대목 인용문', isSpoiler: false },
     { passageId: 122, quotedText: '혼재 페이지의 스포일러 대목 인용문', isSpoiler: true },
   ],
+  // 해제가 대목 단위인지 보려면 한 쪽에 스포일러가 둘 있어야 한다.
+  // 첫 대목부터 스포일러라 스와이프 없이 바로 해제할 수 있다 —
+  // 스와이프 뒤의 탭은 useQuoteSwipe가 삼켜(제스처 한 번 = 이동 한 번) 해제가 일어나지 않는다
+  13: [
+    { passageId: 131, quotedText: '연속 스포일러 첫 대목 인용문', isSpoiler: true },
+    { passageId: 132, quotedText: '연속 스포일러 둘째 대목 인용문', isSpoiler: true },
+  ],
   15: [{ passageId: 151, quotedText: '흔적이 많은 대목 인용문', isSpoiler: false }],
+  // 쪽 목록 첫 묶음(100개) 밖에 있는 쪽 — 딥링크가 여기를 가리키는 경우를 만든다
+  130: [{ passageId: 1301, quotedText: '먼 쪽의 대목 인용문', isSpoiler: false }],
+  131: [{ passageId: 1311, quotedText: '먼 쪽 다음 쪽의 대목 인용문', isSpoiler: false }],
 }
 
 // 흔적 한 페이지(20개)를 넘겨 페이지네이션을 태우기 위한 시드
@@ -218,7 +228,7 @@ function scrollSentinelsIntoView() {
 type DeepLinkTarget = { pageNumber: number; passageId: number; opinionId: number }
 
 async function renderPage(
-  pages = [7, 9, 12, 23, 34, 123],
+  pages = [7, 9, 12, 13, 23, 34, 123],
   failing?: 'passages' | 'opinions',
   target?: DeepLinkTarget,
 ) {
@@ -263,9 +273,28 @@ async function renderPage(
         )
       }
 
-      // 책 제목·표지는 대목 페이지 목록 응답에 함께 실려 온다
+      // 책 제목·표지는 대목 페이지 목록 응답에 함께 실려 온다.
+      // 쪽 목록도 페이지네이션된다 — 딥링크가 아직 안 받은 묶음의 쪽을 가리키는 경우를 만들려면 필요하다
+      const pageQuery = new URLSearchParams(url.split('?')[1] ?? '')
+      const pageSize = Number(pageQuery.get('size') ?? '100')
+      const pageIndex = Number(pageQuery.get('page') ?? '0')
+      const pageOffset = pageIndex * pageSize
       return Promise.resolve(
-        new Response(JSON.stringify({ data: { bookTitle: '모순', pageNumbers: pages } })),
+        new Response(
+          JSON.stringify({
+            data: {
+              bookTitle: '모순',
+              pageNumbers: pages.slice(pageOffset, pageOffset + pageSize),
+              pageInfo: {
+                page: pageIndex,
+                size: pageSize,
+                totalElements: pages.length,
+                totalPages: Math.ceil(pages.length / pageSize),
+                hasNext: pageOffset + pageSize < pages.length,
+              },
+            },
+          }),
+        ),
       )
     }),
   )
@@ -405,6 +434,18 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
   })
 
+  it('딥링크가 아직 안 받은 묶음의 쪽을 가리키면 그 쪽이 나올 때까지 쪽 목록을 이어 받는다', async () => {
+    // 쪽 목록은 100개씩 온다 — 130쪽은 첫 묶음에 없다
+    const manyPages = Array.from({ length: 150 }, (_, index) => index + 1)
+    await renderPage(manyPages, undefined, { pageNumber: 130, passageId: 1301, opinionId: 9001 })
+
+    // 보고 있는 쪽이 목록에 없으면 이웃 쪽을 특정할 수 없어 쪽 이동이 통째로 막힌다
+    const quote = await screen.findByText('먼 쪽의 대목 인용문')
+    swipeCard(quote, 'next')
+
+    expect(await screen.findByText('먼 쪽 다음 쪽의 대목 인용문')).toBeInTheDocument()
+  })
+
   it('책의 첫 대목에서 뒤로 넘겨도 끝으로 돌아가지 않는다', async () => {
     await renderPage()
 
@@ -432,6 +473,14 @@ describe('ReaderHighlightsPage', () => {
     expect(await screen.findByText('첫 대목의 첫 번째 흔적')).toBeInTheDocument()
     expect(screen.getByText('2개의 의견')).toBeInTheDocument()
     expect(screen.queryByText('두 번째 대목의 흔적')).not.toBeInTheDocument()
+  })
+
+  it('닉네임은 눌러도 갈 곳이 없어 조작 대상으로 내놓지 않는다', async () => {
+    await renderPage()
+
+    expect(await screen.findByText('책책책을읽자')).toBeInTheDocument()
+    // 버튼으로 두면 키보드·보조기기가 누를 것을 권하는데 눌러도 아무 일도 일어나지 않는다
+    expect(screen.queryByRole('button', { name: '책책책을읽자' })).not.toBeInTheDocument()
   })
 
   it('흔적이 한 페이지를 넘으면 헤더는 전체 개수를 보여주고 목록은 첫 페이지만 그린다', async () => {
@@ -488,7 +537,7 @@ describe('ReaderHighlightsPage', () => {
     clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
+    fireEvent.click(screen.getByRole('button', { name: '로그인 하기' }))
     expect(pushMock).toHaveBeenCalledWith('/login')
     // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 닫지 않으면 로그인 화면을 덮는다.
     expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
@@ -501,7 +550,7 @@ describe('ReaderHighlightsPage', () => {
 
     clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '취소' }))
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     const like = (await screen.findAllByRole('button', { name: '좋아요' }))[0]
     if (!like) throw new Error('좋아요 버튼을 찾지 못했다')
@@ -563,6 +612,48 @@ describe('ReaderHighlightsPage', () => {
     swipeCard(normalQuote, 'next')
     expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
     expect(screen.getByText('혼재 페이지의 스포일러 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('한 대목의 가림막을 해제해도 같은 쪽의 다른 스포일러 대목은 그대로 가려져 있다', async () => {
+    await renderPage()
+
+    await selectPage(13)
+    await screen.findByText('스포일러가 포함되어있어요!')
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+    expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
+
+    // 해제가 쪽 단위로 남으면 아직 열어본 적 없는 다음 스포일러가 열린 채로 나온다
+    swipeCard(screen.getByText('연속 스포일러 첫 대목 인용문'), 'next')
+
+    expect(screen.getByText('연속 스포일러 둘째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+  })
+
+  it('한 번 해제한 대목으로 되돌아오면 다시 묻지 않는다', async () => {
+    await renderPage()
+
+    await selectPage(13)
+    await screen.findByText('스포일러가 포함되어있어요!')
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+
+    // 다음 대목에 갔다가 되돌아온다 — 한 번 연 대목을 다시 잠그면 오가기가 성가시다
+    swipeCard(screen.getByText('연속 스포일러 첫 대목 인용문'), 'next')
+    swipeCard(screen.getByText('연속 스포일러 둘째 대목 인용문'), 'prev')
+
+    expect(screen.getByText('연속 스포일러 첫 대목 인용문')).toBeInTheDocument()
+    expect(screen.queryByText('스포일러가 포함되어있어요!')).not.toBeInTheDocument()
+  })
+
+  it('쪽을 옮기면 해제가 풀린다 — 다른 쪽의 스포일러는 다시 묻는다', async () => {
+    await renderPage()
+
+    await selectPage(13)
+    await screen.findByText('스포일러가 포함되어있어요!')
+    fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
+
+    await selectPage(9)
+
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
   it('로그인 상태에서 의견 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
@@ -688,6 +779,24 @@ describe('ReaderHighlightsPage', () => {
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
     })
+  })
+
+  it('딥링크가 첫 묶음 밖의 의견을 가리키면 그 의견이 나올 때까지 목록을 이어 받아 상세로 연다', async () => {
+    // 흔적은 20개씩 온다 — 21번째(opinionId 120)는 첫 묶음에 없다
+    await renderPage([15], undefined, { pageNumber: 15, passageId: 151, opinionId: 120 })
+
+    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
+
+    expect(within(dialog).getByText('많은 흔적 21')).toBeInTheDocument()
+  })
+
+  it('딥링크가 가리킨 의견이 끝까지 없으면 조용히 넘어가지 않고 알린다', async () => {
+    await renderPage([15], undefined, { pageNumber: 15, passageId: 151, opinionId: 9999 })
+
+    expect(
+      await screen.findByText('그 흔적을 찾지 못했어요. 지워졌을 수 있어요.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
   })
 
   it('상세 오버레이에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록 스크롤로만 한다', async () => {

@@ -6,6 +6,7 @@ export interface MyOpinionResponse {
   opinionId: number
   bookId: number
   bookTitle: string
+  author: string
   /** @nullable */
   bookCoverImageUrl?: string | null
   passageId: number

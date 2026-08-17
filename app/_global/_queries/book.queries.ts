@@ -2,13 +2,16 @@ import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/r
 
 import {
   getHomeCarouselBooks,
+  getMyLibraryBooks,
   getPopularBooks,
   getRecentBooks,
   searchExternalBooks,
   searchInternalBooks,
 } from '../_apis/_generated/book/book'
+import type { BookActivityResponse } from '../_apis/_generated/models/bookActivityResponse'
 import type { CreateBookRequest } from '../_apis/_generated/models/createBookRequest'
 import type { GetHomeCarouselBooksParams } from '../_apis/_generated/models/getHomeCarouselBooksParams'
+import type { GetMyLibraryBooksParams } from '../_apis/_generated/models/getMyLibraryBooksParams'
 import type { GetPopularBooksParams } from '../_apis/_generated/models/getPopularBooksParams'
 import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentBooksParams'
 import type { SearchExternalBooksParams } from '../_apis/_generated/models/searchExternalBooksParams'
@@ -19,16 +22,18 @@ import { createBook } from '../_apis/book.api'
 export const BOOK_SEARCH_SORT = SearchInternalBooksSort
 export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
 
+/** 서재·홈 캐러셀·인기 목록이 공유하는 도서 카드 데이터 */
+export type BookActivity = BookActivityResponse
+
 export const bookQueries = {
   all: () => ['book'] as const,
-  // 홈 캐러셀은 offset 기반 양방향 조회다. 첫 요청에서 offset을 생략하면
-  // 서버가 전체 목록의 가운데를 잡아주고, 좌우 스크롤은 offset ± size로 이어붙인다.
-  homeCarousel: (params?: Omit<GetHomeCarouselBooksParams, 'offset'>) =>
+  // 홈 캐러셀은 offset 기반 양방향 조회다. offset을 넘기지 않으면 서버가 전체 목록의 가운데를 잡아준다.
+  homeCarousel: (params?: GetHomeCarouselBooksParams) =>
     infiniteQueryOptions({
       queryKey: [...bookQueries.all(), 'home-carousel', params],
       queryFn: ({ pageParam }) =>
-        getHomeCarouselBooks({ ...params, offset: pageParam ?? undefined }),
-      initialPageParam: null as null | number,
+        getHomeCarouselBooks({ ...params, offset: pageParam ?? params?.offset }),
+      initialPageParam: params?.offset ?? null,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
         return pageInfo?.hasNext ? pageInfo.offset + pageInfo.size : undefined
@@ -58,6 +63,20 @@ export const bookQueries = {
     queryOptions({
       queryKey: [...bookQueries.all(), 'recent', params ?? {}],
       queryFn: () => getRecentBooks(params),
+      retry: false,
+    }),
+  // 내 서재. 흔적을 남긴 도서만, 최근에 남긴 순이다. 홈 캐러셀과 같은 offset 기반이지만
+  // 좌우가 아니라 아래로만 이어붙이므로 0에서 시작해 앞 페이지는 두지 않는다.
+  // 비로그인이면 401이 정상 흐름이라 재시도하지 않는다.
+  myLibrary: (params?: Omit<GetMyLibraryBooksParams, 'offset'>) =>
+    infiniteQueryOptions({
+      queryKey: [...bookQueries.all(), 'my-library', params ?? {}],
+      queryFn: ({ pageParam }) => getMyLibraryBooks({ ...params, offset: pageParam }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? pageInfo.offset + pageInfo.size : undefined
+      },
       retry: false,
     }),
   popular: (params?: GetPopularBooksParams) =>

@@ -13,10 +13,21 @@ type SnackbarProps = {
   message: string
   /** message 앞머리에서 강조할 부분. 시안(2469:13096)의 오렌지 볼드 대목이다. */
   highlight?: string
+  /**
+   * 놓이는 배경. 어두운 화면에는 흰 바, 밝은 화면에는 어두운 바를 얹어야 배경과 붙지 않는다.
+   * 대부분의 화면이 어두워 기본은 'dark'다(차단 관리 218:12142가 밝은 면 쪽 시안).
+   */
+  tone?: 'light' | 'dark'
   onClose: () => void
 }
 
 const AUTO_DISMISS_MS = 3000
+
+// 문구·닫기 아이콘은 이 색을 상속한다 — 두 곳에 따로 걸면 톤이 갈린다
+const TONE_CLASS = {
+  light: 'bg-bg-black text-text-inverse',
+  dark: 'bg-bg-default text-text-secondary',
+} as const
 
 /** 강조 대목과 나머지로 가른다. highlight가 앞머리가 아니면 통째로 본문으로 둔다. */
 function splitHighlight(message: string, highlight?: string) {
@@ -24,7 +35,7 @@ function splitHighlight(message: string, highlight?: string) {
   return { head: highlight, tail: message.slice(highlight.length) }
 }
 
-export function Snackbar({ highlight, message, onClose }: SnackbarProps) {
+export function Snackbar({ highlight, message, tone = 'dark', onClose }: SnackbarProps) {
   const onCloseRef = useRef(onClose)
 
   // 매 렌더마다 ref 갱신 (exhaustive-deps 규칙 만족)
@@ -56,7 +67,8 @@ export function Snackbar({ highlight, message, onClose }: SnackbarProps) {
       role="status"
       data-state={state}
       className={cn(
-        'absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-2xl bg-bg-default px-4 py-3',
+        'absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-2xl px-4 py-3',
+        TONE_CLASS[tone],
         'transition-[opacity,translate] duration-fast ease-enter',
         'data-[state=entering]:translate-y-2 data-[state=entering]:opacity-0',
         'data-[state=exiting]:translate-y-2 data-[state=exiting]:opacity-0 data-[state=exiting]:ease-exit',
@@ -64,7 +76,7 @@ export function Snackbar({ highlight, message, onClose }: SnackbarProps) {
         'data-[state=exiting]:pointer-events-none',
       )}
     >
-      <p className="text-body-14md text-text-secondary">
+      <p className="text-body-14md">
         {head && <span className="text-title-14bd text-text-accent">{head}</span>}
         {tail}
       </p>
@@ -72,7 +84,7 @@ export function Snackbar({ highlight, message, onClose }: SnackbarProps) {
         type="button"
         aria-label="닫기"
         onClick={onClose}
-        className="flex size-5 shrink-0 items-center justify-center text-icon-primary"
+        className="flex size-5 shrink-0 items-center justify-center"
       >
         <CloseIcon aria-hidden="true" className="size-5" />
       </button>

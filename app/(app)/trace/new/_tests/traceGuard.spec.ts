@@ -72,10 +72,15 @@ describe('resolveGuardRedirect', () => {
   })
 
   it('저장이 끝났으면 작성 단계로 되돌아갈 수 없다', () => {
-    const saved = draftWith({ ...decorated, result: { opinionId: 1, merged: false } })
+    const saved = draftWith({
+      ...decorated,
+      result: { opinionId: 1, passageId: 71, merged: false },
+    })
     expect(resolveGuardRedirect('/trace/new/decorate', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new/book', saved)).toBe('/trace/new/done')
+    expect(resolveGuardRedirect('/trace/new/write', saved)).toBe('/trace/new/done')
     expect(resolveGuardRedirect('/trace/new/done', saved)).toBeNull()
-    // 첫 화면은 새 흔적을 시작하는 자리라 막지 않는다
+    // 막으면 흔적을 한 번 남긴 뒤로는 계속 done으로 튕겨 새 흔적을 시작할 수 없다
     expect(resolveGuardRedirect('/trace/new', saved)).toBeNull()
   })
 

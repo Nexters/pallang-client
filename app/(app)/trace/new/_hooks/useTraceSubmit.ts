@@ -60,7 +60,12 @@ export function useTraceSubmit() {
           }
           dispatch({
             type: 'setResult',
-            result: { opinionId: response.data.opinionId, merged: response.data.merged },
+            result: {
+              opinionId: response.data.opinionId,
+              // 완료 화면이 방금 남긴 흔적으로 곧장 보내려면 대목까지 알아야 한다
+              passageId: response.data.passageId,
+              merged: response.data.merged,
+            },
           })
           goTo('done')
         },

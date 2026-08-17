@@ -1,25 +1,26 @@
 import { useRef } from 'react'
 
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
-import CautionIcon from '@/app/_global/_components/Icon/assets/caution.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 import { DecoratedQuote } from '@/app/_shared/trace/_components/DecoratedQuote/DecoratedQuote'
 
 import { useQuoteSwipe } from '../../_hooks/useQuoteSwipe'
+import { isSpoilerCovered } from '../../_services/spoiler.service'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
+import { QuoteSpoilerCover } from '../QuoteSpoilerCover/QuoteSpoilerCover'
+import { QuoteStageBackdrop } from '../QuoteStageBackdrop/QuoteStageBackdrop'
 import { TraceHeader } from '../TraceHeader/TraceHeader'
 import styles from './QuoteStage.module.css'
 
 export function QuoteStage({
   title,
-  pages,
+  pageNav,
   highlight,
   quoteIndex,
   isRevealed,
   isCollapsed,
-  onSelectPage,
-  onLoadMorePages,
+  onBack,
   onClickQuote,
   onSwipeQuote,
 }: QuoteStageProps) {
@@ -27,30 +28,20 @@ export function QuoteStage({
   useQuoteSwipe(cardRef, onSwipeQuote)
   const activeQuote = highlight.quotes[quoteIndex]
   // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
-  const isCovered = Boolean(activeQuote?.isSpoiler) && !isRevealed
+  const isCovered = isSpoilerCovered({ isSpoiler: activeQuote?.isSpoiler, isRevealed })
 
   return (
     <div className={cn(styles['stage'], 'absolute inset-x-0 top-0')}>
-      <div className="absolute inset-0 bg-bg-book-card" />
-      {/* 모눈종이 — 아래로 갈수록 배경색으로 걷힌다(디자인 200:939).
-          책 표지가 아니라 화면마다 같은 정적 이미지다 */}
-      <div className={cn(styles['paper'], 'absolute inset-x-0 top-0 overflow-hidden')}>
-        <div className="absolute inset-0 bg-neutral-200" />
-        {/* eslint-disable-next-line @next/next/no-img-element -- 고정 크기 정적 배경이라 next/image의 최적화가 붙을 자리가 없다 */}
-        <img
-          src="/images/trace-grid-paper.png"
-          alt=""
-          className="absolute top-1/2 left-1/2 h-[820px] w-[530px] max-w-none -translate-1/2"
-        />
-        <div className="absolute inset-0 bg-linear-to-b from-transparent to-neutral-200" />
-      </div>
-      {/* 모눈종이 아래는 목록과 같은 어두운 면이고, 카드가 그 경계에 걸쳐 놓인다 */}
-      <div className={cn(styles['underlay'], 'absolute inset-x-0 bottom-0 bg-bg-dark')} />
+      <QuoteStageBackdrop />
       {/* 대목 이동은 카드 위 좌우 스와이프와 카드 안 화살표가 함께 맡는다.
           카드는 접히며 헤더 뒤까지 올라오므로 헤더보다 먼저 그린다 — 순서가 뒤집히면 헤더가 가려진다 */}
       <div
         ref={cardRef}
-        className={cn(styles['card'], 'absolute flex flex-col bg-bg-book-card px-6 text-left')}
+        className={cn(
+          styles['card'],
+          styles['cardSurface'],
+          'absolute flex flex-col bg-bg-book-card px-6 text-left',
+        )}
       >
         {/* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
             반각 여백은 5px뿐이라 첫 줄·끝 줄이 잘린다). 음수 마진과 같은 크기의 패딩으로
@@ -82,47 +73,14 @@ export function QuoteStage({
             <NextIcon width={14} height={14} className="text-text-secondary" />
           </button>
         </div>
-        {isCovered && (
-          <button
-            type="button"
-            onClick={onClickQuote}
-            className={cn(
-              styles['cover'],
-              'absolute inset-x-0 bottom-0 flex flex-col items-center justify-center rounded-[inherit] bg-bg-book-card/70 backdrop-blur-[9px]',
-            )}
-          >
-            {/* ponytail: #3e3e3e는 디자인 변수 미연결 색 — 토큰 추가 시 치환 */}
-            <CautionIcon className={cn(styles['coverIcon'], 'text-[#3e3e3e]')} />
-            <span className="flex flex-col gap-1 text-center">
-              {/* 가변 폰트가 아니라 굵기는 보간되지 않는다 — 전환이 끝난 시점에만 바꾼다 */}
-              <span
-                className={cn(
-                  styles['coverTitle'],
-                  'leading-[1.35] tracking-[-0.04em]',
-                  isCollapsed ? 'font-semibold' : 'font-bold',
-                )}
-              >
-                스포일러가 포함되어있어요!
-              </span>
-              <span
-                className={cn(
-                  'text-body-14md leading-[1.3] tracking-[-0.04em] opacity-70',
-                  isCollapsed && 'font-normal',
-                )}
-              >
-                누르면 확인 할 수 있어요
-              </span>
-            </span>
-          </button>
-        )}
+        {isCovered && <QuoteSpoilerCover isCollapsed={isCollapsed} onReveal={onClickQuote} />}
       </div>
+      {/* 헤더 높이는 전환 좌표계가 쓰는 --header-height 그대로다 — 리터럴로 다시 적으면 어긋난다 */}
       <TraceHeader
         title={title}
-        pages={pages}
-        activePage={highlight.page}
-        onSelectPage={onSelectPage}
-        onLoadMorePages={onLoadMorePages}
-        className="absolute inset-x-0 top-(--safe-top) h-[44px] py-0"
+        onBack={onBack}
+        pageNav={pageNav}
+        className="absolute inset-x-0 top-(--safe-top) h-(--header-height) py-0"
       />
     </div>
   )

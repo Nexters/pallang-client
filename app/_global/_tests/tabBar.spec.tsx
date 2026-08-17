@@ -4,6 +4,17 @@ import { describe, expect, it, vi } from 'vitest'
 import { TabBar } from '@/app/_global/_components/TabBar/TabBar'
 
 describe('TabBar 흔적 남기기', () => {
+  it('모임 탭을 MY 왼쪽 링크로 그린다', () => {
+    render(<TabBar activeTab="meeting" />)
+
+    const meetingLink = screen.getByRole('link', { name: '모임' })
+    const myLink = screen.getByRole('link', { name: 'MY' })
+
+    expect(meetingLink).toHaveAttribute('href', '/meeting')
+    expect(meetingLink).toHaveAttribute('aria-current', 'page')
+    expect(meetingLink.compareDocumentPosition(myLink)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+
   it('게이트를 받으면 링크 대신 버튼으로 그린다', () => {
     const onTraceClick = vi.fn()
     render(<TabBar onTraceClick={onTraceClick} />)
