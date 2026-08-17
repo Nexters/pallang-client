@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
 
 import { HomeBookCarouselSkeleton } from './HomeBookCarouselSkeleton'
 
@@ -30,6 +31,7 @@ type OpinionCountBadgeProps = {
 }
 
 const PAGE_SIZE = 10
+const RESTORE_HOME_BOOK_ID_STORAGE_KEY = 'pallang:home-carousel:restore-book-id'
 const FIRST_BOOK_CENTER_X = 110
 const BOOK_GAP = 214
 const BOOK_TRACK_START_PADDING = `calc(50% - ${String(FIRST_BOOK_CENTER_X)}px)`
@@ -49,6 +51,28 @@ function getInitialBookIndex(bookCount: number): number {
   if (bookCount <= 0) return 0
 
   return bookCount >= 3 ? 1 : 0
+}
+
+function getRestoreHomeBookId(): null | number {
+  const value = getSessionStorageItem(RESTORE_HOME_BOOK_ID_STORAGE_KEY)
+  if (value === null) return null
+
+  const bookId = Number(value)
+
+  return Number.isFinite(bookId) ? bookId : null
+}
+
+function setRestoreHomeBookId(bookId: number): void {
+  setSessionStorageItem(RESTORE_HOME_BOOK_ID_STORAGE_KEY, String(bookId))
+}
+
+function getRestoredBookIndex(books: Book[]): number {
+  const restoreHomeBookId = getRestoreHomeBookId()
+  if (restoreHomeBookId === null) return getInitialBookIndex(books.length)
+
+  const restoredBookIndex = books.findIndex((book) => book.bookId === restoreHomeBookId)
+
+  return restoredBookIndex >= 0 ? restoredBookIndex : getInitialBookIndex(books.length)
 }
 
 // 책 중심이 등차수열이라 가장 가까운 책은 나눗셈 한 번이면 나온다.
@@ -97,10 +121,12 @@ function BookCarouselTrack({
   bookListRef,
   books,
   onScroll,
+  onTraceClick,
   selectedBookIndex,
 }: {
   bookListRef: RefObject<HTMLDivElement | null>
   books: Book[]
+  onTraceClick: (bookId: number) => void
   onScroll: (event: UIEvent<HTMLDivElement>) => void
   selectedBookIndex: number
 }) {
@@ -132,6 +158,9 @@ function BookCarouselTrack({
                   href={`/trace/${String(book.bookId)}`}
                   aria-label={`${book.title} 흔적 보기`}
                   className="relative h-[340px] w-[220px] overflow-hidden rounded-sm border border-border-book bg-interactive-accent shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
+                  onClick={() => {
+                    onTraceClick(book.bookId)
+                  }}
                   style={{
                     scale: getBookScale(index),
                     ...(book.coverImageUrl && {
@@ -239,13 +268,17 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
     const scrollContainer = bookListRef.current
     if (!scrollContainer || arrangedBooks.length === 0) return
 
-    const nextBookIndex = getInitialBookIndex(arrangedBooks.length)
+    const nextBookIndex = getRestoredBookIndex(arrangedBooks)
     const nextBookId = arrangedBooks[nextBookIndex]?.bookId ?? null
 
     syncScrollToBookIndex(scrollContainer, nextBookIndex)
     setActiveBookId(nextBookId)
     setReadyBooksKey(booksKey)
   }, [arrangedBooks, booksKey])
+
+  const handleTraceClick = (bookId: number) => {
+    setRestoreHomeBookId(bookId)
+  }
 
   const handleBookListScroll = (event: UIEvent<HTMLDivElement>) => {
     const scrollContainer = event.currentTarget
@@ -278,7 +311,7 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
 
   if (!activeBook) return <HomeBookCarouselSkeleton />
 
-  const shouldShowSkeleton = booksQuery.isFetching || readyBooksKey !== booksKey
+  const shouldShowSkeleton = booksQuery.isPending || readyBooksKey !== booksKey
 
   return (
     <div className="relative">
@@ -287,6 +320,7 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
           bookListRef={bookListRef}
           books={arrangedBooks}
           selectedBookIndex={selectedBookIndex}
+          onTraceClick={handleTraceClick}
           onScroll={handleBookListScroll}
         />
         <ActiveBookInfo activeBook={activeBook} />
