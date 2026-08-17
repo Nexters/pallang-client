@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     activeTab: {
       control: 'inline-radio',
-      options: ['home', 'book', 'my'],
+      options: ['home', 'book', 'meeting', 'my'],
     },
   },
   parameters: {
@@ -35,6 +35,12 @@ export const HomeActive: Story = {}
 export const BookActive: Story = {
   args: {
     activeTab: 'book',
+  },
+}
+
+export const MeetingActive: Story = {
+  args: {
+    activeTab: 'meeting',
   },
 }
 

@@ -7,6 +7,7 @@ import BackIcon from './assets/back.svg'
 import BookAddIcon from './assets/book-add.svg'
 import CameraIcon from './assets/camera.svg'
 import CautionIcon from './assets/caution.svg'
+import ChatIcon from './assets/chat.svg'
 import ChevronDownIcon from './assets/chevron-down.svg'
 import CloseIcon from './assets/close.svg'
 import CommentIcon from './assets/comment.svg'
@@ -52,6 +53,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   // 흔적·댓글의 ⋯ 메뉴(신고·차단) 트리거
   { name: 'MeatballsMenuIcon', Component: MeatballsMenuIcon },
   { name: 'HomeIcon', Component: HomeIcon },
+  { name: 'ChatIcon', Component: ChatIcon },
   { name: 'MyIcon', Component: MyIcon },
   { name: 'SearchIcon', Component: SearchIcon },
   { name: 'BookAddIcon', Component: BookAddIcon },

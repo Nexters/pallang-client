@@ -3,7 +3,10 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo, useRef } from 'react'
 
-import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import {
+  ApiErrorFeedbackState,
+  FeedbackState,
+} from '@/app/_global/_components/FeedbackState/FeedbackState'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type BookActivity, bookQueries } from '@/app/_global/_queries/book.queries'
@@ -32,17 +35,10 @@ export function MyLibraryView() {
     if (listQuery.isPending) return <MyLibrarySkeleton />
     if (listQuery.isError && books.length === 0) {
       return (
-        <FeedbackState
+        <ApiErrorFeedbackState
           aria-label="내 서재 오류"
-          message={
-            <>
-              서재를 불러오지 못했어요.
-              <br />
-              다시 시도해주세요!
-            </>
-          }
-          actionLabel="다시 시도"
-          onAction={() => {
+          title="서재를 불러오지 못했어요."
+          onRetry={() => {
             void listQuery.refetch()
           }}
         />

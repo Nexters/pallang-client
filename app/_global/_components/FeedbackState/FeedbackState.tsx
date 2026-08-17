@@ -2,14 +2,29 @@ import Image from 'next/image'
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
+import ResetIcon from '@/app/_global/_components/Icon/assets/reset.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
 type FeedbackStateProps = ComponentPropsWithoutRef<'section'> & {
-  actionLabel?: string
+  actionLabel?: ReactNode
   imageSrc?: string
   message: ReactNode
   onAction?: () => void
 }
+
+type ApiErrorProps = Omit<FeedbackStateProps, 'actionLabel' | 'message' | 'onAction' | 'title'> & {
+  onRetry: () => void
+  title?: ReactNode
+}
+
+const DEFAULT_API_ERROR_TITLE = '문제가 발생했습니다.'
+
+const API_ERROR_ACTION_LABEL = (
+  <span className="flex items-center gap-2">
+    다시 시도하기
+    <ResetIcon aria-hidden="true" className="size-6 text-text-inverse" />
+  </span>
+)
 
 export function FeedbackState({
   actionLabel,
@@ -21,7 +36,7 @@ export function FeedbackState({
 }: FeedbackStateProps) {
   return (
     <section
-      className={cn('flex flex-1 flex-col items-center justify-center gap-10 px-4', className)}
+      className={cn('flex flex-1 flex-col items-center justify-center gap-4 px-4', className)}
       {...props}
     >
       <div className="flex w-full flex-col items-center gap-4">
@@ -41,5 +56,26 @@ export function FeedbackState({
         </Button>
       )}
     </section>
+  )
+}
+
+export function ApiErrorFeedbackState({
+  onRetry,
+  title = DEFAULT_API_ERROR_TITLE,
+  ...props
+}: ApiErrorProps) {
+  return (
+    <FeedbackState
+      message={
+        <>
+          {title}
+          <br />
+          다시 시도해주세요!
+        </>
+      }
+      actionLabel={API_ERROR_ACTION_LABEL}
+      onAction={onRetry}
+      {...props}
+    />
   )
 }

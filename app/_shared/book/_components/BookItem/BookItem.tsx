@@ -43,7 +43,7 @@ export function BookItem({
     <article className={cn('flex w-full items-start gap-4', className)} {...props}>
       <div
         aria-hidden="true"
-        className="h-[120px] w-20 shrink-0 rounded-[2px] border border-border-book/10 bg-neutral-200 shadow-[2px_4px_8px_rgba(0,0,0,0.08)]"
+        className="h-[120px] w-20 shrink-0 rounded-[2px] border border-border-book/10 bg-interactive-accent shadow-[2px_4px_8px_rgba(0,0,0,0.08)]"
         style={
           coverImageUrl
             ? {

@@ -27,14 +27,13 @@ export type BookActivity = BookActivityResponse
 
 export const bookQueries = {
   all: () => ['book'] as const,
-  // 홈 캐러셀은 offset 기반 양방향 조회다. 첫 요청에서 offset을 생략하면
-  // 서버가 전체 목록의 가운데를 잡아주고, 좌우 스크롤은 offset ± size로 이어붙인다.
-  homeCarousel: (params?: Omit<GetHomeCarouselBooksParams, 'offset'>) =>
+  // 홈 캐러셀은 offset 기반 양방향 조회다. offset을 넘기지 않으면 서버가 전체 목록의 가운데를 잡아준다.
+  homeCarousel: (params?: GetHomeCarouselBooksParams) =>
     infiniteQueryOptions({
       queryKey: [...bookQueries.all(), 'home-carousel', params],
       queryFn: ({ pageParam }) =>
-        getHomeCarouselBooks({ ...params, offset: pageParam ?? undefined }),
-      initialPageParam: null as null | number,
+        getHomeCarouselBooks({ ...params, offset: pageParam ?? params?.offset }),
+      initialPageParam: params?.offset ?? null,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
         return pageInfo?.hasNext ? pageInfo.offset + pageInfo.size : undefined

@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
-import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import {
+  ApiErrorFeedbackState,
+  FeedbackState,
+} from '@/app/_global/_components/FeedbackState/FeedbackState'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { Select } from '@/app/_global/_components/Select/Select'
@@ -80,17 +83,10 @@ export function BookSearchPageView() {
         className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
       >
         {shouldShowPageError ? (
-          <FeedbackState
+          <ApiErrorFeedbackState
             aria-label="도서 목록 오류"
-            message={
-              <>
-                해당 페이지를 찾을 수 없습니다.
-                <br />
-                다시 시도해주세요!
-              </>
-            }
-            actionLabel="다시 시도"
-            onAction={() => {
+            title="해당 페이지를 찾을 수 없습니다."
+            onRetry={() => {
               void booksQuery.refetch()
             }}
           />
