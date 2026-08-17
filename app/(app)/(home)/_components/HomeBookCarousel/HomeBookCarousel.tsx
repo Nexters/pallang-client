@@ -2,9 +2,8 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import type { RefObject, UIEvent } from 'react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
@@ -23,19 +22,43 @@ type Book = {
   title: string
 }
 
-type BookStatisticLinkProps = {
+type OpinionCountBadgeProps = {
   count: number
   href: string
 }
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 10
 const FIRST_BOOK_CENTER_X = 110
 const BOOK_GAP = 214
 const BOOK_TRACK_START_PADDING = `calc(50% - ${String(FIRST_BOOK_CENTER_X)}px)`
 const CENTER_BOOK_SCALE = 1
 const MIN_BOOK_SCALE = 0.792
 const BOOK_SCALE_PER_STEP = 0.208
-const BOOK_SLOT_CLASS_NAME = 'top-0 h-[340px] w-[220px]'
+
+function getBookCenterX(index: number): number {
+  return FIRST_BOOK_CENTER_X + index * BOOK_GAP
+}
+
+function getBookScrollLeft(index: number): number {
+  return getBookCenterX(index) - FIRST_BOOK_CENTER_X
+}
+
+function getInitialBookIndex(bookCount: number): number {
+  if (bookCount <= 0) return 0
+
+  return bookCount >= 3 ? 1 : 0
+}
+
+// 책 중심이 등차수열이라 가장 가까운 책은 나눗셈 한 번이면 나온다.
+function getNearestBookIndex(scrollLeft: number, bookCount: number): number {
+  if (bookCount <= 0) return 0
+
+  return Math.min(bookCount - 1, Math.max(0, Math.round(scrollLeft / BOOK_GAP)))
+}
+
+function getTrackWidth(bookCount: number): string {
+  return `${String(getBookCenterX(Math.max(0, bookCount - 1)))}px`
+}
 
 // abs()는 구형 웹뷰(Chromium < 125)에 없다. max(d, -d)로 같은 값을 얻는다.
 function getDistanceFromCenter(index: number): string {
@@ -50,40 +73,7 @@ function syncScrollIndex(scrollContainer: HTMLDivElement): void {
   scrollContainer.style.setProperty('--scroll-index', String(scrollContainer.scrollLeft / BOOK_GAP))
 }
 
-function getBookCenterX(index: number): number {
-  return FIRST_BOOK_CENTER_X + index * BOOK_GAP
-}
-
-function getBookScrollLeft(index: number): number {
-  return getBookCenterX(index) - FIRST_BOOK_CENTER_X
-}
-
-function getInitialBookIndex(bookCount: number): number {
-  return Math.max(0, Math.floor((bookCount - 1) / 2))
-}
-
-// 책 중심이 등차수열이라 가장 가까운 책은 나눗셈 한 번이면 나온다.
-function getNearestBookIndex(scrollLeft: number, bookCount: number): number {
-  if (bookCount <= 0) return 0
-
-  return Math.min(bookCount - 1, Math.max(0, Math.round(scrollLeft / BOOK_GAP)))
-}
-
-function getTrackWidth(bookCount: number): string {
-  return `${String(getBookCenterX(Math.max(0, bookCount - 1)))}px`
-}
-
-function dedupeBooks(books: Book[]): Book[] {
-  const seen = new Set<number>()
-
-  return books.filter((book) => {
-    if (seen.has(book.bookId)) return false
-    seen.add(book.bookId)
-    return true
-  })
-}
-
-function BookStatisticLink({ count, href }: BookStatisticLinkProps) {
+function OpinionCountBadge({ count, href }: OpinionCountBadgeProps) {
   return (
     <Link
       href={href}
@@ -125,7 +115,7 @@ function BookCarouselTrack({
             {books.map((book, index) => (
               <div
                 key={book.bookId}
-                className={`absolute flex -translate-x-1/2 snap-center items-center justify-center ${BOOK_SLOT_CLASS_NAME}`}
+                className="absolute top-0 flex h-[340px] w-[220px] -translate-x-1/2 snap-center items-center justify-center"
                 style={{
                   left: `${String(getBookCenterX(index))}px`,
                   zIndex: books.length - Math.abs(index - selectedBookIndex),
@@ -167,7 +157,7 @@ function ActiveBookInfo({ activeBook }: { activeBook: Book }) {
           <p className="min-w-0 flex-1 truncate font-pretendard text-[16px] leading-[1.2] font-normal tracking-[-0.32px] text-text-tertiary">
             {activeBook.author}
           </p>
-          <BookStatisticLink
+          <OpinionCountBadge
             count={activeBook.opinionCount}
             href={`/trace/${String(activeBook.bookId)}`}
           />
@@ -177,22 +167,31 @@ function ActiveBookInfo({ activeBook }: { activeBook: Book }) {
   )
 }
 
+function dedupeBooks(books: Book[]): Book[] {
+  const seen = new Set<number>()
+
+  return books.filter((book) => {
+    if (seen.has(book.bookId)) return false
+    seen.add(book.bookId)
+    return true
+  })
+}
+
+function arrangeBooksForInitialCarousel(books: Book[]): Book[] {
+  if (books.length < 3) return books
+
+  const [firstBook, secondBook, ...restBooks] = books
+  if (!firstBook || !secondBook) return books
+
+  return [secondBook, firstBook, ...restBooks]
+}
+
 export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
-  const pathname = usePathname()
   const bookListRef = useRef<HTMLDivElement>(null)
-  const pendingFirstBookIdRef = useRef<null | number>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
-  const homeCarouselOptions = bookQueries.homeCarousel({ size: PAGE_SIZE })
+  const homeCarouselOptions = bookQueries.homeCarousel({ offset: 0, size: PAGE_SIZE })
   const booksQuery = useInfiniteQuery(homeCarouselOptions)
-  const {
-    fetchNextPage,
-    fetchPreviousPage,
-    hasNextPage,
-    hasPreviousPage,
-    isError,
-    isFetchingNextPage,
-    isFetchingPreviousPage,
-  } = booksQuery
+  const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = booksQuery
   const pages = booksQuery.data?.pages
   const books = useMemo(
     () =>
@@ -211,112 +210,41 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
       ),
     [pages],
   )
+  const arrangedBooks = useMemo(() => arrangeBooksForInitialCarousel(books), [books])
   const activeBookIndex =
-    activeBookId === null ? -1 : books.findIndex((book) => book.bookId === activeBookId)
+    activeBookId === null ? -1 : arrangedBooks.findIndex((book) => book.bookId === activeBookId)
   const selectedBookIndex =
-    activeBookIndex >= 0 ? activeBookIndex : getInitialBookIndex(books.length)
-  const activeBookIdRef = useRef<null | number>(null)
-  const activeBook = books[selectedBookIndex] ?? books[0]
-
-  useEffect(() => {
-    activeBookIdRef.current = activeBookId
-  }, [activeBookId])
-
-  const syncScrollToBookId = useCallback(
-    (bookId: null | number) => {
-      const scrollContainer = bookListRef.current
-      if (!scrollContainer || bookId === null) return
-
-      const bookIndex = books.findIndex((book) => book.bookId === bookId)
-      if (bookIndex < 0) return
-
-      scrollContainer.scrollLeft = getBookScrollLeft(bookIndex)
-      syncScrollIndex(scrollContainer)
-    },
-    [books],
-  )
-
-  const scheduleScrollSyncToActiveBook = useCallback(() => {
-    const syncActiveBookScroll = () => {
-      syncScrollToBookId(activeBookIdRef.current)
-    }
-    const firstFrame = window.requestAnimationFrame(() => {
-      syncActiveBookScroll()
-
-      window.requestAnimationFrame(syncActiveBookScroll)
-    })
-    const timeoutId = window.setTimeout(syncActiveBookScroll, 0)
-
-    return () => {
-      window.cancelAnimationFrame(firstFrame)
-      window.clearTimeout(timeoutId)
-    }
-  }, [syncScrollToBookId])
+    activeBookIndex >= 0 ? activeBookIndex : getInitialBookIndex(arrangedBooks.length)
+  const activeBook = arrangedBooks[selectedBookIndex] ?? arrangedBooks[0]
 
   useEffect(() => {
     onLoadingChange?.(booksQuery.isPending)
   }, [booksQuery.isPending, onLoadingChange])
 
-  // scrollLeft를 직접 만지는 보정은 페인트 전에 끝나야 한다 — useEffect면 한 프레임 튄다.
-  // --scroll-index도 같이 맞춰야 첫 페인트부터 책 크기가 중앙 기준으로 나온다.
+  // 렌더 배열은 [1번 책, 0번 책, 2번 책...] 순서라 첫 중앙 책은 index 1이다.
+  // 첫 페인트 전에 scrollLeft와 --scroll-index를 맞춰 0번 책이 처음부터 중앙에 보이게 한다.
   useLayoutEffect(() => {
     const scrollContainer = bookListRef.current
-    if (!scrollContainer || books.length === 0 || activeBookId !== null) return
+    if (!scrollContainer || arrangedBooks.length === 0 || activeBookId !== null) return
 
-    const initialBookIndex = getInitialBookIndex(books.length)
-    const initialBookId = books[initialBookIndex]?.bookId ?? null
+    const initialBookIndex = getInitialBookIndex(arrangedBooks.length)
+    const initialBookId = arrangedBooks[initialBookIndex]?.bookId ?? null
 
     scrollContainer.scrollLeft = getBookScrollLeft(initialBookIndex)
     syncScrollIndex(scrollContainer)
-    activeBookIdRef.current = initialBookId
     setActiveBookId(initialBookId)
-  }, [activeBookId, books])
-
-  useLayoutEffect(() => {
-    const scrollContainer = bookListRef.current
-    const pendingFirstBookId = pendingFirstBookIdRef.current
-
-    if (!scrollContainer || pendingFirstBookId === null) return
-
-    const preservedBookIndex = books.findIndex((book) => book.bookId === pendingFirstBookId)
-    if (preservedBookIndex <= 0) {
-      pendingFirstBookIdRef.current = null
-      return
-    }
-
-    scrollContainer.scrollLeft += preservedBookIndex * BOOK_GAP
-    syncScrollIndex(scrollContainer)
-    pendingFirstBookIdRef.current = null
-  }, [books])
-
-  useEffect(() => {
-    if (pathname !== '/') return undefined
-
-    return scheduleScrollSyncToActiveBook()
-  }, [pathname, scheduleScrollSyncToActiveBook])
+  }, [activeBookId, arrangedBooks])
 
   const handleBookListScroll = (event: UIEvent<HTMLDivElement>) => {
     const scrollContainer = event.currentTarget
     syncScrollIndex(scrollContainer)
 
-    const nextActiveIndex = getNearestBookIndex(scrollContainer.scrollLeft, books.length)
-    const nextActiveBookId = books[nextActiveIndex]?.bookId ?? null
+    const nextActiveIndex = getNearestBookIndex(scrollContainer.scrollLeft, arrangedBooks.length)
+    const nextActiveBookId = arrangedBooks[nextActiveIndex]?.bookId ?? null
 
-    activeBookIdRef.current = nextActiveBookId
     setActiveBookId(nextActiveBookId)
 
-    if (nextActiveIndex <= 1 && hasPreviousPage && !isFetchingPreviousPage && !isFetchingNextPage) {
-      pendingFirstBookIdRef.current = books[0]?.bookId ?? null
-      void fetchPreviousPage()
-      return
-    }
-
-    if (
-      nextActiveIndex >= books.length - 2 &&
-      hasNextPage &&
-      !isFetchingNextPage &&
-      !isFetchingPreviousPage
-    ) {
+    if (nextActiveIndex >= arrangedBooks.length - 2 && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage()
     }
   }
@@ -344,7 +272,7 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
     <div className="flex flex-col gap-5">
       <BookCarouselTrack
         bookListRef={bookListRef}
-        books={books}
+        books={arrangedBooks}
         selectedBookIndex={selectedBookIndex}
         onScroll={handleBookListScroll}
       />
