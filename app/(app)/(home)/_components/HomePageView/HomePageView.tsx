@@ -11,7 +11,7 @@ import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.con
 import Logo from '@/public/images/logo.svg'
 
 import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
-import { BookListSection } from '../BookListSection/BookListSection'
+import { HomeSection } from '../HomeSection/HomeSection'
 
 const BOOK_SEARCH_PATH = '/book/search'
 
@@ -28,10 +28,10 @@ export function HomePageView() {
 
   const router = useRouter()
   const runWithLogin = useLoginGate()
-  const [isBookListLoading, setIsBookListLoading] = useState(true)
+  const [isHomeSectionLoading, setIsHomeSectionLoading] = useState(true)
 
-  const handleBookListLoadingChange = useCallback((isLoading: boolean) => {
-    setIsBookListLoading(isLoading)
+  const handleHomeSectionLoadingChange = useCallback((isLoading: boolean) => {
+    setIsHomeSectionLoading(isLoading)
   }, [])
 
   useEffect(() => {
@@ -50,12 +50,12 @@ export function HomePageView() {
       activeTab="home"
       className={cn(
         'overflow-y-auto bg-bg-default',
-        !isBookListLoading && GRID_BACKGROUND_CLASS_NAME,
+        !isHomeSectionLoading && GRID_BACKGROUND_CLASS_NAME,
       )}
-      isTabBarLoading={isBookListLoading}
+      isTabBarLoading={isHomeSectionLoading}
     >
       <div className="px-4 pt-4">
-        {isBookListLoading ? (
+        {isHomeSectionLoading ? (
           <HomeHeaderSkeleton />
         ) : (
           <header className="flex items-center">
@@ -64,8 +64,8 @@ export function HomePageView() {
         )}
       </div>
 
-      <BookListSection
-        onLoadingChange={handleBookListLoadingChange}
+      <HomeSection
+        onLoadingChange={handleHomeSectionLoadingChange}
         searchAction={
           <button
             type="button"

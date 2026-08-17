@@ -30,11 +30,11 @@ vi.mock('../_hooks/useOnboardingGate', () => ({
   useOnboardingGate: vi.fn(),
 }))
 
-vi.mock('../_components/BookListSection/BookListSection', async () => {
+vi.mock('../_components/HomeSection/HomeSection', async () => {
   const React = await import('react')
 
   return {
-    BookListSection: ({
+    HomeSection: ({
       onLoadingChange,
       searchAction,
     }: {
