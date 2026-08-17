@@ -1,21 +1,24 @@
 'use client'
 
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { UIEvent } from 'react'
+import type { ReactNode, UIEvent } from 'react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
-import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import ContentIcon from '@/app/_global/_components/Icon/assets/content.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
+import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { HomeSegment } from '../HomeSegment/HomeSegment'
 
 type BookListSectionProps = {
   onLoadingChange?: (isLoading: boolean) => void
+  searchAction?: ReactNode
 }
 
 type Book = {
@@ -30,7 +33,7 @@ type Book = {
 type HomeSectionTab = 'library' | 'opinion'
 
 const HOME_SECTION_TABS = [
-  { value: 'library', label: '내서재' },
+  { value: 'library', label: '내 서재' },
   { value: 'opinion', label: '내 의견' },
 ] as const satisfies readonly { value: HomeSectionTab; label: string }[]
 
@@ -87,6 +90,28 @@ function BookStatisticLink({ count, href, icon: Icon, label }: BookStatisticLink
         {count}개의 {label}
       </span>
     </Link>
+  )
+}
+
+function SectionTitle({
+  isAuthenticated,
+  nickname,
+}: {
+  isAuthenticated: boolean
+  nickname?: string
+}) {
+  const lines = isAuthenticated
+    ? [`${nickname ?? '팔랑'} 님!`, '오늘도 기록을 남겨볼까요?']
+    : ['안녕하세요!', '오늘도 기록을 남겨볼까요?']
+
+  return (
+    <h1 className={SECTION_TITLE_CLASS_NAME}>
+      {lines.map((line) => (
+        <span key={line} className="block">
+          {line}
+        </span>
+      ))}
+    </h1>
   )
 }
 
@@ -165,8 +190,10 @@ function dedupeBooks(books: Book[]): Book[] {
   })
 }
 
-export function BookListSection({ onLoadingChange }: BookListSectionProps) {
+export function BookListSection({ onLoadingChange, searchAction }: BookListSectionProps) {
   const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
+  const meQuery = useQuery({ ...userQueries.me(), enabled: isAuthenticated })
   const bookListRef = useRef<HTMLDivElement>(null)
   const pendingFirstBookIdRef = useRef<null | number>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
@@ -310,121 +337,119 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
 
   if (booksQuery.isPending) return <BookListSectionSkeleton />
 
-  if (isError && books.length === 0) {
-    return (
-      <section
-        aria-label="기록 중인 책 목록"
-        className="mt-4.5 flex min-h-[calc(100dvh-220px)] flex-col gap-4"
-      >
-        <div className="flex flex-col gap-1 px-4">
-          <h1 className={SECTION_TITLE_CLASS_NAME}>지금 기록되고 있는 흔적들</h1>
-        </div>
-        <FeedbackState
-          aria-label="홈 도서 목록 오류"
-          className="pb-20"
-          message={
-            <>
-              책을 불러오지 못했어요.
-              <br />
-              다시 시도해주세요!
-            </>
-          }
-          actionLabel="다시 시도"
-          onAction={() => {
-            void booksQuery.refetch()
-          }}
-        />
-      </section>
-    )
-  }
-
-  if (!activeBook) return null
-
-  const { author, bookId, opinionCount, passageCount, title } = activeBook
+  const hasEmptyError = isError && books.length === 0
 
   return (
-    <section aria-label="기록 중인 책 목록" className="mt-4.5 flex flex-col gap-4">
+    <section aria-label="기록 중인 책 목록" className="mt-4.5 flex flex-col gap-[50px]">
       <div className="flex flex-col gap-4 px-4">
-        <h1 className={SECTION_TITLE_CLASS_NAME}>지금 기록되고 있는 흔적들</h1>
-        <div role="radiogroup" aria-label="홈 목록 보기" className="flex">
-          {HOME_SECTION_TABS.map((tab) => (
-            <HomeSegment
-              key={tab.value}
-              selected={activeTab === tab.value}
-              onClick={() => {
-                setActiveTab(tab.value)
-              }}
-            >
-              {tab.label}
-            </HomeSegment>
-          ))}
-        </div>
-      </div>
-
-      <div className="relative h-82.25 w-full overflow-visible">
-        <div
-          ref={bookListRef}
-          onScroll={handleBookListScroll}
-          className="absolute -top-2 left-0 h-91.25 w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pt-2 pb-7 scrollbar-none [&::-webkit-scrollbar]:hidden"
-        >
+        <SectionTitle isAuthenticated={isAuthenticated} nickname={meQuery.data?.data?.nickname} />
+        <div className="flex items-center justify-between">
           <div
-            className="relative h-82.25 w-max"
-            style={{
-              paddingLeft: BOOK_TRACK_START_PADDING,
-              paddingRight: '50%',
-            }}
+            role="radiogroup"
+            aria-label="홈 목록 보기"
+            className="flex w-fit items-center rounded-[99px] bg-[rgba(0,0,0,0.08)] p-[3px] backdrop-blur-[2px]"
           >
-            <div className="relative h-82.25" style={{ width: getTrackWidth(books.length) }}>
-              {books.map((book, index) => (
-                <div
-                  key={book.bookId}
-                  className={`absolute flex -translate-x-1/2 snap-center items-center justify-center ${BOOK_SLOT_CLASS_NAME}`}
-                  style={{ left: `${String(getBookCenterX(index))}px` }}
-                >
-                  <Link
-                    href={`/trace/${String(book.bookId)}`}
-                    aria-label={`${book.title} 흔적 보기`}
-                    className="relative h-68.5 w-44.25 overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
-                    style={{
-                      rotate: getBookTilt(index),
-                      scale: getBookScale(index),
-                      ...(book.coverImageUrl && {
-                        backgroundImage: `url(${book.coverImageUrl})`,
-                        backgroundPosition: 'center',
-                        backgroundSize: 'cover',
-                      }),
-                    }}
-                  >
-                    <span className="sr-only">{book.title} 표지</span>
-                  </Link>
-                </div>
-              ))}
-            </div>
+            {HOME_SECTION_TABS.map((tab) => (
+              <HomeSegment
+                key={tab.value}
+                selected={activeTab === tab.value}
+                onClick={() => {
+                  setActiveTab(tab.value)
+                }}
+              >
+                {tab.label}
+              </HomeSegment>
+            ))}
           </div>
+          {searchAction}
         </div>
       </div>
 
-      <div className="flex w-full flex-col items-center gap-4">
-        <div className="flex w-full flex-col items-center gap-2 text-center">
-          <h2 className="line-clamp-2 w-full px-6 text-title-24bd text-text-primary">{title}</h2>
-          <p className="w-full truncate px-6 text-body-16md text-text-secondary">{author}</p>
+      {hasEmptyError ? (
+        <div className="flex min-h-82.25 items-center">
+          <ApiErrorFeedbackState
+            aria-label="홈 도서 목록 오류"
+            className="w-full pb-20"
+            title="책을 불러오지 못했어요."
+            onRetry={() => {
+              void booksQuery.refetch()
+            }}
+          />
         </div>
+      ) : (
+        activeBook && (
+          <>
+            <div className="relative h-82.25 w-full overflow-visible">
+              <div
+                ref={bookListRef}
+                onScroll={handleBookListScroll}
+                className="absolute -top-2 left-0 h-91.25 w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pt-2 pb-7 scrollbar-none [&::-webkit-scrollbar]:hidden"
+              >
+                <div
+                  className="relative h-82.25 w-max"
+                  style={{
+                    paddingLeft: BOOK_TRACK_START_PADDING,
+                    paddingRight: '50%',
+                  }}
+                >
+                  <div className="relative h-82.25" style={{ width: getTrackWidth(books.length) }}>
+                    {books.map((book, index) => (
+                      <div
+                        key={book.bookId}
+                        className={`absolute flex -translate-x-1/2 snap-center items-center justify-center ${BOOK_SLOT_CLASS_NAME}`}
+                        style={{ left: `${String(getBookCenterX(index))}px` }}
+                      >
+                        <Link
+                          href={`/trace/${String(book.bookId)}`}
+                          aria-label={`${book.title} 흔적 보기`}
+                          className="relative h-68.5 w-44.25 overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
+                          style={{
+                            rotate: getBookTilt(index),
+                            scale: getBookScale(index),
+                            ...(book.coverImageUrl && {
+                              backgroundImage: `url(${book.coverImageUrl})`,
+                              backgroundPosition: 'center',
+                              backgroundSize: 'cover',
+                            }),
+                          }}
+                        >
+                          <span className="sr-only">{book.title} 표지</span>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        <div className="flex items-center justify-center gap-2">
-          <BookStatisticLink
-            count={passageCount}
-            href={`/trace/${String(bookId)}`}
-            icon={ContentIcon}
-            label="대목"
-          />
-          <BookStatisticLink
-            count={opinionCount}
-            href={`/trace/${String(bookId)}`}
-            icon={PencilIcon}
-            label="흔적"
-          />
-        </div>
-      </div>
+            <div className="flex w-full flex-col items-center gap-4">
+              <div className="flex w-full flex-col items-center gap-2 text-center">
+                <h2 className="line-clamp-2 w-full px-6 text-title-24bd text-text-primary">
+                  {activeBook.title}
+                </h2>
+                <p className="w-full truncate px-6 text-body-16md text-text-secondary">
+                  {activeBook.author}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-2">
+                <BookStatisticLink
+                  count={activeBook.passageCount}
+                  href={`/trace/${String(activeBook.bookId)}`}
+                  icon={ContentIcon}
+                  label="대목"
+                />
+                <BookStatisticLink
+                  count={activeBook.opinionCount}
+                  href={`/trace/${String(activeBook.bookId)}`}
+                  icon={PencilIcon}
+                  label="흔적"
+                />
+              </div>
+            </div>
+          </>
+        )
+      )}
     </section>
   )
 }

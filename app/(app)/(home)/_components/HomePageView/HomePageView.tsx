@@ -17,9 +17,8 @@ const BOOK_SEARCH_PATH = '/book/search'
 
 function HomeHeaderSkeleton() {
   return (
-    <header className="flex h-8 items-center justify-between" aria-hidden="true">
+    <header className="flex h-7 items-center" aria-hidden="true">
       <div className="h-7 w-[100px] rounded bg-bg-surface" />
-      <div className="size-8 rounded-full bg-bg-surface" />
     </header>
   )
 }
@@ -59,21 +58,25 @@ export function HomePageView() {
         {isBookListLoading ? (
           <HomeHeaderSkeleton />
         ) : (
-          <header className="flex items-center justify-between">
+          <header className="flex items-center">
             <Logo aria-label="Pallang" className="h-7 w-18.75" />
-            <button
-              type="button"
-              aria-label="검색"
-              className="flex size-8 items-center justify-center text-icon-primary"
-              onClick={handleSearchClick}
-            >
-              <SearchIcon aria-hidden="true" className="size-8" />
-            </button>
           </header>
         )}
       </div>
 
-      <BookListSection onLoadingChange={handleBookListLoadingChange} />
+      <BookListSection
+        onLoadingChange={handleBookListLoadingChange}
+        searchAction={
+          <button
+            type="button"
+            aria-label="검색"
+            className="press flex size-[42px] shrink-0 items-center justify-center rounded-[100px] bg-bg-default text-icon-primary backdrop-blur-[4px] transition-[background-color,scale] duration-instant ease-standard"
+            onClick={handleSearchClick}
+          >
+            <SearchIcon aria-hidden="true" className="size-6" />
+          </button>
+        }
+      />
     </TabScreenLayout>
   )
 }

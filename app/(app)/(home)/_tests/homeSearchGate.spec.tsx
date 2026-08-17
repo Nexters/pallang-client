@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
@@ -33,12 +34,18 @@ vi.mock('../_components/BookListSection/BookListSection', async () => {
   const React = await import('react')
 
   return {
-    BookListSection: ({ onLoadingChange }: { onLoadingChange?: (isLoading: boolean) => void }) => {
+    BookListSection: ({
+      onLoadingChange,
+      searchAction,
+    }: {
+      onLoadingChange?: (isLoading: boolean) => void
+      searchAction?: ReactNode
+    }) => {
       React.useEffect(() => {
         onLoadingChange?.(false)
       }, [onLoadingChange])
 
-      return <section aria-label="기록 중인 책 목록">책 목록</section>
+      return <section aria-label="기록 중인 책 목록">{searchAction}책 목록</section>
     },
   }
 })
