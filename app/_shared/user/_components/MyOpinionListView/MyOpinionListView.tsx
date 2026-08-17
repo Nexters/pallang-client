@@ -122,7 +122,7 @@ function OpinionItem({ opinion }: { opinion: UserOpinion }) {
     >
       <div
         aria-hidden="true"
-        className="h-24 w-16 shrink-0 rounded-xs border border-border-book/10 bg-bg-book-card bg-cover bg-center"
+        className="h-24 w-16 shrink-0 rounded-xs border border-border-book/10 bg-interactive-accent bg-cover bg-center"
         style={
           opinion.bookCoverImageUrl
             ? { backgroundImage: `url(${opinion.bookCoverImageUrl})` }

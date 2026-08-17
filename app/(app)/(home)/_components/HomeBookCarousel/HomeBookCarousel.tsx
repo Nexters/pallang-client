@@ -124,7 +124,7 @@ function BookCarouselTrack({
                 <Link
                   href={`/trace/${String(book.bookId)}`}
                   aria-label={`${book.title} 흔적 보기`}
-                  className="relative h-[340px] w-[220px] overflow-hidden rounded-sm border border-border-book bg-bg-book-card shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
+                  className="relative h-[340px] w-[220px] overflow-hidden rounded-sm border border-border-book bg-interactive-accent shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
                   style={{
                     scale: getBookScale(index),
                     ...(book.coverImageUrl && {
