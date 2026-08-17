@@ -62,14 +62,25 @@ export const bookQueries = {
       queryFn: () => getRecentBooks(params),
       retry: false,
     }),
+  recentSearch: (params: Omit<GetRecentBooksParams, 'page'>) =>
+    infiniteQueryOptions({
+      queryKey: [...bookQueries.all(), 'recent-search', params],
+      queryFn: ({ pageParam }) => getRecentBooks({ ...params, page: pageParam }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, allPages) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? allPages.length : undefined
+      },
+      retry: false,
+    }),
   myLibrary: (params?: GetMyLibraryBooksParams) =>
     infiniteQueryOptions({
       queryKey: [...bookQueries.all(), 'my-library', params ?? {}],
       queryFn: ({ pageParam }) => getMyLibraryBooks({ ...params, page: pageParam }),
       initialPageParam: 0,
-      getNextPageParam: (lastPage) => {
+      getNextPageParam: (lastPage, allPages) => {
         const pageInfo = lastPage.data?.pageInfo
-        return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+        return pageInfo?.hasNext ? allPages.length : undefined
       },
       retry: false,
     }),

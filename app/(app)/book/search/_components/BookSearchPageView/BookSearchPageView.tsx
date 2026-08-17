@@ -17,7 +17,13 @@ import { BookSearchResultList } from '../BookSearchResultList/BookSearchResultLi
 
 const PAGE_SIZE = 20
 
-export function BookSearchPageView() {
+type BookSearchScope = 'internal' | 'my-recent'
+
+type BookSearchPageViewProps = {
+  scope: BookSearchScope
+}
+
+export function BookSearchPageView({ scope }: BookSearchPageViewProps) {
   const router = useRouter()
   const [keyword, setKeyword] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -29,23 +35,38 @@ export function BookSearchPageView() {
   const me = useQuery(userQueries.me())
   const recent = useQuery(bookQueries.recent({ size: PAGE_SIZE }))
   const popular = useQuery(bookQueries.popular({ size: PAGE_SIZE }))
-  const searched = useInfiniteQuery({
+  const recentSearched = useInfiniteQuery({
+    ...bookQueries.recentSearch({ keyword: debouncedKeyword, size: PAGE_SIZE }),
+    enabled: scope === 'my-recent' && isSearching,
+    placeholderData: keepPreviousData,
+  })
+  const internalSearched = useInfiniteQuery({
     ...bookQueries.searchInternal({ keyword: debouncedKeyword, size: PAGE_SIZE }),
-    enabled: isSearching,
+    enabled: scope === 'internal' && isSearching,
     placeholderData: keepPreviousData,
   })
 
-  const searchResults = searched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
-  const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = searched
+  const isMyRecentScope = scope === 'my-recent'
+  const activeSearch = {
+    books: isMyRecentScope
+      ? (recentSearched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? [])
+      : (internalSearched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []),
+    query: isMyRecentScope ? recentSearched : internalSearched,
+  }
   const showRecent = recent.isPending || (recent.data?.data?.books.length ?? 0) > 0
   const showPopular = popular.isPending || (popular.data?.data?.books.length ?? 0) > 0
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
     rootRef: scrollRef,
-    enabled: isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage,
+    enabled:
+      isSearching &&
+      !isTypingAhead &&
+      activeSearch.query.hasNextPage &&
+      !activeSearch.query.isError &&
+      !activeSearch.query.isFetchingNextPage,
     onLoadMore: () => {
-      void fetchNextPage()
+      void activeSearch.query.fetchNextPage()
     },
   })
 
@@ -91,10 +112,10 @@ export function BookSearchPageView() {
         {isSearching ? (
           <>
             <BookSearchResultList
-              books={searchResults}
+              books={activeSearch.books}
               status={(() => {
-                if (searched.isPending || isTypingAhead) return 'pending'
-                if (isError && searchResults.length === 0) return 'error'
+                if (activeSearch.query.isPending || isTypingAhead) return 'pending'
+                if (activeSearch.query.isError && activeSearch.books.length === 0) return 'error'
                 return 'ready'
               })()}
               onAddBook={() => {
@@ -103,7 +124,7 @@ export function BookSearchPageView() {
               }}
               onLeave={resetKeyword}
               onRetry={() => {
-                void searched.refetch()
+                void activeSearch.query.refetch()
               }}
             />
             <div ref={loadMoreRef} className="h-6 w-full shrink-0" aria-hidden="true" />

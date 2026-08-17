@@ -29,3 +29,15 @@ describe('bookQueries.searchInternal', () => {
     ])
   })
 })
+
+describe('bookQueries.recentSearch', () => {
+  it('최근 남긴 도서 검색 키워드를 쿼리 키에 포함한다', () => {
+    const options = bookQueries.recentSearch({ keyword: '프랑켄슈타인', size: 20 })
+
+    expect(options.queryKey).toEqual([
+      'book',
+      'recent-search',
+      { keyword: '프랑켄슈타인', size: 20 },
+    ])
+  })
+})
