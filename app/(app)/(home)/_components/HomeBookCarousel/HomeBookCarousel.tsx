@@ -9,6 +9,8 @@ import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/F
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 
+import { HomeBookCarouselSkeleton } from './HomeBookCarouselSkeleton'
+
 type HomeBookCarouselProps = {
   onLoadingChange?: (isLoading: boolean) => void
 }
@@ -71,6 +73,11 @@ function getBookScale(index: number): string {
 
 function syncScrollIndex(scrollContainer: HTMLDivElement): void {
   scrollContainer.style.setProperty('--scroll-index', String(scrollContainer.scrollLeft / BOOK_GAP))
+}
+
+function syncScrollToBookIndex(scrollContainer: HTMLDivElement, index: number): void {
+  scrollContainer.scrollLeft = getBookScrollLeft(index)
+  scrollContainer.style.setProperty('--scroll-index', String(index))
 }
 
 function OpinionCountBadge({ count, href }: OpinionCountBadgeProps) {
@@ -189,6 +196,7 @@ function arrangeBooksForInitialCarousel(books: Book[]): Book[] {
 export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
   const bookListRef = useRef<HTMLDivElement>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
+  const [readyBooksKey, setReadyBooksKey] = useState('')
   const homeCarouselOptions = bookQueries.homeCarousel({ offset: 0, size: PAGE_SIZE })
   const booksQuery = useInfiniteQuery(homeCarouselOptions)
   const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = booksQuery
@@ -211,6 +219,10 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
     [pages],
   )
   const arrangedBooks = useMemo(() => arrangeBooksForInitialCarousel(books), [books])
+  const booksKey = useMemo(
+    () => arrangedBooks.map((book) => String(book.bookId)).join('|'),
+    [arrangedBooks],
+  )
   const activeBookIndex =
     activeBookId === null ? -1 : arrangedBooks.findIndex((book) => book.bookId === activeBookId)
   const selectedBookIndex =
@@ -222,18 +234,18 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
   }, [booksQuery.isPending, onLoadingChange])
 
   // 렌더 배열은 [1번 책, 0번 책, 2번 책...] 순서라 첫 중앙 책은 index 1이다.
-  // 첫 페인트 전에 scrollLeft와 --scroll-index를 맞춰 0번 책이 처음부터 중앙에 보이게 한다.
+  // 그 위치로 맞추기 전까지는 이미지와 하단 정보가 어긋나 보이므로 스켈레톤을 덮는다.
   useLayoutEffect(() => {
     const scrollContainer = bookListRef.current
-    if (!scrollContainer || arrangedBooks.length === 0 || activeBookId !== null) return
+    if (!scrollContainer || arrangedBooks.length === 0) return
 
-    const initialBookIndex = getInitialBookIndex(arrangedBooks.length)
-    const initialBookId = arrangedBooks[initialBookIndex]?.bookId ?? null
+    const nextBookIndex = getInitialBookIndex(arrangedBooks.length)
+    const nextBookId = arrangedBooks[nextBookIndex]?.bookId ?? null
 
-    scrollContainer.scrollLeft = getBookScrollLeft(initialBookIndex)
-    syncScrollIndex(scrollContainer)
-    setActiveBookId(initialBookId)
-  }, [activeBookId, arrangedBooks])
+    syncScrollToBookIndex(scrollContainer, nextBookIndex)
+    setActiveBookId(nextBookId)
+    setReadyBooksKey(booksKey)
+  }, [arrangedBooks, booksKey])
 
   const handleBookListScroll = (event: UIEvent<HTMLDivElement>) => {
     const scrollContainer = event.currentTarget
@@ -248,8 +260,6 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
       void fetchNextPage()
     }
   }
-
-  if (booksQuery.isPending) return null
 
   if (isError && books.length === 0) {
     return (
@@ -266,17 +276,26 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
     )
   }
 
-  if (!activeBook) return null
+  if (!activeBook) return <HomeBookCarouselSkeleton />
+
+  const shouldShowSkeleton = booksQuery.isFetching || readyBooksKey !== booksKey
 
   return (
-    <div className="flex flex-col gap-5">
-      <BookCarouselTrack
-        bookListRef={bookListRef}
-        books={arrangedBooks}
-        selectedBookIndex={selectedBookIndex}
-        onScroll={handleBookListScroll}
-      />
-      <ActiveBookInfo activeBook={activeBook} />
+    <div className="relative">
+      <div className={shouldShowSkeleton ? 'invisible flex flex-col gap-5' : 'flex flex-col gap-5'}>
+        <BookCarouselTrack
+          bookListRef={bookListRef}
+          books={arrangedBooks}
+          selectedBookIndex={selectedBookIndex}
+          onScroll={handleBookListScroll}
+        />
+        <ActiveBookInfo activeBook={activeBook} />
+      </div>
+      {shouldShowSkeleton && (
+        <div className="absolute inset-0">
+          <HomeBookCarouselSkeleton />
+        </div>
+      )}
     </div>
   )
 }
