@@ -29,20 +29,32 @@ describe('LoginGateModal', () => {
 
   it('로그인 버튼을 누르면 onLogin을 호출한다', async () => {
     const onLogin = vi.fn()
-    render(<LoginGateModal message="로그인이 필요해요" onLogin={onLogin} onClose={vi.fn()} />)
+    render(
+      <LoginGateModal
+        message="로그인하면 확인 할 수 있어요!"
+        onLogin={onLogin}
+        onClose={vi.fn()}
+      />,
+    )
     await screen.findByRole('dialog')
 
-    await userEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
+    await userEvent.click(screen.getByRole('button', { name: '로그인 하기' }))
 
     expect(onLogin).toHaveBeenCalledOnce()
   })
 
-  it('취소 버튼을 누르면 onClose를 호출한다', async () => {
+  it('닫기 버튼을 누르면 onClose를 호출한다', async () => {
     const onClose = vi.fn()
-    render(<LoginGateModal message="로그인이 필요해요" onLogin={vi.fn()} onClose={onClose} />)
+    render(
+      <LoginGateModal
+        message="로그인하면 확인 할 수 있어요!"
+        onLogin={vi.fn()}
+        onClose={onClose}
+      />,
+    )
     await screen.findByRole('dialog')
 
-    await userEvent.click(screen.getByRole('button', { name: '취소' }))
+    await userEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     await waitFor(() => {
       expect(onClose).toHaveBeenCalledOnce()

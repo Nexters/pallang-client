@@ -537,7 +537,7 @@ describe('ReaderHighlightsPage', () => {
     clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '로그인 하러가기' }))
+    fireEvent.click(screen.getByRole('button', { name: '로그인 하기' }))
     expect(pushMock).toHaveBeenCalledWith('/login')
     // 게이트는 루트 레이아웃에 있어 화면이 바뀌어도 살아 있다. 닫지 않으면 로그인 화면을 덮는다.
     expect(screen.queryByText(LOGIN_GATE_MESSAGE.traceCreate)).not.toBeInTheDocument()
@@ -550,7 +550,7 @@ describe('ReaderHighlightsPage', () => {
 
     clickFabAction('의견 남기기')
     expect(screen.getByText(LOGIN_GATE_MESSAGE.traceCreate)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '취소' }))
+    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     const like = (await screen.findAllByRole('button', { name: '좋아요' }))[0]
     if (!like) throw new Error('좋아요 버튼을 찾지 못했다')
