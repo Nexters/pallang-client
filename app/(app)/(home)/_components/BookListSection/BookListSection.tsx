@@ -12,6 +12,8 @@ import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 
+import { HomeSegment } from '../HomeSegment/HomeSegment'
+
 type BookListSectionProps = {
   onLoadingChange?: (isLoading: boolean) => void
 }
@@ -24,6 +26,13 @@ type Book = {
   passageCount: number
   title: string
 }
+
+type HomeSectionTab = 'library' | 'opinion'
+
+const HOME_SECTION_TABS = [
+  { value: 'library', label: '내서재' },
+  { value: 'opinion', label: '내 의견' },
+] as const satisfies readonly { value: HomeSectionTab; label: string }[]
 
 const PAGE_SIZE = 5
 const FIRST_BOOK_CENTER_X = 122
@@ -40,6 +49,8 @@ const MIN_BOOK_SCALE = 0.86
 const BOOK_SCALE_PER_STEP = 0.11
 // 회전한 카드(274×177)의 15deg 바운딩 박스. 중앙 책이 1.08배여도 296×191이라 이 안에 들어온다.
 const BOOK_SLOT_CLASS_NAME = 'top-1.5 h-77.5 w-60.5'
+const SECTION_TITLE_CLASS_NAME =
+  'font-pretendard text-[22px] leading-[1.3] font-bold tracking-[-0.88px] text-text-secondary'
 
 // abs()는 구형 웹뷰(Chromium < 125)에 없다. max(d, -d)로 같은 값을 얻는다.
 function getDistanceFromCenter(index: number): string {
@@ -86,7 +97,7 @@ function BookListSectionSkeleton() {
   const centerIndex = getInitialBookIndex(PAGE_SIZE)
 
   return (
-    <section aria-label="기록 중인 책 목록" className="mt-9 flex flex-col gap-4">
+    <section aria-label="기록 중인 책 목록" className="mt-4.5 flex flex-col gap-4">
       <div className="flex flex-col gap-1 px-4">
         <Skeleton className="h-6.5 w-45" />
         <Skeleton className="h-5.25 w-30" />
@@ -159,6 +170,7 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
   const bookListRef = useRef<HTMLDivElement>(null)
   const pendingFirstBookIdRef = useRef<null | number>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
+  const [activeTab, setActiveTab] = useState<HomeSectionTab>('library')
   const homeCarouselOptions = bookQueries.homeCarousel({ size: PAGE_SIZE })
   const booksQuery = useInfiniteQuery(homeCarouselOptions)
   const {
@@ -302,10 +314,10 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
     return (
       <section
         aria-label="기록 중인 책 목록"
-        className="mt-9 flex min-h-[calc(100dvh-220px)] flex-col gap-4"
+        className="mt-4.5 flex min-h-[calc(100dvh-220px)] flex-col gap-4"
       >
         <div className="flex flex-col gap-1 px-4">
-          <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
+          <h1 className={SECTION_TITLE_CLASS_NAME}>지금 기록되고 있는 흔적들</h1>
         </div>
         <FeedbackState
           aria-label="홈 도서 목록 오류"
@@ -331,9 +343,22 @@ export function BookListSection({ onLoadingChange }: BookListSectionProps) {
   const { author, bookId, opinionCount, passageCount, title } = activeBook
 
   return (
-    <section aria-label="기록 중인 책 목록" className="mt-9 flex flex-col gap-4">
-      <div className="flex flex-col gap-1 px-4">
-        <h1 className="text-title-20sb text-text-primary">지금 기록되고 있는 흔적들</h1>
+    <section aria-label="기록 중인 책 목록" className="mt-4.5 flex flex-col gap-4">
+      <div className="flex flex-col gap-4 px-4">
+        <h1 className={SECTION_TITLE_CLASS_NAME}>지금 기록되고 있는 흔적들</h1>
+        <div role="radiogroup" aria-label="홈 목록 보기" className="flex">
+          {HOME_SECTION_TABS.map((tab) => (
+            <HomeSegment
+              key={tab.value}
+              selected={activeTab === tab.value}
+              onClick={() => {
+                setActiveTab(tab.value)
+              }}
+            >
+              {tab.label}
+            </HomeSegment>
+          ))}
+        </div>
       </div>
 
       <div className="relative h-82.25 w-full overflow-visible">
