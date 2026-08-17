@@ -1,6 +1,9 @@
 import Link from 'next/link'
 
-import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import {
+  ApiErrorFeedbackState,
+  FeedbackState,
+} from '@/app/_global/_components/FeedbackState/FeedbackState'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 
 type BookSearchResultItem = {
@@ -46,17 +49,10 @@ export function BookSearchResultList({
 
   if (status === 'error') {
     return (
-      <FeedbackState
+      <ApiErrorFeedbackState
         aria-label="도서 검색 오류"
-        message={
-          <>
-            책을 불러오지 못했어요.
-            <br />
-            다시 시도해주세요!
-          </>
-        }
-        actionLabel="다시 시도"
-        onAction={onRetry}
+        title="책을 불러오지 못했어요."
+        onRetry={onRetry}
       />
     )
   }

@@ -81,7 +81,7 @@ describe('내 서재 도서 목록', () => {
     const calls = stubApi({ status: 401, body: { title: 'AUTH_401_1' } })
     renderView()
 
-    expect(await screen.findByRole('button', { name: '다시 시도' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: '다시 시도하기' })).toBeInTheDocument()
     expect(calls).toHaveLength(1)
   })
 

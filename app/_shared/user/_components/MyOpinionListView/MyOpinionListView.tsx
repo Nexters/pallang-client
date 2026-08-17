@@ -5,7 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef } from 'react'
 
-import { FeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import {
+  ApiErrorFeedbackState,
+  FeedbackState,
+} from '@/app/_global/_components/FeedbackState/FeedbackState'
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
@@ -49,17 +52,10 @@ export function MyOpinionListView({ scope }: { scope: UserOpinionScope }) {
     if (listQuery.isPending) return <OpinionListSkeleton />
     if (listQuery.isError && opinions.length === 0) {
       return (
-        <FeedbackState
+        <ApiErrorFeedbackState
           aria-label={`${SCOPE_TEXT[scope].title} 오류`}
-          message={
-            <>
-              목록을 불러오지 못했어요.
-              <br />
-              다시 시도해주세요!
-            </>
-          }
-          actionLabel="다시 시도"
-          onAction={() => {
+          title="목록을 불러오지 못했어요."
+          onRetry={() => {
             void listQuery.refetch()
           }}
         />
