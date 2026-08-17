@@ -1,12 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
-import { cn } from '@/app/_global/_services/cn.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
@@ -15,24 +14,11 @@ import { HomeSection } from '../HomeSection/HomeSection'
 
 const BOOK_SEARCH_PATH = '/book/search'
 
-function HomeHeaderSkeleton() {
-  return (
-    <header className="flex h-7 items-center" aria-hidden="true">
-      <div className="h-7 w-[100px] rounded bg-bg-surface" />
-    </header>
-  )
-}
-
 export function HomePageView() {
   useOnboardingGate()
 
   const router = useRouter()
   const runWithLogin = useLoginGate()
-  const [isHomeSectionLoading, setIsHomeSectionLoading] = useState(true)
-
-  const handleHomeSectionLoadingChange = useCallback((isLoading: boolean) => {
-    setIsHomeSectionLoading(isLoading)
-  }, [])
 
   useEffect(() => {
     router.prefetch(BOOK_SEARCH_PATH)
@@ -48,24 +34,15 @@ export function HomePageView() {
     <TabScreenLayout
       aria-label="홈"
       activeTab="home"
-      className={cn(
-        'overflow-y-auto bg-bg-default',
-        !isHomeSectionLoading && GRID_BACKGROUND_CLASS_NAME,
-      )}
-      isTabBarLoading={isHomeSectionLoading}
+      className={`overflow-y-auto bg-bg-default ${GRID_BACKGROUND_CLASS_NAME}`}
     >
       <div className="px-4 pt-4">
-        {isHomeSectionLoading ? (
-          <HomeHeaderSkeleton />
-        ) : (
-          <header className="flex items-center">
-            <Logo aria-label="Pallang" className="h-7 w-18.75" />
-          </header>
-        )}
+        <header className="flex items-center">
+          <Logo aria-label="Pallang" className="h-7 w-18.75" />
+        </header>
       </div>
 
       <HomeSection
-        onLoadingChange={handleHomeSectionLoadingChange}
         searchAction={
           <button
             type="button"

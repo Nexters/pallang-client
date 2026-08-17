@@ -3,7 +3,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import type { RefObject, UIEvent } from 'react'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
@@ -11,10 +11,6 @@ import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
 
 import { HomeBookCarouselSkeleton } from './HomeBookCarouselSkeleton'
-
-type HomeBookCarouselProps = {
-  onLoadingChange?: (isLoading: boolean) => void
-}
 
 type Book = {
   author: string
@@ -222,7 +218,7 @@ function arrangeBooksForInitialCarousel(books: Book[]): Book[] {
   return [secondBook, firstBook, ...restBooks]
 }
 
-export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
+export function HomeBookCarousel() {
   const bookListRef = useRef<HTMLDivElement>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
   const [readyBooksKey, setReadyBooksKey] = useState('')
@@ -257,10 +253,6 @@ export function HomeBookCarousel({ onLoadingChange }: HomeBookCarouselProps) {
   const selectedBookIndex =
     activeBookIndex >= 0 ? activeBookIndex : getInitialBookIndex(arrangedBooks.length)
   const activeBook = arrangedBooks[selectedBookIndex] ?? arrangedBooks[0]
-
-  useEffect(() => {
-    onLoadingChange?.(booksQuery.isPending)
-  }, [booksQuery.isPending, onLoadingChange])
 
   // 렌더 배열은 [1번 책, 0번 책, 2번 책...] 순서라 첫 중앙 책은 index 1이다.
   // 그 위치로 맞추기 전까지는 이미지와 하단 정보가 어긋나 보이므로 스켈레톤을 덮는다.

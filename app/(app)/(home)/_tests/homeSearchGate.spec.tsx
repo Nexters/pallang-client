@@ -30,21 +30,9 @@ vi.mock('../_hooks/useOnboardingGate', () => ({
   useOnboardingGate: vi.fn(),
 }))
 
-vi.mock('../_components/HomeSection/HomeSection', async () => {
-  const React = await import('react')
-
+vi.mock('../_components/HomeSection/HomeSection', () => {
   return {
-    HomeSection: ({
-      onLoadingChange,
-      searchAction,
-    }: {
-      onLoadingChange?: (isLoading: boolean) => void
-      searchAction?: ReactNode
-    }) => {
-      React.useEffect(() => {
-        onLoadingChange?.(false)
-      }, [onLoadingChange])
-
+    HomeSection: ({ searchAction }: { searchAction?: ReactNode }) => {
       return <section aria-label="기록 중인 책 목록">{searchAction}책 목록</section>
     },
   }
