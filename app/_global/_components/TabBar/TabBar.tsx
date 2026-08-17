@@ -4,11 +4,12 @@ import type { ComponentPropsWithoutRef, FC, SVGProps } from 'react'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import BookFillIcon from '../Icon/assets/book-fill.svg'
+import ChatIcon from '../Icon/assets/chat.svg'
 import HomeIcon from '../Icon/assets/home.svg'
 import MyIcon from '../Icon/assets/my.svg'
 import PlusIcon from '../Icon/assets/plus.svg'
 
-type TabBarTab = 'book' | 'home' | 'my'
+type TabBarTab = 'book' | 'home' | 'meeting' | 'my'
 
 type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
   activeTab?: TabBarTab
@@ -17,6 +18,7 @@ type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
   isLoading?: boolean
   /** 흔적 남기기 이동이 진행 중. Button과 같은 규칙으로 색은 유지한 채 pulse로 알리고 중복 탭을 막는다. */
   isTracePending?: boolean
+  meetingHref?: string
   /** 흔적 남기기는 로그인이 필요해 이동 전에 게이트를 거친다. 넘기지 않으면 traceHref로 바로 이동한다. */
   onTraceClick?: () => void
   traceHref?: string
@@ -61,6 +63,10 @@ function TabBarSkeleton() {
         <div className="size-6.5 rounded-full bg-white/10" />
         <div className="h-2 w-8 rounded-[1px] bg-white/10" />
       </div>
+      <div className="flex w-12 shrink-0 flex-col items-center gap-0.5">
+        <div className="size-6.5 rounded-full bg-white/10" />
+        <div className="h-2 w-8 rounded-[1px] bg-white/10" />
+      </div>
     </>
   )
 }
@@ -72,6 +78,7 @@ export function TabBar({
   homeHref = '/',
   isLoading = false,
   isTracePending = false,
+  meetingHref = '/meeting',
   onTraceClick,
   traceHref = '/trace/new',
   myHref = '/my',
@@ -122,6 +129,12 @@ export function TabBar({
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
               </Link>
             )}
+            <TabLink
+              href={meetingHref}
+              icon={ChatIcon}
+              isActive={activeTab === 'meeting'}
+              label="모임"
+            />
             <TabLink href={myHref} icon={MyIcon} isActive={activeTab === 'my'} label="MY" />
           </>
         )}
