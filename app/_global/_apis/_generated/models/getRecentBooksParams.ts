@@ -4,6 +4,10 @@
 
 export type GetRecentBooksParams = {
   /**
+   * 검색 키워드 (생략하거나 빈 문자열이면 전체 목록)
+   */
+  keyword?: string
+  /**
    * 페이지 번호 (0부터 시작, 기본값 0)
    */
   page?: number

@@ -22,12 +22,10 @@ import { createBook } from '../_apis/book.api'
 export const BOOK_SEARCH_SORT = SearchInternalBooksSort
 export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
 
-/** 서재·홈 캐러셀·인기 목록이 공유하는 도서 카드 데이터 */
 export type BookActivity = BookActivityResponse
 
 export const bookQueries = {
   all: () => ['book'] as const,
-  // 홈 캐러셀은 offset 기반 양방향 조회다. offset을 넘기지 않으면 서버가 전체 목록의 가운데를 잡아준다.
   homeCarousel: (params?: GetHomeCarouselBooksParams) =>
     infiniteQueryOptions({
       queryKey: [...bookQueries.all(), 'home-carousel', params],
@@ -58,24 +56,31 @@ export const bookQueries = {
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
       },
     }),
-  // 로그인한 사용자가 최근에 대목을 남긴 도서. 비로그인이면 401이 정상 흐름이라 재시도하지 않는다.
   recent: (params?: GetRecentBooksParams) =>
     queryOptions({
       queryKey: [...bookQueries.all(), 'recent', params ?? {}],
       queryFn: () => getRecentBooks(params),
       retry: false,
     }),
-  // 내 서재. 흔적을 남긴 도서만, 최근에 남긴 순이다. 홈 캐러셀과 같은 offset 기반이지만
-  // 좌우가 아니라 아래로만 이어붙이므로 0에서 시작해 앞 페이지는 두지 않는다.
-  // 비로그인이면 401이 정상 흐름이라 재시도하지 않는다.
-  myLibrary: (params?: Omit<GetMyLibraryBooksParams, 'offset'>) =>
+  recentSearch: (params: Omit<GetRecentBooksParams, 'page'>) =>
+    infiniteQueryOptions({
+      queryKey: [...bookQueries.all(), 'recent-search', params],
+      queryFn: ({ pageParam }) => getRecentBooks({ ...params, page: pageParam }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage, allPages) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? allPages.length : undefined
+      },
+      retry: false,
+    }),
+  myLibrary: (params?: GetMyLibraryBooksParams) =>
     infiniteQueryOptions({
       queryKey: [...bookQueries.all(), 'my-library', params ?? {}],
-      queryFn: ({ pageParam }) => getMyLibraryBooks({ ...params, offset: pageParam }),
+      queryFn: ({ pageParam }) => getMyLibraryBooks({ ...params, page: pageParam }),
       initialPageParam: 0,
-      getNextPageParam: (lastPage) => {
+      getNextPageParam: (lastPage, allPages) => {
         const pageInfo = lastPage.data?.pageInfo
-        return pageInfo?.hasNext ? pageInfo.offset + pageInfo.size : undefined
+        return pageInfo?.hasNext ? allPages.length : undefined
       },
       retry: false,
     }),
@@ -84,8 +89,6 @@ export const bookQueries = {
       queryKey: [...bookQueries.all(), 'popular', params ?? {}],
       queryFn: () => getPopularBooks(params),
     }),
-  // 내부 검색에 없는 책을 등록할 때 쓰는 알라딘 검색. bookId가 없어 그대로는 고를 수 없고,
-  // POST /api/books로 등록해야 흔적을 남길 수 있다. 한 화면 분량이면 충분해 페이지네이션은 두지 않는다.
   searchExternal: (params: SearchExternalBooksParams) =>
     queryOptions({
       queryKey: [...bookQueries.all(), 'external-search', params],
@@ -95,7 +98,6 @@ export const bookQueries = {
 
 type CreateBookVariables = {
   book: CreateBookRequest
-  /** 표지 파일(jpeg/png). 알라딘 표지는 /api/book-cover 프록시로 받아 Blob으로 넘긴다. */
   coverImage?: Blob
 }
 

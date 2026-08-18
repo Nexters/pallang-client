@@ -17,7 +17,7 @@ const BOOK = {
   opinionCount: 17,
 }
 
-const PAGE_INFO = { offset: 0, size: 20, totalElements: 1, hasPrevious: false, hasNext: false }
+const PAGE_INFO = { page: 0, size: 20, totalElements: 1, totalPages: 1, hasNext: false }
 
 /** 서재 응답을 고정하고 실제로 나간 요청 url을 돌려준다 */
 function stubApi(response: { body?: unknown; status?: number }) {
@@ -61,12 +61,12 @@ describe('내 서재 도서 목록', () => {
     expect(screen.getByText('17')).toBeInTheDocument()
   })
 
-  it('offset 기반으로 첫 페이지를 요청한다', async () => {
+  it('page 기반으로 첫 페이지를 요청한다', async () => {
     const calls = stubApi({ body: { data: { books: [BOOK], pageInfo: PAGE_INFO } } })
     renderView()
 
     await screen.findByText('만조를 기다리며')
-    expect(calls[0]).toBe('/api/books/my-library?offset=0')
+    expect(calls[0]).toBe('/api/books/my-library?page=0')
   })
 
   it('흔적을 남긴 책이 없으면 빈 상태를 보여준다', async () => {

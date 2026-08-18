@@ -12,7 +12,7 @@ import Logo from '@/public/images/logo.svg'
 import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
 import { HomeSection } from '../HomeSection/HomeSection'
 
-const BOOK_SEARCH_PATH = '/book/search'
+const BOOK_SEARCH_PATH = '/book/search/my-books'
 
 export function HomePageView() {
   useOnboardingGate()

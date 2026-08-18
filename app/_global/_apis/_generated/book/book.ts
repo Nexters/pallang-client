@@ -131,7 +131,7 @@ export const getGetRecentBooksUrl = (params?: GetRecentBooksParams) => {
 }
 
 /**
- * 현재 로그인한 사용자가 최근에 대목을 남긴 도서 목록입니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 현재 로그인한 사용자가 최근에 대목을 남긴 도서 목록입니다. 홈 화면 검색에서 사용할 수 있도록 keyword로 제목을 필터링할 수 있으며, 생략하거나 빈 문자열이면 전체 목록을 반환합니다. 제목과 검색어의 띄어쓰기 차이는 무시하고 매칭합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 내가 최근에 남긴 도서 목록
  */
 export const getRecentBooks = async (
@@ -191,14 +191,14 @@ export const getGetMyLibraryBooksUrl = (params?: GetMyLibraryBooksParams) => {
 }
 
 /**
- * 현재 로그인한 사용자가 흔적을 남긴 도서만 대상으로, 대목/흔적 수와 함께 조회합니다. 가장 최근에 흔적을 남긴 도서부터 내림차순으로 정렬되며, offset을 생략하면 0부터(=가장 최근 도서부터) 조회합니다. 더 과거 도서를 이어서 보려면 응답으로 받은 pageInfo를 참고해 offset + size로 다시 요청하면 됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 현재 로그인한 사용자가 흔적을 남긴 도서만 대상으로, 대목/흔적 수와 함께 조회합니다. 가장 최근에 흔적을 남긴 도서부터 내림차순으로 정렬됩니다. opinionCountScope로 흔적 수 집계 기준을 선택할 수 있습니다: ALL(기본값, 도서 전체 흔적 수 - 홈 화면 노출용) 또는 MINE(로그인 사용자 본인이 남긴 흔적 수 - 마이페이지 노출용). Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 내 서재 도서 목록
  */
 export const getMyLibraryBooks = async (
   params?: GetMyLibraryBooksParams,
   options?: Parameters<typeof customFetch>[1],
-): Promise<DataResponseBookCarouselListResponse> => {
-  return customFetch<DataResponseBookCarouselListResponse>(getGetMyLibraryBooksUrl(params), {
+): Promise<DataResponseBookActivityListResponse> => {
+  return customFetch<DataResponseBookActivityListResponse>(getGetMyLibraryBooksUrl(params), {
     ...options,
     method: 'GET',
   })

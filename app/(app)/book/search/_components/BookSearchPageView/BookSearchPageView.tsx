@@ -35,17 +35,26 @@ export function BookSearchPageView() {
     placeholderData: keepPreviousData,
   })
 
-  const searchResults = searched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
-  const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = searched
+  const searchedBooks = searched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  const searchStatus = (() => {
+    if (searched.isPending || isTypingAhead) return 'pending'
+    if (searched.isError && searchedBooks.length === 0) return 'error'
+    return 'ready'
+  })()
   const showRecent = recent.isPending || (recent.data?.data?.books.length ?? 0) > 0
   const showPopular = popular.isPending || (popular.data?.data?.books.length ?? 0) > 0
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
     rootRef: scrollRef,
-    enabled: isSearching && !isTypingAhead && hasNextPage && !isError && !isFetchingNextPage,
+    enabled:
+      isSearching &&
+      !isTypingAhead &&
+      searched.hasNextPage &&
+      !searched.isError &&
+      !searched.isFetchingNextPage,
     onLoadMore: () => {
-      void fetchNextPage()
+      void searched.fetchNextPage()
     },
   })
 
@@ -91,12 +100,8 @@ export function BookSearchPageView() {
         {isSearching ? (
           <>
             <BookSearchResultList
-              books={searchResults}
-              status={(() => {
-                if (searched.isPending || isTypingAhead) return 'pending'
-                if (isError && searchResults.length === 0) return 'error'
-                return 'ready'
-              })()}
+              books={searchedBooks}
+              status={searchStatus}
               onAddBook={() => {
                 resetKeyword()
                 router.push('/book/new')
