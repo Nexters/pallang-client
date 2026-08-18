@@ -16,6 +16,7 @@ import { passageMutations } from '@/app/_global/_queries/passage.queries'
 
 import { MAX_QUOTE_LENGTH } from '../../_data/quote.constant'
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
+import { useTraceCapture } from '../../_hooks/useTraceCapture'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import type { BlockBox } from '../../_services/blockSelection.service'
@@ -39,6 +40,8 @@ export function OcrSelector() {
   const { goBack, goTo } = useTraceNav()
   const { dispatch } = useTraceDraft()
   const { takePhoto } = useCamera()
+  // 방식 선택 화면이 사용자의 탭 안에서 이미 시작해 둔 촬영
+  const { take: takeHandedCapture } = useTraceCapture()
   const ocr = useMutation(passageMutations.ocr())
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [blocks, setBlocks] = useState<PositionedBlock[]>([])
@@ -70,68 +73,76 @@ export function OcrSelector() {
     [],
   )
 
-  const runCapture = useCallback(async (isInitial: boolean, source: PhotoSource = 'camera') => {
-    let photo: null | Photo
-    try {
-      photo = await latestRef.current.takePhoto(source)
-    } catch (error) {
-      // 권한이 이미 꺼져 있으면 다시 찍어도 같은 벽이다. 설정으로 보내는 안내로 갈아탄다.
-      if (error instanceof CameraPermissionDeniedError) {
-        setFailure(null)
-        setPermissionBlocked(error.kind)
+  const runCapture = useCallback(
+    async (
+      isInitial: boolean,
+      source: PhotoSource = 'camera',
+      /** 이미 시작해 둔 촬영. 넘어오면 새로 열지 않고 그 결과를 기다린다. */
+      handed: Promise<null | Photo> | null = null,
+    ) => {
+      let photo: null | Photo
+      try {
+        photo = await (handed ?? latestRef.current.takePhoto(source))
+      } catch (error) {
+        // 권한이 이미 꺼져 있으면 다시 찍어도 같은 벽이다. 설정으로 보내는 안내로 갈아탄다.
+        if (error instanceof CameraPermissionDeniedError) {
+          setFailure(null)
+          setPermissionBlocked(error.kind)
+          return
+        }
+        // 취소는 null로 오고 여기 오는 건 실제 실패다. 되돌리지 말고 대안을 보여준다.
+        console.error('사진을 가져오지 못했습니다.', error)
+        setFailure(
+          source === 'camera'
+            ? '카메라를 열지 못했어요.\n갤러리에서 사진을 골라주세요.'
+            : '사진을 가져오지 못했어요.\n다시 시도해주세요.',
+        )
         return
       }
-      // 취소는 null로 오고 여기 오는 건 실제 실패다. 되돌리지 말고 대안을 보여준다.
-      console.error('사진을 가져오지 못했습니다.', error)
-      setFailure(
-        source === 'camera'
-          ? '카메라를 열지 못했어요.\n갤러리에서 사진을 골라주세요.'
-          : '사진을 가져오지 못했어요.\n다시 시도해주세요.',
-      )
-      return
-    }
 
-    if (!photo) {
-      // 첫 진입에서 촬영을 취소하면 보여줄 사진이 없다. 다시 찍기 취소는 기존 사진을 유지한다.
-      if (isInitial) latestRef.current.goBack()
-      return
-    }
+      if (!photo) {
+        // 첫 진입에서 촬영을 취소하면 보여줄 사진이 없다. 다시 찍기 취소는 기존 사진을 유지한다.
+        if (isInitial) latestRef.current.goBack()
+        return
+      }
 
-    setFailure(null)
-    setPermissionBlocked(null)
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
-    objectUrlRef.current = photo.webPath.startsWith('blob:') ? photo.webPath : null
-    setImageUrl(photo.webPath)
-    setBlocks([])
-    setSelected([])
-    setEditedText(null)
+      setFailure(null)
+      setPermissionBlocked(null)
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
+      objectUrlRef.current = photo.webPath.startsWith('blob:') ? photo.webPath : null
+      setImageUrl(photo.webPath)
+      setBlocks([])
+      setSelected([])
+      setEditedText(null)
 
-    try {
-      const response = await latestRef.current.ocrMutateAsync({ image: photo.blob })
-      const positionedBlocks = (response.data?.blocks ?? [])
-        .filter((block) => block.boundingBox.vertices.length > 0)
-        .map((block) => {
-          const xs = block.boundingBox.vertices.map((point) => point.x)
-          const ys = block.boundingBox.vertices.map((point) => point.y)
-          const left = Math.min(...xs)
-          const top = Math.min(...ys)
-          // lineBreak는 인쇄된 줄의 끝을 뜻할 뿐이라 발췌문에 옮기지 않는다(ocrText.service 참고)
-          return {
-            height: Math.max(...ys) - top,
-            left,
-            text: block.text,
-            top,
-            width: Math.max(...xs) - left,
-          }
-        })
-      // 한 글자도 못 읽었으면 사진만 덩그러니 남는다. 실패와 같은 자리에서 안내한다.
-      if (positionedBlocks.length === 0) setFailure(OCR_FAILURE_MESSAGE)
-      else setBlocks(positionedBlocks)
-    } catch (error) {
-      console.error('글자 인식에 실패했습니다.', error)
-      setFailure(OCR_FAILURE_MESSAGE)
-    }
-  }, [])
+      try {
+        const response = await latestRef.current.ocrMutateAsync({ image: photo.blob })
+        const positionedBlocks = (response.data?.blocks ?? [])
+          .filter((block) => block.boundingBox.vertices.length > 0)
+          .map((block) => {
+            const xs = block.boundingBox.vertices.map((point) => point.x)
+            const ys = block.boundingBox.vertices.map((point) => point.y)
+            const left = Math.min(...xs)
+            const top = Math.min(...ys)
+            // lineBreak는 인쇄된 줄의 끝을 뜻할 뿐이라 발췌문에 옮기지 않는다(ocrText.service 참고)
+            return {
+              height: Math.max(...ys) - top,
+              left,
+              text: block.text,
+              top,
+              width: Math.max(...xs) - left,
+            }
+          })
+        // 한 글자도 못 읽었으면 사진만 덩그러니 남는다. 실패와 같은 자리에서 안내한다.
+        if (positionedBlocks.length === 0) setFailure(OCR_FAILURE_MESSAGE)
+        else setBlocks(positionedBlocks)
+      } catch (error) {
+        console.error('글자 인식에 실패했습니다.', error)
+        setFailure(OCR_FAILURE_MESSAGE)
+      }
+    },
+    [],
+  )
 
   // started는 컴포넌트 인스턴스마다 새로 생성되는 ref라, 언마운트 후 재마운트되면
   // 자동으로 false에서 다시 시작한다 — cleanup으로 되돌릴 필요가 없다.
@@ -140,8 +151,10 @@ export function OcrSelector() {
   useEffect(() => {
     if (started.current) return
     started.current = true
-    void runCapture(true)
-  }, [runCapture])
+    // 방식 선택 화면이 사용자의 탭 안에서 이미 카메라를 열어 두었으면 그 결과를 이어받는다.
+    // 없으면(새로고침·직접 진입) 여기서 연다 — 네이티브는 조작 권한을 따지지 않아 그대로 열린다.
+    void runCapture(true, 'camera', takeHandedCapture())
+  }, [runCapture, takeHandedCapture])
 
   // 설정에서 권한을 켜고 돌아왔으면 바로 이어서 진행한다.
   // iOS는 권한을 바꾸는 순간 OS가 앱을 종료시켜 이 경로로 돌아오지 않는다 — 실질적으로 Android용이다.

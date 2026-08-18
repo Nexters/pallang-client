@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import { useCamera } from '@/app/_global/_hooks/useCamera'
 import type { TraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
+import { useTraceCapture } from '../../_hooks/useTraceCapture'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import { ManualQuoteSheet } from '../ManualQuoteSheet/ManualQuoteSheet'
@@ -20,6 +22,8 @@ type TraceSourceViewProps = {
 export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
   const { draft, dispatch } = useTraceDraft()
   const { goTo, requestExit } = useTraceNav()
+  const { takePhoto } = useCamera()
+  const capture = useTraceCapture()
   // 이 화면은 방식 선택 시트 그 자체다 — 마운트하면 연다. 다만 씨앗이 대목까지 물고 왔으면
   // 고를 방식이 없다(대목이 이미 있다). 그때는 열지 않고 곧장 ①로 넘어간다.
   const [sheet, setSheet] = useState<'manual' | 'none' | 'source'>(
@@ -88,6 +92,10 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
         book={draft.book}
         onClose={requestExit}
         onSelectPhoto={() => {
+          // 카메라는 이 탭 안에서 연다. 사진 화면으로 옮겨 간 뒤 그쪽 effect에서 열면
+          // 브라우저 조작 권한이 이미 끊겨 파일 선택창이 조용히 무시된다(TraceCaptureProvider 참고).
+          // 시작만 여기서 하고 결과는 사진 화면이 이어받는다 — 전환은 지금처럼 곧바로 일어난다.
+          capture.hand(takePhoto('camera'))
           dispatch({ type: 'setSource', source: 'photo' })
           setSheet('none')
           goTo('photo')

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 
+import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
 import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
@@ -15,6 +16,12 @@ const replaceMock = vi.fn()
 vi.mock('next/navigation', () => ({
   usePathname: () => navState.pathname,
   useRouter: () => ({ push: vi.fn(), replace: replaceMock, prefetch: vi.fn() }),
+}))
+
+const takePhotoMock = vi.fn(() => new Promise<null>(() => undefined))
+
+vi.mock('@/app/_global/_hooks/useCamera', () => ({
+  useCamera: () => ({ takePhoto: takePhotoMock }),
 }))
 
 // 씨앗이 초안에 어떻게 내려앉았는지는 화면으로 볼 수 없다(곧장 ①로 넘어간다) — 초안을 직접 읽는다
@@ -39,12 +46,14 @@ function renderView(seed: Parameters<typeof TraceSourceView>[0]['seed'] = null) 
   return render(
     <HardwareBackProvider>
       <TraceDraftProvider>
-        <TraceOverlayProvider>
-          <TraceNavProvider>
-            <TraceSourceView seed={seed} />
-            <DraftProbe />
-          </TraceNavProvider>
-        </TraceOverlayProvider>
+        <TraceCaptureProvider>
+          <TraceOverlayProvider>
+            <TraceNavProvider>
+              <TraceSourceView seed={seed} />
+              <DraftProbe />
+            </TraceNavProvider>
+          </TraceOverlayProvider>
+        </TraceCaptureProvider>
       </TraceDraftProvider>
     </HardwareBackProvider>,
   )
@@ -103,6 +112,22 @@ describe('흔적 작성 첫 화면', () => {
     await waitFor(() => {
       expect(replaceMock).toHaveBeenCalledWith('/trace/new/photo')
     })
+  })
+
+  it('카메라는 화면을 옮기기 전에, 누른 그 손짓 안에서 연다', async () => {
+    replaceMock.mockClear()
+    takePhotoMock.mockClear()
+    renderView()
+
+    fireEvent.click(await screen.findByRole('button', { name: /사진으로 입력/ }))
+
+    // 사진 화면으로 옮겨 간 뒤 그쪽 effect에서 열면 브라우저 조작 권한이 끊겨
+    // 파일 선택창이 예외도 없이 무시된다 — 촬영 약속이 영영 안 끝나 화면이 멈춘다.
+    expect(takePhotoMock).toHaveBeenCalledWith('camera')
+    // 기본값은 "부르지 않았으면 실패"로 읽히게 잡는다
+    const [cameraOrder = Number.POSITIVE_INFINITY] = takePhotoMock.mock.invocationCallOrder
+    const [navigateOrder = 0] = replaceMock.mock.invocationCallOrder
+    expect(cameraOrder).toBeLessThan(navigateOrder)
   })
 
   it('직접 입력을 고르고 문장을 적어 제출하면 대목을 담아 작성 단계로 간다', async () => {

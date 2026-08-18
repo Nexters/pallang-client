@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 
 import { OcrSelector } from '../_components/OcrSelector/OcrSelector'
+import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
 import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
@@ -33,11 +34,13 @@ function renderSelector() {
     <QueryClientProvider client={queryClient}>
       <HardwareBackProvider>
         <TraceDraftProvider>
-          <TraceOverlayProvider>
-            <TraceNavProvider>
-              <OcrSelector />
-            </TraceNavProvider>
-          </TraceOverlayProvider>
+          <TraceCaptureProvider>
+            <TraceOverlayProvider>
+              <TraceNavProvider>
+                <OcrSelector />
+              </TraceNavProvider>
+            </TraceOverlayProvider>
+          </TraceCaptureProvider>
         </TraceDraftProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,

@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 
@@ -96,6 +96,29 @@ describe('BottomSheet', () => {
     expect(screen.getByRole('button', { name: '뒤로' })).toBeTruthy()
     // 뒤로는 한 층 걷어내는 길이고 닫기는 시트를 통째로 접는 길이라 함께 선다
     expect(screen.getByRole('button', { name: '닫기' })).toBeTruthy()
+  })
+
+  // base-ui는 'starting'을 다음 애니메이션 프레임에 걷어낸다. rAF를 붙잡아 두면
+  // 첫 커밋 상태가 그대로 남아 시작 스타일이 붙었는지 확인할 수 있다.
+  describe('등장 전환', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('열린 채로 마운트해도 시작 위치에서 올라온다', () => {
+      vi.stubGlobal('requestAnimationFrame', () => 1)
+      vi.stubGlobal('cancelAnimationFrame', () => undefined)
+
+      render(
+        <BottomSheet open title="새로운 기록을 어떻게 남길까요?" onClose={vi.fn()}>
+          <p>본문</p>
+        </BottomSheet>,
+      )
+
+      // 이 속성이 없으면 시트가 translate-y-full을 거치지 않고 제자리에 그려진다
+      // = 올라오는 전환이 통째로 사라진다(base-ui는 open인 채 마운트되면 starting을 건너뛴다)
+      expect(screen.getByRole('dialog')).toHaveAttribute('data-starting-style')
+    })
   })
 
   it('footer는 본문 스크롤 영역 바깥에 그린다', () => {
