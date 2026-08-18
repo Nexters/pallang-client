@@ -1,5 +1,5 @@
-import { OcrSelector } from '../_components/OcrSelector/OcrSelector'
+import { OcrCaptureBoundary } from '../_components/OcrCaptureBoundary/OcrCaptureBoundary'
 
 export default function TracePhotoPage() {
-  return <OcrSelector />
+  return <OcrCaptureBoundary />
 }
