@@ -1,7 +1,7 @@
 'use client'
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
-import { type ReactNode, useRef } from 'react'
+import { type ReactNode, useDeferredValue, useRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -48,9 +48,18 @@ export function BottomSheet({
   // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
   const popupRef = useRef<HTMLDivElement>(null)
 
+  // 열린 채로 마운트되는 시트(화면 자체가 시트인 경우 — TraceSourceView)를 위한 한 렌더 유예다.
+  // base-ui는 mounted 초기값을 open으로 잡아(internals/useTransitionStatus) 처음부터 열려 있으면
+  // 'starting' 단계를 건너뛴다 = data-starting-style이 한 번도 붙지 않아 시작 위치
+  // (translate-y-full)를 거치지 않고 제자리에 그려진다 — 올라오는 전환이 통째로 사라진다.
+  // 첫 렌더만 닫힌 채로 두고 곧바로 열어, 어떻게 마운트되든 닫힘→열림 전환을 거치게 한다.
+  // useDeferredValue의 두 번째 인자(React 19)가 "첫 렌더는 이 값, 그다음 렌더부터 진짜 값"을
+  // 그대로 준다 — effect에서 setState를 부르는 것과 결과는 같고 연쇄 렌더는 만들지 않는다.
+  const hasMounted = useDeferredValue(true, false)
+
   return (
     <BaseDialog.Root
-      open={open}
+      open={open && hasMounted}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose()
       }}
