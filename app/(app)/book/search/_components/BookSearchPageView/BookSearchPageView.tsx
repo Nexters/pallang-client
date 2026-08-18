@@ -17,13 +17,7 @@ import { BookSearchResultList } from '../BookSearchResultList/BookSearchResultLi
 
 const PAGE_SIZE = 20
 
-type BookSearchScope = 'internal' | 'my-recent'
-
-type BookSearchPageViewProps = {
-  scope: BookSearchScope
-}
-
-export function BookSearchPageView({ scope }: BookSearchPageViewProps) {
+export function BookSearchPageView() {
   const router = useRouter()
   const [keyword, setKeyword] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -35,24 +29,18 @@ export function BookSearchPageView({ scope }: BookSearchPageViewProps) {
   const me = useQuery(userQueries.me())
   const recent = useQuery(bookQueries.recent({ size: PAGE_SIZE }))
   const popular = useQuery(bookQueries.popular({ size: PAGE_SIZE }))
-  const recentSearched = useInfiniteQuery({
-    ...bookQueries.recentSearch({ keyword: debouncedKeyword, size: PAGE_SIZE }),
-    enabled: scope === 'my-recent' && isSearching,
-    placeholderData: keepPreviousData,
-  })
-  const internalSearched = useInfiniteQuery({
+  const searched = useInfiniteQuery({
     ...bookQueries.searchInternal({ keyword: debouncedKeyword, size: PAGE_SIZE }),
-    enabled: scope === 'internal' && isSearching,
+    enabled: isSearching,
     placeholderData: keepPreviousData,
   })
 
-  const isMyRecentScope = scope === 'my-recent'
-  const activeSearch = {
-    books: isMyRecentScope
-      ? (recentSearched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? [])
-      : (internalSearched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []),
-    query: isMyRecentScope ? recentSearched : internalSearched,
-  }
+  const searchedBooks = searched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  const searchStatus = (() => {
+    if (searched.isPending || isTypingAhead) return 'pending'
+    if (searched.isError && searchedBooks.length === 0) return 'error'
+    return 'ready'
+  })()
   const showRecent = recent.isPending || (recent.data?.data?.books.length ?? 0) > 0
   const showPopular = popular.isPending || (popular.data?.data?.books.length ?? 0) > 0
 
@@ -62,11 +50,11 @@ export function BookSearchPageView({ scope }: BookSearchPageViewProps) {
     enabled:
       isSearching &&
       !isTypingAhead &&
-      activeSearch.query.hasNextPage &&
-      !activeSearch.query.isError &&
-      !activeSearch.query.isFetchingNextPage,
+      searched.hasNextPage &&
+      !searched.isError &&
+      !searched.isFetchingNextPage,
     onLoadMore: () => {
-      void activeSearch.query.fetchNextPage()
+      void searched.fetchNextPage()
     },
   })
 
@@ -112,19 +100,15 @@ export function BookSearchPageView({ scope }: BookSearchPageViewProps) {
         {isSearching ? (
           <>
             <BookSearchResultList
-              books={activeSearch.books}
-              status={(() => {
-                if (activeSearch.query.isPending || isTypingAhead) return 'pending'
-                if (activeSearch.query.isError && activeSearch.books.length === 0) return 'error'
-                return 'ready'
-              })()}
+              books={searchedBooks}
+              status={searchStatus}
               onAddBook={() => {
                 resetKeyword()
                 router.push('/book/new')
               }}
               onLeave={resetKeyword}
               onRetry={() => {
-                void activeSearch.query.refetch()
+                void searched.refetch()
               }}
             />
             <div ref={loadMoreRef} className="h-6 w-full shrink-0" aria-hidden="true" />

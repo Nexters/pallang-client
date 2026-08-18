@@ -58,7 +58,7 @@ describe('홈 검색 게이트', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: '검색' }))
 
-    expect(pushMock).not.toHaveBeenCalledWith('/book/search?scope=my-recent')
+    expect(pushMock).not.toHaveBeenCalledWith('/book/search/my-books')
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toHaveAccessibleName('로그인하면 확인 할 수 있어요!')
     expect(dialog).toHaveAccessibleDescription('팔랑과 함께하고 더 많은 의견을 확인해보세요.')
@@ -71,7 +71,7 @@ describe('홈 검색 게이트', () => {
     await userEvent.click(await screen.findByRole('button', { name: '검색' }))
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith('/book/search?scope=my-recent')
+      expect(pushMock).toHaveBeenCalledWith('/book/search/my-books')
     })
     expect(screen.queryByRole('dialog')).toBeNull()
   })
