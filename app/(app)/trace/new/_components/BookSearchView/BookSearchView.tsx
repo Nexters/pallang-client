@@ -71,16 +71,24 @@ export function BookSearchView({
     },
   })
 
+  // 통합 검색이 생기면서 응답의 bookId·pageCount가 선택 항목이 됐다(미등록 도서는 비어 있다).
+  // 내부 검색 결과는 모두 등록된 도서지만 타입은 그걸 모르므로, bookId가 없는 항목은 걸러 낸다.
   const searchResults =
     searched.data?.pages.flatMap((page) =>
-      (page.data?.books ?? []).map((book) => ({
-        author: book.author,
-        bookId: book.bookId,
-        coverImageUrl: book.coverImageUrl ?? null,
-        pageCount: book.pageCount,
-        publisher: book.publisher,
-        title: book.title,
-      })),
+      (page.data?.books ?? []).flatMap((book) =>
+        book.bookId == null
+          ? []
+          : [
+              {
+                author: book.author,
+                bookId: book.bookId,
+                coverImageUrl: book.coverImageUrl ?? null,
+                pageCount: book.pageCount ?? null,
+                publisher: book.publisher,
+                title: book.title,
+              },
+            ],
+      ),
     ) ?? []
 
   // 내부에 있는 책이면 그걸 고르는 게 맞다. 없을 때만 알라딘을 부른다.
@@ -92,11 +100,11 @@ export function BookSearchView({
   })
 
   const externalBooks: ExternalBook[] = (external.data?.data?.books ?? []).map((book) => ({
-    author: book.author ?? '',
+    author: book.author,
     coverImageUrl: book.coverImageUrl ?? null,
     isbn: book.isbn ?? '',
-    publisher: book.publisher ?? '',
-    title: book.title ?? '',
+    publisher: book.publisher,
+    title: book.title,
   }))
 
   const recentBooks: SelectedBook[] = (recent.data?.data?.books ?? []).map((book) => ({

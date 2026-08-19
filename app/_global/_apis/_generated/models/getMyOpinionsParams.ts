@@ -4,6 +4,10 @@
 
 export type GetMyOpinionsParams = {
   /**
+   * 책 ID (생략 시 전체 책 대상)
+   */
+  bookId?: number
+  /**
    * 페이지 번호 (0부터 시작, 기본값 0)
    */
   page?: number

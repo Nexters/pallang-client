@@ -63,7 +63,7 @@ vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
         ],
       },
     }),
-  searchExternalBooks: () => Promise.resolve({ data: { books: [] } }),
+  searchBooks: () => Promise.resolve({ data: { books: [] } }),
   searchInternalBooks: searchInternalMock,
 }))
 

@@ -33,7 +33,14 @@ export function BookSearchPageView() {
     ...bookQueries.searchInternal({ keyword: '', size: 20, sort }),
   })
 
-  const books = booksQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  // 통합 검색이 생기면서 응답의 bookId가 선택 항목이 됐다(미등록 도서는 비어 있다).
+  // 이 목록은 내부 검색이라 모두 등록된 도서지만, 타입이 그걸 모르므로 bookId 없는 항목은 걸러 낸다.
+  const books =
+    booksQuery.data?.pages.flatMap((page) =>
+      (page.data?.books ?? []).flatMap((book) =>
+        book.bookId == null ? [] : [{ ...book, bookId: book.bookId }],
+      ),
+    ) ?? []
   const totalCount = booksQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
   const { fetchNextPage, hasNextPage, isError, isFetching, isFetchingNextPage } = booksQuery
   const canObserveLoadMore = hasNextPage && !isError && !isFetchingNextPage

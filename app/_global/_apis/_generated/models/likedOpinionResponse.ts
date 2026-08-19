@@ -6,12 +6,14 @@ export interface LikedOpinionResponse {
   opinionId: number
   bookId: number
   bookTitle: string
+  author: string
   /** @nullable */
   bookCoverImageUrl?: string | null
   passageId: number
   quotedText: string
   pageNumber: number
   content: string
+  nickname: string
   likeCount: number
   createdAt: string
   likedAt: string
