@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import ContentIcon from '@/app/_global/_components/Icon/assets/content.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
@@ -11,6 +11,8 @@ type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   opinionCount?: number
   passageCount?: number
   publisher?: string
+  /** 대목·흔적 수 오른쪽에 붙는 자리(Figma 225:13279). 책 상세의 독서 상태 뱃지가 여기로 들어온다. */
+  statusBadge?: ReactNode
   title: string
 }
 
@@ -34,6 +36,7 @@ export function BookItem({
   opinionCount,
   passageCount,
   publisher,
+  statusBadge,
   title,
   ...props
 }: BookItemProps) {
@@ -63,6 +66,7 @@ export function BookItem({
           <div className="flex items-center gap-1">
             <BookStat icon="content" value={passageCount} />
             <BookStat icon="pencil" value={opinionCount} />
+            {statusBadge}
           </div>
         )}
       </div>

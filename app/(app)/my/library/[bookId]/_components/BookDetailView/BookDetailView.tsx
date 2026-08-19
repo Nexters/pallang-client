@@ -1,11 +1,11 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
-import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { bookMutations, bookQueries, type BookStatus } from '@/app/_global/_queries/book.queries'
 import type { MyPassage } from '@/app/_global/_queries/user.queries'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerReleaseDialog/SpoilerReleaseDialog'
@@ -13,6 +13,8 @@ import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerRele
 import { type BookRecordTab, bookRecordTabIds } from '../../_data/bookRecordTab.constant'
 import { BookHeaderSkeleton } from '../BookHeaderSkeleton/BookHeaderSkeleton'
 import { BookRecordTabs } from '../BookRecordTabs/BookRecordTabs'
+import { BookStatusChip } from '../BookStatusChip/BookStatusChip'
+import { BookStatusSheet } from '../BookStatusSheet/BookStatusSheet'
 import { LikedPanel } from '../LikedPanel/LikedPanel'
 import { OpinionPanel } from '../OpinionPanel/OpinionPanel'
 import { SpoilerPanel } from '../SpoilerPanel/SpoilerPanel'
@@ -28,9 +30,31 @@ export function BookDetailView({ bookId }: { bookId: number }) {
   const [tab, setTab] = useState<BookRecordTab>('opinion')
   const [unliked, setUnliked] = useState<UnlikedTarget | null>(null)
   const [releasing, setReleasing] = useState<MyPassage | null>(null)
+  // 시트가 들고 있는 선택값. 열 때 서버 상태로 채우고, 닫으면 다음에 열 때 다시 채운다
+  const [statusDraft, setStatusDraft] = useState<BookStatus>(null)
+  const [isStatusOpen, setIsStatusOpen] = useState(false)
 
+  const queryClient = useQueryClient()
   const bookQuery = useQuery(bookQueries.detail(bookId))
   const book = bookQuery.data?.data
+  const updateStatus = useMutation({
+    ...bookMutations.updateStatus(),
+    onSuccess: async () => {
+      setIsStatusOpen(false)
+      // 뱃지가 읽는 myStatus는 책 상세 응답에만 실린다 — 되살릴 캐시도 그 하나뿐이다
+      await queryClient.invalidateQueries({ queryKey: bookQueries.detail(bookId).queryKey })
+    },
+  })
+
+  const handleSaveStatus = () => {
+    if (!statusDraft) return
+    // PUT은 상태와 현재 페이지를 함께 덮어쓴다 — 읽던 쪽을 지우지 않게 지금 값을 그대로 실어 보낸다
+    updateStatus.mutate({
+      bookId,
+      status: statusDraft,
+      currentPage: book?.myCurrentPage ?? undefined,
+    })
+  }
 
   return (
     <>
@@ -57,6 +81,15 @@ export function BookDetailView({ bookId }: { bookId: number }) {
               opinionCount={book.opinionCount}
               passageCount={book.passageCount}
               publisher={book.publisher}
+              statusBadge={
+                <BookStatusChip
+                  status={book.myStatus ?? null}
+                  onClick={() => {
+                    setStatusDraft(book.myStatus ?? null)
+                    setIsStatusOpen(true)
+                  }}
+                />
+              }
               title={book.title}
             />
           ) : (
@@ -102,6 +135,17 @@ export function BookDetailView({ bookId }: { bookId: number }) {
         onClose={() => {
           setUnliked(null)
         }}
+      />
+
+      <BookStatusSheet
+        open={isStatusOpen}
+        value={statusDraft}
+        saving={updateStatus.isPending}
+        onChange={setStatusDraft}
+        onClose={() => {
+          setIsStatusOpen(false)
+        }}
+        onSave={handleSaveStatus}
       />
 
       <SpoilerReleaseDialog
