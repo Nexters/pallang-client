@@ -114,6 +114,27 @@ describe('traceDraftReducer', () => {
     })
 
     expect(next.passageId).toBeNull()
+    expect(next.similarCheckedKey).toBeNull()
+  })
+
+  it('setPageDetail은 빈 페이지를 처음 채우는 것만으로는 병합 대상을 비우지 않는다', () => {
+    // 합칠지 묻는 자리는 대목을 얻은 직후(①)이고, 그때는 아직 페이지를 받기 전이다.
+    // 여기서 비우면 방금 '합칠게요'로 답한 것이 바로 다음 줄의 '다음'에서 조용히 날아간다.
+    const answered = [
+      { type: 'selectBook', book } as const,
+      { type: 'setQuotedText', quotedText: '어떤 문장' } as const,
+      { type: 'markSimilarChecked', key: '1:어떤 문장' } as const,
+      { type: 'setMergeTarget', passageId: 14 } as const,
+    ].reduce(traceDraftReducer, initialTraceDraft)
+
+    const next = traceDraftReducer(answered, {
+      type: 'setPageDetail',
+      pageNumber: 87,
+      isSpoiler: false,
+    })
+
+    expect(next.passageId).toBe(14)
+    expect(next.similarCheckedKey).toBe('1:어떤 문장')
   })
 
   it('applyDecoration은 겹치지 않는 범위를 그대로 추가한다', () => {

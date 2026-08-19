@@ -1,8 +1,10 @@
 import type { ComponentPropsWithoutRef, Ref } from 'react'
 
+import { cn } from '@/app/_global/_services/cn.service'
 import { DecoratedQuote } from '@/app/_shared/trace/_components/DecoratedQuote/DecoratedQuote'
 import type { Decoration } from '@/app/_shared/trace/_data/decoration.model'
 
+import { TRACE_NOTE_SIZE, type TraceNoteSize } from '../../_data/traceNote.constant'
 import type { TextRange } from '../../_services/textRange.service'
 
 type TraceNoteProps = Pick<
@@ -17,6 +19,8 @@ type TraceNoteProps = Pick<
   scrollRef?: Ref<HTMLDivElement>
   /** 드래그로 범위를 고르는 화면에서만 켠다. 켜면 노트 위 드래그가 스크롤로 새지 않는다. */
   selectable?: boolean
+  /** 노트 높이. 아래 어두운 띠와 한 쌍이라 값은 traceNote.constant에 있다. */
+  size?: TraceNoteSize
 }
 
 export function TraceNote({
@@ -25,14 +29,18 @@ export function TraceNote({
   quotedText,
   scrollRef,
   selectable = false,
+  size = 'default',
   ...handlers
 }: TraceNoteProps) {
   return (
-    // 시안의 TraceNote는 높이가 320px로 고정이다. 인용문이 길면 잘리지 않고 안에서 스크롤한다.
-    // h-[320px](고정 높이)여야 아래 min-h-full의 퍼센트 기준이 확정된다.
+    // 노트는 높이가 고정이다. 인용문이 길면 잘리지 않고 안에서 스크롤한다.
+    // 고정 높이여야 아래 min-h-full의 퍼센트 기준이 확정된다.
     <div
       ref={scrollRef}
-      className="h-[320px] overflow-x-hidden overflow-y-auto rounded-[4px] border border-border-book bg-bg-book-card drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]"
+      className={cn(
+        'overflow-x-hidden overflow-y-auto rounded-[4px] border border-border-book bg-bg-book-card drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]',
+        TRACE_NOTE_SIZE[size].note,
+      )}
     >
       {/* min-h-full: 짧으면 세로 중앙, 길면 위부터 스크롤(flex+overflow는 넘칠 때 상단이 잘리므로) */}
       <div className="flex min-h-full items-center px-6 py-10">

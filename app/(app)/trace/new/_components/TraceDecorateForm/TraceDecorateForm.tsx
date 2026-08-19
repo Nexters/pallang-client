@@ -10,6 +10,7 @@ import { useLastPresent } from '@/app/_global/_hooks/useLastPresent'
 import { DEFAULT_DECORATION_COLOR } from '@/app/_shared/trace/_data/decorationColor.constant'
 
 import type { EffectOption } from '../../_data/effect.constant'
+import { TRACE_NOTE_SIZE } from '../../_data/traceNote.constant'
 import { useTextRangeSelection } from '../../_hooks/useTextRangeSelection'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
@@ -17,6 +18,7 @@ import type { TextRange } from '../../_services/textRange.service'
 import type { DraftDecoration } from '../../_types/traceDraft.type'
 import { DecorationEditPopover } from '../DecorationEditPopover/DecorationEditPopover'
 import { EffectPicker } from '../EffectPicker/EffectPicker'
+import { TraceBookHeader } from '../TraceBookHeader/TraceBookHeader'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepIndicator } from '../TraceStepIndicator/TraceStepIndicator'
 
@@ -104,20 +106,20 @@ export function TraceDecorateForm() {
       {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepIndicator current={2} />
-        <div className="flex items-center px-4 py-2.5">
-          <h1 className="min-w-px flex-1 text-title-20bd text-text-primary">
-            적용할 효과를 고르고 문장을 드래그해보세요
-          </h1>
-        </div>
+        <TraceBookHeader />
       </div>
       {/* 셸이 h-dvh·overflow-hidden이라 넘치는 만큼이 잘린다 — 가운데만 스크롤시키고
           단계 표시와 버튼 줄은 바깥에 두어 고정한다(①·③과 같은 처리). */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* 노트가 흰 영역과 어두운 영역에 걸쳐 놓인다 — 시안에서 노트 아래 199px가 어두운 배경이다 */}
+        {/* 노트가 밝음/어둠 경계를 가로지른다 — 어두운 쪽 높이는 노트 높이와 한 쌍이다 */}
         <div className="relative bg-bg-default px-8">
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+          <div
+            aria-hidden="true"
+            className={`absolute inset-x-0 bottom-0 bg-bg-dark ${TRACE_NOTE_SIZE.compact.dark}`}
+          />
           <div ref={noteRef} className="relative">
             <TraceNote
+              size="compact"
               quotedText={draft.quotedText}
               decorations={draft.decorations}
               pendingRange={range}
@@ -155,8 +157,12 @@ export function TraceDecorateForm() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3.5 px-4 py-6">
-          <span className="text-body-16md text-text-inverse opacity-80">효과</span>
+        <div className="flex flex-col gap-3 px-4 py-6">
+          {/* 시안(3082:36364)에서 안내 문구가 흰 상단이 아니라 효과 목록 바로 위로 내려왔다 —
+              고를 것과 안내가 붙어 있어야 "골라서 문장에 칠한다"가 한 덩이로 읽힌다 */}
+          <h1 className="whitespace-pre-line text-title-16sb text-text-inverse">
+            {'원하는 효과를 선택하고\n문장에 표시해보세요'}
+          </h1>
           <EffectPicker onPick={handlePick} disabled={false} selectedKey={activeEffect?.key} />
         </div>
       </div>
@@ -164,7 +170,7 @@ export function TraceDecorateForm() {
       <div className="flex gap-2 px-4 pt-4 pb-safe">
         <Button
           variant="back"
-          className="h-[54px] flex-1"
+          className="flex-1"
           onClick={() => {
             goBack()
           }}
@@ -173,7 +179,7 @@ export function TraceDecorateForm() {
         </Button>
         <Button
           variant="activated"
-          className="h-[54px] flex-1"
+          className="flex-1"
           disabled={draft.decorations.length === 0}
           onClick={() => {
             goTo('book')

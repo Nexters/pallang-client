@@ -54,7 +54,10 @@ export function EffectPicker({ disabled, onPick, selectedKey }: EffectPickerProp
             )}
           >
             <Icon aria-hidden="true" className="size-[30px]" />
-            <span className="w-full text-center">{option.label}</span>
+            {/* 고른 효과는 라벨까지 굵어진다(시안 I3082:36368;2200:14222) */}
+            <span className={cn('w-full text-center', isSelected && 'text-title-14bd')}>
+              {option.label}
+            </span>
           </button>
         )
       })}
