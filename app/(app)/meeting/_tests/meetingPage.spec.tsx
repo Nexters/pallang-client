@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { MeetingPageView } from '../_components/MeetingPageView/MeetingPageView'
@@ -102,9 +103,11 @@ function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <LoginGateProvider>
-        <MeetingPageView />
-      </LoginGateProvider>
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <MeetingPageView />
+        </LoginGateProvider>
+      </HardwareBackProvider>
     </QueryClientProvider>,
   )
 }
@@ -169,6 +172,13 @@ describe('모임 탭', () => {
     fireEvent.click(await screen.findByRole('button', { name: '보러가기' }))
     expect(routerMock.push).toHaveBeenCalledWith('/trace/7?groupId=1')
   })
+  it('목록을 못 받으면 오류 상태와 다시 시도를 보여준다', async () => {
+    stubFetch([], { listStatus: 500 })
+    renderPage()
+    // 문구는 <br/>로 '다시 시도해주세요!'와 한 <p>를 나눠 쓴다 — 정확 일치로는 잡히지 않는다
+    expect(await screen.findByText(/모임을 불러오지 못했어요\./)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /다시 시도하기/ })).toBeInTheDocument()
+  })
   it('돌아오자마자 만들기 완료 스낵바를 한 번 띄운다', async () => {
     window.sessionStorage.setItem('pallang.meetingNotice', 'created')
     stubFetch([group])
@@ -196,7 +206,7 @@ describe('더보기 시트', () => {
   it('···를 누르면 두 타일이 보인다', async () => {
     stubFetch([group])
     renderPage()
-    fireEvent.click(await screen.findByRole('button', { name: '더보기' }))
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
     expect(await screen.findByRole('heading', { name: '더보기' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '초대 링크 보내기' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '방 설정 변경하기' })).toBeInTheDocument()
@@ -204,26 +214,38 @@ describe('더보기 시트', () => {
   it('방 설정 변경하기는 수정 화면으로 간다', async () => {
     stubFetch([group])
     renderPage()
-    fireEvent.click(await screen.findByRole('button', { name: '더보기' }))
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
     fireEvent.click(await screen.findByRole('button', { name: '방 설정 변경하기' }))
     expect(routerMock.push).toHaveBeenCalledWith('/meeting/1/edit')
   })
-  it('초대 링크 보내기는 초대 코드를 받아 OS 공유로 넘긴다', async () => {
-    const share = vi.fn<(data?: ShareData) => Promise<void>>().mockResolvedValue(undefined)
-    const restore = defineNavigator({ share })
+  it('시트를 열 때 초대 링크를 미리 받아 둔다', async () => {
+    // 누를 때 받으면 그 사이 손짓(user activation)이 끊겨 OS 공유 시트가 뜨지 않는다
     const fetchMock = stubFetch([group])
     renderPage()
-    fireEvent.click(await screen.findByRole('button', { name: '더보기' }))
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
+    await waitFor(() => {
+      expect(
+        fetchMock.mock.calls.some(([input]: string[]) =>
+          String(input).includes('/api/groups/1/invite-link'),
+        ),
+      ).toBe(true)
+    })
+    expect(screen.getByRole('button', { name: '초대 링크 보내기' })).toBeInTheDocument()
+  })
+  it('초대 링크 보내기는 초대 코드를 받아 OS 공유로 넘기고, 끝나면 시트를 닫는다', async () => {
+    const share = vi.fn<(data?: ShareData) => Promise<void>>().mockResolvedValue(undefined)
+    const restore = defineNavigator({ share })
+    stubFetch([group])
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
     fireEvent.click(await screen.findByRole('button', { name: '초대 링크 보내기' }))
     await waitFor(() => {
       expect(share).toHaveBeenCalled()
     })
     expect(share.mock.calls[0]?.[0]?.url).toMatch(/\/meeting\/invite\/abc$/)
-    expect(
-      fetchMock.mock.calls.some(([input]: string[]) =>
-        String(input).includes('/api/groups/1/invite-link'),
-      ),
-    ).toBe(true)
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: '초대 링크 보내기' })).not.toBeInTheDocument()
+    })
     restore()
   })
   it('공유 시트가 없으면 복사하고 알려준다', async () => {
@@ -233,7 +255,7 @@ describe('더보기 시트', () => {
     })
     stubFetch([group])
     renderPage()
-    fireEvent.click(await screen.findByRole('button', { name: '더보기' }))
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
     fireEvent.click(await screen.findByRole('button', { name: '초대 링크 보내기' }))
     expect(await screen.findByText('초대 링크를 복사했어요.')).toBeInTheDocument()
     restore()
@@ -241,7 +263,7 @@ describe('더보기 시트', () => {
   it('모임장이 아니면(403) 안내한다', async () => {
     stubFetch([group], { inviteLinkStatus: 403 })
     renderPage()
-    fireEvent.click(await screen.findByRole('button', { name: '더보기' }))
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
     fireEvent.click(await screen.findByRole('button', { name: '초대 링크 보내기' }))
     expect(await screen.findByText('모임장만 초대 링크를 보낼 수 있어요.')).toBeInTheDocument()
   })

@@ -4,7 +4,6 @@ import {
   ApiErrorFeedbackState,
   FeedbackState,
 } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import { cn } from '@/app/_global/_services/cn.service'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
@@ -88,7 +87,7 @@ export function BookPickList({
               onClick={() => {
                 onSelect(book)
               }}
-              className={cn('relative w-full cursor-pointer rounded-[2px] text-left')}
+              className="relative w-full cursor-pointer rounded-[2px] text-left"
             >
               <BookItem
                 author={book.author}

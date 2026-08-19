@@ -9,7 +9,7 @@ type MeetingListProps = {
   onMore: (group: GroupSummary) => void
   onView: (group: GroupSummary) => void
   /** 목록 끝 감시 지점 — 보이면 다음 페이지를 받는다 */
-  loadMoreRef: RefObject<HTMLDivElement | null>
+  loadMoreRef: RefObject<HTMLLIElement | null>
 }
 
 /** 시안: 헤더 아래 16, 카드 사이 12, 좌우 16 */
@@ -21,7 +21,7 @@ export function MeetingList({ groups, onMore, onView, loadMoreRef }: MeetingList
           <MeetingCard group={group} onMore={onMore} onView={onView} />
         </li>
       ))}
-      <div ref={loadMoreRef} aria-hidden className="h-6 w-full" />
+      <li ref={loadMoreRef} aria-hidden className="h-6 w-full" />
     </ul>
   )
 }

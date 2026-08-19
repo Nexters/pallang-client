@@ -45,7 +45,7 @@ export function MeetingCard({ group, onMore, onView }: MeetingCardProps) {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          aria-label="더보기"
+          aria-label={`${group.name} 더보기`}
           onClick={() => {
             onMore(group)
           }}

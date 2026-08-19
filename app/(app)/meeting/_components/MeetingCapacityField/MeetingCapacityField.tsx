@@ -43,6 +43,7 @@ export function MeetingCapacityField({
         {/* 시안 343×56 surface r16 p16, 값 16md #111, 우측 24px 아래 셰브론(next 글리프 90° 회전, Icon/Muted) */}
         <BaseSelect.Trigger
           aria-labelledby={labelId}
+          aria-required
           className="flex h-14 w-full cursor-pointer items-center justify-between rounded-2xl bg-bg-surface p-4 text-body-16md text-text-primary outline-none"
         >
           <BaseSelect.Value />

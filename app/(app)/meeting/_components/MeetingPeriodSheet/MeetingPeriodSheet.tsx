@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -36,6 +36,8 @@ export function MeetingPeriodSheet({
   const endId = useId()
   const [draft, setDraft] = useState<MeetingPeriod>({ startDate, endDate })
   const { register } = useHardwareBackRegistry()
+  // onClose는 매 렌더 새로 만들어져 의존성에 걸면 시트가 열려 있는 동안 등록·해제가 반복된다(useHardwareBack 선례)
+  const onCloseRef = useRef(onClose)
 
   // 열 때마다 필드의 현재 값으로 다시 시작한다 — 렌더 도중의 상태 조정 패턴(ReportDialog와 같은 이유,
   // 이펙트 안 setState는 캐스케이딩 렌더를 부른다는 lint 경고를 피한다)
@@ -46,9 +48,15 @@ export function MeetingPeriodSheet({
   }
 
   useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
+  useEffect(() => {
     if (!open) return
-    return register(onClose)
-  }, [open, register, onClose])
+    return register(() => {
+      onCloseRef.current()
+    })
+  }, [open, register])
 
   const bothFilled = isIsoDate(draft.startDate) && isIsoDate(draft.endDate)
   const orderError = bothFilled && !isValidMeetingPeriod(draft.startDate, draft.endDate)

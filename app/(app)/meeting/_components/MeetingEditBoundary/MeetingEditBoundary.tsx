@@ -8,5 +8,7 @@ type MeetingEditBoundaryProps = { params: Promise<{ id: string }> }
 export async function MeetingEditBoundary({ params }: MeetingEditBoundaryProps) {
   const { id } = await params
   if (!/^\d+$/.test(id) || Number(id) <= 0) notFound()
-  return <MeetingEditView groupId={Number(id)} />
+  const groupId = Number(id)
+  // groupId가 바뀌면 화면을 갈아 끼운다 — 같은 인스턴스를 재사용하면 앞 모임에서 고치던 값(edited)이 남는다
+  return <MeetingEditView key={groupId} groupId={groupId} />
 }

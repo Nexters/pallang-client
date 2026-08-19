@@ -30,7 +30,7 @@ export function MeetingMemberAvatars({ groupId, memberCount }: MeetingMemberAvat
   const list = members.data?.data?.members.slice(0, shown) ?? []
 
   return (
-    <div className="flex items-center" aria-label={`멤버 ${String(memberCount)}명`}>
+    <div role="group" className="flex items-center" aria-label={`멤버 ${String(memberCount)}명`}>
       {Array.from({ length: shown }, (_, index) => {
         const member = list[index]
         return (

@@ -45,6 +45,7 @@ export function MeetingForm({
       <MeetingField label="모임명" required helperText="최대 15자까지 가능해요." htmlFor={nameId}>
         <input
           id={nameId}
+          aria-required
           value={values.name}
           maxLength={MEETING_NAME_MAX_LENGTH}
           placeholder="모임명을 입력해주세요"
