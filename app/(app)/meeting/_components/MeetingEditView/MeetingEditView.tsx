@@ -74,7 +74,7 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
       },
       onError: (error) => {
         if (error instanceof ApiError && error.status === 401) {
-          runWithLogin(submit, LOGIN_GATE_MESSAGE.groupCreate)
+          runWithLogin(submit, LOGIN_GATE_MESSAGE.groupEdit)
           return
         }
         setMessage(updateErrorMessage(error))
