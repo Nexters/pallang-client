@@ -12,6 +12,7 @@ const PARAM = {
   page: 'page',
   passageId: 'passageId',
   opinionId: 'opinionId',
+  groupId: 'groupId',
 } as const
 
 export type TraceTarget = {
@@ -21,13 +22,31 @@ export type TraceTarget = {
   opinionId: number
 }
 
+export type TraceScopeOptions = {
+  /** 모임 안에서 연 흔적 화면 — 대목 조회가 이 모임 전용 대목만 보고, 헤더에 '모임' 배지가 붙는다 */
+  groupId?: number
+}
+
+/** 책 화면(첫 쪽)으로 가는 링크. 모임에서 '보러가기'가 쓴다. */
+export function buildTraceHref(bookId: number, options: TraceScopeOptions = {}): string {
+  const params = new URLSearchParams()
+  if (options.groupId !== undefined) params.set(PARAM.groupId, String(options.groupId))
+  const query = params.toString()
+  return query ? `/trace/${String(bookId)}?${query}` : `/trace/${String(bookId)}`
+}
+
 /** 흔적 보기 화면에서 이 흔적 하나가 상세로 열린 채 시작하는 링크. */
-export function buildTraceTargetHref(bookId: number, target: TraceTarget): string {
+export function buildTraceTargetHref(
+  bookId: number,
+  target: TraceTarget,
+  options: TraceScopeOptions = {},
+): string {
   const params = new URLSearchParams({
     [PARAM.page]: String(target.pageNumber),
     [PARAM.passageId]: String(target.passageId),
     [PARAM.opinionId]: String(target.opinionId),
   })
+  if (options.groupId !== undefined) params.set(PARAM.groupId, String(options.groupId))
   return `/trace/${String(bookId)}?${params.toString()}`
 }
 
@@ -41,4 +60,11 @@ export function parseTraceTarget(
 
   if (pageNumber === undefined || passageId === undefined || opinionId === undefined) return null
   return { pageNumber, passageId, opinionId }
+}
+
+/** 모임 스코프 여부. 양의 정수가 아니면 일반(전역) 화면이다. */
+export function parseTraceGroupId(
+  params: Record<string, string | string[] | undefined>,
+): number | undefined {
+  return readPositiveInt(params, PARAM.groupId)
 }
