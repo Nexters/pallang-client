@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { shouldShowHomeCoachMark } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { hasSeenOnboarding } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
 import { OnboardingView } from '../_components/OnboardingView/OnboardingView'
@@ -66,6 +67,7 @@ describe('온보딩 뷰', () => {
     await userEvent.click(screen.getByRole('button', { name: '건너뛰기' }))
 
     expect(hasSeenOnboarding()).toBe(true)
+    expect(shouldShowHomeCoachMark()).toBe(true)
     expect(replace).toHaveBeenCalledWith('/')
   })
 
@@ -81,6 +83,7 @@ describe('온보딩 뷰', () => {
     await userEvent.click(screen.getByRole('button', { name: '시작하기' }))
 
     expect(hasSeenOnboarding()).toBe(true)
+    expect(shouldShowHomeCoachMark()).toBe(true)
     expect(replace).toHaveBeenCalledWith('/')
   })
 })

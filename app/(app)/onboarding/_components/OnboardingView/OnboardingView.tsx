@@ -8,6 +8,7 @@ import { Fragment, useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
 import { cn } from '@/app/_global/_services/cn.service'
+import { markHomeCoachMarkPending } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { markOnboardingSeen } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
 import { ONBOARDING_STEPS } from '../../_data/onboarding.constant'
@@ -20,6 +21,7 @@ export function OnboardingView() {
 
   const finishOnboarding = () => {
     markOnboardingSeen()
+    markHomeCoachMarkPending()
     router.replace('/')
   }
 

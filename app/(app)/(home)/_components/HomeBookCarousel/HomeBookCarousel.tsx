@@ -175,6 +175,9 @@ function BookCarouselTrack({
                 <Link
                   href={`/trace/${String(book.bookId)}`}
                   aria-label={`${book.title} 흔적 보기`}
+                  data-home-coachmark-target={
+                    index === selectedBookIndex ? 'library-book-cover' : undefined
+                  }
                   className="relative h-[340px] w-[220px] overflow-visible rounded-sm border border-border-book bg-interactive-accent shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
                   onClick={() => {
                     onTraceClick(book.bookId)
@@ -203,7 +206,10 @@ function BookCarouselTrack({
 function ActiveBookInfo({ activeBook }: { activeBook: Book }) {
   return (
     <div className="flex w-full justify-center">
-      <div className="flex w-[220px] flex-col items-start justify-center rounded-2xl">
+      <div
+        className="flex w-[220px] flex-col items-start justify-center rounded-2xl"
+        data-home-coachmark-target="library-book-info"
+      >
         <h2 className="line-clamp-2 w-full text-title-18bd text-text-primary">
           {activeBook.title}
         </h2>
