@@ -1,5 +1,6 @@
 'use client'
 
+import { Tabs } from '@base-ui/react/tabs'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
@@ -10,7 +11,7 @@ import type { MyPassage } from '@/app/_global/_queries/user.queries'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerReleaseDialog/SpoilerReleaseDialog'
 
-import { type BookRecordTab, bookRecordTabIds } from '../../_data/bookRecordTab.constant'
+import type { BookRecordTab } from '../../_data/bookRecordTab.constant'
 import { BookHeaderSkeleton } from '../BookHeaderSkeleton/BookHeaderSkeleton'
 import { BookRecordTabs } from '../BookRecordTabs/BookRecordTabs'
 import { BookStatusChip } from '../BookStatusChip/BookStatusChip'
@@ -26,6 +27,9 @@ type UnlikedTarget = { nickname: string; undo: () => void }
  * 내 서재 > 책 상세(Figma 225:12569).
  * 책 머리는 스크롤에 걷히고 탭만 상단에 붙는다 — `position: sticky` 하나로 끝나 JS로 재지 않는다.
  */
+/** 패널 세 장이 같은 회색 면을 쓴다 — 한곳에 두어 서로 어긋나지 않게 한다 */
+const PANEL_CLASS = 'flex flex-1 flex-col gap-2 bg-bg-surface p-4'
+
 export function BookDetailView({ bookId }: { bookId: number }) {
   const [tab, setTab] = useState<BookRecordTab>('opinion')
   const [unliked, setUnliked] = useState<UnlikedTarget | null>(null)
@@ -72,55 +76,58 @@ export function BookDetailView({ bookId }: { bookId: number }) {
           </button>
         }
       >
-        {/* 셸(TopBar·탭)은 데이터를 기다리지 않는다 — 책 머리 자리만 골격으로 채운다 */}
-        <div className="shrink-0 px-4 pt-2">
-          {book ? (
-            <BookItem
-              author={book.author}
-              coverImageUrl={book.coverImageUrl}
-              opinionCount={book.opinionCount}
-              passageCount={book.passageCount}
-              publisher={book.publisher}
-              statusBadge={
-                <BookStatusChip
-                  status={book.myStatus ?? null}
-                  onClick={() => {
-                    setStatusDraft(book.myStatus ?? null)
-                    setIsStatusOpen(true)
-                  }}
-                />
-              }
-              title={book.title}
-            />
-          ) : (
-            <BookHeaderSkeleton />
-          )}
-        </div>
-
-        {/* 스크롤하면 위 책 머리가 걷히고 이 줄만 상단에 남는다(Figma 225:12619) */}
-        <div className="sticky top-0 z-10 flex shrink-0 justify-center bg-bg-default p-2">
-          <BookRecordTabs
-            value={tab}
-            onChange={(next) => {
-              setTab(next)
-              // 탭을 바꾸면 되돌릴 카드도 열어 둔 대상도 화면에서 사라진다 — 안내를 함께 접는다
-              setUnliked(null)
-              setReleasing(null)
-            }}
-          />
-        </div>
-
-        {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다(Figma 225:12580) */}
-        <div
-          role="tabpanel"
-          id={bookRecordTabIds(tab).panelId}
-          aria-labelledby={bookRecordTabIds(tab).tabId}
-          className="flex flex-1 flex-col gap-2 bg-bg-surface p-4"
+        <Tabs.Root
+          value={tab}
+          onValueChange={(next) => {
+            setTab(next as BookRecordTab)
+            // 탭을 바꾸면 되돌릴 카드도 열어 둔 대상도 화면에서 사라진다 — 안내를 함께 접는다
+            setUnliked(null)
+            setReleasing(null)
+          }}
+          className="flex min-h-0 flex-1 flex-col"
         >
-          {tab === 'opinion' && <OpinionPanel bookId={bookId} />}
-          {tab === 'like' && <LikedPanel bookId={bookId} onUnlike={setUnliked} />}
-          {tab === 'spoiler' && <SpoilerPanel bookId={bookId} onRelease={setReleasing} />}
-        </div>
+          {/* 셸(TopBar·탭)은 데이터를 기다리지 않는다 — 책 머리 자리만 골격으로 채운다 */}
+          <div className="shrink-0 px-4 pt-2">
+            {book ? (
+              <BookItem
+                author={book.author}
+                coverImageUrl={book.coverImageUrl}
+                opinionCount={book.opinionCount}
+                passageCount={book.passageCount}
+                publisher={book.publisher}
+                statusBadge={
+                  <BookStatusChip
+                    status={book.myStatus ?? null}
+                    onClick={() => {
+                      setStatusDraft(book.myStatus ?? null)
+                      setIsStatusOpen(true)
+                    }}
+                  />
+                }
+                title={book.title}
+              />
+            ) : (
+              <BookHeaderSkeleton />
+            )}
+          </div>
+
+          {/* 스크롤하면 위 책 머리가 걷히고 이 줄만 상단에 남는다(Figma 225:12619) */}
+          <div className="sticky top-0 z-10 flex shrink-0 justify-center bg-bg-default p-2">
+            <BookRecordTabs />
+          </div>
+
+          {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다(Figma 225:12580).
+            Tabs.Panel은 고르지 않은 쪽을 떼어 두므로(keepMounted 기본값) 활성 탭의 쿼리만 나간다. */}
+          <Tabs.Panel value="opinion" className={PANEL_CLASS}>
+            <OpinionPanel bookId={bookId} />
+          </Tabs.Panel>
+          <Tabs.Panel value="like" className={PANEL_CLASS}>
+            <LikedPanel bookId={bookId} onUnlike={setUnliked} />
+          </Tabs.Panel>
+          <Tabs.Panel value="spoiler" className={PANEL_CLASS}>
+            <SpoilerPanel bookId={bookId} onRelease={setReleasing} />
+          </Tabs.Panel>
+        </Tabs.Root>
       </ScreenLayout>
 
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다(Figma 225:13419) */}

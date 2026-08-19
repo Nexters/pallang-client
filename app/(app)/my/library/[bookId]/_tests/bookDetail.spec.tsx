@@ -179,6 +179,32 @@ describe('내 서재 책 상세', () => {
     expect(document.querySelector('[aria-busy="true"]')).not.toBeNull()
   })
 
+  it('탭 순서에는 고른 탭 하나만 들어간다 — 셋 다 들어가면 탭이 아니라 버튼 셋이다', async () => {
+    renderView({ opinions: [MY_OPINION] })
+    await screen.findByText(LONG_CONTENT)
+
+    expect(screen.getByRole('tab', { name: '의견' })).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('tab', { name: '좋아요' })).toHaveAttribute('tabindex', '-1')
+    expect(screen.getByRole('tab', { name: '스포일러' })).toHaveAttribute('tabindex', '-1')
+  })
+
+  it('좌우 키는 포커스만 옮기고 선택은 Enter로 확정한다 — 지나가는 탭마다 요청이 나가면 안 된다', async () => {
+    const requests = renderView({ opinions: [MY_OPINION], liked: [LIKED_OPINION] })
+    await screen.findByText(LONG_CONTENT)
+
+    screen.getByRole('tab', { name: '의견' }).focus()
+    await userEvent.keyboard('{ArrowRight}')
+
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: '좋아요' }))
+    expect(screen.getByRole('tab', { name: '의견' })).toHaveAttribute('aria-selected', 'true')
+    expect(urlsFor(requests, '/me/likes')).toHaveLength(0)
+
+    await userEvent.keyboard('{Enter}')
+
+    expect(await screen.findByText('밤샘낭독가')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '좋아요' })).toHaveAttribute('aria-selected', 'true')
+  })
+
   it('처음에는 이 책으로 좁힌 내 흔적만 요청한다', async () => {
     const requests = renderView({ opinions: [MY_OPINION] })
 

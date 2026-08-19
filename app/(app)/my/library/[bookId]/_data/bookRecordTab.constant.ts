@@ -6,8 +6,3 @@ export const BOOK_RECORD_TABS = [
 ] as const
 
 export type BookRecordTab = (typeof BOOK_RECORD_TABS)[number]['value']
-
-/** 탭 버튼과 그 아래 패널을 잇는 id — 양쪽이 같은 규칙으로 만든다. */
-export function bookRecordTabIds(tab: BookRecordTab) {
-  return { tabId: `book-record-tab-${tab}`, panelId: `book-record-panel-${tab}` }
-}
