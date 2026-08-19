@@ -16,7 +16,10 @@ import { MyLibrarySkeleton } from '../MyLibrarySkeleton/MyLibrarySkeleton'
 
 export function MyLibraryView() {
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const listQuery = useInfiniteQuery(bookQueries.myLibrary())
+  // 흔적 수는 MINE으로 센다. 같은 엔드포인트를 홈도 쓰지만(스펙상 ALL = 도서 전체 흔적 수,
+  // 홈 캐러셀 노출용) 여기는 마이페이지 > 내 서재라 "내가 이 책에 몇 개 남겼나"가 읽혀야 한다.
+  // 서버 설명도 MINE을 마이페이지 노출용으로 못 박아 두었다.
+  const listQuery = useInfiniteQuery(bookQueries.myLibrary({ opinionCountScope: 'MINE' }))
   const books = useMemo<BookActivity[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? [],
     [listQuery.data],
@@ -52,12 +55,15 @@ export function MyLibraryView() {
         <ul className="flex flex-col gap-3">
           {books.map((book, index) => (
             <li key={book.bookId} className="flex flex-col gap-3">
-              {/* 책 상세(#244)가 붙기 전까지는 이동할 곳이 없어 카드만 그린다 */}
+              {/* ponytail: 행에 링크를 걸지 않는다. 책 상세(/my/library/[bookId])가 다음 단계라
+                  아직 라우트가 없어, 지금 Link를 붙이면 누르는 족족 404로 보낸다.
+                  화면이 생기면 이 자리를 Link로 감싸고 press 유틸만 더하면 된다. */}
               <BookItem
                 author={book.author}
                 coverImageUrl={book.coverImageUrl}
                 opinionCount={book.opinionCount}
                 passageCount={book.passageCount}
+                publisher={book.publisher}
                 title={book.title}
               />
               {index < books.length - 1 && (
@@ -73,7 +79,7 @@ export function MyLibraryView() {
   }
 
   return (
-    <ScreenLayout title="내 서재" bodyClassName="px-4 py-2">
+    <ScreenLayout title="내 서재" bodyClassName="p-4">
       {renderList()}
     </ScreenLayout>
   )
