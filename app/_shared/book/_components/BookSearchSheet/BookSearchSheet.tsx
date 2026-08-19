@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -8,21 +8,28 @@ import {
   BookNewForm,
   type BookNewFormStatus,
 } from '@/app/_shared/book/_components/BookNewForm/BookNewForm'
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 import {
   type BookFormValues,
   emptyBookForm,
   normalizeExternalAuthor,
 } from '@/app/_shared/book/_services/bookForm.service'
 
-import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
-import type { SelectedBook } from '../../_types/traceDraft.type'
 import { BookSearchView } from '../BookSearchView/BookSearchView'
 import type { ExternalBook } from '../ExternalBookList/ExternalBookList'
 
 type BookSearchSheetProps = {
   open: boolean
+  /** 시트 제목 — 흔적 ③은 '책 등록하기', 모임 만들기는 '책 선택하기'(시안 3321:28250) */
+  title?: string
   onClose: () => void
   onSelect: (book: SelectedBook) => void
+  /**
+   * 시트 안 도서 등록 폼이 열린 동안 뒤로가기(하드웨어/제스처)가 폼만 닫게 등록한다.
+   * 흔적 플로우는 TraceOverlayProvider의 register, 모임은 HardwareBackProvider의 register를 넘긴다.
+   * 시트 자체의 열림 가드는 여는 쪽이 등록한다(여기서는 폼 층만).
+   */
+  onRegisterBack?: (close: () => void) => () => void
 }
 
 type AddFormState = { coverImageUrl: null | string; values: BookFormValues }
@@ -33,7 +40,13 @@ const BOOK_ADD_FORM_ID = 'book-add-form'
 
 const IDLE_FORM_STATUS: BookNewFormStatus = { canSubmit: false, isPending: false }
 
-export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProps) {
+export function BookSearchSheet({
+  open,
+  title = '책 등록하기',
+  onClose,
+  onSelect,
+  onRegisterBack,
+}: BookSearchSheetProps) {
   // 목록·캐러셀에서 고른 책은 후보일 뿐이다 — 하단 '등록하기'를 눌러야 onSelect로 확정된다.
   const [picked, setPicked] = useState<SelectedBook | null>(null)
   // 직접 등록 폼은 시트를 닫지 않고 같은 시트의 본문을 갈아끼운다(헤더·풀하이트·백드롭을 그대로 쓴다).
@@ -56,7 +69,18 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
   }
 
   // 폼이 본문을 차지하는 동안에는 하드웨어 뒤로가기가 시트를 나가는 대신 폼만 닫는다.
-  useOverlayBackGuard(form !== null, closeForm)
+  // register는 여는 쪽(흔적은 TraceOverlayProvider, 모임은 HardwareBackProvider)이 넘긴다.
+  const closeFormRef = useRef(closeForm)
+  useEffect(() => {
+    closeFormRef.current = closeForm
+  })
+  const formOpen = form !== null
+  useEffect(() => {
+    if (!onRegisterBack || !formOpen) return
+    return onRegisterBack(() => {
+      closeFormRef.current()
+    })
+  }, [formOpen, onRegisterBack])
 
   // 헤더의 ←·Escape·바깥 탭·하드웨어 뒤로가기가 모두 같은 규칙을 따른다:
   // 폼이 열려 있으면 폼만 닫고, 아니면 시트 전체를 닫는다.
@@ -78,7 +102,7 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
   return (
     <BottomSheet
       open={open}
-      title={form ? '책 추가하기' : '책 등록하기'}
+      title={form ? '책 추가하기' : title}
       // 화면 상단 여백만 남기고 채운다 — 본문이 시트 안에서 스크롤되고 footer는 바닥에 붙는다
       popupClassName="h-[calc(100%-40px)]"
       // 여백은 본문 대신 안쪽 조각(검색바·목록·등록 폼)이 각자 px-4로 갖는다 — 여기서 p-4를 주면
@@ -113,7 +137,7 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
             </p>
             <Button
               variant="activated"
-              className="w-full"
+              className="w-full disabled:bg-interactive-accent disabled:opacity-40"
               disabled={!picked}
               onClick={() => {
                 if (picked) onSelect(picked)

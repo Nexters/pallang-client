@@ -3,11 +3,28 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { BookSearchSheet } from '../_components/BookSearchSheet/BookSearchSheet'
-// 브리프의 원 파일 목록에는 없던 의존성이다 — useOverlayBackGuard(→useTraceOverlay)가
-// TraceOverlayProvider 밖에서 던지는 문제를 테스트가 provider 없이 렌더해 놓쳤던 것을 리뷰에서
-// 바로잡았다(Task 5의 ocrPermission.spec.tsx가 같은 문제를 이렇게 해결한 선례를 따른다).
-import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
-import { useTraceOverlay } from '../_hooks/useTraceOverlay'
+
+/** searchInternalBooks 응답의 책 한 권 — _apis를 직접 import하지 않고(no-restricted-imports)
+ *  목의 반환 타입을 넓히기 위한 최소 모양이다. */
+type MockSearchBook = {
+  bookId: number
+  title: string
+  author: string
+  publisher: string
+  coverImageUrl: string | null
+  pageCount: number | null
+}
+
+// vi.mock 팩토리는 import보다도 먼저(호이스팅되어) 실행된다 — 팩토리 안에서 참조할 목은
+// vi.hoisted로 감싸야 "초기화 전 접근" 참조 오류 없이 값을 공유할 수 있다(traceBookForm.spec.tsx와
+// 같은 선례). _apis를 직접 import하지 않고도(no-restricted-imports) 테스트에서 반환값을 갈아끼울 수 있다.
+const { searchInternalBooksMock } = vi.hoisted(() => ({
+  searchInternalBooksMock: vi.fn(
+    (): Promise<{
+      data: { books: MockSearchBook[]; pageInfo: { page: number; hasNext: boolean } }
+    }> => Promise.resolve({ data: { books: [], pageInfo: { page: 0, hasNext: false } } }),
+  ),
+}))
 
 // 도서 직접 등록은 multipart라 생성물이 아니라 손으로 쓴 book.api에 산다(#211).
 // 저장하기 footer 버튼(BookAddForm의 <form> 밖, HTML form 속성으로만 연결)이 실제로 그
@@ -30,8 +47,8 @@ vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
       },
     }),
   searchBooks: () => Promise.resolve({ data: { books: [] } }),
-  searchInternalBooks: () =>
-    Promise.resolve({ data: { books: [], pageInfo: { page: 0, hasNext: false } } }),
+  // 기본은 빈 목록이다 — 검색 결과 리본을 검증하는 케이스만 mockResolvedValueOnce로 한 권을 채운다.
+  searchInternalBooks: searchInternalBooksMock,
 }))
 
 vi.mock('@/app/_global/_apis/_generated/user/user', () => ({
@@ -39,19 +56,21 @@ vi.mock('@/app/_global/_apis/_generated/user/user', () => ({
   getMyOpinions: () => Promise.resolve({ data: { opinions: [] } }),
 }))
 
-// 하드웨어 뒤로가기를 흉내 낸다 — traceOverlay.spec.tsx와 같은 프로브 패턴을 그대로 쓴다.
-function BackProbe() {
-  const overlay = useTraceOverlay()
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        overlay.closeTop()
-      }}
-    >
-      하드웨어 뒤로가기
-    </button>
-  )
+/** 등록된 닫기 핸들러를 들고 있다가 '하드웨어 뒤로가기' 버튼이 맨 위 것을 부른다 */
+function createBackRegistry() {
+  const stack: (() => void)[] = []
+  return {
+    register: (close: () => void) => {
+      stack.push(close)
+      return () => {
+        const index = stack.indexOf(close)
+        if (index >= 0) stack.splice(index, 1)
+      }
+    },
+    closeTop: () => {
+      stack.at(-1)?.()
+    },
+  }
 }
 
 /** 등록 폼(BookNewForm)은 표지를 필수로 받는다 — 기기에서 고른 것처럼 파일을 넣는다. */
@@ -63,14 +82,25 @@ function attachCoverFile() {
   })
 }
 
-function renderSheet({ onClose = vi.fn(), onSelect = vi.fn() } = {}) {
+function renderSheet({
+  onClose = vi.fn(),
+  onSelect = vi.fn(),
+  title = '책 등록하기',
+}: { onClose?: () => void; onSelect?: (book: unknown) => void; title?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const registry = createBackRegistry()
   render(
     <QueryClientProvider client={queryClient}>
-      <TraceOverlayProvider>
-        <BackProbe />
-        <BookSearchSheet open onClose={onClose} onSelect={onSelect} />
-      </TraceOverlayProvider>
+      <button type="button" onClick={registry.closeTop}>
+        하드웨어 뒤로가기
+      </button>
+      <BookSearchSheet
+        open
+        title={title}
+        onClose={onClose}
+        onRegisterBack={registry.register}
+        onSelect={onSelect}
+      />
     </QueryClientProvider>,
   )
   return { onClose, onSelect }
@@ -90,6 +120,12 @@ describe('책 등록 시트', () => {
 
     expect(await screen.findByText('책 등록하기')).toBeTruthy()
     expect(screen.queryByRole('button', { name: '도서 추가' })).toBeNull()
+  })
+
+  it('title을 주면 헤더 제목이 바뀐다', () => {
+    renderSheet({ title: '책 선택하기' })
+
+    expect(screen.getByRole('heading', { name: '책 선택하기' })).toBeInTheDocument()
   })
 
   it('검색 전에도 새 책 등록하기로 등록 폼에 닿는다', async () => {
@@ -131,6 +167,33 @@ describe('책 등록 시트', () => {
 
     await screen.findByPlaceholderText('책 제목을 입력해 주세요.')
     expect(screen.getByRole('button', { name: '등록하기' }).hasAttribute('disabled')).toBe(true)
+  })
+
+  it('후보를 고르면 그 행에 "선택" 리본이 붙고 등록하기가 켜진다', async () => {
+    searchInternalBooksMock.mockResolvedValueOnce({
+      data: {
+        books: [
+          {
+            bookId: 42,
+            title: '여름',
+            author: '김영하',
+            publisher: '문학동네',
+            coverImageUrl: null,
+            pageCount: 200,
+          },
+        ],
+        pageInfo: { page: 0, hasNext: false },
+      },
+    })
+    renderSheet()
+
+    fireEvent.change(await screen.findByPlaceholderText('책 제목을 입력해 주세요.'), {
+      target: { value: '여름' },
+    })
+    fireEvent.click(await screen.findByText('여름'))
+
+    expect(screen.getByText('선택')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '등록하기' })).toBeEnabled()
   })
 
   it('폼이 열린 채로 하드웨어 뒤로가기를 누르면 폼만 닫히고 시트는 유지된다', async () => {

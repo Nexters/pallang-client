@@ -6,14 +6,15 @@ import { useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { userQueries } from '@/app/_global/_queries/user.queries'
+import { BookSearchSheet } from '@/app/_shared/book/_components/BookSearchSheet/BookSearchSheet'
+import { SelectedBookCard } from '@/app/_shared/book/_components/SelectedBookCard/SelectedBookCard'
 
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
+import { useTraceOverlay } from '../../_hooks/useTraceOverlay'
 import { useTraceSubmit } from '../../_hooks/useTraceSubmit'
 import type { SelectedBook } from '../../_types/traceDraft.type'
-import { BookSearchSheet } from '../BookSearchSheet/BookSearchSheet'
-import { SelectedBookCard } from '../SelectedBookCard/SelectedBookCard'
 import { TraceMergePrompt } from '../TraceMergePrompt/TraceMergePrompt'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceOpinionPreview } from '../TraceOpinionPreview/TraceOpinionPreview'
@@ -22,6 +23,7 @@ import { TraceStepIndicator } from '../TraceStepIndicator/TraceStepIndicator'
 export function TraceBookForm() {
   const { draft, dispatch } = useTraceDraft()
   const { goBack } = useTraceNav()
+  const { register } = useTraceOverlay()
   // 씨앗으로 책이 이미 있으면(책 상세에서 들어온 경우) 시트를 다시 열 이유가 없다 — 바로 확인 화면이다.
   const [sheetOpen, setSheetOpen] = useState(draft.book === null)
   // 저장은 ①(대목을 물고 들어온 경로)과도 나눠 쓴다 — useTraceSubmit이 그 한 벌이다.
@@ -106,6 +108,7 @@ export function TraceBookForm() {
         onClose={() => {
           setSheetOpen(false)
         }}
+        onRegisterBack={register}
         onSelect={handleSelectBook}
       />
 

@@ -1,8 +1,7 @@
 'use client'
 
 import { cn } from '@/app/_global/_services/cn.service'
-
-import type { SelectedBook } from '../../_types/traceDraft.type'
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 type BookCoverCarouselProps = {
   books: SelectedBook[]

@@ -1,11 +1,11 @@
 import { cn } from '@/app/_global/_services/cn.service'
-
-import type { SelectedBook } from '../../_types/traceDraft.type'
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 type SelectedBookCardProps = {
   /** 아직 책을 고르지 않았으면 null이다 — 그래도 카드는 남아 시트를 열 수 있다. */
   book: SelectedBook | null
-  onEdit: () => void
+  /** 없으면 편집 없는 잠김 카드 — 방 설정 변경(책 고정)과 모임 스코프 흔적 ③이 쓴다 */
+  onEdit?: () => void
   /**
    * 책을 고치러 가는 길을 어디에 두는가.
    * - `pill` ③의 카드 — 오른쪽에 '편집하기' 버튼이 붙는다.
@@ -49,6 +49,9 @@ export function SelectedBookCard({ affordance = 'pill', book, onEdit }: Selected
   )
 
   if (affordance === 'card') {
+    if (!onEdit) {
+      return <div className={CARD_CLASS}>{content}</div>
+    }
     return (
       <button
         type="button"
@@ -64,13 +67,15 @@ export function SelectedBookCard({ affordance = 'pill', book, onEdit }: Selected
   return (
     <div className={CARD_CLASS}>
       {content}
-      <button
-        type="button"
-        onClick={onEdit}
-        className="press shrink-0 rounded-full border border-border-default px-2.5 py-1.5 text-body-14md text-text-primary"
-      >
-        편집하기
-      </button>
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="press shrink-0 rounded-full border border-border-default px-2.5 py-1.5 text-body-14md text-text-primary"
+        >
+          편집하기
+        </button>
+      )}
     </div>
   )
 }

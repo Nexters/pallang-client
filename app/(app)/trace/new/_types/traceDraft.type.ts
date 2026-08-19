@@ -1,12 +1,9 @@
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 import type { Decoration, EffectType } from '@/app/_shared/trace/_data/decoration.model'
 
-export type SelectedBook = {
-  bookId: number
-  title: string
-  author: string
-  coverImageUrl: string | null
-  pageCount: number | null
-}
+/** 초안의 책은 공용 모양 그대로다 — 책 선택 시트(_shared/book)와 같은 타입을 써야 시트가 고른 책을 그대로 담는다. */
+// eslint-disable-next-line no-barrel-files/no-barrel-files -- 배럴이 아니라 이 경로를 쓰는 ~14곳의 trace/new 임포터를 건드리지 않기 위한 호환 재노출
+export type { SelectedBook }
 
 /** 작성 중인 초안의 효과도 흔적 보기와 같은 모양이다 — 렌더 코드를 공유하려고 _shared 타입을 그대로 쓴다. */
 export type DraftEffectType = EffectType
