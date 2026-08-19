@@ -110,8 +110,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 **① 유한한 전환 (등장·퇴장·색·프레스)** — `transition`으로 만든다.
 
 - duration·easing은 `globals.css`의 토큰만 쓴다. `duration-200`, `ease-[cubic-bezier(...)]` 같은 임의값은 금지다 — `motionConvention.spec.ts`가 `app/**/*.tsx`를 훑어 막는다.
-  - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달·바텀시트) · `duration-slow`(350ms 전체화면 전환)
-  - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환)
+  - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달) · `duration-slow`(350ms 전체화면 전환) · `duration-rise`(320ms 바텀시트 등장)
+  - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환) · `ease-rise`(화면 높이만큼 올라오는 등장)
+  - **먼 거리 등장에 `ease-enter`를 쓰지 않는다.** 제어점 y가 둘 다 1이라 거리를 앞에 몰아줘, 시트처럼 화면 높이만큼 옮기면 2프레임 만에 62%가 끝나 "올라온다"가 아니라 "번쩍"으로 읽힌다(실기기에서 확인). 그 자리는 `ease-rise`+`duration-rise`다.
 - 움직임 축소에서 이 토큰들은 **1ms로 떨어진다** = 즉시 끝.
 
 **② 무한 반복 (처리 중·불러오는 중)** — `animate-spin`(스피너) · `animate-pulse`(스켈레톤) **둘만** 쓴다.

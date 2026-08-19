@@ -14,4 +14,6 @@ export const MOTION_DURATION = {
   normal: 240,
   /** 전체화면 전환 */
   slow: 350,
+  /** 화면 높이만큼 올라오는 등장(바텀시트) */
+  rise: 320,
 } as const

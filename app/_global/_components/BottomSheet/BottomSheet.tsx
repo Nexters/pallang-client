@@ -90,7 +90,9 @@ export function BottomSheet({
               isDark ? 'bg-bg-dark' : 'bg-bg-default',
               // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
               'outline-none',
-              'transition-transform duration-normal ease-enter',
+              // 시트는 화면 높이만큼 올라온다 — ease-enter로 그 거리를 옮기면 2프레임 만에 62%가
+              // 끝나 번쩍이는 것으로 읽힌다(실기기에서 확인). 먼 거리 등장 전용 토큰을 쓴다.
+              'transition-transform duration-rise ease-rise',
               'starting:translate-y-full data-starting-style:translate-y-full',
               'data-ending-style:translate-y-full',
               'data-ending-style:duration-fast data-ending-style:ease-exit',

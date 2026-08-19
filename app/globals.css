@@ -200,6 +200,10 @@
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); /* 등장 — 빠르게 나와 부드럽게 안착 */
   --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* 퇴장 — 가속하며 사라짐 */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* 상태 전환 — 색·투명도·프레스 */
+  /* 화면 높이만큼 올라오는 등장(바텀시트). ease-enter는 제어점 y가 둘 다 1이라 거리를 앞에
+     몰아줘서, 시트처럼 먼 거리를 옮기면 2프레임 만에 62%가 끝나 "올라온다"가 아니라
+     "번쩍"으로 읽힌다. 감속이되 끝을 덜 눌러 이동이 눈에 남게 한다. */
+  --ease-rise: cubic-bezier(0.25, 0.6, 0.25, 1);
 
   /* Motion — 반복(loop). --animate-*도 Tailwind v4 테마 네임스페이스라 빌트인 값을 덮을 수 있다.
      빌트인은 duration이 선언에 박혀 있어(spin 1s) 움직임 축소 정책이 닿지 않는다 —
@@ -219,6 +223,9 @@
   --duration-fast: 180ms;
   --duration-normal: 240ms;
   --duration-slow: 350ms;
+  /* 화면 높이만큼 올라오는 등장 전용. slow(350ms)와 가깝지만 전체화면 전환과 시트는
+     이동 거리가 달라 감각이 갈린다 — 실기기에서 골라 정한 값이다. */
+  --duration-rise: 320ms;
 }
 
 /* Motion — 반복(loop) duration. 위 --duration-* 와 이름을 나눈 이유는 움직임 축소에서 갈 곳이 다르기 때문이다.
@@ -240,6 +247,7 @@
     --duration-fast: 1ms;
     --duration-normal: 1ms;
     --duration-slow: 1ms;
+    --duration-rise: 1ms;
 
     /* 반복은 끄지 않고 늦춘다 — 멈추면 "처리 중"이라는 정보가 사라져 앱이 멎은 것으로 읽힌다.
        어지럼증을 부르는 건 반복 자체가 아니라 빠른 회전이라, 속도만 떨어뜨려도 목적은 달성된다. */
@@ -268,6 +276,11 @@
 @utility duration-slow {
   --tw-duration: var(--duration-slow);
   transition-duration: var(--duration-slow);
+}
+
+@utility duration-rise {
+  --tw-duration: var(--duration-rise);
+  transition-duration: var(--duration-rise);
 }
 
 /* 누를 때 살짝 눌리는 표준 피드백. 탭 가능한 요소에 붙인다.
