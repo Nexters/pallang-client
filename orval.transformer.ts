@@ -6,16 +6,31 @@ const TAG_RENAMES: Record<string, string> = {
 }
 
 const renameTag = (tag: string) => TAG_RENAMES[tag] ?? tag
+const DEPRECATED_PATHS = ['/api/home/books']
+const DEPRECATED_SCHEMAS = [
+  'BookCarouselListResponse',
+  'CarouselPageInfo',
+  'DataResponseBookCarouselListResponse',
+]
 
 // openapi-types의 3.1 Document는 index signature 기반이라 필요한 부분만 좁혀서 다룬다.
 type SpecSubset = {
   tags?: { name: string }[]
   paths?: Record<string, Record<string, { tags?: string[] } | undefined> | undefined>
-  components?: { securitySchemes?: Record<string, { type?: string; name?: string }> }
+  components?: {
+    schemas?: Record<string, unknown>
+    securitySchemes?: Record<string, { type?: string; name?: string }>
+  }
 }
 
 export default defineTransformer((spec) => {
   const raw = spec as unknown as SpecSubset
+  DEPRECATED_PATHS.forEach((path) => {
+    delete raw.paths?.[path]
+  })
+  DEPRECATED_SCHEMAS.forEach((schema) => {
+    delete raw.components?.schemas?.[schema]
+  })
   raw.tags?.forEach((tag) => {
     tag.name = renameTag(tag.name)
   })
