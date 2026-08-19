@@ -4,32 +4,29 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import { FlatDialog } from '@/app/_global/_components/FlatDialog/FlatDialog'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Select } from '@/app/_global/_components/Select/Select'
-import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
-import { type LikedOpinion, userQueries } from '@/app/_global/_queries/user.queries'
+import { type MyPassage, userQueries } from '@/app/_global/_queries/user.queries'
 import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
 
-import { LikedOpinionCard } from '../LikedOpinionCard/LikedOpinionCard'
+import { SpoilerPassageCard } from '../SpoilerPassageCard/SpoilerPassageCard'
 
 /** 책을 고르지 않은 상태. Select는 문자열 값만 다뤄 숫자 bookId와 섞이지 않을 이름을 쓴다. */
 const ALL_BOOKS = 'all'
 
-/** 좋아요를 되돌릴 대상 — 스낵바가 닫히거나 필터가 바뀌면 비운다 */
-type UnlikedTarget = { nickname: string; undo: () => void }
-
-export function LikedOpinionsView() {
+export function SpoilerPassagesView() {
   const [selectedBook, setSelectedBook] = useState<string>(ALL_BOOKS)
-  const [unliked, setUnliked] = useState<UnlikedTarget | null>(null)
+  const [releasing, setReleasing] = useState<MyPassage | null>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const bookId = selectedBook === ALL_BOOKS ? undefined : Number(selectedBook)
-  const listQuery = useInfiniteQuery(userQueries.likedOpinionList(bookId))
-  const booksQuery = useQuery(userQueries.filterBooks('LIKE'))
+  const listQuery = useInfiniteQuery(userQueries.spoilerPassageList(bookId))
+  const booksQuery = useQuery(userQueries.filterBooks('SPOILER'))
 
-  const opinions = useMemo<LikedOpinion[]>(
-    () => listQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
+  const passages = useMemo<MyPassage[]>(
+    () => listQuery.data?.pages.flatMap((page) => page.data?.passages ?? []) ?? [],
     [listQuery.data],
   )
 
@@ -58,10 +55,10 @@ export function LikedOpinionsView() {
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   function renderList() {
     if (listQuery.isPending) return <RecordListSkeleton />
-    if (listQuery.isError && opinions.length === 0) {
+    if (listQuery.isError && passages.length === 0) {
       return (
         <ApiErrorFeedbackState
-          aria-label="좋아요 관리 오류"
+          aria-label="스포일러 관리 오류"
           title="목록을 불러오지 못했어요."
           onRetry={() => {
             void listQuery.refetch()
@@ -69,20 +66,20 @@ export function LikedOpinionsView() {
         />
       )
     }
-    if (opinions.length === 0) {
-      // 시안(225:12791)의 빈 상태는 일러스트 없이 문구 한 줄뿐이라 FeedbackState를 쓰지 않는다
+    if (passages.length === 0) {
+      // 시안(225:12937)의 빈 상태는 일러스트 없이 문구 한 줄뿐이라 FeedbackState를 쓰지 않는다
       return (
         <p className="flex flex-1 items-center justify-center text-center text-title-18md text-text-secondary">
-          등록한 좋아요가 없습니다
+          등록한 스포일러가 없습니다
         </p>
       )
     }
     return (
       <>
         <ul className="flex flex-col gap-2">
-          {opinions.map((opinion) => (
-            <li key={opinion.opinionId}>
-              <LikedOpinionCard opinion={opinion} onUnlike={setUnliked} />
+          {passages.map((passage) => (
+            <li key={passage.passageId}>
+              <SpoilerPassageCard passage={passage} onRelease={setReleasing} />
             </li>
           ))}
         </ul>
@@ -94,7 +91,7 @@ export function LikedOpinionsView() {
 
   return (
     <>
-      <ScreenLayout title="좋아요 관리">
+      <ScreenLayout title="스포일러 관리">
         <div className="flex shrink-0 justify-end px-4 py-2">
           <Select
             label="도서 필터"
@@ -103,29 +100,33 @@ export function LikedOpinionsView() {
             value={selectedBook}
             onValueChange={(value) => {
               setSelectedBook(value)
-              // 필터를 바꾸면 되돌릴 카드가 화면에서 사라질 수 있어 안내도 함께 접는다
-              setUnliked(null)
+              // 필터를 바꾸면 열어 둔 대상이 화면에서 사라질 수 있어 다이얼로그도 함께 접는다
+              setReleasing(null)
             }}
-            // 시안(225:12790)의 트리거는 140px 고정 폭에 값이 왼쪽, 화살표가 오른쪽 끝이다
+            // 시안(225:12680)의 트리거는 140px 고정 폭에 값이 왼쪽, 화살표가 오른쪽 끝이다
             className="w-35 justify-between px-2.5 text-body-14sb"
           />
         </div>
 
-        {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다(Figma 225:12749) */}
+        {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다(Figma 225:12681) */}
         <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">{renderList()}</div>
       </ScreenLayout>
 
-      {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
-      <Snackbar
-        tone="light"
-        message={unliked ? `${unliked.nickname}님의 좋아요를 해제했어요` : ''}
-        actionLabel="취소"
-        onAction={() => {
-          unliked?.undo()
-          setUnliked(null)
-        }}
-        onClose={() => {
-          setUnliked(null)
+      {/* 시안 225:13010. 문구는 시안이 정한 자리에서 줄을 바꾼다 — Dialog가 pre-line이다.
+          ponytail: 확정 버튼은 죽여 둔다. 스포일러를 되돌리는 `PATCH /api/passages/{passageId}/spoiler`가
+          서버에 아직 없어 지금 눌러도 보낼 곳이 없다. API가 생기면 (1) `_apis`를 재생성하고
+          (2) `user.queries.ts`에 mutationOptions를 더한 뒤 (3) 여기서 `releasing.passageId`로 mutate하고
+          성공 시 `spoilerPassageList`를 무효화하면 된다. `confirmDisabled`만 걷어내면 나머지는 그대로다. */}
+      <FlatDialog
+        open={releasing !== null}
+        illustrated={false}
+        title={'해당 문장의 스포일러를\n해제하시겠습니까?'}
+        description={'스포일러 해제 시\n해당 문장이 다른 유저들에게 바로 보이게 됩니다.'}
+        cancelLabel="뒤로"
+        confirmLabel="스포일러 해제"
+        confirmDisabled
+        onCancel={() => {
+          setReleasing(null)
         }}
       />
     </>
