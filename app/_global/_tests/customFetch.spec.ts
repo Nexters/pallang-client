@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   customFetch,
   setAccessTokenGetter,
+  setInvalidTokenHandler,
   setTokenRefresher,
 } from '@/app/_global/_apis/customFetch.api'
 import { ApiError } from '@/app/_global/_data/api.model'
@@ -18,6 +19,7 @@ describe('customFetch', () => {
     vi.unstubAllGlobals()
     setAccessTokenGetter(() => null)
     setTokenRefresher(null)
+    setInvalidTokenHandler(null)
   })
 
   it('200 응답이면 JSON body를 반환한다', async () => {
@@ -86,6 +88,32 @@ describe('customFetch', () => {
     )
     expect(refresher).not.toHaveBeenCalled()
     expect(spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('401 INVALID_TOKEN이면 토큰을 정리하고 Authorization 없이 1회 재시도한다', async () => {
+    const spy = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ title: 'AUTH_401_3' }), { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    vi.stubGlobal('fetch', spy)
+    let token: null | string = 'broken-token'
+    const clearInvalidToken = vi.fn().mockImplementation(() => {
+      token = null
+      return Promise.resolve()
+    })
+    setAccessTokenGetter(() => token)
+    setInvalidTokenHandler(clearInvalidToken)
+
+    await expect(customFetch('/api/books/my-library', { method: 'GET' })).resolves.toEqual({
+      ok: true,
+    })
+    expect(clearInvalidToken).toHaveBeenCalledOnce()
+    expect(spy).toHaveBeenCalledTimes(2)
+
+    const firstHeaders = new Headers((spy.mock.calls[0]?.[1] as RequestInit).headers)
+    const secondHeaders = new Headers((spy.mock.calls[1]?.[1] as RequestInit).headers)
+    expect(firstHeaders.get('Authorization')).toBe('Bearer broken-token')
+    expect(secondHeaders.has('Authorization')).toBe(false)
   })
 
   it('body가 FormData면 Content-Type을 설정하지 않는다', async () => {
