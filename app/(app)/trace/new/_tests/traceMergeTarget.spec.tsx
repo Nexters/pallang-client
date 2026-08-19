@@ -43,7 +43,7 @@ vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
   createBook: () => Promise.resolve(null),
   getPopularBooks: () => Promise.resolve({ data: { books: [] } }),
   getRecentBooks: () => Promise.resolve({ data: { books: [] } }),
-  searchExternalBooks: () => Promise.resolve({ data: { books: [] } }),
+  searchBooks: () => Promise.resolve({ data: { books: [] } }),
   searchInternalBooks: () =>
     Promise.resolve({ data: { books: [], pageInfo: { page: 0, hasNext: false } } }),
 }))

@@ -45,12 +45,21 @@ export function useBookDetailFill(): void {
   })
 
   const { isFetched } = search
-  const candidates = search.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  // 통합 검색이 생기면서 응답의 bookId·pageCount가 선택 항목이 됐다(미등록 도서는 비어 있다).
+  // 채울 값이 없는 항목은 후보에서 뺀다 — 내부 검색 결과라 실제로는 모두 채워져 있다.
+  const candidates =
+    search.data?.pages.flatMap((page) =>
+      (page.data?.books ?? []).flatMap((book) =>
+        book.bookId == null || book.pageCount == null
+          ? []
+          : [{ author: book.author, bookId: book.bookId, pageCount: book.pageCount }],
+      ),
+    ) ?? []
   const detail = bookId === null ? null : findBookDetail(candidates, bookId)
 
-  // 채우기도 한 번이다. 이 effect가 보는 값들(응답 객체에서 꺼낸 detail)은 재렌더에도 같은
-  // 참조라 다시 돌지 않고, 설령 다시 돌더라도 reducer가 채울 것이 없으면 상태를 그대로 돌려준다
-  // — 채우기 → 리렌더 → 다시 채우기로 도는 길이 양쪽에서 막혀 있다.
+  // 채우기도 한 번이다. detail은 위에서 매 렌더 새로 만드는 객체라 effect가 다시 돌 수 있지만,
+  // reducer가 채울 것이 없으면 상태를 그대로 돌려준다(useReducer가 같은 상태에 리렌더를 만들지
+  // 않는다) — 채우기 → 리렌더 → 다시 채우기로 도는 길은 그쪽에서 막혀 있다.
   useEffect(() => {
     if (!isMissing || bookId === null || !isFetched) return
     // 결과에 이 책이 없으면 채울 값이 없다. 초안을 그대로 두고 조용히 끝낸다.

@@ -35,7 +35,14 @@ export function BookSearchPageView() {
     placeholderData: keepPreviousData,
   })
 
-  const searchedBooks = searched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  // 통합 검색이 생기면서 응답의 bookId가 선택 항목이 됐다(미등록 도서는 비어 있다).
+  // 여기는 내부 검색이라 모두 등록된 도서지만, 타입이 그걸 모르므로 bookId 없는 항목은 걸러 낸다.
+  const searchedBooks =
+    searched.data?.pages.flatMap((page) =>
+      (page.data?.books ?? []).flatMap((book) =>
+        book.bookId == null ? [] : [{ ...book, bookId: book.bookId }],
+      ),
+    ) ?? []
   const searchStatus = (() => {
     if (searched.isPending || isTypingAhead) return 'pending'
     if (searched.isError && searchedBooks.length === 0) return 'error'
