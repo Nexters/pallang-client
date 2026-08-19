@@ -90,14 +90,7 @@ export function BottomSheet({
               isDark ? 'bg-bg-dark' : 'bg-bg-default',
               // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
               'outline-none',
-              // 등장만 ease-standard·duration-slow다. ease-enter(0.16,1,0.3,1)는 제어점 y가
-              // 둘 다 1이라 거리를 앞에 몰아준다 — 팝오버처럼 몇 px 움직이는 등장에는 경쾌하지만,
-              // 시트는 화면 높이만큼(272px 시트 기준 234px) 올라오는데 그 86%가 앞 77ms,
-              // 60Hz로 4~5프레임 만에 끝나 "올라온다"가 아니라 "툭 나타난다"로 읽힌다.
-              // 길이만 늘려도 그 성질은 안 풀린다(350ms로 재도 눈에 보이는 구간은 80→100ms).
-              // ease-standard는 이동을 가운데에 배분해 같은 350ms로 그 구간이 156ms가 된다.
-              // 퇴장은 그대로 짧고 빠르게 둔다 — 닫는 동작은 기다릴 이유가 없다.
-              'transition-transform duration-slow ease-standard',
+              'transition-transform duration-normal ease-enter',
               'starting:translate-y-full data-starting-style:translate-y-full',
               'data-ending-style:translate-y-full',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
