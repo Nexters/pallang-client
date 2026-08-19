@@ -17,10 +17,12 @@ import { groupQueries, type GroupSummary } from '@/app/_global/_queries/group.qu
 import { buildTraceHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { MEETING_NOTICE_MESSAGE } from '../../_data/meeting.constant'
+import { useInviteShare } from '../../_hooks/useInviteShare'
 import { consumeMeetingNotice } from '../../_services/meetingNotice.service'
 import { MeetingEmptyState } from '../MeetingEmptyState/MeetingEmptyState'
 import { MeetingList } from '../MeetingList/MeetingList'
 import { MeetingListSkeleton } from '../MeetingListSkeleton/MeetingListSkeleton'
+import { MeetingMoreSheet } from '../MeetingMoreSheet/MeetingMoreSheet'
 
 export function MeetingPageView() {
   const router = useRouter()
@@ -31,8 +33,9 @@ export function MeetingPageView() {
     () => list.data?.pages.flatMap((page) => page.data?.groups ?? []) ?? [],
     [list.data],
   )
-  const [, setMoreTarget] = useState<GroupSummary | null>(null)
+  const [moreTarget, setMoreTarget] = useState<GroupSummary | null>(null)
   const [message, setMessage] = useState('')
+  const invite = useInviteShare()
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   useLoadMoreOnVisible({
@@ -110,12 +113,27 @@ export function MeetingPageView() {
         </TopBar.Root>
         {renderBody()}
       </TabScreenLayout>
-      {/* Task 8이 여기에 <MeetingMoreSheet group={moreTarget} …/>를 붙인다 */}
+      <MeetingMoreSheet
+        group={moreTarget}
+        isSharing={invite.isSharing}
+        onClose={() => {
+          setMoreTarget(null)
+        }}
+        onShareInvite={(group) => {
+          setMoreTarget(null)
+          void invite.share(group)
+        }}
+        onEditSettings={(group) => {
+          setMoreTarget(null)
+          router.push(`/meeting/${String(group.groupId)}/edit`)
+        }}
+      />
       <Snackbar
         tone="light"
-        message={message}
+        message={message || invite.message}
         onClose={() => {
           setMessage('')
+          invite.closeMessage()
         }}
       />
     </>
