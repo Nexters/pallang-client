@@ -197,9 +197,14 @@
   --text-caption-12rg--font-weight: 400;
 
   /* Motion — easing. --ease-*는 Tailwind v4 네이티브 네임스페이스라 유틸이 자동 생성된다 */
-  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1); /* 등장 — 빠르게 나와 부드럽게 안착 */
+  /* 등장 — 빠르게 나와 부드럽게 안착. 제어점 y가 둘 다 1이라 거리를 앞에 몰아주므로
+     몇 px~수십 px 움직이는 등장(팝오버·토스트·모달 스케일) 전용이다. */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1); /* 퇴장 — 가속하며 사라짐 */
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* 상태 전환 — 색·투명도·프레스 */
+  /* 상태 전환(색·투명도·프레스)과, 화면 높이만큼 움직이는 등장(바텀시트). 이동을 가운데에
+     배분해 긴 거리에서도 '움직이는 구간'이 남는다 — ease-enter로 같은 거리를 옮기면
+     86%가 앞 77ms에 끝나 툭 나타난 것으로 읽힌다(BottomSheet 주석 참고). */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Motion — 반복(loop). --animate-*도 Tailwind v4 테마 네임스페이스라 빌트인 값을 덮을 수 있다.
      빌트인은 duration이 선언에 박혀 있어(spin 1s) 움직임 축소 정책이 닿지 않는다 —
