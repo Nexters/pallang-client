@@ -2,7 +2,6 @@
 
 import type { FC, SVGProps } from 'react'
 
-import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 
@@ -41,23 +40,20 @@ function SourceOption({ description, icon: Icon, onClick, title }: SourceOptionP
   )
 }
 
-type TraceSourceSheetProps = {
-  open: boolean
+type TraceSourceOptionsProps = {
   book?: SelectedBook | null
-  onClose: () => void
   onSelectPhoto: () => void
   onSelectManual: () => void
 }
 
-export function TraceSourceSheet({
-  open,
+/** 방식 선택 화면의 본문. 시트 껍데기는 이 화면을 담는 TraceSourceView가 갖는다. */
+export function TraceSourceOptions({
   book,
-  onClose,
   onSelectPhoto,
   onSelectManual,
-}: TraceSourceSheetProps) {
+}: TraceSourceOptionsProps) {
   return (
-    <BottomSheet open={open} title="새로운 기록을 어떻게 남길까요?" onClose={onClose}>
+    <>
       {book && (
         <div className="flex flex-col gap-2">
           {/* text-body-12md·text-body-12rg는 존재하지 않는 토큰이라 클래스가 생성되지 않았고,
@@ -98,6 +94,6 @@ export function TraceSourceSheet({
           onClick={onSelectManual}
         />
       </div>
-    </BottomSheet>
+    </>
   )
 }
