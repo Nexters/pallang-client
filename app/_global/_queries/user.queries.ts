@@ -5,12 +5,14 @@ import type { GetFilterBooksType } from '../_apis/_generated/models/getFilterBoo
 import type { LikedOpinionResponse } from '../_apis/_generated/models/likedOpinionResponse'
 import type { ModifyProfileImageBody } from '../_apis/_generated/models/modifyProfileImageBody'
 import type { MyOpinionResponse } from '../_apis/_generated/models/myOpinionResponse'
+import type { MyPassageResponse } from '../_apis/_generated/models/myPassageResponse'
 import type { UpdateNicknameRequest } from '../_apis/_generated/models/updateNicknameRequest'
 import {
   getFilterBooks,
   getLikedOpinions,
   getMe,
   getMyOpinions,
+  getMyPassages,
   modifyNickname,
   modifyProfileImage,
   withdraw,
@@ -23,6 +25,9 @@ export type UserOpinion = MyOpinionResponse
 
 /** 좋아요 관리 화면의 목록 항목 — 내 흔적 목록과 달리 `nickname`·`likedAt`이 온다. */
 export type LikedOpinion = LikedOpinionResponse
+
+/** 스포일러 관리 화면의 목록 항목 — 흔적 본문 없이 대목 인용문(`quotedText`)만 온다. */
+export type MyPassage = MyPassageResponse
 
 /** 도서 필터 드롭다운의 옵션 하나. */
 export type FilterBook = BookOptionResponse
@@ -63,6 +68,26 @@ export const userQueries = {
       queryKey: [...userQueries.likedOpinionListAll(), bookId ?? 'all'],
       queryFn: ({ pageParam }) =>
         getLikedOpinions({ bookId, page: pageParam, size: USER_OPINION_PAGE_SIZE }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+      },
+    }),
+  /**
+   * 내가 스포일러로 표시한 대목 목록. `bookId`를 주면 그 책만 추린다.
+   * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
+   */
+  spoilerPassageList: (bookId?: number) =>
+    infiniteQueryOptions({
+      queryKey: [...userQueries.all(), 'spoiler-passage-list', bookId ?? 'all'],
+      queryFn: ({ pageParam }) =>
+        getMyPassages({
+          bookId,
+          spoilerOnly: true,
+          page: pageParam,
+          size: USER_OPINION_PAGE_SIZE,
+        }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo

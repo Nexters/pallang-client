@@ -14,6 +14,8 @@ type FlatDialogProps = {
   confirmLabel: string
   /** 확정 요청이 처리 중인 동안 확인 버튼을 스피너로 잠근다 */
   loading?: boolean
+  /** 확정할 수 없는 상태(연결할 API가 아직 없는 등)에서 확인 버튼만 죽인다 */
+  confirmDisabled?: boolean
   /** 마스코트를 카드 위로 얹을지. 문구만으로 서는 확인 다이얼로그(218:12135)는 걷어 낸다. */
   illustrated?: boolean
   /**
@@ -22,7 +24,8 @@ type FlatDialogProps = {
    */
   dismissible?: boolean
   onCancel: () => void
-  onConfirm: () => void
+  /** `confirmDisabled`로 확정을 막아 둔 다이얼로그는 생략한다 */
+  onConfirm?: () => void
 }
 
 /**
@@ -37,6 +40,7 @@ export function FlatDialog({
   cancelLabel,
   confirmLabel,
   loading = false,
+  confirmDisabled = false,
   illustrated = true,
   dismissible = true,
   onCancel,
@@ -66,7 +70,12 @@ export function FlatDialog({
           <Button variant="back" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button variant="activated" loading={loading} onClick={onConfirm}>
+          <Button
+            variant="activated"
+            loading={loading}
+            disabled={confirmDisabled}
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </Button>
         </Dialog.Footer>
