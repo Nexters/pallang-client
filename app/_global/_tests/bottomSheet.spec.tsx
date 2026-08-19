@@ -106,8 +106,10 @@ describe('BottomSheet', () => {
     // 시트가 열린 채로 DOM에 꽂히는 경로(화면 자체가 시트인 첫 화면 · 탭바로 들어오는 진입)에서는
     // base-ui가 'starting'을 건너뛴다 — mounted 초기값이 open이라 닫힘→열림 경계가 없다.
     // 그 경로를 받는 것은 CSS @starting-style뿐이라, 시작값을 CSS로 들고 있는지가 곧 보장이다.
+    // 값은 반드시 직접 써야 한다 — translate-y-full처럼 var()로 조립하면 iOS Safari가
+    // @starting-style 안에서 시작값을 잡지 못해 전환이 통째로 사라진다(실기기 판정).
     // (happy-dom은 @starting-style을 계산하지 않아 실제 이동은 브라우저에서 확인한다.)
-    it('열린 채로 꽂혀도 시작 위치를 CSS가 들고 있다', () => {
+    it('열린 채로 꽂혀도 시작 위치를 CSS가 직접 값으로 들고 있다', () => {
       render(
         <BottomSheet open title="새로운 기록을 어떻게 남길까요?" onClose={vi.fn()}>
           <p>본문</p>
@@ -117,7 +119,8 @@ describe('BottomSheet', () => {
       const backdrop = document.querySelector('[data-slot="bottom-sheet-backdrop"]')
       if (backdrop === null) throw new Error('바텀시트 백드롭을 찾지 못했다')
 
-      expect(screen.getByRole('dialog').className).toContain('starting:translate-y-full')
+      expect(screen.getByRole('dialog').className).toContain('starting:[translate:0_100%]')
+      expect(screen.getByRole('dialog').className).not.toContain('starting:translate-y-full')
       expect(backdrop.className).toContain('starting:opacity-0')
     })
 
