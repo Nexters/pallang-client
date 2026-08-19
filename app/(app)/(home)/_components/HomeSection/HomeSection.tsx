@@ -32,7 +32,7 @@ export function HomeSection({ searchAction }: HomeSectionProps) {
         onTabChange={setActiveTab}
       />
 
-      {activeTab === 'library' && <HomeBookCarousel />}
+      {activeTab === 'library' && <HomeBookCarousel showSampleLabel={!isAuthenticated} />}
       {activeTab === 'opinion' && <HomeOpinionList />}
     </section>
   )

@@ -29,6 +29,10 @@ type OpinionCountBadgeProps = {
   href: string
 }
 
+type SampleBookLabelProps = {
+  show: boolean
+}
+
 const PAGE_SIZE = 10
 const RESTORE_HOME_BOOK_ID_STORAGE_KEY = 'pallang:home-carousel:restore-book-id'
 const FIRST_BOOK_CENTER_X = 110
@@ -116,17 +120,32 @@ function OpinionCountBadge({ count, href }: OpinionCountBadgeProps) {
   )
 }
 
+function SampleBookLabel({ show }: SampleBookLabelProps) {
+  if (!show) return null
+
+  return (
+    <span
+      aria-label="샘플 도서"
+      className="absolute top-[-20px] left-0 z-10 bg-bg-dark px-3 py-2 font-pretendard text-[14px] leading-[1.2] font-semibold text-text-inverse"
+    >
+      SAMPLE
+    </span>
+  )
+}
+
 function BookCarouselTrack({
   bookListRef,
   books,
   onScroll,
   onTraceClick,
+  showSampleLabel,
   selectedBookIndex,
 }: {
   bookListRef: RefObject<HTMLDivElement | null>
   books: Book[]
   onTraceClick: (bookId: number) => void
   onScroll: (event: UIEvent<HTMLDivElement>) => void
+  showSampleLabel: boolean
   selectedBookIndex: number
 }) {
   return (
@@ -134,7 +153,7 @@ function BookCarouselTrack({
       <div
         ref={bookListRef}
         onScroll={onScroll}
-        className="absolute left-0 h-[396px] w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pb-14 scrollbar-none [&::-webkit-scrollbar]:hidden"
+        className={`absolute left-0 w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pb-14 scrollbar-none [&::-webkit-scrollbar]:hidden ${showSampleLabel ? '-top-5 h-[416px] pt-5' : 'h-[396px]'}`}
       >
         <div
           className="relative h-[340px] w-max"
@@ -156,7 +175,7 @@ function BookCarouselTrack({
                 <Link
                   href={`/trace/${String(book.bookId)}`}
                   aria-label={`${book.title} 흔적 보기`}
-                  className="relative h-[340px] w-[220px] overflow-hidden rounded-sm border border-border-book bg-interactive-accent shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
+                  className="relative h-[340px] w-[220px] overflow-visible rounded-sm border border-border-book bg-interactive-accent shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
                   onClick={() => {
                     onTraceClick(book.bookId)
                   }}
@@ -169,6 +188,7 @@ function BookCarouselTrack({
                     }),
                   }}
                 >
+                  <SampleBookLabel show={showSampleLabel} />
                   <span className="sr-only">{book.title} 표지</span>
                 </Link>
               </div>
@@ -221,7 +241,7 @@ function arrangeBooksForInitialCarousel(books: Book[]): Book[] {
   return [secondBook, firstBook, ...restBooks]
 }
 
-export function HomeBookCarousel() {
+export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean }) {
   const bookListRef = useRef<HTMLDivElement>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
   const [readyBooksKey, setReadyBooksKey] = useState('')
@@ -326,6 +346,7 @@ export function HomeBookCarousel() {
         <BookCarouselTrack
           bookListRef={bookListRef}
           books={arrangedBooks}
+          showSampleLabel={showSampleLabel}
           selectedBookIndex={selectedBookIndex}
           onTraceClick={handleTraceClick}
           onScroll={handleBookListScroll}
