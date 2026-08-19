@@ -99,7 +99,29 @@ describe('대목을 얻은 직후의 중복 물음', () => {
     renderWriteStep(false)
 
     // 화면이 다 그려졌다 = 이 화면의 effect가 다 돌았다
-    expect(await screen.findByLabelText('책 편집하기')).toBeInTheDocument()
+    expect(await screen.findByLabelText('스포일러')).toBeInTheDocument()
     expect(similarCheckMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('① 상단의 책 줄', () => {
+  beforeEach(() => {
+    similarCheckMock.mockReset()
+    similarCheckMock.mockResolvedValue({ data: { passages: [] } })
+  })
+
+  it('책이 이미 정해져 있으면 보여준다', async () => {
+    renderWriteStep(true)
+
+    expect(await screen.findByLabelText('책 편집하기')).toBeInTheDocument()
+  })
+
+  it('책을 아직 안 골랐으면 자리를 차지하지 않는다', async () => {
+    // 평소 경로에서 책은 ③에서 고른다 — 여기에 빈 카드를 두면 "아직 고른 책이 없어요"가
+    // ①·② 두 화면 내내 붙어 있게 된다.
+    renderWriteStep(false)
+
+    expect(await screen.findByLabelText('스포일러')).toBeInTheDocument()
+    expect(screen.queryByLabelText('책 편집하기')).toBeNull()
   })
 })
