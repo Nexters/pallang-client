@@ -4,16 +4,25 @@
 import type { BookSearchResponseSource } from './bookSearchResponseSource'
 
 export interface BookSearchResponse {
-  bookId: number
+  /**
+   * 서비스 DB에 등록된 도서일 때만 채워진다. GET /api/books/search에서 알라딘에만 있고 아직 등록되지 않은 도서는 null이다.
+   * @nullable
+   */
+  bookId?: number | null
   title: string
   author: string
   publisher: string
-  pageCount: number
+  /** GET /api/books/search에서 미등록 도서는 0이다. */
+  pageCount?: number
   /** @nullable */
   isbn?: string | null
   /** @nullable */
   coverImageUrl?: string | null
-  source: BookSearchResponseSource
+  /**
+   * bookId와 마찬가지로 미등록 도서는 null이다.
+   * @nullable
+   */
+  source?: BookSearchResponseSource
   passageCount: number
   opinionCount: number
 }

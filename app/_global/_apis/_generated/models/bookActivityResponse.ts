@@ -6,6 +6,7 @@ export interface BookActivityResponse {
   bookId: number
   title: string
   author: string
+  publisher: string
   /** @nullable */
   coverImageUrl?: string | null
   passageCount: number
