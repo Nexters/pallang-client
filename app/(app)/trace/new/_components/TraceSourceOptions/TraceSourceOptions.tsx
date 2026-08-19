@@ -4,8 +4,7 @@ import type { FC, SVGProps } from 'react'
 
 import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
-
-import type { SelectedBook } from '../../_types/traceDraft.type'
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 type SourceOptionProps = {
   description: string

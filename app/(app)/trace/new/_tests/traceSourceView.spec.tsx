@@ -32,6 +32,7 @@ function DraftProbe() {
       {JSON.stringify({
         content: draft.content,
         decorations: draft.decorations,
+        groupId: draft.groupId,
         isSpoiler: draft.isSpoiler,
         pageNumber: draft.pageNumber,
         passageId: draft.passageId,
@@ -172,12 +173,28 @@ describe('흔적 작성 첫 화면', () => {
       expect(JSON.parse(screen.getByTestId('draft-probe').textContent)).toEqual({
         content: '',
         decorations: [SEED_DECORATION],
+        groupId: null,
         isSpoiler: true,
         pageNumber: 122,
         passageId: 42,
         quotedText: '문장이 오래 남았다',
         source: 'passage',
       })
+    })
+  })
+
+  it('모임에서 시작한 씨앗이면 그 모임을 초안에 심는다', async () => {
+    // 저장·유사 검사·완료 화면이 모두 이 값으로 스코프를 정한다 — 심기지 않으면 전역 흔적이 된다
+    renderView({
+      bookId: 11,
+      bookTitle: '모순',
+      bookCoverImageUrl: null,
+      passage: null,
+      groupId: 3,
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('draft-probe')).toHaveTextContent('"groupId":3')
     })
   })
 

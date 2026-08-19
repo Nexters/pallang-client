@@ -1,4 +1,4 @@
-import type { SelectedBook } from '../_types/traceDraft.type'
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 /**
  * 내부 검색 결과 한 항목에서 우리가 쓰는 값만 추린 모양.

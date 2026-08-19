@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
+
 import { initialTraceDraft } from '../_data/traceDraft.store'
 import { resolveExitDecision } from '../_services/traceExit.service'
-import type { SelectedBook, TraceDraft } from '../_types/traceDraft.type'
+import type { TraceDraft } from '../_types/traceDraft.type'
 
 const book: SelectedBook = {
   bookId: 1,

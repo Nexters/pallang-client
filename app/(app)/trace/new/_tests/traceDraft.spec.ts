@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
+
 import { initialTraceDraft, traceDraftReducer } from '../_data/traceDraft.store'
-import type { DraftDecoration, SelectedBook, TraceDraft } from '../_types/traceDraft.type'
+import type { DraftDecoration, TraceDraft } from '../_types/traceDraft.type'
 
 const book: SelectedBook = {
   bookId: 1,
