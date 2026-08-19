@@ -94,12 +94,12 @@ function stubApi(opinions = OPINIONS) {
   return calls
 }
 
-function renderList() {
+function renderList(showSampleLabel = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   render(
     <QueryClientProvider client={client}>
-      <HomeOpinionList />
+      <HomeOpinionList showSampleLabel={showSampleLabel} />
     </QueryClientProvider>,
   )
 }
@@ -116,6 +116,33 @@ describe('홈 내 의견 목록', () => {
     expect(await screen.findByText('첫 번째 의견입니다.')).toBeInTheDocument()
     expect(screen.getByText('26.08.10')).toBeInTheDocument()
     expect(calls.some((url) => url.includes('/api/users/me/opinions?page=0&size=20'))).toBe(true)
+  })
+
+  it('의견 카드는 흔적 화면의 해당 의견 좌표로 이동한다', async () => {
+    stubApi()
+    renderList()
+
+    const link = await screen.findByRole('link', { name: '모순 12쪽 의견 보기' })
+
+    expect(link).toHaveAttribute('href', '/trace/11?page=12&passageId=101&opinionId=1')
+  })
+
+  it('비로그인 샘플 의견 목록은 첫 카드에만 SAMPLE 배지를 보여준다', async () => {
+    stubApi()
+    renderList(true)
+
+    await screen.findByText('첫 번째 의견입니다.')
+
+    expect(screen.getAllByText('SAMPLE')).toHaveLength(1)
+  })
+
+  it('로그인 사용자의 의견 목록에는 SAMPLE 배지를 보여주지 않는다', async () => {
+    stubApi()
+    renderList(false)
+
+    await screen.findByText('첫 번째 의견입니다.')
+
+    expect(screen.queryByText('SAMPLE')).not.toBeInTheDocument()
   })
 
   it('카드 배경색을 Figma 배치대로 yellow, gray, white 순서로 반복한다', async () => {

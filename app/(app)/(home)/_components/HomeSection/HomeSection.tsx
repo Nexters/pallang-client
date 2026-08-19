@@ -33,7 +33,7 @@ export function HomeSection({ searchAction }: HomeSectionProps) {
       />
 
       {activeTab === 'library' && <HomeBookCarousel showSampleLabel={!isAuthenticated} />}
-      {activeTab === 'opinion' && <HomeOpinionList />}
+      {activeTab === 'opinion' && <HomeOpinionList showSampleLabel={!isAuthenticated} />}
     </section>
   )
 }

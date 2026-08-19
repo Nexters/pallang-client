@@ -187,7 +187,7 @@ function HomeOpinionListSkeleton() {
   )
 }
 
-export function HomeOpinionList() {
+export function HomeOpinionList({ showSampleLabel }: { showSampleLabel: boolean }) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const opinionListQuery = useInfiniteQuery(userQueries.opinionList())
   const opinions = useMemo<UserOpinion[]>(
@@ -251,6 +251,7 @@ export function HomeOpinionList() {
             <HomeOpinionCard
               className={getHomeOpinionCardLayout(index, opinions.length).className}
               opinion={opinion}
+              showSampleLabel={showSampleLabel && index === 0}
               tone={getHomeOpinionCardTone(index)}
             />
           </li>

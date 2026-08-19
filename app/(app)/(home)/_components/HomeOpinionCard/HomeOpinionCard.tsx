@@ -12,6 +12,7 @@ type HomeOpinionCardTone = 'gray' | 'white' | 'yellow'
 type HomeOpinionCardProps = {
   className?: string
   opinion: UserOpinion
+  showSampleLabel?: boolean
   tone: HomeOpinionCardTone
 }
 
@@ -39,7 +40,12 @@ const DIVIDER_CLASS_NAME: Record<HomeOpinionCardTone, string> = {
   gray: 'border-white/50',
 }
 
-export function HomeOpinionCard({ className, opinion, tone }: HomeOpinionCardProps) {
+export function HomeOpinionCard({
+  className,
+  opinion,
+  showSampleLabel = false,
+  tone,
+}: HomeOpinionCardProps) {
   return (
     <Link
       href={buildTraceTargetHref(opinion.bookId, {
@@ -49,11 +55,19 @@ export function HomeOpinionCard({ className, opinion, tone }: HomeOpinionCardPro
       })}
       aria-label={`${opinion.bookTitle} ${String(opinion.pageNumber)}쪽 의견 보기`}
       className={cn(
-        'press flex h-[260px] w-[200px] shrink-0 flex-col border border-border-book drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]',
+        'press relative flex h-[260px] w-[200px] shrink-0 flex-col overflow-visible border border-border-book drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]',
         TONE_CLASS_NAME[tone],
         className,
       )}
     >
+      {showSampleLabel && (
+        <span
+          aria-label="샘플 의견"
+          className="absolute top-[-20px] -left-px z-10 bg-bg-dark px-3 py-2 font-pretendard text-[14px] leading-[1.2] font-semibold text-text-inverse"
+        >
+          SAMPLE
+        </span>
+      )}
       <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
         <div className="flex min-w-0 flex-col gap-1">
           <h2 className="truncate font-pretendard text-[16px] leading-[1.4] font-bold tracking-[-0.32px]">

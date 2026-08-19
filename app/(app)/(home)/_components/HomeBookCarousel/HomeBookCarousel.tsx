@@ -126,7 +126,7 @@ function SampleBookLabel({ show }: SampleBookLabelProps) {
   return (
     <span
       aria-label="샘플 도서"
-      className="absolute top-[-20px] left-0 z-10 bg-bg-dark px-3 py-2 font-pretendard text-[14px] leading-[1.2] font-semibold text-text-inverse"
+      className="absolute top-[-20px] -left-px z-10 bg-bg-dark px-3 py-2 font-pretendard text-[14px] leading-[1.2] font-semibold text-text-inverse"
     >
       SAMPLE
     </span>
