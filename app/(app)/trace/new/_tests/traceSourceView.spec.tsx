@@ -70,6 +70,7 @@ const PASSAGE_SEED = {
   bookId: 11,
   bookTitle: '모순',
   bookCoverImageUrl: null,
+  groupId: null,
   passage: {
     passageId: 42,
     pageNumber: 122,
@@ -90,7 +91,13 @@ describe('흔적 작성 첫 화면', () => {
   })
 
   it('책을 물고 들어오면 그 책을 시트에 보여준다', async () => {
-    renderView({ bookId: 11, bookTitle: '모순', bookCoverImageUrl: null, passage: null })
+    renderView({
+      bookId: 11,
+      bookTitle: '모순',
+      bookCoverImageUrl: null,
+      passage: null,
+      groupId: null,
+    })
 
     expect(await screen.findByText('지금 기록을 남기는 책')).toBeTruthy()
     expect(screen.getByText('모순')).toBeTruthy()
@@ -176,7 +183,13 @@ describe('흔적 작성 첫 화면', () => {
 
   it('책만 물고 들어오면 종전대로 방식 선택 시트에 머문다', async () => {
     replaceMock.mockClear()
-    renderView({ bookId: 11, bookTitle: '모순', bookCoverImageUrl: null, passage: null })
+    renderView({
+      bookId: 11,
+      bookTitle: '모순',
+      bookCoverImageUrl: null,
+      passage: null,
+      groupId: null,
+    })
 
     expect(await screen.findByText('새로운 기록을 어떻게 남길까요?')).toBeTruthy()
     expect(replaceMock).not.toHaveBeenCalledWith('/trace/new/write')

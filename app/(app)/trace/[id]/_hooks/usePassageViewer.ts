@@ -15,8 +15,8 @@ import { useHighlightViewer } from './useHighlightViewer'
 
 /** 인용문 무대 흐름 — 대목 페이지 목록 → 페이지 선택 → 페이지별 대목 조회 체인을 소유한다.
     activePassage·isRevealed는 흔적 목록 흐름도 쓰므로 이 훅은 셸(TraceCollapseView)에서 호출한다 */
-export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
-  const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId))
+export function usePassageViewer(bookId: number, target?: TraceTarget | null, groupId?: number) {
+  const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId, groupId))
   const pages = useMemo(
     () => pageNumbersQuery.data?.pages.flatMap((page) => page.data?.pageNumbers ?? []) ?? [],
     [pageNumbersQuery.data],
@@ -36,7 +36,7 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null) {
     target ? { page: target.pageNumber, cursor: { passageId: target.passageId } } : undefined,
   )
   const passagesQuery = useQuery({
-    ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0),
+    ...passageQueries.passagesByPage(bookId, viewer.activePage ?? 0, groupId),
     enabled: viewer.activePage !== undefined,
   })
 

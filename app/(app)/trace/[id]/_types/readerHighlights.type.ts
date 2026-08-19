@@ -36,6 +36,8 @@ export type PageNav = {
 /** 상단 스테이지(QuoteStage)가 받는 props */
 export type QuoteStageProps = {
   title: string
+  /** 모임 안에서 연 흔적이면 제목 앞에 붙는 알약 라벨 — 없으면 배지를 세우지 않는다 */
+  scopeLabel?: string
   /** 없으면 헤더에 쪽 선택기를 세우지 않는다 */
   pageNav?: PageNav
   highlight: Highlight

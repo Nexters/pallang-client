@@ -20,16 +20,18 @@ type TraceCollapseViewProps = {
   bookId: number
   /** 목록 화면에서 특정 흔적을 지목해 들어온 경우의 좌표(쪽 → 대목 → 흔적) */
   target?: TraceTarget | null
+  /** 모임 안에서 연 화면이면 그 모임 — 대목 조회·헤더 배지·흔적 남기기가 모두 이 값을 따른다 */
+  groupId?: number
 }
 
 /** 셸 — 인용문 무대 흐름(usePassageViewer)과 흔적 목록 흐름(TraceListPanel)을 연결하고,
     두 흐름에 걸치는 것(접힘 제스처·화면 이동)만 직접 든다 */
-export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
+export function TraceCollapseView({ bookId, target, groupId }: TraceCollapseViewProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const router = useRouter()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const { stageStyle, isCollapsed } = useQuoteCollapse(scrollerRef)
-  const stage = usePassageViewer(bookId, target)
+  const stage = usePassageViewer(bookId, target, groupId)
   const activePassageId = stage.activePassage?.passageId
   // 상세 오버레이(aria-modal)가 떠 있는 동안 남기기 FAB을 숨긴다.
   // 오버레이는 목록 흐름 안에, FAB은 셸에 있어 형제로 공존하므로 열림 여부만 셸이 받아 든다
@@ -41,6 +43,7 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
     bookCoverImageUrl: stage.bookCoverImageUrl,
     activePassage: stage.activePassage,
     pageNumber: stage.highlight.page,
+    groupId,
   })
 
   // 스포일러는 대목 단위다(#49) — 스테이지 가림막과 같은 조건으로 목록도 가리고, 해제하면 함께 열린다
@@ -65,6 +68,8 @@ export function TraceCollapseView({ bookId, target }: TraceCollapseViewProps) {
         <div className={styles['stageAnchor']}>
           <QuoteStage
             title={stage.bookTitle}
+            // 모임 안에서 연 흔적임을 헤더에서 바로 알린다 — 남기는 흔적도 이 모임에 붙는다
+            scopeLabel={groupId === undefined ? undefined : '모임'}
             pageNav={stage.pageNav}
             highlight={stage.highlight}
             quoteIndex={stage.quoteIndex}

@@ -28,15 +28,17 @@ export async function prefetchTraceScreen(
   bookId: number,
   /** 목록 화면이 지목한 흔적 — 있으면 첫 페이지·첫 대목 대신 이 좌표를 채운다 */
   target?: TraceTarget | null,
+  /** 모임 안에서 연 화면이면 그 모임의 대목만 채운다 — 전역 대목과 캐시가 갈린다 */
+  groupId?: number,
 ): Promise<void> {
   const fetchOptions = await getServerFetchOptions()
-  const pageNumbersOptions = passageQueries.pageNumbers(bookId, fetchOptions)
+  const pageNumbersOptions = passageQueries.pageNumbers(bookId, groupId, fetchOptions)
 
   if (target) {
     await Promise.all([
       queryClient.prefetchInfiniteQuery(pageNumbersOptions),
       queryClient.prefetchQuery(
-        passageQueries.passagesByPage(bookId, target.pageNumber, fetchOptions),
+        passageQueries.passagesByPage(bookId, target.pageNumber, groupId, fetchOptions),
       ),
       queryClient.prefetchInfiniteQuery(
         opinionQueries.listByPassage(target.passageId, DEFAULT_OPINION_SORT_TYPE, fetchOptions),
@@ -52,7 +54,7 @@ export async function prefetchTraceScreen(
   const firstPage = pageNumbers?.pages[0]?.data?.pageNumbers[0]
   if (firstPage === undefined) return
 
-  const passagesOptions = passageQueries.passagesByPage(bookId, firstPage, fetchOptions)
+  const passagesOptions = passageQueries.passagesByPage(bookId, firstPage, groupId, fetchOptions)
   await queryClient.prefetchQuery(passagesOptions)
 
   const passages = queryClient.getQueryData(passagesOptions.queryKey)

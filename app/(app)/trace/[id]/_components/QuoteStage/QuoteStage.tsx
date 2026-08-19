@@ -15,6 +15,7 @@ import styles from './QuoteStage.module.css'
 
 export function QuoteStage({
   title,
+  scopeLabel,
   pageNav,
   highlight,
   quoteIndex,
@@ -78,6 +79,7 @@ export function QuoteStage({
       {/* 헤더 높이는 전환 좌표계가 쓰는 --header-height 그대로다 — 리터럴로 다시 적으면 어긋난다 */}
       <TraceHeader
         title={title}
+        scopeLabel={scopeLabel}
         onBack={onBack}
         pageNav={pageNav}
         className="absolute inset-x-0 top-(--safe-top) h-(--header-height) py-0"

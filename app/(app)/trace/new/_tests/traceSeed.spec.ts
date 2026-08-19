@@ -17,6 +17,7 @@ const BOOK: TraceSeed = {
   bookTitle: '모순',
   bookCoverImageUrl: 'https://example.com/cover.jpg',
   passage: null,
+  groupId: null,
 }
 
 describe('흔적 작성 씨앗', () => {

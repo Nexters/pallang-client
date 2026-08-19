@@ -20,6 +20,8 @@ type TraceCreateNavInput = {
   activePassage: ActivePassage | undefined
   /** 보고 있는 쪽 */
   pageNumber: number
+  /** 모임 안에서 연 화면이면 그 모임 — 여기서 남기는 흔적도 같은 모임에 붙는다 */
+  groupId?: number
 }
 
 /**
@@ -33,13 +35,22 @@ export function useTraceCreateNav({
   bookCoverImageUrl,
   activePassage,
   pageNumber,
+  groupId,
 }: TraceCreateNavInput) {
   const router = useRouter()
   const runWithLogin = useLoginGate()
 
   const goCreateTrace = (passage: TraceSeedPassage | null) => {
     runWithLogin(() => {
-      router.push(buildTraceSeedHref({ bookId, bookTitle, bookCoverImageUrl, passage }))
+      router.push(
+        buildTraceSeedHref({
+          bookId,
+          bookTitle,
+          bookCoverImageUrl,
+          passage,
+          groupId: groupId ?? null,
+        }),
+      )
     }, LOGIN_GATE_MESSAGE.traceCreate)
   }
 

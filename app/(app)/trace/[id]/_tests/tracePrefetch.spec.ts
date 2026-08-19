@@ -36,6 +36,7 @@ vi.mock('../_components/TraceCollapseView/TraceCollapseView', () => ({
 const BOOK_ID = 1
 const FIRST_PAGE = 7
 const FIRST_PASSAGE_ID = 71
+const GROUP_ID = 5
 
 type RecordedCall = { url: string; authorization: string | null }
 
@@ -84,8 +85,10 @@ function stubTraceApi(): RecordedCall[] {
 
 function readPrefetched(queryClient: QueryClient) {
   return {
-    pageNumbers: queryClient.getQueryData(passageQueries.pageNumbers(BOOK_ID).queryKey),
-    passages: queryClient.getQueryData(passageQueries.passagesByPage(BOOK_ID, FIRST_PAGE).queryKey),
+    pageNumbers: queryClient.getQueryData(passageQueries.pageNumbers(BOOK_ID, undefined).queryKey),
+    passages: queryClient.getQueryData(
+      passageQueries.passagesByPage(BOOK_ID, FIRST_PAGE, undefined).queryKey,
+    ),
     opinions: queryClient.getQueryData(
       opinionQueries.listByPassage(FIRST_PASSAGE_ID, DEFAULT_OPINION_SORT_TYPE).queryKey,
     ),
@@ -136,10 +139,12 @@ describe('흔적 페이지 서버 프리페치', () => {
     })
 
     expect(
-      queryClient.getQueryData(passageQueries.passagesByPage(BOOK_ID, 9).queryKey),
+      queryClient.getQueryData(passageQueries.passagesByPage(BOOK_ID, 9, undefined).queryKey),
     ).toBeDefined()
     expect(
-      queryClient.getQueryData(passageQueries.passagesByPage(BOOK_ID, FIRST_PAGE).queryKey),
+      queryClient.getQueryData(
+        passageQueries.passagesByPage(BOOK_ID, FIRST_PAGE, undefined).queryKey,
+      ),
     ).toBeUndefined()
   })
 
@@ -161,6 +166,27 @@ describe('흔적 페이지 서버 프리페치', () => {
 
     expect(calls.every((call) => call.authorization === null)).toBe(true)
     expect(readPrefetched(queryClient).opinions?.pages[0]?.data?.opinions).toHaveLength(1)
+  })
+
+  it('모임에서 들어오면 모임 스코프 캐시에 채우고 요청에도 groupId를 싣는다', async () => {
+    const calls = stubTraceApi()
+    const queryClient = new QueryClient()
+
+    await prefetchTraceScreen(queryClient, BOOK_ID, null, GROUP_ID)
+
+    // 전역 대목과 다른 목록이므로 캐시 자리도 갈린다 — 섞이면 모임 밖 대목이 모임 안에 보인다
+    expect(
+      queryClient.getQueryData(passageQueries.pageNumbers(BOOK_ID, GROUP_ID).queryKey),
+    ).toBeDefined()
+    expect(
+      queryClient.getQueryData(passageQueries.pageNumbers(BOOK_ID, undefined).queryKey),
+    ).toBeUndefined()
+    expect(
+      queryClient.getQueryData(
+        passageQueries.passagesByPage(BOOK_ID, FIRST_PAGE, GROUP_ID).queryKey,
+      ),
+    ).toBeDefined()
+    expect(calls.filter((call) => call.url.includes(`groupId=${String(GROUP_ID)}`))).toHaveLength(2)
   })
 
   it('조회가 실패해도 예외를 던지지 않고 빈 캐시로 넘어간다(클라이언트가 다시 조회한다)', async () => {
@@ -210,5 +236,16 @@ describe('TracePrefetchBoundary', () => {
     expect(notFoundMock).not.toHaveBeenCalled()
     expect(boundary.props.children.type).toBe(TraceCollapseView)
     expect(boundary.props.children.props.bookId).toBe(BOOK_ID)
+  })
+
+  it('쿼리의 groupId를 화면까지 내려준다 — 배지·조회·흔적 남기기가 이 값을 따른다', async () => {
+    stubTraceApi()
+
+    const boundary = (await TracePrefetchBoundary({
+      params: Promise.resolve({ id: '1' }),
+      searchParams: Promise.resolve({ groupId: String(GROUP_ID) }),
+    })) as ReactElement<{ children: ReactElement<{ groupId: number | undefined }> }>
+
+    expect(boundary.props.children.props.groupId).toBe(GROUP_ID)
   })
 })

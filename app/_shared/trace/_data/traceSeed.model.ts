@@ -20,6 +20,7 @@ const PARAM = {
   quote: 'quote',
   spoiler: 'spoiler',
   decorations: 'deco',
+  groupId: 'groupId',
 } as const
 
 /** 대목까지 물고 갈 때만 채운다. 없으면 책만 정해진 채 대목 입력부터 시작한다. */
@@ -88,6 +89,8 @@ export type TraceSeed = {
   bookTitle: string
   bookCoverImageUrl: string | null
   passage: TraceSeedPassage | null
+  /** 모임 안에서 시작한 흔적이면 그 모임 — 작성 플로우가 이 모임에 흔적을 붙인다. 아니면 null */
+  groupId: number | null
 }
 
 /** 흔적 작성 플로우로 보낼 링크. 대목을 함께 넘기면 꾸미기 단계부터 시작한다. */
@@ -97,6 +100,7 @@ export function buildTraceSeedHref(seed: TraceSeed): string {
     [PARAM.bookTitle]: seed.bookTitle,
   })
   if (seed.bookCoverImageUrl) params.set(PARAM.bookCover, seed.bookCoverImageUrl)
+  if (seed.groupId !== null) params.set(PARAM.groupId, String(seed.groupId))
   if (seed.passage) {
     params.set(PARAM.passageId, String(seed.passage.passageId))
     params.set(PARAM.page, String(seed.passage.pageNumber))
@@ -125,6 +129,7 @@ export function parseTraceSeed(
     bookId,
     bookTitle,
     bookCoverImageUrl: readParam(params, PARAM.bookCover) ?? null,
+    groupId: readPositiveInt(params, PARAM.groupId) ?? null,
     passage:
       passageId !== undefined && pageNumber !== undefined && quotedText
         ? {
