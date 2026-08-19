@@ -6,10 +6,10 @@ import { useMemo, useRef, useState } from 'react'
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Select } from '@/app/_global/_components/Select/Select'
-import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type LikedOpinion, userQueries } from '@/app/_global/_queries/user.queries'
+import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
 
 import { LikedOpinionCard } from '../LikedOpinionCard/LikedOpinionCard'
 
@@ -57,7 +57,7 @@ export function LikedOpinionsView() {
 
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   function renderList() {
-    if (listQuery.isPending) return <LikedOpinionsSkeleton />
+    if (listQuery.isPending) return <RecordListSkeleton />
     if (listQuery.isError && opinions.length === 0) {
       return (
         <ApiErrorFeedbackState
@@ -129,30 +129,5 @@ export function LikedOpinionsView() {
         }}
       />
     </>
-  )
-}
-
-/** 목록과 같은 좌표(카드 gap-2 + p-4 + 머리줄·점선·본문 3줄)로 자리를 지킨다 */
-function LikedOpinionsSkeleton() {
-  return (
-    <div aria-busy="true" className="flex flex-col gap-2">
-      {Array.from({ length: 4 }, (_, index) => (
-        <div
-          key={index}
-          className="flex flex-col gap-4 border border-border-book bg-bg-default p-4"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="size-5" />
-          </div>
-          <div className="border-t border-dashed border-border-book" />
-          <div className="flex flex-col gap-1">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-2/3" />
-          </div>
-        </div>
-      ))}
-    </div>
   )
 }
