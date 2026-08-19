@@ -1,10 +1,13 @@
 import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query'
 
+import type { BookOptionResponse } from '../_apis/_generated/models/bookOptionResponse'
+import type { GetFilterBooksType } from '../_apis/_generated/models/getFilterBooksType'
+import type { LikedOpinionResponse } from '../_apis/_generated/models/likedOpinionResponse'
 import type { ModifyProfileImageBody } from '../_apis/_generated/models/modifyProfileImageBody'
 import type { MyOpinionResponse } from '../_apis/_generated/models/myOpinionResponse'
-import type { PageInfo } from '../_apis/_generated/models/pageInfo'
 import type { UpdateNicknameRequest } from '../_apis/_generated/models/updateNicknameRequest'
 import {
+  getFilterBooks,
   getLikedOpinions,
   getMe,
   getMyOpinions,
@@ -15,16 +18,17 @@ import {
 import { clearTokens } from '../_services/authToken.service'
 import { markWithdrawalCompleted } from '../_services/withdrawal.service'
 
-/** 흔적 목록 화면이 보는 범위 — 내가 쓴 것인지, 내가 좋아요를 누른 것인지 */
-export type UserOpinionScope = 'liked' | 'mine'
+/** feature 코드는 _apis를 직접 import할 수 없어 목록 항목 타입을 여기서 재노출한다. */
+export type UserOpinion = MyOpinionResponse
 
-/** feature 코드는 _apis를 직접 import할 수 없어 목록 항목 타입을 여기서 재노출한다.
-    두 응답이 완전히 같지는 않다 — 좋아요 목록에만 `likedAt`이, 내 흔적 목록에만 `author`가 온다.
-    목록 UI가 쓰는 필드는 겹치는 쪽이라, 다른 한쪽에만 있는 필드를 optional로 낮춰 하나로 합친다. */
-export type UserOpinion = Omit<MyOpinionResponse, 'author'> & { author?: string }
+/** 좋아요 관리 화면의 목록 항목 — 내 흔적 목록과 달리 `nickname`·`likedAt`이 온다. */
+export type LikedOpinion = LikedOpinionResponse
 
-/** 두 응답을 한 쿼리로 묶기 위한 공통 페이지 형태 — 응답 봉투(`data`)는 그대로 둔다. */
-type UserOpinionPage = { data?: { opinions: UserOpinion[]; pageInfo: PageInfo } }
+/** 도서 필터 드롭다운의 옵션 하나. */
+export type FilterBook = BookOptionResponse
+
+/** 필터를 거는 관리 화면 종류(LIKE: 좋아요 관리, SPOILER: 스포일러 대목 관리). */
+export type FilterBooksType = GetFilterBooksType
 
 const USER_OPINION_PAGE_SIZE = 20
 
@@ -37,22 +41,39 @@ export const userQueries = {
       // 비로그인이면 401이 정상 흐름이라 재시도하지 않는다
       retry: false,
     }),
-  /**
-   * 내가 남긴 / 좋아요 누른 흔적 전체 목록. 목록 UI가 쓰는 필드가 두 응답에 모두 있어서,
-   * 화면을 공유하는 만큼 쿼리도 scope 하나로 가른다.
-   */
-  opinionList: (scope: UserOpinionScope) =>
+  /** 내가 남긴 흔적 전체 목록. */
+  opinionList: () =>
     infiniteQueryOptions({
-      queryKey: [...userQueries.all(), 'opinion-list', scope],
-      queryFn: ({ pageParam }): Promise<UserOpinionPage> =>
-        scope === 'mine'
-          ? getMyOpinions({ page: pageParam, size: USER_OPINION_PAGE_SIZE })
-          : getLikedOpinions({ page: pageParam, size: USER_OPINION_PAGE_SIZE }),
+      queryKey: [...userQueries.all(), 'opinion-list'],
+      queryFn: ({ pageParam }) => getMyOpinions({ page: pageParam, size: USER_OPINION_PAGE_SIZE }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
       },
+    }),
+  /** 좋아요 관리 화면의 목록 전체 — 도서 필터를 가리지 않고 함께 무효화할 때 쓴다 */
+  likedOpinionListAll: () => [...userQueries.all(), 'liked-opinion-list'] as const,
+  /**
+   * 내가 좋아요를 누른 흔적 목록. `bookId`를 주면 그 책만 추린다.
+   * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
+   */
+  likedOpinionList: (bookId?: number) =>
+    infiniteQueryOptions({
+      queryKey: [...userQueries.likedOpinionListAll(), bookId ?? 'all'],
+      queryFn: ({ pageParam }) =>
+        getLikedOpinions({ bookId, page: pageParam, size: USER_OPINION_PAGE_SIZE }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+      },
+    }),
+  /** 관리 화면 도서 필터의 선택지. */
+  filterBooks: (type: FilterBooksType) =>
+    queryOptions({
+      queryKey: [...userQueries.all(), 'filter-books', type],
+      queryFn: () => getFilterBooks({ type }),
     }),
 }
 

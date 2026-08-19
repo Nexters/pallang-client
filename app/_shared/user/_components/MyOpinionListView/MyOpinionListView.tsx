@@ -14,25 +14,18 @@ import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
-import {
-  type UserOpinion,
-  type UserOpinionScope,
-  userQueries,
-} from '@/app/_global/_queries/user.queries'
+import { type UserOpinion, userQueries } from '@/app/_global/_queries/user.queries'
 import { buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
-/** 두 화면이 제목·빈 문구만 다르다 — 목록 구조는 그대로 공유한다 */
-const SCOPE_TEXT = {
-  mine: { title: '내가 남긴 흔적', empty: '아직 남긴 흔적이 없어요' },
-  liked: { title: '좋아요 누른 흔적', empty: '아직 좋아요를 누른 흔적이 없어요' },
-} as const
+const TITLE = '내가 남긴 흔적'
+const EMPTY_MESSAGE = '아직 남긴 흔적이 없어요'
 
 // ponytail: 확정 디자인이 없다 — 도서 목록(BookItem) 톤을 따른 1차 구현.
-export function MyOpinionListView({ scope }: { scope: UserOpinionScope }) {
+export function MyOpinionListView() {
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const listQuery = useInfiniteQuery(userQueries.opinionList(scope))
+  const listQuery = useInfiniteQuery(userQueries.opinionList())
   const opinions = useMemo<UserOpinion[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
     [listQuery.data],
@@ -53,7 +46,7 @@ export function MyOpinionListView({ scope }: { scope: UserOpinionScope }) {
     if (listQuery.isError && opinions.length === 0) {
       return (
         <ApiErrorFeedbackState
-          aria-label={`${SCOPE_TEXT[scope].title} 오류`}
+          aria-label={`${TITLE} 오류`}
           title="목록을 불러오지 못했어요."
           onRetry={() => {
             void listQuery.refetch()
@@ -62,12 +55,7 @@ export function MyOpinionListView({ scope }: { scope: UserOpinionScope }) {
       )
     }
     if (opinions.length === 0) {
-      return (
-        <FeedbackState
-          aria-label={`빈 ${SCOPE_TEXT[scope].title}`}
-          message={SCOPE_TEXT[scope].empty}
-        />
-      )
+      return <FeedbackState aria-label={`빈 ${TITLE}`} message={EMPTY_MESSAGE} />
     }
     return (
       <>
@@ -96,7 +84,7 @@ export function MyOpinionListView({ scope }: { scope: UserOpinionScope }) {
         >
           <BackIcon />
         </TopBar.Action>
-        <TopBar.Title as="h1">{SCOPE_TEXT[scope].title}</TopBar.Title>
+        <TopBar.Title as="h1">{TITLE}</TopBar.Title>
         <TopBar.Spacer />
       </TopBar.Root>
 
