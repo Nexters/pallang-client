@@ -119,8 +119,8 @@ describe('BottomSheet', () => {
       const backdrop = document.querySelector('[data-slot="bottom-sheet-backdrop"]')
       if (backdrop === null) throw new Error('바텀시트 백드롭을 찾지 못했다')
 
+      // 값을 var로 조립하는 유틸을 쓰면 안 된다는 쪽은 motionConvention.spec.ts가 전역으로 막는다
       expect(screen.getByRole('dialog').className).toContain('starting:[translate:0_100%]')
-      expect(screen.getByRole('dialog').className).not.toContain('starting:translate-y-full')
       expect(backdrop.className).toContain('starting:opacity-0')
     })
 

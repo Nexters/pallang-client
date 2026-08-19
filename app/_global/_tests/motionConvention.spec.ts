@@ -91,6 +91,21 @@ describe('모션 컨벤션', () => {
     }
   })
 
+  it('@starting-style 안에서는 값을 var로 조립하는 유틸을 쓰지 않는다', () => {
+    // Tailwind의 translate-*/scale-*/rotate-*는 값을 직접 내지 않고 --tw-* 를 거쳐
+    // translate:var(--tw-translate-x) var(--tw-translate-y) 처럼 조립한다. iOS Safari
+    // (= 아이폰의 모든 브라우저)는 @starting-style 안에서 var()로 조립된 값을 시작값으로
+    // 잡지 못해 전환이 통째로 사라진다. 데스크톱 Chrome은 정상 처리해서 브라우저 계측만으로는
+    // 끝까지 안 잡힌다 — 실기기에서만 드러나므로 여기서 코드로 막는다.
+    // 시작값은 [translate:0_100%]처럼 직접 값으로 쓴다(BottomSheet 참고).
+    // opacity-0처럼 값을 직접 내는 유틸은 그대로 써도 되므로 대상에서 뺀다.
+    const offenders = findOffenders(
+      CLASS_FILES.filter((file) => !file.endsWith('motionConvention.spec.ts')),
+      /\bstarting:-?(?:translate|scale|rotate)-/,
+    )
+    expect(offenders).toEqual([])
+  })
+
   it('스타일시트에 @keyframes를 새로 만들지 않는다', () => {
     // 같은 이유로 CSS 쪽도 막는다 — tsx만 훑으면 globals.css의 keyframes가 그대로 통과한다.
     expect(findOffenders(STYLE_FILES, /@keyframes\b/)).toEqual([])
