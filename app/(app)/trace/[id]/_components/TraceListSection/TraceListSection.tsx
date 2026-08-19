@@ -15,11 +15,11 @@ type TraceListSectionProps = {
   isMasked: boolean
   sortType: OpinionSortType
   onChangeSort: (sortType: OpinionSortType) => void
-  /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 202:3672 주석) */
+  /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 주석) */
   onOpenOpinionSheet: () => void
   /** 댓글이 펼쳐진 의견 — null이면 모두 접혀 있다 */
   expandedOpinionId: number | null
-  /** 흔적의 댓글 버튼 — 그 자리에서 댓글을 여닫는다(디자인 202:3991 주석) */
+  /** 흔적의 댓글 버튼 — 그 자리에서 댓글을 여닫는다(디자인 주석) */
   onToggleComments: (trace: Trace) => void
   className?: string
 }
@@ -37,10 +37,10 @@ export function TraceListSection({
 }: TraceListSectionProps) {
   return (
     <section className={cn('flex flex-col', className)}>
-      {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다. h-15는 시안(202:3672) 헤더 높이 */}
+      {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다. h-15는 시안 헤더 높이 */}
       <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
-          {/* 시안(200:906)에서 장식이던 셰브론이 의견 바텀시트라는 목적지를 얻었다(202:3672 주석) */}
+          {/* 시안에서 장식이던 셰브론이 의견 바텀시트라는 목적지를 얻었다 */}
           <button
             type="button"
             onClick={onOpenOpinionSheet}
@@ -50,7 +50,7 @@ export function TraceListSection({
             <NextIcon width={20} height={20} aria-hidden className="text-icon-active" />
           </button>
         </div>
-        {/* 열리면 트리거가 그대로 첫 줄이 되는 드롭다운(218:8736) — 목록 위로 펼쳐지도록 헤더보다 앞에 세운다 */}
+        {/* 열리면 트리거가 그대로 첫 줄이 되는 드롭다운 — 목록 위로 펼쳐지도록 헤더보다 앞에 세운다 */}
         <Select
           label="정렬 기준"
           options={OPINION_SORT_OPTIONS}
@@ -74,7 +74,7 @@ export function TraceListSection({
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
-            // 구분선 양옆으로 24px씩(디자인 202:7290 Content gap) — 흔적끼리 붙어 보이지 않게 한다.
+            // 구분선 양옆으로 24px씩(디자인의 Content gap) — 흔적끼리 붙어 보이지 않게 한다.
             // 첫 흔적 위에는 두지 않는다 — 헤더와 붙어 두 줄로 보인다
             className={index > 0 ? 'mt-6 border-t border-dashed border-white/30 pt-6' : undefined}
           >
@@ -87,7 +87,7 @@ export function TraceListSection({
                 onToggleComments(trace)
               }}
             />
-            {/* 댓글은 다른 화면으로 넘기지 않고 흔적 바로 아래로 펼친다(디자인 202:3978).
+            {/* 댓글은 다른 화면으로 넘기지 않고 흔적 바로 아래로 펼친다.
                 입력바는 이 안이 아니라 화면 하단 고정이라 목록 바깥(TraceListPanel)에 있다 */}
             {trace.opinionId === expandedOpinionId && (
               <TraceCommentSection opinionId={trace.opinionId} />

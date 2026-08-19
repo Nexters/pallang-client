@@ -13,7 +13,7 @@ import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 /** 갈 곳이 없는 항목(path 없음)은 아직 화면이 없는 것 — 버튼으로만 그린다 */
 type SettingItem = { label: string; path?: string }
 
-// 확정 시안(3113:23189)에서 내 기록은 서재 하나로 좁혀졌다.
+// 확정 시안에서 내 기록은 서재 하나로 좁혀졌다.
 // 책별 기록은 서재 > 책 상세의 의견·좋아요·스포일러 탭이 대신한다.
 const myRecords: SettingItem[] = [{ label: '내 서재', path: '/my/library' }]
 const loggedInSettings: SettingItem[] = [
@@ -23,7 +23,7 @@ const loggedInSettings: SettingItem[] = [
   { label: '스포일러 관리', path: '/my/spoilers' },
   { label: '좋아요 관리', path: '/my/likes' },
   { label: '알림 설정' },
-  // 시안에는 없지만 남긴다 — 차단 유저 관리 화면(3113:24568)이 확정 디자인으로 살아 있어
+  // 시안에는 없지만 남긴다 — 차단 유저 관리 화면이 확정 디자인으로 살아 있어
   // 여기서 빼면 /my/blocks에 접근할 통로가 사라진다. 고객지원도 같은 이유다.
   { label: '차단 관리', path: '/my/blocks' },
   { label: '고객지원', path: '/support' },

@@ -18,7 +18,7 @@ type LikedPanelProps = {
   onUnlike: (unliked: { nickname: string; undo: () => void }) => void
 }
 
-/** 이 책에서 내가 좋아요를 누른 흔적 목록(Figma 225:13300). */
+/** 이 책에서 내가 좋아요를 누른 흔적 목록. */
 export function LikedPanel({ bookId, onUnlike }: LikedPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listQuery = useInfiniteQuery(userQueries.likedOpinionList(bookId))

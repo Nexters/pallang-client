@@ -36,7 +36,7 @@ export function TraceItem({
   return (
     <article className="flex flex-col gap-3 py-4">
       <div className="flex items-center justify-between">
-        {/* 닉네임 줄과 날짜의 밝기 차이가 시안(202:4568)의 위계다 — 닉네임 50%, 날짜 25%.
+        {/* 닉네임 줄과 날짜의 밝기 차이가 시안의 위계다 — 닉네임 50%, 날짜 25%.
             ponytail: 시안의 셰브론은 작성자 프로필로 가는 자리인데 그 화면이 아직 없다.
             버튼으로 두면 키보드·보조기기에 누를 것을 권하고도 아무 일이 없어, 글자로만 세우고
             셰브론은 장식으로 남긴다 — 프로필 화면이 생기면 여기를 링크로 바꾼다 */}

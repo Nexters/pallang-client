@@ -416,7 +416,7 @@ describe('의견 바텀시트와 답글 흐름', () => {
   it('흔적의 댓글 아이콘을 누르면 다른 화면으로 넘어가지 않고 그 자리에 펼쳐진다', async () => {
     await openFirstTraceComments()
 
-    // 페이지에서는 상세로도, 시트로도 넘어가지 않는다 — 흔적 바로 아래로 열린다(디자인 202:3978)
+    // 페이지에서는 상세로도, 시트로도 넘어가지 않는다 — 흔적 바로 아래로 열린다
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByLabelText('댓글 목록')).toBeInTheDocument()
     expect(commentToggle(0)).toHaveAttribute('aria-expanded', 'true')
@@ -464,7 +464,7 @@ describe('의견 바텀시트와 답글 흐름', () => {
     await renderView()
     fireEvent.click(commentToggle(0))
 
-    // 비워두면 의견 카드 아래가 그냥 붙어 "없다"는 사실이 화면에 남지 않는다(디자인 202:5958)
+    // 비워두면 의견 카드 아래가 그냥 붙어 "없다"는 사실이 화면에 남지 않는다
     expect(await screen.findByText('아직 남겨진 댓글이 없습니다.')).toBeInTheDocument()
     expect(screen.getByText('첫번째 댓글을 달아주세요!')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()

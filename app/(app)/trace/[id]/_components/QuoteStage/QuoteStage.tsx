@@ -51,7 +51,7 @@ export function QuoteStage({
           decorations={activeQuote?.decorations ?? []}
           className="text-body-20md -m-4 min-h-0 flex-1 overflow-hidden p-4 text-text-secondary"
         />
-        {/* ponytail: 시안(200:967)의 화살표는 아직 스크린샷을 붙여둔 자리라 에셋이 없다.
+        {/* ponytail: 시안의 화살표는 아직 스크린샷을 붙여둔 자리라 에셋이 없다.
             글리프가 가장 가까운 back/next를 쓰고, 실제 아이콘이 나오면 갈아끼운다 */}
         <div className="absolute right-8 bottom-8 flex items-center gap-2.5">
           <button

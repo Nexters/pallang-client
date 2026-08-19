@@ -61,7 +61,7 @@ export function TraceWriteForm() {
           화면 밖으로 밀려 아예 누를 수 없었다 — 가운데만 스크롤시키고 단계 표시와 버튼 줄은
           바깥에 두어 고정한다(ScreenLayout·BookInternalView와 같은 처리). */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안(2295:5842): 노트 하단 199px가 어두운 배경 */}
+        {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안: 노트 하단 199px가 어두운 배경 */}
         <div className="relative bg-bg-default px-8">
           <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
           <div className="relative">

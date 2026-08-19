@@ -11,8 +11,8 @@ type RecordCardProps = {
   /** 머리줄 왼쪽 — 책 안의 쪽 번호 */
   pageNumber: number
   /**
-   * 쪽수 옆 보조 텍스트. 좋아요 관리는 닉네임(225:12750), 스포일러 관리는 작성일(225:12682).
-   * 책 상세 의견 탭(225:12582)은 쪽수 옆에 붙일 게 없어 생략한다 — 작성일은 오른쪽 끝이다.
+   * 쪽수 옆 보조 텍스트. 좋아요 관리는 닉네임, 스포일러 관리는 작성일.
+   * 책 상세 의견 탭은 쪽수 옆에 붙일 게 없어 생략한다 — 작성일은 오른쪽 끝이다.
    */
   meta?: string
   /** 점선 아래 본문. 좋아요 관리는 흔적 본문, 스포일러 관리는 대목 인용문이다. */
@@ -25,14 +25,14 @@ type RecordCardProps = {
   /** 카드를 덮는 이동 링크. 좌표를 만들 수 있는 화면만 넘긴다. */
   link?: { href: string; label: string }
   /**
-   * 펼친 본문을 다시 접을 수 있는지. 책 상세 의견 탭(225:12588)에만 `접기` 자리가 있고
-   * 관리 화면 두 곳(좋아요 225:12750 · 스포일러 225:12682)의 시안에는 없어 기본은 한 방향이다.
+   * 펼친 본문을 다시 접을 수 있는지. 책 상세 의견 탭에만 `접기` 자리가 있고
+   * 관리 화면 두 곳(좋아요 · 스포일러)의 시안에는 없어 기본은 한 방향이다.
    */
   collapsible?: boolean
 }
 
 /**
- * 마이페이지 관리 목록(좋아요 관리 225:12750 · 스포일러 관리 225:12682)의 카드 하나.
+ * 마이페이지 관리 목록(좋아요 관리 · 스포일러 관리)의 카드 하나.
  * 표지 없이 `{쪽수}p · 보조 텍스트` 머리줄 + 점선 + 본문만 담고,
  * 두 화면이 갈리는 자리(보조 텍스트·우측 액션·이동 링크)는 값과 slot으로 받는다.
  */
@@ -62,13 +62,13 @@ export function RecordCard({
         {action && <div className="relative z-10 shrink-0">{action}</div>}
       </div>
 
-      {/* 머리줄과 본문을 가르는 점선(Figma 225:12756) — SVG 대신 CSS라 카드 너비를 따라 늘어난다 */}
+      {/* 머리줄과 본문을 가르는 점선 — SVG 대신 CSS라 카드 너비를 따라 늘어난다 */}
       <div aria-hidden className="border-t border-dashed border-border-book" />
 
       <div className="flex flex-col items-end gap-1">
         <p
           ref={contentRef}
-          // 접힌 본문은 세 줄까지만 보인다(Figma 225:12750)
+          // 접힌 본문은 세 줄까지만 보인다
           className={cn('w-full text-body-16md text-text-secondary', !expanded && 'line-clamp-3')}
         >
           {body}

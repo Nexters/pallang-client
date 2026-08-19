@@ -45,7 +45,7 @@ export function EffectPicker({ disabled, onPick, selectedKey }: EffectPickerProp
             }}
             className={cn(
               'press flex cursor-pointer flex-col items-center rounded-2xl bg-bg-gray p-3.5 text-body-14md text-text-inverse backdrop-blur-[1px]',
-              // 시안 2209:16281(꾸미기 버튼 클릭) — 누르는 동안 흰 배경에 진한 글자로 뒤집힌다.
+              // 시안(꾸미기 버튼 클릭) — 누르는 동안 흰 배경에 진한 글자로 뒤집힌다.
               // 아이콘은 에셋에 색이 박혀 있어(효과 오렌지 + A 회색) 양쪽 상태에서 그대로 쓴다.
               'active:bg-bg-default active:text-text-primary',
               // 고른 효과는 누르는 동안과 같은 반전 스타일로 계속 활성 표시한다

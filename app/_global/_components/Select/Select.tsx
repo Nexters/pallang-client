@@ -6,7 +6,7 @@ import { Fragment, useState } from 'react'
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
-// Figma 218:8736 — 정렬 필터(최신순/인기순) Select.
+// 정렬 필터(최신순/인기순) Select.
 // 닫혀 있을 땐 배경 없는 알약, 열리면 트리거가 그대로 첫 줄이 되는 radius 8 블록이다.
 // 얹히는 면에 따라 tone이 갈린다(dark: 채운 회색 / light: 유리) — 시안의 네 변형이 이 둘 × 열림 상태다.
 // 열림 모션·이음매 처리는 헤더의 PagePicker와 같은 규약을 따른다(트리거가 아래 모서리를 펴고,

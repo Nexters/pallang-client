@@ -11,7 +11,7 @@ import { formatRecordedDate } from '@/app/_shared/user/_services/recordDate.serv
 
 import { RecordPanel } from '../RecordPanel/RecordPanel'
 
-/** 이 책에 내가 남긴 흔적 목록(Figma 225:12580). */
+/** 이 책에 내가 남긴 흔적 목록. */
 export function OpinionPanel({ bookId }: { bookId: number }) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listQuery = useInfiniteQuery(userQueries.opinionList(bookId))
@@ -31,7 +31,7 @@ export function OpinionPanel({ bookId }: { bookId: number }) {
   return (
     <RecordPanel
       label="의견"
-      // 시안에 의견 탭 빈 상태 프레임이 없어 형제 탭(225:13472 · 225:13647) 문구를 그대로 따른다
+      // 시안에 의견 탭 빈 상태 프레임이 없어 형제 탭 문구를 그대로 따른다
       emptyMessage="등록한 의견이 없습니다"
       isPending={listQuery.isPending}
       isError={listQuery.isError}
@@ -51,7 +51,7 @@ export function OpinionPanel({ bookId }: { bookId: number }) {
 }
 
 /**
- * 의견 탭의 카드 하나(Figma 225:12581).
+ * 의견 탭의 카드 하나.
  * 쪽수 옆에 붙일 보조 텍스트가 없고 작성일이 오른쪽 끝에 서며, 펼친 뒤 `접기`로 되돌아온다.
  */
 function OpinionRecordCard({ opinion }: { opinion: UserOpinion }) {

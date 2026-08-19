@@ -11,13 +11,13 @@ type TraceCommentSectionProps = {
 
 /**
  * 목록을 대신하는 자리(로딩·오류·빈 목록)는 모두 같은 상자다 — 높이가 다르면 상태가 넘어갈 때마다
- * 아래 흔적들이 밀려 올라왔다 내려간다. 크기는 빈 목록 카드(디자인 202:5958, 128px)에 맞춘다.
+ * 아래 흔적들이 밀려 올라왔다 내려간다. 크기는 빈 목록 카드(디자인의 128px)에 맞춘다.
  */
 const PLACEHOLDER_BOX = 'flex h-32 flex-col items-center justify-center bg-bg-overlay p-4'
 
 /**
  * 흔적 아이템 바로 아래에 인라인으로 펼쳐지는 댓글 묶음.
- * 댓글은 5개까지 보이고 더보기를 누를 때마다 5개씩 이어 붙는다(디자인 2165:5125 주석).
+ * 댓글은 5개까지 보이고 더보기를 누를 때마다 5개씩 이어 붙는다(디자인 주석).
  */
 export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
   const {
@@ -64,7 +64,7 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
   }
 
   // 빈 목록을 그냥 두면 의견 카드 바로 아래에 다음 요소가 붙어 "댓글이 없다"는 사실이 화면에
-  // 남지 않는다 — 디자인(202:5958)은 같은 자리에 첫 댓글을 권하는 카드를 세워 둔다
+  // 남지 않는다 — 디자인은 같은 자리에 첫 댓글을 권하는 카드를 세워 둔다
   if (view === 'empty') {
     return (
       <section

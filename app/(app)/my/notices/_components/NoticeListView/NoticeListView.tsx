@@ -15,7 +15,7 @@ import { formatNoticeDate } from '../../_services/noticeDate.service'
 export function NoticeListView() {
   const listQuery = useQuery(noticeQueries.list())
   const notices = listQuery.data?.data?.notices ?? []
-  // 시안(225:13761)은 한 번에 한 건만 펼친다 — 펼친 공지 하나만 들고 있으면 된다
+  // 시안은 한 번에 한 건만 펼친다 — 펼친 공지 하나만 들고 있으면 된다
   const [openId, setOpenId] = useState<null | number>(null)
 
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */

@@ -21,13 +21,13 @@ const GLASS_SURFACE = 'bg-black/10 backdrop-blur-[9px]'
 /** 항목을 가르는 점선 — SVG 대신 CSS 테두리라 목록 너비가 바뀌어도 따라 늘어난다 */
 const DASHED_RULE = 'border-t border-dashed border-black/10'
 
-/** 헤더의 쪽 선택(디자인 202:7776의 상단 탭).
+/** 헤더의 쪽 선택(디자인의 상단 탭).
     가로 탭 줄을 대신하므로 페이지 수가 많아도 열리는 목록 안에서 이어 불러온다. */
 export function PagePicker(nav: PageNav) {
   const { popupRef, loadMoreRef, currentPage, otherPages, listPages, syncListAnchor } =
     usePagePicker(nav)
 
-  // 고를 쪽이 없으면 펼칠 것도 없다 — 화살표 없는 알약으로만 세운다(디자인 202:7777)
+  // 고를 쪽이 없으면 펼칠 것도 없다 — 화살표 없는 알약으로만 세운다
   if (otherPages.length === 0) {
     if (currentPage === undefined) return null
 

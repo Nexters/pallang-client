@@ -11,7 +11,7 @@ type OpinionReplyScreenProps = {
   state: ExitTransitionState
 }
 
-/** 의견 시트 안에서 목록 위로 밀려 들어오는 답글 화면(디자인 202:7346) */
+/** 의견 시트 안에서 목록 위로 밀려 들어오는 답글 화면 */
 export function OpinionReplyScreen({ trace, state }: OpinionReplyScreenProps) {
   return (
     <div

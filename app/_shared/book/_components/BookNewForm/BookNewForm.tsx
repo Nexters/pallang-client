@@ -177,7 +177,7 @@ export function BookNewForm({
   return (
     <>
       <form id={formId} onSubmit={(event) => void handleSubmit(event)}>
-        {/* Figma 2260:9671 — 표지 자리. 눌러 기기에서 고르고, 알라딘에서 온 표지는 미리 채워져 있다. */}
+        {/* 표지 자리. 눌러 기기에서 고르고, 알라딘에서 온 표지는 미리 채워져 있다. */}
         <div className="flex shrink-0 items-center justify-center px-4 py-3.5">
           <button
             type="button"

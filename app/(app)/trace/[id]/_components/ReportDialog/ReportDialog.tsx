@@ -23,7 +23,7 @@ type ReportDialogProps = {
   onSubmit: (request: ReportRequest) => void
 }
 
-// Figma 2872:16761(기본) · 16835(사유 선택) · 16886(기타 입력) — 사유 9종을 2열로 고르는 신고 모달.
+// 기본 · 사유 선택 · 기타 입력 — 사유 9종을 2열로 고르는 신고 모달.
 // 상세 입력 칸은 항상 보이되 기타를 골랐을 때만 활성화된다.
 export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogProps) {
   const [selected, setSelected] = useState<ReportReasonOption | null>(null)
@@ -113,7 +113,7 @@ export function ReportDialog({ open, loading, onClose, onSubmit }: ReportDialogP
           />
         </div>
 
-        {/* 버튼 높이 54px는 시안(Figma 2872:16761)의 고정 치수다 */}
+        {/* 버튼 높이 54px는 시안의 고정 치수다 */}
         <Dialog.Footer>
           <Button variant="back" className="h-[54px]" disabled={loading} onClick={onClose}>
             뒤로

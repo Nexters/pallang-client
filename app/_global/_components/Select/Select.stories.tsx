@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 
-/** 밝은 면 위에 얹는 톤(시안 218:8736 Variant3/4) — 채운 회색 대신 유리 질감으로 깔린다 */
+/** 밝은 면 위에 얹는 톤(시안 Variant3/4) — 채운 회색 대신 유리 질감으로 깔린다 */
 export const Light: Story = {
   args: { tone: 'light' },
   decorators: [

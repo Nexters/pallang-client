@@ -14,7 +14,7 @@ export function TraceStepIndicator({ current }: { current: 1 | 2 | 3 }) {
   return (
     <TopBar.Root>
       {/* 세 단계가 한 줄에 다 들어가면서 닫기(X)를 덮지 않아야 한다 — X는 ①②③에서
-          하드웨어 뒤로가기 말고는 유일한 출구다. 시안(3115:17349)의 치수를 그대로 따른다:
+          하드웨어 뒤로가기 말고는 유일한 출구다. 시안의 치수를 그대로 따른다:
           숫자 원 18px · 라벨 12px · 원과 라벨 사이 4px. 그래도 시스템 글꼴 확대 같은
           변수가 있어, min-w-0 + truncate로 마지막에 잘리더라도 X 자리는 침범하지 않게 한다. */}
       <ol className="flex min-w-px flex-1 items-center gap-1.5">

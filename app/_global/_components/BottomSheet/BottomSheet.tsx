@@ -101,7 +101,7 @@ export function BottomSheet({
             ref={popupRef}
             initialFocus={popupRef}
             className={cn(
-              // 모서리 24px — 의견 시트 시안(202:7290)의 comment_Area 값이다
+              // 모서리 24px — 의견 시트 시안의 comment_Area 값이다
               'relative flex flex-col rounded-t-3xl pt-6 pb-safe',
               isDark ? 'bg-bg-dark' : 'bg-bg-default',
               // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다

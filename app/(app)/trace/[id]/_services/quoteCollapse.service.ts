@@ -15,7 +15,7 @@ export const HEADER_HEIGHT = 44
 /** 펼친 상태 스티커 영역 — 헤더 아래로 고정된 높이. 비율이 아니라 이 수치 그대로다 */
 export const STICKER_HEIGHT = 367
 /** 모눈종이 배경이 덮는 높이 — 스티커 영역 안에서 여기부터 아래는 목록과 같은 어두운 면이고,
-    카드가 그 경계를 가로질러 걸친다(시안 200:939의 img 335 − 노치 44 − 목록이 덮는 25) */
+    카드가 그 경계를 가로질러 걸친다(시안의 img 335 − 노치 44 − 목록이 덮는 25) */
 export const PAPER_HEIGHT = 266
 /** 포스트잇 카드 (w-78 / h-80) */
 export const CARD_WIDTH = 312

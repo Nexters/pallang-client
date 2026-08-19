@@ -136,7 +136,7 @@ export function BookSearchView({
     // 간격은 여기서 gap으로 주지 않는다 — 검색바(py-2.5)와 목록(py-6)이 각자 가진 여백이
     // 곧 시안의 간격이라, gap을 더하면 그만큼 벌어진다.
     <div hidden={hidden} className="flex flex-col">
-      {/* 검색바 옆에 있던 '도서 추가' 버튼은 시안(3077:16108·3077:16138)에서 빠졌다 —
+      {/* 검색바 옆에 있던 '도서 추가' 버튼은 시안에서 빠졌다 —
           등록으로 빠져나가는 길은 시트 footer의 '새 책 등록하기'가 대신 든다. */}
       <BookSearchBar placeholder="책 제목을 입력해 주세요." onKeywordChange={setKeyword} />
 

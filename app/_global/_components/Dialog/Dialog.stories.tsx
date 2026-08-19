@@ -20,7 +20,7 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-// Figma 2260:6966 / 2224:19102 — 버튼 1개(풀폭)
+// 버튼 1개(풀폭)
 export const SingleAction: Story = {
   render: (args) => (
     <Dialog.Root {...args}>
@@ -39,7 +39,7 @@ export const SingleAction: Story = {
   ),
 }
 
-// Figma 2545:7228 — 버튼 2개(151.5px씩 + gap 8)
+// 버튼 2개(151.5px씩 + gap 8)
 export const TwoActions: Story = {
   render: (args) => (
     <Dialog.Root {...args}>

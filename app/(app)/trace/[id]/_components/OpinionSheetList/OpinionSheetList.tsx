@@ -16,7 +16,7 @@ type OpinionSheetListProps = {
   onSelectOpinion: (opinionId: number) => void
 }
 
-/** 의견 시트의 목록 화면(디자인 202:7290) — 자체 스크롤 영역이라 무한스크롤도 여기서 관찰한다 */
+/** 의견 시트의 목록 화면 — 자체 스크롤 영역이라 무한스크롤도 여기서 관찰한다 */
 export function OpinionSheetList({
   traces,
   isInert,
@@ -40,7 +40,7 @@ export function OpinionSheetList({
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
-            // 구분선 양옆 24px — 흔적 목록과 같은 리듬이다(디자인 202:7290 Content gap)
+            // 구분선 양옆 24px — 흔적 목록과 같은 리듬이다(디자인의 Content gap)
             className={index > 0 ? 'mt-6 border-t border-dashed border-white/30 pt-6' : undefined}
           >
             <TraceItem

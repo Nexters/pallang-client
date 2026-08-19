@@ -4,7 +4,7 @@ import { type ComponentPropsWithoutRef, useId } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
-// Figma 2260:9675(TextFiled) — 라벨 14 Medium + 필수 * Interactive/Required,
+// Figma TextFiled — 라벨 14 Medium + 필수 * Interactive/Required,
 // 입력 Background/Surface · radius 16 · padding 16 · 16 Medium.
 type TextfieldProps = Omit<ComponentPropsWithoutRef<'input'>, 'type'> & {
   errorMessage?: string
