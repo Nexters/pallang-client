@@ -19,7 +19,8 @@ export function PolicyDetailContent({ policy }: PolicyDetailContentProps) {
 
   return (
     <main className="flex h-full min-h-0 flex-col bg-bg-default">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 text-body-14rg text-text-secondary">
+      {/* 시안(225:10441 · 225:10473)의 본문 면은 24px 안쪽 여백에 16 Regular다 */}
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 text-body-16rg text-text-secondary">
         <ReactMarkdown
           components={{
             h1: ({ ...props }) => (

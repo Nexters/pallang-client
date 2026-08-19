@@ -1,8 +1,9 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import Link from 'next/link'
+import { useState } from 'react'
 
+import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import PlusThinIcon from '@/app/_global/_components/Icon/assets/plus-thin.svg'
 import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
@@ -14,6 +15,8 @@ import { formatNoticeDate } from '../../_services/noticeDate.service'
 export function NoticeListView() {
   const listQuery = useQuery(noticeQueries.list())
   const notices = listQuery.data?.data?.notices ?? []
+  // 시안(225:13761)은 한 번에 한 건만 펼친다 — 펼친 공지 하나만 들고 있으면 된다
+  const [openId, setOpenId] = useState<null | number>(null)
 
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   function renderList() {
@@ -35,24 +38,55 @@ export function NoticeListView() {
     }
     return (
       <ul className="flex flex-col">
-        {notices.map((notice) => (
-          <li key={notice.noticeId} className="border-b border-border-default">
-            {/* 목록 응답이 본문까지 들고 있어 상세는 캐시에서 즉시 그린다 — RSC 프리페치는 낭비 */}
-            <Link
-              href={`/my/notices/${String(notice.noticeId)}`}
-              prefetch={false}
-              className="flex items-center justify-between gap-2 py-6 press"
+        {notices.map((notice) => {
+          const isOpen = notice.noticeId === openId
+          const panelId = `notice-panel-${String(notice.noticeId)}`
+
+          return (
+            <li
+              key={notice.noticeId}
+              className="flex flex-col gap-2 border-b border-border-default py-6"
             >
-              <span className="flex min-w-0 flex-1 flex-col gap-2">
-                <span className="text-title-18md text-text-secondary">{notice.title}</span>
-                <time dateTime={notice.createdAt} className="text-body-18rg text-text-tertiary">
-                  {formatNoticeDate(notice.createdAt)}
-                </time>
-              </span>
-              <PlusThinIcon width={32} height={32} className="shrink-0 text-icon-muted" />
-            </Link>
-          </li>
-        ))}
+              {/* 목록 응답이 본문까지 들고 있어 그 자리에서 펼친다 — 상세를 따로 부르지 않는다 */}
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                onClick={() => {
+                  setOpenId(isOpen ? null : notice.noticeId)
+                }}
+                className="flex w-full items-center justify-between gap-2 text-left press"
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-2">
+                  <span className="text-title-18md text-text-secondary">{notice.title}</span>
+                  <time dateTime={notice.createdAt} className="text-body-18rg text-text-tertiary">
+                    {formatNoticeDate(notice.createdAt)}
+                  </time>
+                </span>
+                {isOpen ? (
+                  <CloseIcon
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-icon-primary opacity-30"
+                  />
+                ) : (
+                  <PlusThinIcon
+                    aria-hidden="true"
+                    className="size-5 shrink-0 text-icon-primary opacity-30"
+                  />
+                )}
+              </button>
+              {isOpen && (
+                // ponytail: 본문은 평문이라 줄바꿈만 살린다 — 서식이 필요해지면 약관처럼 ReactMarkdown을 얹는다
+                <p
+                  id={panelId}
+                  className="p-2 whitespace-pre-wrap text-body-16rg text-text-secondary"
+                >
+                  {notice.content}
+                </p>
+              )}
+            </li>
+          )
+        })}
       </ul>
     )
   }
