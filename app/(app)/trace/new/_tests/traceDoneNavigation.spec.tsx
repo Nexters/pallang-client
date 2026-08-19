@@ -1,8 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+
 import { TraceDoneView } from '../_components/TraceDoneView/TraceDoneView'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
+import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
+import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
 import { TraceStepGuard } from '../_components/TraceStepGuard/TraceStepGuard'
 import { useTraceDraft } from '../_hooks/useTraceDraft'
 
@@ -12,7 +16,7 @@ const replaceMock = vi.fn<(path: string) => void>()
 
 vi.mock('next/navigation', () => ({
   usePathname: () => navState.pathname,
-  useRouter: () => ({ push: vi.fn(), replace: replaceMock, prefetch: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: replaceMock, back: vi.fn(), prefetch: vi.fn() }),
 }))
 
 const BOOK_ID = 11
@@ -60,9 +64,16 @@ function DoneProbe({ withPage = true }: { withPage?: boolean }) {
 function renderDone({ withPage = true }: { withPage?: boolean } = {}) {
   navState.pathname = '/trace/new/done'
   render(
-    <TraceDraftProvider>
-      <DoneProbe withPage={withPage} />
-    </TraceDraftProvider>,
+    // 가드는 nav 안에서만 성립한다(나가는 중에는 물러나야 하므로) — layout과 같은 순서로 감싼다
+    <HardwareBackProvider>
+      <TraceDraftProvider>
+        <TraceOverlayProvider>
+          <TraceNavProvider>
+            <DoneProbe withPage={withPage} />
+          </TraceNavProvider>
+        </TraceOverlayProvider>
+      </TraceDraftProvider>
+    </HardwareBackProvider>,
   )
   fireEvent.click(screen.getByRole('button', { name: '흔적 저장됨' }))
   // 초안이 채워지기 전 첫 렌더에서 가드가 부른 것은 이 테스트의 관심사가 아니다

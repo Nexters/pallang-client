@@ -21,7 +21,7 @@ type TraceSourceViewProps = {
 /** 흔적 작성 플로우의 첫 화면. 화면 자체가 방식 선택 시트라, 시트를 닫는 것이 곧 플로우를 벗어나는 것이다. */
 export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
   const { draft, dispatch } = useTraceDraft()
-  const { goTo, requestExit, step } = useTraceNav()
+  const { goTo, markReturnable, requestExit, step } = useTraceNav()
   const { takePhoto } = useCamera()
   const capture = useTraceCapture()
   // 이 화면은 방식 선택 시트 그 자체다 — 이 단계에 서 있으면 연다. 다만 씨앗이 대목까지 물고
@@ -49,6 +49,10 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
     const pending = pendingSeedRef.current
     if (!pending) return
     pendingSeedRef.current = null
+
+    // 씨앗은 흔적 보기가 push로만 만든다(useTraceCreateNav) — 되감을 자리가 반드시 있다.
+    // 나갈 때 홈으로 튕기지 않고 보고 있던 흔적으로 되돌아가는 근거가 이 표시다.
+    markReturnable()
 
     dispatch({
       type: 'selectBook',
@@ -82,7 +86,7 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
     // 대목의 출처를 남긴다 — ①이 이 값을 보고 "받을 것은 의견뿐"임을 안다(seededPassage.service).
     dispatch({ type: 'setSource', source: 'passage' })
     goTo('write')
-  }, [dispatch, goTo])
+  }, [dispatch, goTo, markReturnable])
 
   // 직접 입력 시트는 방식 선택 시트 위에 얹힌 한 층이다 — 뒤로가기는 화면을 떠나는 대신
   // 방식 선택 시트로 한 층만 걷어낸다. 방식 선택 시트 자체는 이 화면 그 자체라 별도 가드가 없다
