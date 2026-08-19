@@ -79,6 +79,7 @@
   /* Semantic — Background */
   --color-bg-default: #ffffff; /* Background/Background, neutral/0 */
   --color-bg-surface: #f0f0f0; /* neutral/50 */
+  --color-bg-tertiary: #5b5b5b; /* Background/Tertiary — 어두운 면 위 트랙(스포일러 토글) */
   --color-bg-book-card: #f7f2c6; /* Background/Book-Card */
   --color-bg-gray: #323232;
   --color-bg-dark: #222222;

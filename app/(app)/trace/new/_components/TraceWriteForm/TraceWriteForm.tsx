@@ -7,10 +7,13 @@ import { SegmentedControl } from '@/app/_global/_components/SegmentedControl/Seg
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { Textarea } from '@/app/_global/_components/Textarea/Textarea'
 
+import { TRACE_NOTE_SIZE } from '../../_data/traceNote.constant'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
 import { useTraceSubmit } from '../../_hooks/useTraceSubmit'
 import { isSeededPassage } from '../../_services/seededPassage.service'
+import { TraceBookHeader } from '../TraceBookHeader/TraceBookHeader'
+import { TraceMergePrompt } from '../TraceMergePrompt/TraceMergePrompt'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepIndicator } from '../TraceStepIndicator/TraceStepIndicator'
 
@@ -55,65 +58,79 @@ export function TraceWriteForm() {
       {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다 */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepIndicator current={1} />
+        {/* 물고 들어온 대목은 그 대목의 책에 매여 있다 — 바꿀 수 있게 두면 합칠 대목이 끊긴다.
+            이 경로는 받을 것이 의견뿐인 다른 화면이라 시안의 책 줄도 여기에는 없다. */}
+        {!isSeeded && <TraceBookHeader />}
       </div>
       {/* 셸(app/(app)/layout.tsx의 main)은 h-dvh·overflow-hidden이라 넘치는 만큼을 그냥 자른다.
-          노트(320px)와 의견 입력(206px)이 둘 다 고정 높이여서 작은 화면에서는 아래 버튼 줄이
-          화면 밖으로 밀려 아예 누를 수 없었다 — 가운데만 스크롤시키고 단계 표시와 버튼 줄은
-          바깥에 두어 고정한다(ScreenLayout·BookInternalView와 같은 처리). */}
+          노트와 의견 입력이 둘 다 고정 높이여서 작은 화면에서는 아래 버튼 줄이 화면 밖으로
+          밀려 아예 누를 수 없었다 — 가운데만 스크롤시키고 단계 표시와 버튼 줄은 바깥에 두어
+          고정한다(ScreenLayout·BookInternalView와 같은 처리). */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* 노트가 밝음/어둠 경계를 가로지른다 — 시안: 노트 하단 199px가 어두운 배경 */}
+        {/* 노트가 밝음/어둠 경계를 가로지른다 — 어두운 쪽 높이는 노트 높이와 한 쌍이다 */}
         <div className="relative bg-bg-default px-8">
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[199px] bg-bg-dark" />
+          <div
+            aria-hidden="true"
+            className={`absolute inset-x-0 bottom-0 bg-bg-dark ${TRACE_NOTE_SIZE.compact.dark}`}
+          />
           <div className="relative">
             {/* 물고 들어온 대목은 이미 꾸며져 있다 — 그 모습 그대로 보여준다 */}
             <TraceNote
+              size="compact"
               quotedText={draft.quotedText}
               decorations={isSeeded ? draft.decorations : []}
             />
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 px-4 pt-8 pb-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor={PAGE_INPUT_ID} className="text-body-14md text-text-inverse">
-              페이지
-            </label>
-            <span className="flex items-center gap-2 rounded-lg border border-white-a20 px-4 py-3">
-              <input
-                id={PAGE_INPUT_ID}
-                inputMode="numeric"
-                maxLength={MAX_PAGE_DIGITS}
-                value={page}
-                placeholder="000"
-                // 물고 들어온 대목의 페이지는 그 대목의 것이라 여기서 바꿀 수 없다.
-                // disabled가 아니라 readOnly인 이유: 값은 읽히고 초점도 갈 수 있어야 한다.
-                readOnly={isSeeded}
-                onChange={(event) => {
-                  setPage(event.target.value.replace(/[^0-9]/g, '').slice(0, MAX_PAGE_DIGITS))
-                }}
-                className="min-w-0 flex-1 bg-transparent text-body-16rg text-text-inverse outline-none placeholder:opacity-40 read-only:opacity-60"
-              />
-              <span className="text-body-16rg text-text-inverse opacity-60">P</span>
-            </span>
-          </div>
-
-          {/* 스포일러 여부도 물고 들어온 대목의 것이다 — 고를 것이 없어 아예 묻지 않는다 */}
-          {!isSeeded && (
-            <div className="flex flex-col gap-2">
-              <span className="text-body-14md text-text-inverse">스포일러</span>
-              <SegmentedControl
-                label="스포일러"
-                options={SPOILER_OPTIONS}
-                value={spoiler}
-                onChange={(value) => {
-                  setSpoiler(value === 'yes' ? 'yes' : 'no')
-                }}
-              />
+        <div className="flex flex-col gap-4 px-4 py-5">
+          {/* 시안(3077:15663) — 페이지와 스포일러가 한 줄을 반씩 나눠 갖는다 */}
+          <div className="flex items-start gap-4">
+            <div className="flex min-w-px flex-1 flex-col gap-1.5">
+              <label
+                htmlFor={PAGE_INPUT_ID}
+                className="text-body-16md text-text-inverse opacity-80"
+              >
+                페이지
+              </label>
+              <span className="flex items-center gap-2 rounded-2xl border border-text-inverse bg-bg-gray px-6 py-4">
+                <input
+                  id={PAGE_INPUT_ID}
+                  inputMode="numeric"
+                  maxLength={MAX_PAGE_DIGITS}
+                  value={page}
+                  placeholder="000"
+                  // 물고 들어온 대목의 페이지는 그 대목의 것이라 여기서 바꿀 수 없다.
+                  // disabled가 아니라 readOnly인 이유: 값은 읽히고 초점도 갈 수 있어야 한다.
+                  readOnly={isSeeded}
+                  onChange={(event) => {
+                    setPage(event.target.value.replace(/[^0-9]/g, '').slice(0, MAX_PAGE_DIGITS))
+                  }}
+                  className="min-w-0 flex-1 bg-transparent text-body-16md text-text-inverse outline-none placeholder:opacity-40 read-only:opacity-60"
+                />
+                <span className="text-body-16md text-text-inverse opacity-60">P</span>
+              </span>
             </div>
-          )}
+
+            {/* 스포일러 여부도 물고 들어온 대목의 것이다 — 고를 것이 없어 아예 묻지 않는다 */}
+            {!isSeeded && (
+              <div className="flex min-w-px flex-1 flex-col gap-1.5">
+                <span className="text-body-16md text-text-inverse opacity-80">스포일러</span>
+                <SegmentedControl
+                  label="스포일러"
+                  options={SPOILER_OPTIONS}
+                  value={spoiler}
+                  onChange={(value) => {
+                    setSpoiler(value === 'yes' ? 'yes' : 'no')
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
           <Textarea
             variant="dark"
+            className="h-[126px]"
             maxLength={300}
             value={draft.content}
             placeholder="문장에 대한 생각이나 의견을 작성해보세요."
@@ -127,7 +144,7 @@ export function TraceWriteForm() {
         </div>
       </div>
 
-      <div className="flex gap-2 px-4 pb-safe">
+      <div className="flex gap-2 px-4 pt-4 pb-safe">
         <Button
           variant="back"
           className="flex-1"
@@ -148,6 +165,9 @@ export function TraceWriteForm() {
           {isSeeded ? '기록 완료' : '다음'}
         </Button>
       </div>
+
+      {/* 대목을 얻은 직후에 묻는 자리. 책을 물고 들어온 경로는 여기서 이미 '책 + 대목'이 갖춰진다. */}
+      <TraceMergePrompt at="write" />
 
       <Snackbar message={message} onClose={closeMessage} />
     </div>

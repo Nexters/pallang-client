@@ -29,6 +29,11 @@ export type TraceDraft = {
   decorations: DraftDecoration[]
   content: string
   passageId: number | null
+  /**
+   * 유사 대목(중복)을 이미 물어본 조합. `책 + 대목`을 키로 삼는다(similarCheck.service).
+   * 초안에 두는 이유는 묻는 자리가 단계마다 갈리기 때문이다 — ①에서 물었으면 ③에서 또 묻지 않는다.
+   */
+  similarCheckedKey: string | null
   result: TraceCreateResult | null
 }
 
@@ -59,6 +64,8 @@ export type TraceDraftAction =
   | { type: 'removeDecoration'; startOffset: number }
   | { type: 'setContent'; content: string }
   | { type: 'setMergeTarget'; passageId: number | null }
+  /** 이 조합은 유사 대목을 물어봤다고 표시한다. 답이 무엇이든(합치기·따로) 다시 묻지 않기 위함. */
+  | { type: 'markSimilarChecked'; key: string }
   | { type: 'setResult'; result: TraceCreateResult }
   | { type: 'resetKeepingBook' }
   | { type: 'reset' }

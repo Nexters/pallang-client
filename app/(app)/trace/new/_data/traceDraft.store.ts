@@ -13,6 +13,7 @@ export const initialTraceDraft: TraceDraft = {
   decorations: [],
   content: '',
   passageId: null,
+  similarCheckedKey: null,
   result: null,
 }
 
@@ -54,16 +55,25 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
         pageNumber: null,
         isSpoiler: false,
         passageId: null,
+        similarCheckedKey: null,
       }
-    case 'setPageDetail':
-      // 병합 대상은 '이 책 · 이 페이지 · 이 대목'에 매인 판정이다.
-      // 페이지가 바뀌면 그 판정은 다른 쪽에 대한 답이라 무효다 — 비워서 ③이 다시 묻게 한다.
+    case 'setPageDetail': {
+      // 병합 판정은 '이 책 · 이 대목'에 매인다 — 대목을 얻은 직후(①에 들어서는 순간),
+      // 아직 페이지를 받기 전에 묻기 때문이다. 그래서 빈 자리를 처음 채우는 것만으로는
+      // 판정을 버리지 않는다. 그러지 않으면 ①에서 '합칠게요'를 고른 답이 바로 다음 줄의
+      // '다음'에서 조용히 날아간다.
+      // 다만 이미 정해져 있던 페이지를 다른 값으로 고치면 얘기가 다르다 — 서버는 인접
+      // 페이지(±1)에서만 후보를 찾으므로 그 판정은 다른 쪽에 대한 답이 된다. 그때만 비워
+      // 다시 묻게 한다.
+      const isPageReplaced = state.pageNumber !== null && state.pageNumber !== action.pageNumber
       return {
         ...state,
         pageNumber: action.pageNumber,
         isSpoiler: action.isSpoiler,
-        passageId: null,
+        passageId: isPageReplaced ? null : state.passageId,
+        similarCheckedKey: isPageReplaced ? null : state.similarCheckedKey,
       }
+    }
     case 'applyDecoration':
       return {
         ...state,
@@ -88,6 +98,8 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
       return { ...state, content: action.content }
     case 'setMergeTarget':
       return { ...state, passageId: action.passageId }
+    case 'markSimilarChecked':
+      return { ...state, similarCheckedKey: action.key }
     case 'setResult':
       return { ...state, result: action.result }
     case 'resetKeepingBook':

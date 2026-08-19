@@ -35,7 +35,9 @@ function Seeded({ onDraft }: { onDraft: (count: number) => void }) {
 /** 글자 span 위를 끄는 시늉. elementFromPoint가 오프셋 span을 돌려주게 한다. */
 function dragOver(from: number, to: number) {
   const charAt = (offset: number) => document.querySelector(`[data-offset="${String(offset)}"]`)
-  const note = document.querySelector('p')
+  // 글자 span을 품은 문단이 곧 노트다. 그냥 첫 <p>를 집으면 화면 위쪽(책 줄 등)의 문단을
+  // 잡아 드래그가 노트에 닿지 않는다.
+  const note = charAt(0)?.closest('p')
   if (!note) throw new Error('노트를 찾지 못했다')
 
   vi.spyOn(document, 'elementFromPoint').mockImplementation(() => charAt(from))
