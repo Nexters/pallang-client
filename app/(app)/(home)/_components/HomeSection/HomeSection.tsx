@@ -9,6 +9,7 @@ import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { HomeBookCarousel } from '../HomeBookCarousel/HomeBookCarousel'
 import { HomeBookSectionHeader } from '../HomeBookSectionHeader/HomeBookSectionHeader'
+import { HomeOpinionList } from '../HomeOpinionList/HomeOpinionList'
 
 type HomeSectionProps = {
   searchAction?: ReactNode
@@ -31,7 +32,8 @@ export function HomeSection({ searchAction }: HomeSectionProps) {
         onTabChange={setActiveTab}
       />
 
-      {activeTab === 'library' && <HomeBookCarousel />}
+      {activeTab === 'library' && <HomeBookCarousel showSampleLabel={!isAuthenticated} />}
+      {activeTab === 'opinion' && <HomeOpinionList showSampleLabel={!isAuthenticated} />}
     </section>
   )
 }

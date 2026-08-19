@@ -4,6 +4,10 @@ import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import {
+  markHomeCoachMarkPending,
+  shouldShowHomeCoachMark,
+} from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 
 import { HomePageView } from '../_components/HomePageView/HomePageView'
 
@@ -48,6 +52,7 @@ function renderHome() {
 
 describe('홈 검색 게이트', () => {
   beforeEach(() => {
+    window.localStorage.clear()
     authState.isAuthenticated = false
     prefetchMock.mockClear()
     pushMock.mockClear()
@@ -74,5 +79,26 @@ describe('홈 검색 게이트', () => {
       expect(pushMock).toHaveBeenCalledWith('/book/search/my-books')
     })
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('온보딩 직후 홈 코치마크를 3단계로 보여주고 완료하면 닫는다', async () => {
+    markHomeCoachMarkPending()
+    renderHome()
+
+    expect(await screen.findByRole('dialog', { name: '홈 사용 안내' })).toBeInTheDocument()
+    expect(screen.getByText('1/3')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '다음' }))
+
+    expect(screen.getByText('2/3')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '다음' }))
+
+    expect(screen.getByText('3/3')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '확인' }))
+
+    expect(screen.queryByRole('dialog', { name: '홈 사용 안내' })).not.toBeInTheDocument()
+    expect(shouldShowHomeCoachMark()).toBe(false)
   })
 })

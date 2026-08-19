@@ -29,20 +29,22 @@ const TRACE_BUTTON_CLASS =
   'press flex w-20 shrink-0 items-center justify-center rounded-full bg-interactive-accent px-4 py-3.5 text-text-primary'
 
 type TabLinkProps = {
+  coachMarkTargetName?: string
   href: string
   icon: FC<SVGProps<SVGSVGElement>>
   isActive: boolean
   label: string
 }
 
-function TabLink({ href, icon: Icon, isActive, label }: TabLinkProps) {
+function TabLink({ coachMarkTargetName, href, icon: Icon, isActive, label }: TabLinkProps) {
   return (
     <Link
       href={href}
       aria-current={isActive ? 'page' : undefined}
+      data-home-coachmark-target={coachMarkTargetName}
       className={cn(
         'press flex w-12 shrink-0 cursor-pointer flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
-        !isActive && 'opacity-60',
+        !isActive && 'opacity-60 data-[home-coachmark-active=true]:opacity-100',
       )}
     >
       <Icon aria-hidden="true" className="size-7" />
@@ -102,6 +104,7 @@ export function TabBar({
           <>
             <TabLink href={homeHref} icon={HomeIcon} isActive={activeTab === 'home'} label="홈" />
             <TabLink
+              coachMarkTargetName="book-tab"
               href={bookHref}
               icon={BookFillIcon}
               isActive={activeTab === 'book'}
