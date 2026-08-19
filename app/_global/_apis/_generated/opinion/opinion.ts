@@ -24,7 +24,7 @@ export const getCreateOpinionUrl = () => {
 }
 
 /**
- * Passage(신규 생성 또는 기존 병합) + Opinion + Decoration을 원자적으로 생성합니다. passageId가 없으면 새 Passage를 만들고, 있으면 해당 Passage에 병합합니다(Q-06). OCR 입력은 별도 플로우이며 이 API는 직접 입력만 지원합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * Passage(신규 생성 또는 기존 병합) + Opinion + Decoration을 원자적으로 생성합니다. passageId가 없으면 새 Passage를 만들고, 있으면 해당 Passage에 병합합니다(Q-06). groupId를 지정하면 그 모임 전용 흔적/대목이 되며(요청자는 모임원이어야 함), 생략하면 기존처럼 전역 공개로 생성됩니다. passageId와 groupId를 함께 지정한 경우 기존 대목의 소속 모임과 정확히 일치해야 합니다. OCR 입력은 별도 플로우이며 이 API는 직접 입력만 지원합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 흔적 작성 (직접 입력)
  */
 export const createOpinion = async (
@@ -44,7 +44,7 @@ export const getToggleOpinionLikeUrl = (opinionId: number) => {
 }
 
 /**
- * 좋아요를 누르지 않은 상태면 좋아요를 남기고, 이미 눌렀다면 취소합니다. X-Debug-User-Id 헤더로 인증합니다(임시 스탠드인).
+ * 좋아요를 누르지 않은 상태면 좋아요를 남기고, 이미 눌렀다면 취소합니다. 흔적이 모임 전용이면 모임원만 좋아요를 남기거나 취소할 수 있습니다. X-Debug-User-Id 헤더로 인증합니다(임시 스탠드인).
  * @summary 흔적 좋아요 토글
  */
 export const toggleOpinionLike = async (
@@ -62,7 +62,7 @@ export const getGetOpinionUrl = (opinionId: number) => {
 }
 
 /**
- * 흔적 작성자가 기록한 꾸밈을 그대로 확인합니다(병합된 결과가 아님).
+ * 흔적 작성자가 기록한 꾸밈을 그대로 확인합니다(병합된 결과가 아님). 대목이 모임 전용이면 모임원만 조회할 수 있습니다.
  * @summary 흔적 상세 조회
  */
 export const getOpinion = async (
@@ -131,7 +131,7 @@ export const getGetOpinionsUrl = (passageId: number, params?: GetOpinionsParams)
 }
 
 /**
- * 특정 대목에 남겨진 흔적을 정렬 기준(최신순 기본/좋아요순)으로 조회합니다.
+ * 특정 대목에 남겨진 흔적을 정렬 기준(최신순 기본/좋아요순)으로 조회합니다. 대목이 모임 전용이면 모임원만 조회할 수 있습니다.
  * @summary 흔적 목록 조회
  */
 export const getOpinions = async (

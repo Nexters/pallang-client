@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 
+import { BookSearchSheet } from '@/app/_shared/book/_components/BookSearchSheet/BookSearchSheet'
+import { SelectedBookCard } from '@/app/_shared/book/_components/SelectedBookCard/SelectedBookCard'
+
 import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
-import { BookSearchSheet } from '../BookSearchSheet/BookSearchSheet'
-import { SelectedBookCard } from '../SelectedBookCard/SelectedBookCard'
+import { useTraceOverlay } from '../../_hooks/useTraceOverlay'
 
 /**
  * ①·② 상단에 붙는 책 줄. 시안(3077:15701 · 3082:36454)에서 단계 표시 바로 아래,
@@ -20,7 +22,10 @@ import { SelectedBookCard } from '../SelectedBookCard/SelectedBookCard'
  */
 export function TraceBookHeader() {
   const { draft, dispatch } = useTraceDraft()
+  const { register } = useTraceOverlay()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // 모임 흔적은 그 모임의 책에 고정이다(GROUP_400_3) — 카드가 눌리지도, 시트가 붙지도 않는다.
+  const isBookLocked = draft.groupId !== null
 
   // 시트가 떠 있는 동안에는 뒤로가기가 플로우를 나가는 대신 시트만 닫는다(③과 같은 처리)
   useOverlayBackGuard(sheetOpen, () => {
@@ -34,20 +39,27 @@ export function TraceBookHeader() {
       <SelectedBookCard
         affordance="card"
         book={draft.book}
-        onEdit={() => {
-          setSheetOpen(true)
-        }}
+        onEdit={
+          isBookLocked
+            ? undefined
+            : () => {
+                setSheetOpen(true)
+              }
+        }
       />
-      <BookSearchSheet
-        open={sheetOpen}
-        onClose={() => {
-          setSheetOpen(false)
-        }}
-        onSelect={(book) => {
-          dispatch({ type: 'selectBook', book })
-          setSheetOpen(false)
-        }}
-      />
+      {!isBookLocked && (
+        <BookSearchSheet
+          open={sheetOpen}
+          onClose={() => {
+            setSheetOpen(false)
+          }}
+          onRegisterBack={register}
+          onSelect={(book) => {
+            dispatch({ type: 'selectBook', book })
+            setSheetOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }

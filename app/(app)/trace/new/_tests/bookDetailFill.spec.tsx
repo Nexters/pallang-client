@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 import { BookDetailFiller } from '../_components/BookDetailFiller/BookDetailFiller'
 import { TraceBookForm } from '../_components/TraceBookForm/TraceBookForm'
@@ -12,7 +13,6 @@ import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraft
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
 import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
 import { useTraceDraft } from '../_hooks/useTraceDraft'
-import type { SelectedBook } from '../_types/traceDraft.type'
 
 // vi.mock 팩토리는 import보다 먼저 실행된다 — 팩토리가 참조할 목은 vi.hoisted로 올린다
 // (traceBookForm.spec.tsx와 같은 방식).

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
+
 import { findBookDetail, isBookDetailMissing } from '../_services/bookDetail.service'
-import type { SelectedBook } from '../_types/traceDraft.type'
 
 const book: SelectedBook = {
   bookId: 3,

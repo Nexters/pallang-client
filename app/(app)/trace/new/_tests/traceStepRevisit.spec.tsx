@@ -118,6 +118,7 @@ describe('흔적 작성 첫 화면으로 되돌아오기', () => {
       bookId: 11,
       bookTitle: '모순',
       bookCoverImageUrl: null,
+      groupId: null,
       passage: {
         passageId: 42,
         pageNumber: 122,

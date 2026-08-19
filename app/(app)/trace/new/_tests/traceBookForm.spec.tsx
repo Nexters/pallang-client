@@ -80,9 +80,11 @@ const SEED_BOOK = {
 
 // dispatch는 effect에서만 부른다(렌더 중 부르면 Provider를 렌더 도중 갱신하게 된다)
 function Seeded({
+  groupId = null,
   pageNumber = 10,
   withBook = false,
 }: {
+  groupId?: number | null
   pageNumber?: number
   withBook?: boolean
 }) {
@@ -90,6 +92,7 @@ function Seeded({
 
   useEffect(() => {
     if (withBook) dispatch({ type: 'selectBook', book: SEED_BOOK })
+    dispatch({ type: 'setGroupId', groupId })
     dispatch({ type: 'setQuotedText', quotedText: '어떤 문장' })
     dispatch({ type: 'setPageDetail', pageNumber, isSpoiler: false })
     dispatch({ type: 'setContent', content: '좋았다' })
@@ -97,7 +100,7 @@ function Seeded({
       type: 'applyDecoration',
       decoration: { startOffset: 0, endOffset: 2, effectType: 'HIGHLIGHT', color: '#FFE81A' },
     })
-  }, [dispatch, pageNumber, withBook])
+  }, [dispatch, groupId, pageNumber, withBook])
 
   // 초안이 다 차기 전에는 TraceBookForm을 마운트하지 않는다 — 마운트 시점의 draft.book이
   // 시트를 열지 말지를 정하므로, 씨앗 경로를 흉내 내려면 책이 먼저 들어가 있어야 한다.
@@ -122,7 +125,11 @@ function BackProbe() {
   )
 }
 
-function renderForm({ pageNumber = 10, withBook = false } = {}) {
+function renderForm({
+  groupId = null,
+  pageNumber = 10,
+  withBook = false,
+}: { groupId?: number | null; pageNumber?: number; withBook?: boolean } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
@@ -131,7 +138,7 @@ function renderForm({ pageNumber = 10, withBook = false } = {}) {
           <TraceDraftProvider>
             <TraceOverlayProvider>
               <TraceNavProvider>
-                <Seeded pageNumber={pageNumber} withBook={withBook} />
+                <Seeded groupId={groupId} pageNumber={pageNumber} withBook={withBook} />
                 <BackProbe />
               </TraceNavProvider>
             </TraceOverlayProvider>
@@ -266,6 +273,48 @@ describe('책 등록 단계', () => {
 
     expect(await screen.findByText(/쪽수를 넘어요/)).toBeTruthy()
     expect(createOpinionMock).not.toHaveBeenCalled()
+  })
+
+  it('모임에서 남기는 흔적은 책이 고정이라 바꿀 길이 없다', async () => {
+    // 모임 밖의 책으로 보내면 서버가 GROUP_400_3으로 거절한다 — 고를 수 없는 것을
+    // 고르게 두면 사용자는 저장 실패로만 그 사실을 알게 된다.
+    renderForm({ withBook: true, groupId: 3 })
+
+    expect(await screen.findByText('헤르만 헤세')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '편집하기' })).toBeNull()
+    expect(screen.queryByPlaceholderText('책 제목을 입력해 주세요.')).toBeNull()
+  })
+
+  it('모임에서 남기는 흔적이면 저장 요청에 모임을 실어 보낸다', async () => {
+    createOpinionMock.mockClear()
+    renderForm({ withBook: true, groupId: 3 })
+
+    fireEvent.click(await screen.findByRole('button', { name: '기록 완료' }))
+
+    await waitFor(() => {
+      expect(createOpinionMock).toHaveBeenCalledWith(expect.objectContaining({ groupId: 3 }))
+    })
+  })
+
+  it('모임 밖 흔적은 모임 자리 없이 그대로 보낸다', async () => {
+    // 서버가 이 자리의 유무로 스코프를 가른다 — 빈 자리라도 실으면 안 된다.
+    // objectContaining이 아니라 통째로 맞춰 본다: 그래야 실리지 않아야 할 것이 실렸을 때 걸린다.
+    createOpinionMock.mockClear()
+    renderForm({ withBook: true })
+
+    fireEvent.click(await screen.findByRole('button', { name: '기록 완료' }))
+
+    await waitFor(() => {
+      expect(createOpinionMock).toHaveBeenCalledWith({
+        bookId: SEED_BOOK.bookId,
+        pageNumber: 10,
+        quotedText: '어떤 문장',
+        isSpoiler: false,
+        passageId: null,
+        content: '좋았다',
+        decorations: [{ startOffset: 0, endOffset: 2, effectType: 'HIGHLIGHT', color: '#FFE81A' }],
+      })
+    })
   })
 
   it('기록 완료를 누르면 흔적을 저장하고 완료로 간다', async () => {

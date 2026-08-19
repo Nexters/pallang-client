@@ -36,7 +36,7 @@ export const getGetCommentsUrl = (opinionId: number, params?: GetCommentsParams)
 }
 
 /**
- * 흔적에 달린 원댓글과 답글을 조회합니다. 원댓글은 page/size로 페이지네이션되며, 각 원댓글에는 답글이 최대 5개까지 미리보기로 포함됩니다. 5개를 초과하면 hasMoreReplies=true이며, 나머지는 GET /api/comments/{commentId}/replies로 조회합니다. 로그인 상태면(Authorization 헤더) 내가 차단한 사용자의 댓글/답글은 목록에서 제외됩니다.
+ * 흔적에 달린 원댓글과 답글을 조회합니다. 원댓글은 page/size로 페이지네이션되며, 각 원댓글에는 답글이 최대 5개까지 미리보기로 포함됩니다. 5개를 초과하면 hasMoreReplies=true이며, 나머지는 GET /api/comments/{commentId}/replies로 조회합니다. 로그인 상태면(Authorization 헤더) 내가 차단한 사용자의 댓글/답글은 목록에서 제외됩니다. 흔적이 모임 전용이면 모임원만 조회할 수 있습니다.
  * @summary 댓글 목록 조회
  */
 export const getComments = async (
@@ -55,7 +55,7 @@ export const getCreateCommentUrl = (opinionId: number) => {
 }
 
 /**
- * 흔적에 댓글 또는 답글을 작성합니다. parentCommentId가 없으면 원댓글, 있으면 답글로 생성됩니다. 답글에는 다시 답글을 남길 수 없습니다(1-depth). 삭제된 댓글을 부모로 답글을 작성할 수 없습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 흔적에 댓글 또는 답글을 작성합니다. parentCommentId가 없으면 원댓글, 있으면 답글로 생성됩니다. 답글에는 다시 답글을 남길 수 없습니다(1-depth). 삭제된 댓글을 부모로 답글을 작성할 수 없습니다. 흔적이 모임 전용이면 모임원만 작성할 수 있습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 댓글/답글 작성
  */
 export const createComment = async (
@@ -127,7 +127,7 @@ export const getGetRepliesUrl = (commentId: number, params?: GetRepliesParams) =
 }
 
 /**
- * 특정 원댓글에 달린 답글을 page/size로 페이지네이션 조회합니다. 로그인 상태면(Authorization 헤더) 내가 차단한 사용자의 답글은 목록에서 제외됩니다.
+ * 특정 원댓글에 달린 답글을 page/size로 페이지네이션 조회합니다. 로그인 상태면(Authorization 헤더) 내가 차단한 사용자의 답글은 목록에서 제외됩니다. 흔적이 모임 전용이면 모임원만 조회할 수 있습니다.
  * @summary 답글 더보기
  */
 export const getReplies = async (

@@ -11,4 +11,6 @@ export const LOGIN_GATE_MESSAGE = {
   traceCreate: '로그인하면 흔적을 남길 수 있어요!',
   report: '로그인하면 신고할 수 있어요!',
   block: '로그인하면 차단할 수 있어요!',
+  groupCreate: '로그인하면 모임을 만들 수 있어요!',
+  groupEdit: '로그인하면 모임을 수정할 수 있어요!',
 } as const

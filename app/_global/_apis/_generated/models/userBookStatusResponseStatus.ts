@@ -8,4 +8,5 @@ export type UserBookStatusResponseStatus =
 export const UserBookStatusResponseStatus = {
   READING: 'READING',
   PLANNED: 'PLANNED',
+  FINISHED: 'FINISHED',
 } as const

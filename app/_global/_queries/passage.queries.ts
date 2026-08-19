@@ -19,21 +19,27 @@ type FetchOptions = Parameters<typeof getPageNumbers>[2]
 
 export const passageQueries = {
   all: () => ['passage'] as const,
-  pageNumbers: (bookId: number, options?: FetchOptions) =>
+  pageNumbers: (bookId: number, groupId: number | undefined, options?: FetchOptions) =>
     infiniteQueryOptions({
-      queryKey: [...passageQueries.all(), 'page-numbers', bookId],
+      // 모임 전용 대목과 전역 대목은 다른 목록이다 — 키를 갈라 캐시가 섞이지 않게 한다
+      queryKey: [...passageQueries.all(), 'page-numbers', bookId, groupId ?? null],
       queryFn: ({ pageParam }) =>
-        getPageNumbers(bookId, { page: pageParam, size: PAGE_NUMBER_PAGE_SIZE }, options),
+        getPageNumbers(bookId, { page: pageParam, size: PAGE_NUMBER_PAGE_SIZE, groupId }, options),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
       },
     }),
-  passagesByPage: (bookId: number, page: number, options?: FetchOptions) =>
+  passagesByPage: (
+    bookId: number,
+    page: number,
+    groupId: number | undefined,
+    options?: FetchOptions,
+  ) =>
     queryOptions({
-      queryKey: [...passageQueries.all(), 'by-page', bookId, page],
-      queryFn: () => getPassagesByPage(bookId, page, options),
+      queryKey: [...passageQueries.all(), 'by-page', bookId, page, groupId ?? null],
+      queryFn: () => getPassagesByPage(bookId, page, { groupId }, options),
     }),
 }
 

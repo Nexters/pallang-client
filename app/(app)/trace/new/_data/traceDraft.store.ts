@@ -14,6 +14,7 @@ export const initialTraceDraft: TraceDraft = {
   content: '',
   passageId: null,
   similarCheckedKey: null,
+  groupId: null,
   result: null,
 }
 
@@ -98,12 +99,16 @@ export function traceDraftReducer(state: TraceDraft, action: TraceDraftAction): 
       return { ...state, content: action.content }
     case 'setMergeTarget':
       return { ...state, passageId: action.passageId }
+    case 'setGroupId':
+      return { ...state, groupId: action.groupId }
     case 'markSimilarChecked':
       return { ...state, similarCheckedKey: action.key }
     case 'setResult':
       return { ...state, result: action.result }
     case 'resetKeepingBook':
-      return { ...initialTraceDraft, book: state.book }
+      // 같은 자리에서 하나 더 남기는 흐름이다 — 책과 함께 모임도 남긴다.
+      // 모임을 여기서 떨구면 이어서 남긴 흔적만 조용히 전역으로 새어 나간다.
+      return { ...initialTraceDraft, book: state.book, groupId: state.groupId }
     case 'reset':
       return initialTraceDraft
   }

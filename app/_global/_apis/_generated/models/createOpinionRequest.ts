@@ -18,6 +18,11 @@ export interface CreateOpinionRequest {
    */
   passageId?: number | null
   /**
+   * 모임 ID. 없으면 전역 공개 흔적/대목으로 생성됩니다.
+   * @nullable
+   */
+  groupId?: number | null
+  /**
    * @minLength 0
    * @maxLength 500
    */

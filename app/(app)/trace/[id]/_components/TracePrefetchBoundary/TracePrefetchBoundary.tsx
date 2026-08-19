@@ -2,7 +2,7 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { notFound } from 'next/navigation'
 
 import { getQueryClient } from '@/app/_global/_services/queryClient.service'
-import { parseTraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
+import { parseTraceGroupId, parseTraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { parseBookId, prefetchTraceScreen } from '../../_services/tracePrefetch.service'
 import { TraceCollapseView } from '../TraceCollapseView/TraceCollapseView'
@@ -25,15 +25,18 @@ export async function TracePrefetchBoundary({ params, searchParams }: TracePrefe
   // 404 상태 코드까지 필요해지면 params를 Suspense 바깥에서 읽어야 하고(= 라우트 전체가 blocking) 셸 프리렌더를 잃는다.
   if (bookId === undefined) notFound()
 
+  const searchParamsValue = await searchParams
   // 목록 화면이 지목한 흔적이 있으면 첫 페이지 대신 그 좌표를 채운다 — 도착하자마자 그 대목이 보인다
-  const target = parseTraceTarget(await searchParams)
+  const target = parseTraceTarget(searchParamsValue)
+  // 모임 안에서 들어왔으면 그 모임의 대목만 본다 — 조회·배지·흔적 남기기가 모두 이 값을 따라간다
+  const groupId = parseTraceGroupId(searchParamsValue)
 
   const queryClient = getQueryClient()
-  await prefetchTraceScreen(queryClient, bookId, target)
+  await prefetchTraceScreen(queryClient, bookId, target, groupId)
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <TraceCollapseView bookId={bookId} target={target} />
+      <TraceCollapseView bookId={bookId} target={target} groupId={groupId} />
     </HydrationBoundary>
   )
 }

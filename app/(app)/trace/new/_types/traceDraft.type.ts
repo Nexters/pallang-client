@@ -1,12 +1,6 @@
+// 초안의 책은 공용 모양 그대로다 — 책 선택 시트(_shared/book)와 같은 타입을 써야 시트가 고른 책을 그대로 담는다.
+import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 import type { Decoration, EffectType } from '@/app/_shared/trace/_data/decoration.model'
-
-export type SelectedBook = {
-  bookId: number
-  title: string
-  author: string
-  coverImageUrl: string | null
-  pageCount: number | null
-}
 
 /** 작성 중인 초안의 효과도 흔적 보기와 같은 모양이다 — 렌더 코드를 공유하려고 _shared 타입을 그대로 쓴다. */
 export type DraftEffectType = EffectType
@@ -30,10 +24,15 @@ export type TraceDraft = {
   content: string
   passageId: number | null
   /**
-   * 유사 대목(중복)을 이미 물어본 조합. `책 + 대목`을 키로 삼는다(similarCheck.service).
+   * 유사 대목(중복)을 이미 물어본 조합. `책 + 모임 + 대목`을 키로 삼는다(similarCheck.service).
    * 초안에 두는 이유는 묻는 자리가 단계마다 갈리기 때문이다 — ①에서 물었으면 ③에서 또 묻지 않는다.
    */
   similarCheckedKey: string | null
+  /**
+   * 모임 안에서 남기는 흔적이면 그 모임. 아니면 null(전역 흔적).
+   * 저장·유사 검사가 이 스코프로 가고, 모임 흔적은 책이 그 모임의 책으로 고정된다(GROUP_400_3).
+   */
+  groupId: number | null
   result: TraceCreateResult | null
 }
 
@@ -64,6 +63,8 @@ export type TraceDraftAction =
   | { type: 'removeDecoration'; startOffset: number }
   | { type: 'setContent'; content: string }
   | { type: 'setMergeTarget'; passageId: number | null }
+  /** 이 초안이 어느 모임에 붙는지. 씨앗(TraceSeed)이 물고 온 값을 첫 화면에서 한 번 심는다. */
+  | { type: 'setGroupId'; groupId: number | null }
   /** 이 조합은 유사 대목을 물어봤다고 표시한다. 답이 무엇이든(합치기·따로) 다시 묻지 않기 위함. */
   | { type: 'markSimilarChecked'; key: string }
   | { type: 'setResult'; result: TraceCreateResult }

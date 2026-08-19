@@ -35,6 +35,7 @@ const PASSAGE_SEED: TraceSeed = {
   bookId: 11,
   bookTitle: '모순',
   bookCoverImageUrl: null,
+  groupId: null,
   passage: {
     passageId: 42,
     pageNumber: 122,
