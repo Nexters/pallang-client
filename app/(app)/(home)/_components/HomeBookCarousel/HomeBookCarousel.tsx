@@ -5,7 +5,10 @@ import Link from 'next/link'
 import type { RefObject, UIEvent } from 'react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 
-import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import {
+  ApiErrorFeedbackState,
+  FeedbackState,
+} from '@/app/_global/_components/FeedbackState/FeedbackState'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
@@ -222,8 +225,8 @@ export function HomeBookCarousel() {
   const bookListRef = useRef<HTMLDivElement>(null)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
   const [readyBooksKey, setReadyBooksKey] = useState('')
-  const homeCarouselOptions = bookQueries.homeCarousel({ offset: 0, size: PAGE_SIZE })
-  const booksQuery = useInfiniteQuery(homeCarouselOptions)
+  const libraryOptions = bookQueries.myLibrary({ opinionCountScope: 'ALL', size: PAGE_SIZE })
+  const booksQuery = useInfiniteQuery(libraryOptions)
   const { fetchNextPage, hasNextPage, isError, isFetchingNextPage } = booksQuery
   const pages = booksQuery.data?.pages
   const books = useMemo(
@@ -296,6 +299,18 @@ export function HomeBookCarousel() {
           onRetry={() => {
             void booksQuery.refetch()
           }}
+        />
+      </div>
+    )
+  }
+
+  if (!booksQuery.isPending && books.length === 0) {
+    return (
+      <div className="flex min-h-82.25 items-center">
+        <FeedbackState
+          aria-label="빈 홈 내 서재"
+          className="w-full pb-20"
+          message="아직 흔적을 남긴 책이 없어요"
         />
       </div>
     )

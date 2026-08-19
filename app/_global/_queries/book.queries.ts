@@ -2,7 +2,6 @@ import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/r
 
 import {
   getBookDetail,
-  getHomeCarouselBooks,
   getMyLibraryBooks,
   getPopularBooks,
   getRecentBooks,
@@ -13,7 +12,6 @@ import type { BookActivityResponse } from '../_apis/_generated/models/bookActivi
 import type { BookDetailResponse } from '../_apis/_generated/models/bookDetailResponse'
 import { BookDetailResponseMyStatus } from '../_apis/_generated/models/bookDetailResponseMyStatus'
 import type { CreateBookRequest } from '../_apis/_generated/models/createBookRequest'
-import type { GetHomeCarouselBooksParams } from '../_apis/_generated/models/getHomeCarouselBooksParams'
 import type { GetMyLibraryBooksParams } from '../_apis/_generated/models/getMyLibraryBooksParams'
 import type { GetPopularBooksParams } from '../_apis/_generated/models/getPopularBooksParams'
 import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentBooksParams'
@@ -43,24 +41,6 @@ export const bookQueries = {
     queryOptions({
       queryKey: [...bookQueries.all(), 'detail', bookId],
       queryFn: () => getBookDetail(bookId),
-    }),
-  homeCarousel: (params?: GetHomeCarouselBooksParams) =>
-    infiniteQueryOptions({
-      queryKey: [...bookQueries.all(), 'home-carousel', params],
-      queryFn: ({ pageParam }) =>
-        // ponytail: 재생성된 스펙에서 이 엔드포인트가 @deprecated로 바뀌었다(대체: my-library).
-        // 화면을 옮기는 건 별개 작업이라 지금은 경고만 눌러 둔다.
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        getHomeCarouselBooks({ ...params, offset: pageParam ?? params?.offset }),
-      initialPageParam: params?.offset ?? null,
-      getNextPageParam: (lastPage) => {
-        const pageInfo = lastPage.data?.pageInfo
-        return pageInfo?.hasNext ? pageInfo.offset + pageInfo.size : undefined
-      },
-      getPreviousPageParam: (firstPage) => {
-        const pageInfo = firstPage.data?.pageInfo
-        return pageInfo?.hasPrevious ? Math.max(0, pageInfo.offset - pageInfo.size) : undefined
-      },
     }),
   searchInternal: (params: Omit<SearchInternalBooksParams, 'page'>) =>
     infiniteQueryOptions({

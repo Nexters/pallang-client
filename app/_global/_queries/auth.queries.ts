@@ -12,7 +12,11 @@ import {
 } from '../_apis/_generated/auth/auth'
 import type { AppleLoginRequest } from '../_apis/_generated/models/appleLoginRequest'
 import type { LoginResponse } from '../_apis/_generated/models/loginResponse'
-import { setAccessTokenGetter, setTokenRefresher } from '../_apis/customFetch.api'
+import {
+  setAccessTokenGetter,
+  setInvalidTokenHandler,
+  setTokenRefresher,
+} from '../_apis/customFetch.api'
 import {
   clearTokens,
   getAccessToken,
@@ -51,11 +55,17 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+async function clearInvalidSession(): Promise<void> {
+  await clearTokens()
+  clearSessionCache()
+}
+
 // 앱 부팅 시 1회. 영속 토큰 복원 + customFetch에 토큰 getter/refresher 연결.
 export async function initAuthSession(): Promise<void> {
   await hydrateTokens()
   setAccessTokenGetter(getAccessToken)
   setTokenRefresher(refreshAccessToken)
+  setInvalidTokenHandler(clearInvalidSession)
 }
 
 // 웹·앱 공통: 카카오 액세스 토큰 → pallang 로그인 → 토큰 저장 → 로그인 결과 반환.

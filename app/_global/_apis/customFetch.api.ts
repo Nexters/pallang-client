@@ -1,6 +1,6 @@
 // orval mutator — 생성된 fetch 함수가 이 함수를 경유한다.
 import { ApiError } from '@/app/_global/_data/api.model'
-import { TOKEN_EXPIRED_CODE } from '@/app/_global/_data/auth.constant'
+import { INVALID_TOKEN_CODE, TOKEN_EXPIRED_CODE } from '@/app/_global/_data/auth.constant'
 
 type ErrorBody = {
   type?: string
@@ -27,6 +27,16 @@ let tokenRefresher: TokenRefresher | null = null
 
 export function setTokenRefresher(refresher: TokenRefresher | null) {
   tokenRefresher = refresher
+}
+
+// 저장된 토큰이 유효하지 않으면 로컬 세션을 폐기한 뒤 비로그인 요청으로 한 번 재시도한다.
+// 순환 import를 피하려고 토큰 정리 로직도 주입식으로 받는다(initAuthSession에서 연결).
+type InvalidTokenHandler = () => Promise<void>
+
+let invalidTokenHandler: InvalidTokenHandler | null = null
+
+export function setInvalidTokenHandler(handler: InvalidTokenHandler | null) {
+  invalidTokenHandler = handler
 }
 
 // 동시 401을 하나의 refresh로 합친다.
@@ -80,6 +90,17 @@ export async function customFetch<T>(
     ) {
       const newToken = await runRefresh()
       if (newToken) return customFetch<T>(url, options, true)
+    }
+
+    if (
+      res.status === 401 &&
+      !isRetry &&
+      !isAuthPath(url) &&
+      body?.title === INVALID_TOKEN_CODE &&
+      invalidTokenHandler
+    ) {
+      await invalidTokenHandler()
+      return customFetch<T>(url, options, true)
     }
 
     throw new ApiError(
