@@ -1,7 +1,7 @@
 # 모임(교환독서) 기능 설계
 
 **대상:** 모임 탭(목록·빈 상태) · 모임 만들기 · 방 설정 변경 · 더보기(초대 링크 보내기·방 설정 변경하기) · 모임 스코프 흔적 보기/남기기.
-**근거:** Figma `4ffaEtjCoV2r2P2ZCVLOls` "모임 초대" 섹션(타이틀 `3308:23056`) 13프레임 + 서버 `group` API(dev 스웨거) + 서버 PR Nexters/pallang-server#134(흔적/의견에 `groupId` 스코프, **미배포**).
+**근거:** Figma `4ffaEtjCoV2r2P2ZCVLOls` "모임 초대" 섹션(타이틀 `3308:23056`) 13프레임 + 서버 `group` API(dev 스웨거) + 서버 PR Nexters/pallang-server#134(흔적/의견에 `groupId` 스코프 — 작업 중 dev에 배포되어 코드젠으로 반영).
 
 ## 1. 용어·이름
 
@@ -33,7 +33,7 @@
 | 1   | 기간: Figma 별표 없음·기간 없이 CTA 활성 / API `startDate`·`endDate` 필수 | **FE도 필수.** 별표 붙이고 CTA 조건에 포함. 피커 시안이 없어 바텀시트에 시작일/종료일 네이티브 `input[type=date]` 2칸. 필드 표시 `2026.08.19 ~ 2026.09.19`. 디자이너에게 피커 프레임 요청 |
 | 2   | 초대 링크 보내기(카카오 아이콘) / 공유·카카오 SDK 인프라 없음             | `navigator.share` → 실패·미지원 시 클립보드 복사 + 스낵바. 아이콘은 시안의 카카오톡 앱 아이콘 PNG 유지. 카카오 SDK 공유는 후속                                                            |
 | 3   | 초대 랜딩 시안 없음                                                       | 이번 제외. 공유 URL은 `/meeting/invite/{code}`로 고정                                                                                                                                     |
-| 4   | 서버 PR 134 미배포                                                        | FE 배선은 지금 한다. 생성 타입에 `groupId`가 없으므로 `_queries`/`_apis` 래퍼에서 타입을 넓히고, 배포 후 `pnpm api:gen`으로 정리                                                          |
+| 4   | 서버 PR 134 미배포(착수 시점)                                             | FE 배선을 먼저 하고 래퍼로 타입을 넓혔다가, 작업 중 배포가 확인돼 `pnpm api:gen`으로 생성 타입을 받고 래퍼(`passage.api.ts`)를 제거했다                                                   |
 | 5   | 책 선택 시트 제목 `책 선택하기`(28250) vs `책 등록하기`(28387)            | 모임은 `책 선택하기`. 28387은 흔적 시트 복제본(stale). 시트는 `title` prop                                                                                                                |
 | 6   | 선택 표시: Figma 리본 "선택" / 코드 `ring-2`                              | 리본으로 바꾼다 — 흔적 ③ 시안(3140:19070)도 리본이라 공용 변경이 맞다                                                                                                                     |
 | 7   | CTA disabled: Figma 오렌지 40% / Button 기본 회색                         | 모임 폼·책 선택 시트 CTA는 `disabled:bg-interactive-accent disabled:opacity-40` 오버라이드(CommentBar 선례)                                                                               |
@@ -50,7 +50,6 @@
 
 ```
 app/_global/_queries/group.queries.ts            groupQueries{all,list,detail,members,inviteLink} · groupMutations{create,update}
-app/_global/_apis/passage.api.ts                 getPassagesByPageScoped(bookId,page,groupId) — 생성 함수에 params가 없어 임시 래퍼
 app/_global/_data/loginGate.constant.ts          LOGIN_GATE_MESSAGE.groupCreate
 
 app/_shared/book/_data/selectedBook.model.ts     SelectedBook (trace/new에서 이동)
