@@ -115,6 +115,7 @@ export function TabBar({
               <button
                 type="button"
                 aria-label="흔적 남기기"
+                data-home-coachmark-target="trace-button"
                 onClick={onTraceClick}
                 // 이동이 끝나기 전에 또 누르면 같은 화면으로 두 번 밀어 넣는다
                 disabled={isTracePending}
@@ -128,7 +129,12 @@ export function TabBar({
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
               </button>
             ) : (
-              <Link href={traceHref} aria-label="흔적 남기기" className={TRACE_BUTTON_CLASS}>
+              <Link
+                href={traceHref}
+                aria-label="흔적 남기기"
+                data-home-coachmark-target="trace-button"
+                className={TRACE_BUTTON_CLASS}
+              >
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
               </Link>
             )}

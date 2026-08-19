@@ -30,16 +30,18 @@ export function HomeCoachMarkBubble({
   return (
     <div ref={rootRef} className={cn('flex w-[250px] flex-col', className)} style={style}>
       <div className="flex w-full flex-col gap-2 rounded-lg bg-bg-dark px-4 py-3 text-text-inverse backdrop-blur-[1px]">
-        <p className="whitespace-pre-line font-pretendard text-[14px] leading-[1.3] font-medium tracking-[-0.56px]">
-          {children}
-        </p>
+        {/* 시안 값(14px·500·1.3·-0.04em)이 그대로 나오는 기존 토큰이다.
+            원시값으로 쓰던 font-pretendard는 이 앱이 Pretendard를 로드하지 않아 효과가 없었다. */}
+        <p className="whitespace-pre-line text-body-14rg font-medium">{children}</p>
         <div className="flex items-center justify-between gap-3">
-          <span className="font-pretendard text-[12px] leading-[1.3] font-normal tracking-[-0.48px] whitespace-nowrap text-text-inverse/50">
+          <span className="text-caption-12rg whitespace-nowrap text-text-inverse/50">
             {currentStep}/{totalSteps}
           </span>
+          {/* press가 이미 duration-instant·ease-standard로 색과 scale을 전환한다 —
+              transition을 덧붙이면 transition-property가 서로를 덮는다 */}
           <button
             type="button"
-            className="press rounded-2xl bg-interactive-accent px-2 py-1 font-pretendard text-[12px] leading-[1.3] font-normal tracking-[-0.48px] whitespace-nowrap text-text-inverse outline-none transition-[background-color,scale] duration-instant ease-standard"
+            className="press rounded-2xl bg-interactive-accent px-2 py-1 text-caption-12rg whitespace-nowrap text-text-inverse outline-none"
             onClick={onAction}
           >
             {actionLabel}
