@@ -1,5 +1,5 @@
-import { MyOpinionListView } from '@/app/_shared/user/_components/MyOpinionListView/MyOpinionListView'
+import { LikedOpinionsView } from './_components/LikedOpinionsView/LikedOpinionsView'
 
-export default function MyLikedTracesPage() {
-  return <MyOpinionListView scope="liked" />
+export default function MyLikesPage() {
+  return <LikedOpinionsView />
 }
