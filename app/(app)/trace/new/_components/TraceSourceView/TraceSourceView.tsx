@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
+import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import { useCamera } from '@/app/_global/_hooks/useCamera'
 import type { TraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
@@ -9,8 +10,8 @@ import { useOverlayBackGuard } from '../../_hooks/useOverlayBackGuard'
 import { useTraceCapture } from '../../_hooks/useTraceCapture'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 import { useTraceNav } from '../../_hooks/useTraceNav'
-import { ManualQuoteSheet } from '../ManualQuoteSheet/ManualQuoteSheet'
-import { TraceSourceSheet } from '../TraceSourceSheet/TraceSourceSheet'
+import { ManualQuoteForm } from '../ManualQuoteForm/ManualQuoteForm'
+import { TraceSourceOptions } from '../TraceSourceOptions/TraceSourceOptions'
 
 type TraceSourceViewProps = {
   /** 흔적 보기 화면이 URL로 넘긴 씨앗. 마운트 때 한 번만 소비한다. */
@@ -94,35 +95,49 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
     <>
       {/* 시트 뒤가 루트 배경(bg-bg-dark)으로 비지 않게 한다 */}
       <div className="flex flex-1 flex-col bg-bg-dark" />
-      <TraceSourceSheet
-        open={openSheet === 'source'}
-        book={draft.book}
-        onClose={requestExit}
-        onSelectPhoto={() => {
-          // 카메라는 이 탭 안에서 연다. 사진 화면으로 옮겨 간 뒤 그쪽 effect에서 열면
-          // 브라우저 조작 권한이 이미 끊겨 파일 선택창이 조용히 무시된다(TraceCaptureProvider 참고).
-          // 시작만 여기서 하고 결과는 사진 화면이 이어받는다 — 전환은 지금처럼 곧바로 일어난다.
-          capture.hand(takePhoto('camera'))
-          dispatch({ type: 'setSource', source: 'photo' })
-          setSheet('none')
-          goTo('photo')
-        }}
-        onSelectManual={() => {
-          dispatch({ type: 'setSource', source: 'manual' })
-          setSheet('manual')
-        }}
-      />
-      <ManualQuoteSheet
-        open={openSheet === 'manual'}
+      {/* 방식 선택과 직접 입력은 시트 하나를 나눠 쓴다. 시트를 둘로 두면 하나가 내려가는
+          동안 다른 하나가 올라와 둘이 교차하고, 백드롭도 각자라 어두운 층이 꺼졌다 켜진다.
+          panelKey로 패널만 다시 꽂아 등장 전환은 그대로 타되 백드롭은 이어지게 한다. */}
+      <BottomSheet
+        open={openSheet !== 'none'}
+        panelKey={openSheet}
+        title={openSheet === 'manual' ? '직접 입력' : '새로운 기록을 어떻게 남길까요?'}
         onClose={() => {
-          setSheet('source')
+          // 직접 입력에서 닫으면 플로우를 벗어나는 대신 한 층만 걷어낸다
+          if (openSheet === 'manual') {
+            setSheet('source')
+            return
+          }
+          requestExit()
         }}
-        onSubmit={(quotedText) => {
-          dispatch({ type: 'setQuotedText', quotedText })
-          setSheet('none')
-          goTo('write')
-        }}
-      />
+      >
+        {openSheet === 'manual' ? (
+          <ManualQuoteForm
+            onSubmit={(quotedText) => {
+              dispatch({ type: 'setQuotedText', quotedText })
+              setSheet('none')
+              goTo('write')
+            }}
+          />
+        ) : (
+          <TraceSourceOptions
+            book={draft.book}
+            onSelectPhoto={() => {
+              // 카메라는 이 탭 안에서 연다. 사진 화면으로 옮겨 간 뒤 그쪽 effect에서 열면
+              // 브라우저 조작 권한이 이미 끊겨 파일 선택창이 조용히 무시된다(TraceCaptureProvider 참고).
+              // 시작만 여기서 하고 결과는 사진 화면이 이어받는다 — 전환은 지금처럼 곧바로 일어난다.
+              capture.hand(takePhoto('camera'))
+              dispatch({ type: 'setSource', source: 'photo' })
+              setSheet('none')
+              goTo('photo')
+            }}
+            onSelectManual={() => {
+              dispatch({ type: 'setSource', source: 'manual' })
+              setSheet('manual')
+            }}
+          />
+        )}
+      </BottomSheet>
     </>
   )
 }

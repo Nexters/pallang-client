@@ -26,6 +26,13 @@ type BottomSheetProps = {
   popupClassName?: string
   /** 본문 아래 고정 영역. 본문이 안에서 스크롤돼도 딸려 올라가지 않는다 */
   footer?: ReactNode
+  /**
+   * 값이 바뀌면 시트 패널만 새로 꽂혀 등장 전환을 다시 탄다. 백드롭은 그대로 남는다.
+   * 한 시트 안에서 화면이 갈릴 때, 시트를 통째로 닫았다 여는 대신 쓴다 — 시트 두 개를 쓰면
+   * 나가는 시트가 내려가는 동안 새 시트가 올라와 둘이 교차하고, 백드롭도 각자라 어두운 층이
+   * 꺼졌다 켜진다.
+   */
+  panelKey?: string
 }
 
 // Dialog와 같은 base-ui 프리미티브 위에 올린다 — 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘을
@@ -42,6 +49,7 @@ export function BottomSheet({
   contentClassName,
   popupClassName,
   footer,
+  panelKey,
 }: BottomSheetProps) {
   const isDark = tone === 'dark'
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
@@ -88,6 +96,7 @@ export function BottomSheet({
         />
         <BaseDialog.Viewport className="fixed inset-0 z-50 flex flex-col justify-end">
           <BaseDialog.Popup
+            key={panelKey}
             data-slot="bottom-sheet-popup"
             ref={popupRef}
             initialFocus={popupRef}
