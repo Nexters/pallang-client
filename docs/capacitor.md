@@ -120,6 +120,13 @@ native-plugins/kakao-login/
 - **해결: 앱 전체에서 리스너를 하나만 붙이고 되감기·종료까지 직접 처리한다.** `HardwareBackProvider`가 그 하나를 맡고, 화면은 `useHardwareBack`으로 스택에 핸들러를 등록한다(나중에 등록한 층이 우선). 아무도 안 가져가면 `canGoBack`이면 `history.back()`, 아니면 `App.exitApp()`.
 - 브라우저에서는 리스너를 붙이지 않는다 — 브라우저 back이 그대로 동작해야 한다.
 
+## ⚠️ 함정 7 — 웹뷰의 `history`는 브라우저와 같다. **원격 URL을 로드할 때만.**
+
+- 웹뷰를 검색하면 "WKWebView는 `history.length`가 항상 1이라 SPA 히스토리를 못 쓴다"는 이야기가 먼저 나온다. **우리에게는 해당하지 않는다.** 그 증상은 `loadHTMLString()`으로 HTML을 문자열로 밀어넣거나 `file:` URL을 로드한 경우다(iOS WebKit의 `PushStateFilePathRestriction`이 `file:`에서 path 변경 자체를 막는다). 우리는 `server.url`로 `https://www.pallang.co.kr`을 **실제로 네트워크에서 받아 오므로** 일반 브라우저와 똑같이 히스토리가 쌓인다.
+- 이 앱에는 그 증거가 이미 두 개 있다. iOS는 스와이프 백이 동작한다 = 웹뷰가 자기 히스토리를 걷고 있다(함정 6). Android는 `@capacitor/app`이 `canGoBack`을 넘겨준다 = 네이티브가 웹뷰 히스토리를 읽고 있다(`HardwareBackProvider`가 쓰는 값).
+- **그래서 `router.back()`과 `window.history.length` 판정을 웹과 같은 코드로 쓸 수 있다.** 흔적 작성 이탈이 그렇게 동작한다 — 씨앗을 물고 들어왔고 되감을 칸이 있으면 `router.back()`으로 들어온 자리로, 아니면 정해진 경로로 `replace`(`TraceNavProvider`).
+- **다만 되감기를 무조건 부르지는 않는다.** iOS는 메모리 압박으로 WKWebView 프로세스가 죽고 다시 로드될 수 있고, 그때 히스토리가 통째로 날아간다. 그 상태에서 되감으면 앱 밖으로 나가거나 아무 일도 일어나지 않는다. `history.length > 1`을 먼저 확인하고, 아니면 갈 곳을 직접 지정한다 — 히스토리가 사라진 상황에서도 홈으로 떨어지지 앱을 벗어나지 않는다.
+
 ## dev 서버 URL 자동화 (`scripts/cap-dev.sh`)
 
 로컬 dev 서버를 앱이 로드하려면 `CAP_SERVER_URL`에 맥의 **LAN IP**가 필요한데, 이 IP는 **와이파이/네트워크가 바뀌면 달라진다.** `capacitor.config.ts`는 `process.env.CAP_SERVER_URL`을 읽으므로, IP를 앱에 하드코딩하지 않고 스크립트가 매 실행마다 현재 IP를 감지해 sync 한다.
