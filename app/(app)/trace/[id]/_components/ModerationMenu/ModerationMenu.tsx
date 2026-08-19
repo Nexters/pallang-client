@@ -63,7 +63,7 @@ export function ModerationMenu({ target, authorUserId, authorNickname }: Moderat
           aria-label="더보기 메뉴"
           data-state={menu.state}
           className={cn(
-            // Figma 2248:3299 필터 드롭다운 패턴 — 어두운 패널(#383838 = bg-bg-overlay).
+            // Figma 필터 드롭다운 패턴 — 어두운 패널(#383838 = bg-bg-overlay).
             // 댓글 카드도 같은 색이라 경계가 사라지지 않게 ring과 그림자를 더한다.
             'absolute top-full right-0 z-10 mt-1 flex min-w-28 flex-col rounded-lg bg-bg-overlay p-1 shadow-lg ring-1 ring-white/10',
             'origin-top-right transition-[opacity,scale] duration-fast ease-enter',

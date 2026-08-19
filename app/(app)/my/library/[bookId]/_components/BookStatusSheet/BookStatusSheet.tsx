@@ -34,7 +34,7 @@ function StatusOption({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        // 시안(225:8880)의 선택지는 모서리를 두지 않은 80px 타일이다
+        // 시안의 선택지는 모서리를 두지 않은 80px 타일이다
         'press flex h-20 min-w-px flex-1 flex-col justify-center p-5 text-left text-title-18bd',
         selected ? 'bg-bg-dark text-text-inverse' : 'bg-bg-surface text-text-secondary',
         disabled && 'opacity-40',
@@ -45,7 +45,7 @@ function StatusOption({
   )
 }
 
-/** 독서 상태 설정 바텀시트(Figma 225:8867 · 225:8877). */
+/** 독서 상태 설정 바텀시트. */
 export function BookStatusSheet({
   open,
   value,

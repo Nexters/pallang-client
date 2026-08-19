@@ -6,12 +6,12 @@ import { type ComponentProps, useRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
-// Figma 2500:8761(Group 2147220874) export를 200×145 컨테이너 기준 2x(400×290)로 리사이즈한 것.
+// Figma(Group 2147220874) export를 200×145 컨테이너 기준 2x(400×290)로 리사이즈한 것.
 // 벡터(흰 눈·배)와 PNG가 합성된 상태여야 한다 — PNG만 쓰면 눈이 투명해져 뒤 백드롭이 비친다.
 const MASCOT_SRC = '/images/mascot-pair.png'
 const MASCOT_SIZE = { width: 200, height: 145 }
 
-// ponytail: Figma 2545:7228(버튼 2개) · 2224:19102(버튼 1개) · 2260:6966(일러스트 포함 전체 화면)
+// ponytail: 버튼 2개 · 버튼 1개 · 일러스트 포함 전체 화면
 // 카드 스펙은 세 디자인 모두 동일하고 차이는 Footer 버튼 개수뿐이다.
 // shadcn/ui 인터페이스를 따르되 base-ui의 `render` prop을 쓴다(shadcn의 `asChild` 대응).
 // AGENTS.md의 "파일당 컴포넌트 1개 export" 규칙을 지키려 Dialog 네임스페이스 객체 하나만 내보낸다.
@@ -21,7 +21,7 @@ const MASCOT_SIZE = { width: 200, height: 145 }
 //   설명 Title/Body/S/Medium = 14px / lh 1.3 / ls -0.04em ↔ --text-body-14md = 14px / lh 1.5 / ls -0.03em
 // 기존 토큰을 재사용하고 어긋나는 축만 override 했다. 디자인 확정 후 토큰을 정리하면 override를 걷어낼 것.
 
-// NOTE(디자인 확인 필요): 백드롭 색은 Figma 변수로 지정돼 있지 않다(2260:6966의 회색은 목업 캔버스 배경일 수 있음).
+// NOTE(디자인 확인 필요): 백드롭 색은 Figma 변수로 지정돼 있지 않다(회색은 목업 캔버스 배경일 수 있음).
 // 일단 bg-black 50%로 두었으니 디자인 확정 시 교체할 것.
 
 function Root(props: ComponentProps<typeof BaseDialog.Root>) {
@@ -117,11 +117,11 @@ function Content({ children, ...props }: PopupProps) {
   )
 }
 
-// 일러스트 없는 형태(차단 해제 확인 218:12135)는 Popup의 `illustrated={false}`로 만든다 —
+// 일러스트 없는 형태(차단 해제 확인)는 Popup의 `illustrated={false}`로 만든다 —
 // 일러스트를 걷으면 그 자리로 잡아 둔 상단 여백도 같이 줄어야 제목 위가 휑하지 않다.
 
 // 카드 위로 겹쳐 올라가는 일러스트. 기본은 마스코트이고, children을 주면 다른 일러스트로 바꿀 수 있다.
-// Figma 기준 카드 안쪽으로 38px 겹치고 가로 중앙 정렬(2260:6966 — img 200×145, 카드 상단 -107px).
+// Figma 기준 카드 안쪽으로 38px 겹치고 가로 중앙 정렬(img 200×145, 카드 상단 -107px).
 // bottom을 기준으로 잡아 일러스트 높이가 달라져도 겹침 38px이 유지된다.
 function Illustration({ className, children, ...props }: ComponentProps<'div'>) {
   return (

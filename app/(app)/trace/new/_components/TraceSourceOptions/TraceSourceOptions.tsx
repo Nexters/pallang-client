@@ -16,7 +16,7 @@ type SourceOptionProps = {
 
 function SourceOption({ description, icon: Icon, onClick, title }: SourceOptionProps) {
   return (
-    // 시안 2135:3707('사진으로 클릭')·2137:3764('직접 클릭') — 누르는 동안 어두운 배경으로
+    // 시안의 '사진으로 클릭'·'직접 클릭' — 누르는 동안 어두운 배경으로
     // 뒤집히고 아이콘만 오렌지로 산다. 자식 색은 group-active로 같이 넘긴다.
     // 두 카드는 같은 모양이다. 한쪽만 어둡게 두면 눌려 있는 것으로 읽힌다.
     <button

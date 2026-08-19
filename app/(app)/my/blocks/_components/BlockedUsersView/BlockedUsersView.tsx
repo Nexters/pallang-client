@@ -135,7 +135,7 @@ export function BlockedUsersView() {
         {renderList()}
       </ScreenLayout>
 
-      {/* 설명은 시안(218:12138)이 정한 자리에서 줄을 바꾼다 — Dialog.Description이 pre-line이다 */}
+      {/* 설명은 시안이 정한 자리에서 줄을 바꾼다 — Dialog.Description이 pre-line이다 */}
       <FlatDialog
         open={target !== null}
         title={`${shownTarget?.nickname ?? ''}님의 차단을 해제하시겠어요?`}

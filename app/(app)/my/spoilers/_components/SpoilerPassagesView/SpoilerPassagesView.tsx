@@ -66,7 +66,7 @@ export function SpoilerPassagesView() {
       )
     }
     if (passages.length === 0) {
-      // 시안(225:12937)의 빈 상태는 일러스트 없이 문구 한 줄뿐이라 FeedbackState를 쓰지 않는다
+      // 시안의 빈 상태는 일러스트 없이 문구 한 줄뿐이라 FeedbackState를 쓰지 않는다
       return (
         <p className="flex flex-1 items-center justify-center text-center text-title-18md text-text-secondary">
           등록한 스포일러가 없습니다
@@ -102,12 +102,12 @@ export function SpoilerPassagesView() {
               // 필터를 바꾸면 열어 둔 대상이 화면에서 사라질 수 있어 다이얼로그도 함께 접는다
               setReleasing(null)
             }}
-            // 시안(225:12680)의 트리거는 140px 고정 폭에 값이 왼쪽, 화살표가 오른쪽 끝이다
+            // 시안의 트리거는 140px 고정 폭에 값이 왼쪽, 화살표가 오른쪽 끝이다
             className="w-35 justify-between px-2.5 text-body-14sb"
           />
         </div>
 
-        {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다(Figma 225:12681) */}
+        {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다 */}
         <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">{renderList()}</div>
       </ScreenLayout>
 

@@ -25,8 +25,8 @@ type TraceOpinionSheetProps = {
 }
 
 /**
- * "N개의 의견"으로 진입하는 의견 목록 바텀시트(디자인 202:7290).
- * 의견 카드의 답글 버튼을 누르면 시트 안에서 답글 화면(디자인 202:7346)으로 겹쳐 전환된다.
+ * "N개의 의견"으로 진입하는 의견 목록 바텀시트.
+ * 의견 카드의 답글 버튼을 누르면 시트 안에서 답글 화면으로 겹쳐 전환된다.
  */
 export function TraceOpinionSheet({
   open,
@@ -59,7 +59,7 @@ export function TraceOpinionSheet({
       onBack={isReplyOpen ? onShowList : undefined}
       reserveBackSlot
       onClose={onClose}
-      // 상단 54px(디자인 202:7346 — 상태바 44 + 10)만 남기고 화면을 채운다.
+      // 상단 54px(디자인의 상태바 44 + 10)만 남기고 화면을 채운다.
       // 고정 54px 대신 인셋 토큰을 쓴다 — 노치가 큰 기기에서 헤더가 노치에 가리지 않게.
       // pb-0: 하단 인셋은 안쪽에서 소비한다 — 패널이 먼저 먹으면 답글 화면의 검은 입력바
       // 아래로 시트 바닥이 띠로 남는다. 대신 목록과 입력바가 각자 pb-safe를 진다.

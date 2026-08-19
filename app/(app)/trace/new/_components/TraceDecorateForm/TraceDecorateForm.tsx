@@ -20,7 +20,7 @@ import { EffectPicker } from '../EffectPicker/EffectPicker'
 import { TraceNote } from '../TraceNote/TraceNote'
 import { TraceStepIndicator } from '../TraceStepIndicator/TraceStepIndicator'
 
-// 시안(2469:13096)의 토스트는 앞머리만 오렌지 볼드로 둔다 — 둘을 붙여 써 어긋나지 않게 한다.
+// 시안의 토스트는 앞머리만 오렌지 볼드로 둔다 — 둘을 붙여 써 어긋나지 않게 한다.
 const EFFECT_HINT = '효과를 먼저 선택'
 const EFFECT_HINT_MESSAGE = `${EFFECT_HINT}한 뒤 문장을 드래그해주세요!`
 

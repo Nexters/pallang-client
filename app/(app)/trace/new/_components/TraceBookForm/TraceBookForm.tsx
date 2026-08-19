@@ -93,7 +93,7 @@ export function TraceBookForm() {
   return (
     <div className="relative flex min-h-0 flex-1 flex-col bg-bg-dark">
       {/* 흰 상단이 노치 뒤까지 채워지도록 셸 패딩을 되돌리고(-mt) 안에서 다시 더한다.
-          시안(3092:14086)은 이 화면도 write/decorate와 같은 밝음/어둠 구성이다 —
+          시안은 이 화면도 write/decorate와 같은 밝음/어둠 구성이다 —
           책 카드까지 흰 영역에 넣는다(TraceWriteForm·TraceDecorateForm과 같은 처리). */}
       <div className="-mt-(--safe-top) bg-bg-default pt-(--safe-top)">
         <TraceStepIndicator current={3} />

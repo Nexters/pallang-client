@@ -7,7 +7,7 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { BOOK_RECORD_TABS } from '../../_data/bookRecordTab.constant'
 
 /**
- * 책 상세의 기록 종류 세그먼트(Figma 225:12612).
+ * 책 상세의 기록 종류 세그먼트.
  *
  * 목록만 세운다 — 고른 값과 패널은 BookDetailView의 `Tabs.Root`가 쥔다.
  * base-ui `Tabs` 위에 올린 이유는 탭 패턴의 키보드 규약(활성 탭 하나만 탭 순서에 두는 roving

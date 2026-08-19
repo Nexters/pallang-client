@@ -8,7 +8,7 @@ import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSke
 type RecordPanelProps = {
   /** 오류 안내를 가리키는 이름 — 세 탭이 같은 자리를 쓰므로 어느 탭인지 구분되어야 한다 */
   label: string
-  /** 시안(225:13472 · 225:13647)의 빈 상태는 일러스트 없이 문구 한 줄뿐이다 */
+  /** 시안의 빈 상태는 일러스트 없이 문구 한 줄뿐이다 */
   emptyMessage: string
   isPending: boolean
   isError: boolean

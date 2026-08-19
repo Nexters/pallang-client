@@ -16,7 +16,7 @@ type TraceCreateFabProps = {
   onAddRecord: () => void
 }
 
-/** 우하단 남기기 버튼(디자인 202:2963 닫힘 / 202:2921 열림).
+/** 우하단 남기기 버튼.
     닫힘은 +, 열면 같은 버튼이 45° 돌아 ×가 되고 위로 두 갈래가 펼쳐진다. */
 export function TraceCreateFab({ onAddOpinion, onAddRecord }: TraceCreateFabProps) {
   const [isOpen, setIsOpen] = useState(false)

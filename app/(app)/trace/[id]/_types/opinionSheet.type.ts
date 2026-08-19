@@ -10,7 +10,7 @@ export type OpinionSheetState = { opinionId: number | null } | null
  */
 export type OpinionSheetModel = {
   sheet: OpinionSheetState
-  /** 흔적 목록에서 댓글이 펼쳐진 의견 — 한 번에 하나만 편다(디자인 202:3978) */
+  /** 흔적 목록에서 댓글이 펼쳐진 의견 — 한 번에 하나만 편다 */
   expandedOpinionId: number | null
   /** 마지막으로 반영한 대목 — 이 값이 바뀌면 목록이 통째로 갈린다 */
   passageId: number | undefined

@@ -26,7 +26,7 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-// 시안(2469:13096)의 기본형 — 앞머리만 오렌지 볼드로 강조한다
+// 시안의 기본형 — 앞머리만 오렌지 볼드로 강조한다
 export const Default: Story = {
   args: { highlight: '영역 선택 후' },
 }

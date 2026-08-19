@@ -13,7 +13,7 @@ type WithdrawDialogProps = {
   open: boolean
 }
 
-// Figma 2432:13714 — 슬픈 캐릭터가 모달 위 중앙에 걸친 회원 탈퇴 확인 모달.
+// 슬픈 캐릭터가 모달 위 중앙에 걸친 회원 탈퇴 확인 모달.
 export function WithdrawDialog({ loading, onCancel, onConfirm, open }: WithdrawDialogProps) {
   return (
     <Dialog.Root

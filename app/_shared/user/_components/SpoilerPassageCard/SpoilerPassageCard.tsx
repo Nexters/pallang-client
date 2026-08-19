@@ -11,7 +11,7 @@ type SpoilerPassageCardProps = {
 }
 
 /**
- * 스포일러 관리 목록의 카드 하나(Figma 225:12682).
+ * 스포일러 관리 목록의 카드 하나.
  * 틀은 `RecordCard`가 갖고, 여기서는 스포일러에만 있는 것(작성일 머리줄·`해제` 버튼)을 채운다.
  */
 export function SpoilerPassageCard({ passage, onRelease }: SpoilerPassageCardProps) {
@@ -29,7 +29,7 @@ export function SpoilerPassageCard({ passage, onRelease }: SpoilerPassageCardPro
           onClick={() => {
             onRelease(passage)
           }}
-          // 시안(225:12690)의 알약 버튼 — 흰 바탕에 10% 테두리, 12px Bold
+          // 시안의 알약 버튼 — 흰 바탕에 10% 테두리, 12px Bold
           className="flex h-6 items-center justify-center rounded-full border border-border-default bg-bg-default px-3 text-title-12bd text-text-tertiary press"
         >
           해제

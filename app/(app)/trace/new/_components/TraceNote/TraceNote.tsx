@@ -28,7 +28,7 @@ export function TraceNote({
   ...handlers
 }: TraceNoteProps) {
   return (
-    // 시안(2295:5843)의 TraceNote는 높이가 320px로 고정이다. 인용문이 길면 잘리지 않고 안에서 스크롤한다.
+    // 시안의 TraceNote는 높이가 320px로 고정이다. 인용문이 길면 잘리지 않고 안에서 스크롤한다.
     // h-[320px](고정 높이)여야 아래 min-h-full의 퍼센트 기준이 확정된다.
     <div
       ref={scrollRef}

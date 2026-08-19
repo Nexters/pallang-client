@@ -15,7 +15,7 @@ type SpoilerPanelProps = {
   onRelease: (passage: MyPassage) => void
 }
 
-/** 이 책에서 내가 스포일러로 가려 둔 대목 목록(Figma 225:13494). */
+/** 이 책에서 내가 스포일러로 가려 둔 대목 목록. */
 export function SpoilerPanel({ bookId, onRelease }: SpoilerPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listQuery = useInfiniteQuery(userQueries.spoilerPassageList(bookId))

@@ -8,7 +8,7 @@ type SpoilerReleaseDialogProps = {
 }
 
 /**
- * 스포일러 해제 확인 다이얼로그(Figma 225:13010 · 책 상세 225:13669).
+ * 스포일러 해제 확인 다이얼로그.
  * 문구는 시안이 정한 자리에서 줄을 바꾼다 — Dialog가 pre-line이다.
  *
  * ponytail: 확정 버튼은 죽여 둔다. 스포일러를 되돌리는 `PATCH /api/passages/{passageId}/spoiler`가

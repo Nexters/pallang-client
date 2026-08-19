@@ -12,7 +12,7 @@ export type ReportReasonOption = {
 }
 
 /**
- * 신고 사유 선택지 — 확정 디자인(Figma 2872:16761)의 9종.
+ * 신고 사유 선택지 — 확정 디자인의 9종.
  * 서버 enum은 5종(SPAM/HATE/ABUSE/COPYRIGHT/ETC)뿐이라 직접 짝이 없는 사유는
  * ETC로 보내고 라벨을 detail에 싣는다(buildReportRequest). enum 확장은 백엔드와 협의할 것.
  * 순서가 곧 2열 그리드의 노출 순서다(좌→우, 위→아래, 기타는 마지막 전체 폭 행).

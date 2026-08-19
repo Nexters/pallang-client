@@ -14,7 +14,7 @@ type LikedOpinionCardProps = {
 }
 
 /**
- * 좋아요 관리 목록의 카드 하나(Figma 225:12750).
+ * 좋아요 관리 목록의 카드 하나.
  * 틀은 `RecordCard`가 갖고, 여기서는 좋아요에만 있는 것(닉네임 머리줄·하트 토글·흔적 좌표)을 채운다.
  */
 export function LikedOpinionCard({ opinion, onUnlike }: LikedOpinionCardProps) {

@@ -99,7 +99,7 @@ export function BookSearchSheet({ open, onClose, onSelect }: BookSearchSheetProp
           </Button>
         ) : (
           <>
-            {/* 도서 등록으로 빠져나가는 유일한 길이다 — 검색바 옆 '도서 추가' 버튼을 대신한다(시안 3140:27686).
+            {/* 도서 등록으로 빠져나가는 유일한 길이다 — 검색바 옆 '도서 추가' 버튼을 대신한다.
                 본문이 아니라 footer에 두어 검색 전·검색 결과 어느 쪽에서도 같은 자리에 늘 보인다. */}
             <p className="flex items-center justify-center gap-1.5 py-6 text-body-14md text-neutral-500">
               찾는 책이 없나요?

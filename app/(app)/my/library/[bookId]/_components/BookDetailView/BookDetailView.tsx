@@ -24,7 +24,7 @@ import { SpoilerPanel } from '../SpoilerPanel/SpoilerPanel'
 type UnlikedTarget = { nickname: string; undo: () => void }
 
 /**
- * 내 서재 > 책 상세(Figma 225:12569).
+ * 내 서재 > 책 상세.
  * 책 머리는 스크롤에 걷히고 탭만 상단에 붙는다 — `position: sticky` 하나로 끝나 JS로 재지 않는다.
  */
 /** 패널 세 장이 같은 회색 면을 쓴다 — 한곳에 두어 서로 어긋나지 않게 한다 */
@@ -68,7 +68,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
           <button
             type="button"
             disabled
-            // ponytail: 누른 뒤 화면이 시안 어디에도 없다. 자리만 시안(225:12579)대로 잡고 죽여 둔다.
+            // ponytail: 누른 뒤 화면이 시안 어디에도 없다. 자리만 시안대로 잡고 죽여 둔다.
             // 편집 화면이 정해지면 disabled만 걷어내고 onClick을 달면 된다.
             className="flex shrink-0 items-center justify-center rounded-full bg-black/10 px-2.5 py-2 text-body-14sb text-text-primary"
           >
@@ -111,12 +111,12 @@ export function BookDetailView({ bookId }: { bookId: number }) {
             )}
           </div>
 
-          {/* 스크롤하면 위 책 머리가 걷히고 이 줄만 상단에 남는다(Figma 225:12619) */}
+          {/* 스크롤하면 위 책 머리가 걷히고 이 줄만 상단에 남는다 */}
           <div className="sticky top-0 z-10 flex shrink-0 justify-center bg-bg-default p-2">
             <BookRecordTabs />
           </div>
 
-          {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다(Figma 225:12580).
+          {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다.
             Tabs.Panel은 고르지 않은 쪽을 떼어 두므로(keepMounted 기본값) 활성 탭의 쿼리만 나간다. */}
           <Tabs.Panel value="opinion" className={PANEL_CLASS}>
             <OpinionPanel bookId={bookId} />
@@ -130,7 +130,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
         </Tabs.Root>
       </ScreenLayout>
 
-      {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다(Figma 225:13419) */}
+      {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
         tone="light"
         message={unliked ? `${unliked.nickname}님의 좋아요를 해제했어요` : ''}

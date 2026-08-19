@@ -16,7 +16,7 @@ type FlatDialogProps = {
   loading?: boolean
   /** 확정할 수 없는 상태(연결할 API가 아직 없는 등)에서 확인 버튼만 죽인다 */
   confirmDisabled?: boolean
-  /** 마스코트를 카드 위로 얹을지. 문구만으로 서는 확인 다이얼로그(218:12135)는 걷어 낸다. */
+  /** 마스코트를 카드 위로 얹을지. 문구만으로 서는 확인 다이얼로그는 걷어 낸다. */
   illustrated?: boolean
   /**
    * 백드롭·Esc로 닫을 수 있는지. 두 선택지 중 하나를 반드시 골라야 하는 다이얼로그는 false로 막는다.

@@ -11,7 +11,7 @@ type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   opinionCount?: number
   passageCount?: number
   publisher?: string
-  /** 대목·흔적 수 오른쪽에 붙는 자리(Figma 225:13279). 책 상세의 독서 상태 뱃지가 여기로 들어온다. */
+  /** 대목·흔적 수 오른쪽에 붙는 자리. 책 상세의 독서 상태 뱃지가 여기로 들어온다. */
   statusBadge?: ReactNode
   title: string
 }
