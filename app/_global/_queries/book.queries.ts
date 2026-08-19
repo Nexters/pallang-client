@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query'
 
 import {
+  getBookDetail,
   getHomeCarouselBooks,
   getMyLibraryBooks,
   getPopularBooks,
@@ -9,6 +10,7 @@ import {
   searchInternalBooks,
 } from '../_apis/_generated/book/book'
 import type { BookActivityResponse } from '../_apis/_generated/models/bookActivityResponse'
+import type { BookDetailResponse } from '../_apis/_generated/models/bookDetailResponse'
 import type { CreateBookRequest } from '../_apis/_generated/models/createBookRequest'
 import type { GetHomeCarouselBooksParams } from '../_apis/_generated/models/getHomeCarouselBooksParams'
 import type { GetMyLibraryBooksParams } from '../_apis/_generated/models/getMyLibraryBooksParams'
@@ -24,8 +26,17 @@ export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
 
 export type BookActivity = BookActivityResponse
 
+/** 책 상세 화면의 머리 정보(제목·지은이·출판사·표지·대목/흔적 수). */
+export type BookDetail = BookDetailResponse
+
 export const bookQueries = {
   all: () => ['book'] as const,
+  /** 도서 단건. 인증 헤더가 붙으면 읽기 상태(myStatus)까지 함께 온다. */
+  detail: (bookId: number) =>
+    queryOptions({
+      queryKey: [...bookQueries.all(), 'detail', bookId],
+      queryFn: () => getBookDetail(bookId),
+    }),
   homeCarousel: (params?: GetHomeCarouselBooksParams) =>
     infiniteQueryOptions({
       queryKey: [...bookQueries.all(), 'home-carousel', params],

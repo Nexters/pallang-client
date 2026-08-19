@@ -46,11 +46,15 @@ export const userQueries = {
       // 비로그인이면 401이 정상 흐름이라 재시도하지 않는다
       retry: false,
     }),
-  /** 내가 남긴 흔적 전체 목록. */
-  opinionList: () =>
+  /**
+   * 내가 남긴 흔적 목록. `bookId`를 주면 그 책만 추린다(책 상세 의견 탭).
+   * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
+   */
+  opinionList: (bookId?: number) =>
     infiniteQueryOptions({
-      queryKey: [...userQueries.all(), 'opinion-list'],
-      queryFn: ({ pageParam }) => getMyOpinions({ page: pageParam, size: USER_OPINION_PAGE_SIZE }),
+      queryKey: [...userQueries.all(), 'opinion-list', bookId ?? 'all'],
+      queryFn: ({ pageParam }) =>
+        getMyOpinions({ bookId, page: pageParam, size: USER_OPINION_PAGE_SIZE }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo

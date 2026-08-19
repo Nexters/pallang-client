@@ -13,6 +13,8 @@ type ScreenLayoutProps = Omit<ComponentPropsWithoutRef<'main'>, 'title'> & {
   title: ReactNode
   /** 생략하면 router.back() — 흐름을 직접 되돌려야 하는 화면만 넘긴다 */
   onBack?: () => void
+  /** TopBar 오른쪽 끝에 세우는 조각(책 상세의 `편집` 알약 225:12579). 없으면 제목만 남는다. */
+  action?: ReactNode
   /** 하단에 고정되는 CTA 자리. 홈 인디케이터 인셋은 여기서 pb-safe로 소비한다 */
   footer?: ReactNode
   /** 스크롤 body에 붙일 클래스 — 좌우·상하 패딩이 화면마다 다르다 */
@@ -27,6 +29,7 @@ type ScreenLayoutProps = Omit<ComponentPropsWithoutRef<'main'>, 'title'> & {
 export function ScreenLayout({
   title,
   onBack,
+  action,
   footer,
   bodyClassName,
   className,
@@ -58,6 +61,7 @@ export function ScreenLayout({
         </TopBar.Action>
         <TopBar.Title as="h1">{title}</TopBar.Title>
         <TopBar.Spacer />
+        {action}
       </TopBar.Root>
 
       <div className={cn('flex min-h-0 flex-1 flex-col overflow-y-auto', bodyClassName)}>
