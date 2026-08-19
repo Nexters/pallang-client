@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import Link from 'next/link'
 import { useMemo, useRef } from 'react'
 
 import {
@@ -55,17 +56,16 @@ export function MyLibraryView() {
         <ul className="flex flex-col gap-3">
           {books.map((book, index) => (
             <li key={book.bookId} className="flex flex-col gap-3">
-              {/* ponytail: 행에 링크를 걸지 않는다. 책 상세(/my/library/[bookId])가 다음 단계라
-                  아직 라우트가 없어, 지금 Link를 붙이면 누르는 족족 404로 보낸다.
-                  화면이 생기면 이 자리를 Link로 감싸고 press 유틸만 더하면 된다. */}
-              <BookItem
-                author={book.author}
-                coverImageUrl={book.coverImageUrl}
-                opinionCount={book.opinionCount}
-                passageCount={book.passageCount}
-                publisher={book.publisher}
-                title={book.title}
-              />
+              <Link href={`/my/library/${String(book.bookId)}`} className="press block">
+                <BookItem
+                  author={book.author}
+                  coverImageUrl={book.coverImageUrl}
+                  opinionCount={book.opinionCount}
+                  passageCount={book.passageCount}
+                  publisher={book.publisher}
+                  title={book.title}
+                />
+              </Link>
               {index < books.length - 1 && (
                 <div aria-hidden="true" className="h-px w-full bg-border-default" />
               )}
