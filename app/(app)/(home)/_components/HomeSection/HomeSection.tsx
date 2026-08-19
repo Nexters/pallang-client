@@ -9,6 +9,7 @@ import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { HomeBookCarousel } from '../HomeBookCarousel/HomeBookCarousel'
 import { HomeBookSectionHeader } from '../HomeBookSectionHeader/HomeBookSectionHeader'
+import { HomeOpinionList } from '../HomeOpinionList/HomeOpinionList'
 
 type HomeSectionProps = {
   searchAction?: ReactNode
@@ -32,6 +33,7 @@ export function HomeSection({ searchAction }: HomeSectionProps) {
       />
 
       {activeTab === 'library' && <HomeBookCarousel />}
+      {activeTab === 'opinion' && <HomeOpinionList />}
     </section>
   )
 }
