@@ -11,9 +11,13 @@ import type { DataResponsePassagesByPage } from '../models/dataResponsePassagesB
 
 import type { DataResponseSimilarCandidates } from '../models/dataResponseSimilarCandidates'
 
+import type { DataResponseSpoilerUpdate } from '../models/dataResponseSpoilerUpdate'
+
 import type { GetPageNumbersParams } from '../models/getPageNumbersParams'
 
 import type { SimilarCheck } from '../models/similarCheck'
+
+import type { UpdateSpoiler } from '../models/updateSpoiler'
 
 import { customFetch } from '../../customFetch.api'
 
@@ -58,6 +62,27 @@ export const createOcrResult = async (
     ...options,
     method: 'POST',
     body: formData,
+  })
+}
+
+export const getUpdateSpoilerUrl = (passageId: number) => {
+  return `/api/passages/${passageId}/spoiler`
+}
+
+/**
+ * 대목의 스포일러 표기를 변경합니다(해제 뿐 아니라 재설정도 허용). 권한은 이 대목에 흔적을 남긴 사용자만 가집니다(최초 생성자가 아니어도 병합된 대목에 흔적을 남겼으면 가능). Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * @summary 대목 스포일러 설정 변경
+ */
+export const updateSpoiler = async (
+  passageId: number,
+  updateSpoiler: UpdateSpoiler,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseSpoilerUpdate> => {
+  return customFetch<DataResponseSpoilerUpdate>(getUpdateSpoilerUrl(passageId), {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateSpoiler),
   })
 }
 

@@ -3,6 +3,10 @@
  */
 import type { DataResponseUserBookStatusResponse } from '../models/dataResponseUserBookStatusResponse'
 
+import type { DataResponseVoid } from '../models/dataResponseVoid'
+
+import type { DeleteBookStatusParams } from '../models/deleteBookStatusParams'
+
 import type { UpdateUserBookStatusRequest } from '../models/updateUserBookStatusRequest'
 
 import { customFetch } from '../../customFetch.api'
@@ -24,5 +28,35 @@ export const updateBookStatus = async (
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(updateUserBookStatusRequest),
+  })
+}
+
+export const getDeleteBookStatusUrl = (params: DeleteBookStatusParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/users/me/book-status?${stringifiedParams}`
+    : `/api/users/me/book-status`
+}
+
+/**
+ * 로그인한 사용자의 특정 도서에 설정된 읽기상태를 삭제합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * @summary 읽기상태 해제
+ */
+export const deleteBookStatus = async (
+  params: DeleteBookStatusParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseVoid> => {
+  return customFetch<DataResponseVoid>(getDeleteBookStatusUrl(params), {
+    ...options,
+    method: 'DELETE',
   })
 }
