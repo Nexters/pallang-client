@@ -5,8 +5,6 @@ import type { CreateBookBody } from '../models/createBookBody'
 
 import type { DataResponseBookActivityListResponse } from '../models/dataResponseBookActivityListResponse'
 
-import type { DataResponseBookCarouselListResponse } from '../models/dataResponseBookCarouselListResponse'
-
 import type { DataResponseBookDetailResponse } from '../models/dataResponseBookDetailResponse'
 
 import type { DataResponseBookListResponse } from '../models/dataResponseBookListResponse'
@@ -14,8 +12,6 @@ import type { DataResponseBookListResponse } from '../models/dataResponseBookLis
 import type { DataResponseBookResponse } from '../models/dataResponseBookResponse'
 
 import type { DataResponseBookSearchListResponse } from '../models/dataResponseBookSearchListResponse'
-
-import type { GetHomeCarouselBooksParams } from '../models/getHomeCarouselBooksParams'
 
 import type { GetMyLibraryBooksParams } from '../models/getMyLibraryBooksParams'
 
@@ -53,35 +49,6 @@ export const createBook = async (
     ...options,
     method: 'POST',
     body: formData,
-  })
-}
-
-export const getGetHomeCarouselBooksUrl = (params?: GetHomeCarouselBooksParams) => {
-  const normalizedParams = new URLSearchParams()
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  })
-
-  const stringifiedParams = normalizedParams.toString()
-
-  return stringifiedParams.length > 0 ? `/api/home/books?${stringifiedParams}` : `/api/home/books`
-}
-
-/**
- * (사용 중단) 더 이상 홈 화면에서 사용하지 않습니다. 홈 화면 도서 목록은 GET /api/books/my-library(opinionCountScope=ALL)를 사용하세요. 흔적이 남은 도서를 대목/흔적 수와 함께 조회합니다. offset을 생략하면 전체 목록 중 정가운데 책들을 기준으로 조회하며, 좌우 스크롤 시에는 응답으로 받은 pageInfo를 참고해 offset - size(이전) 또는 offset + size(다음)로 다시 요청하면 됩니다.
- * @deprecated
- * @summary 홈 캐러셀 도서 목록
- */
-export const getHomeCarouselBooks = async (
-  params?: GetHomeCarouselBooksParams,
-  options?: Parameters<typeof customFetch>[1],
-): Promise<DataResponseBookCarouselListResponse> => {
-  return customFetch<DataResponseBookCarouselListResponse>(getGetHomeCarouselBooksUrl(params), {
-    ...options,
-    method: 'GET',
   })
 }
 
