@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
+import { cn } from '@/app/_global/_services/cn.service'
 import { buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
@@ -43,7 +44,17 @@ export function TraceDoneView() {
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-2 rounded-t-[28px] bg-bg-default px-4 pt-8 pb-safe">
+      <div
+        className={cn(
+          'flex flex-col items-center gap-2 rounded-t-[28px] bg-bg-default px-4 pt-8 pb-safe',
+          // 이 판은 바텀시트처럼 생겼지만 다이얼로그가 아니라 화면의 일부다 — 그래도 등장은
+          // 시트와 같아야 해서 같은 토큰을 쓴다. 화면에 들어서는 순간 한 번만 올라오면 되므로
+          // @starting-style로 시작값만 준다(translate는 레이아웃을 밀지 않아 자리도 그대로다).
+          // 시작값은 직접 값으로 낸다 — translate-* 유틸은 var로 조립돼 iOS Safari가
+          // @starting-style 안에서 시작값을 잡지 못한다(motionConvention.spec.ts가 막는다).
+          'transition-transform duration-rise ease-rise starting:[translate:0_100%]',
+        )}
+      >
         <h1 className="text-title-20sb text-text-primary">흔적을 책에 끼워두었어요!</h1>
         <p className="text-center text-body-14md text-text-tertiary">
           남긴 흔적이 어떻게 보이는지

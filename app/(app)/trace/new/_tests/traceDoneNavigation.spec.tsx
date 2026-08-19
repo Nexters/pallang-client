@@ -95,6 +95,21 @@ describe('완료 화면에서 나가기', () => {
     expect(replaceMock.mock.calls.map(([path]) => path)).toEqual([`/trace/${String(BOOK_ID)}`])
   })
 
+  // 이 판은 다이얼로그가 아니라 화면의 일부라 base-ui가 등장을 봐주지 않는다 — 시작값을
+  // CSS로 들고 있는지가 곧 보장이다. 값은 반드시 직접 써야 한다(translate-* 유틸은 var로
+  // 조립돼 iOS Safari가 @starting-style 안에서 시작값을 잡지 못한다).
+  // happy-dom은 @starting-style을 계산하지 않아 실제 이동은 브라우저에서 확인한다.
+  it('아래 판은 시트와 같은 토큰으로 올라온다', () => {
+    renderDone()
+
+    const panel = screen.getByRole('heading', { name: '흔적을 책에 끼워두었어요!' }).parentElement
+    if (panel === null) throw new Error('완료 화면의 아래 판을 찾지 못했다')
+
+    expect(panel.className).toContain('starting:[translate:0_100%]')
+    expect(panel.className).toContain('duration-rise')
+    expect(panel.className).toContain('ease-rise')
+  })
+
   it('뒤로는 홈으로만 이동한다', () => {
     renderDone()
 
