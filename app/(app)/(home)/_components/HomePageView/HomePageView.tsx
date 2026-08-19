@@ -47,7 +47,7 @@ export function HomePageView() {
           <button
             type="button"
             aria-label="검색"
-            className="press flex size-[42px] shrink-0 items-center justify-center rounded-[100px] bg-bg-default text-icon-primary backdrop-blur-[4px] transition-[background-color,scale] duration-instant ease-standard"
+            className="press flex size-[42px] shrink-0 items-center justify-center rounded-[100px] bg-[rgba(0,0,0,0.08)] text-icon-primary backdrop-blur-[4px] transition-[background-color,scale] duration-instant ease-standard"
             onClick={handleSearchClick}
           >
             <SearchIcon aria-hidden="true" className="size-6" />
