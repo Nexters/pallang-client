@@ -1,7 +1,7 @@
 'use client'
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
-import { type ReactNode, useDeferredValue, useRef } from 'react'
+import { type ReactNode, useRef } from 'react'
 
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -48,18 +48,24 @@ export function BottomSheet({
   // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
   const popupRef = useRef<HTMLDivElement>(null)
 
-  // 열린 채로 마운트되는 시트(화면 자체가 시트인 경우 — TraceSourceView)를 위한 한 렌더 유예다.
-  // base-ui는 mounted 초기값을 open으로 잡아(internals/useTransitionStatus) 처음부터 열려 있으면
-  // 'starting' 단계를 건너뛴다 = data-starting-style이 한 번도 붙지 않아 시작 위치
-  // (translate-y-full)를 거치지 않고 제자리에 그려진다 — 올라오는 전환이 통째로 사라진다.
-  // 첫 렌더만 닫힌 채로 두고 곧바로 열어, 어떻게 마운트되든 닫힘→열림 전환을 거치게 한다.
-  // useDeferredValue의 두 번째 인자(React 19)가 "첫 렌더는 이 값, 그다음 렌더부터 진짜 값"을
-  // 그대로 준다 — effect에서 setState를 부르는 것과 결과는 같고 연쇄 렌더는 만들지 않는다.
-  const hasMounted = useDeferredValue(true, false)
+  // 시트가 "열린 채로" DOM에 꽂히는 경로가 있다 — 화면 자체가 시트인 첫 화면(TraceSourceView)이
+  // 그렇고, 탭바로 들어오면 특히 그렇다. base-ui는 mounted 초기값을 open으로 잡아
+  // (internals/useTransitionStatus) 그 경우 'starting'을 건너뛴다 = data-starting-style이 한 번도
+  // 붙지 않아 시작 위치를 거치지 않고 제자리에 그려진다. 올라오는 전환이 통째로 사라진다.
+  //
+  // React 쪽에서 한 렌더 유예를 만드는 방법은 전부 새는 길이 있었다. useDeferredValue(true, false)는
+  // URL 직접 로드에서만 유예가 걸리고 router.push 경로에서는 첫 렌더부터 true가 나온다. 렌더 중
+  // 상태 갱신은 마운트를 통째로 다시 돌려 base-ui가 또 열린 채로 초기화된다. effect+setState는
+  // lint가 막는다(react-hooks/set-state-in-effect).
+  //
+  // 그래서 유예를 없애고 CSS에 맡긴다. @starting-style(Tailwind의 starting: 변형)은 "이 요소가
+  // 처음 그려질 때의 시작값"을 브라우저가 직접 잡아주는 규칙이라 React가 언제 커밋하든 상관없다.
+  // base-ui의 data-starting-style은 열림이 런타임에 토글되는 경로에서 그대로 동작하고,
+  // starting:은 열린 채 꽂히는 경로를 받는다 — 둘은 같은 시작값이라 겹쳐도 무해하다.
 
   return (
     <BaseDialog.Root
-      open={open && hasMounted}
+      open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose()
       }}
@@ -69,7 +75,8 @@ export function BottomSheet({
           data-slot="bottom-sheet-backdrop"
           className={cn(
             'fixed inset-0 z-50 bg-bg-black/50 transition-opacity duration-fast ease-enter',
-            'data-starting-style:opacity-0 data-ending-style:opacity-0 data-ending-style:ease-exit',
+            'starting:opacity-0 data-starting-style:opacity-0',
+            'data-ending-style:opacity-0 data-ending-style:ease-exit',
           )}
         />
         <BaseDialog.Viewport className="fixed inset-0 z-50 flex flex-col justify-end">
@@ -91,7 +98,8 @@ export function BottomSheet({
               // ease-standard는 이동을 가운데에 배분해 같은 350ms로 그 구간이 156ms가 된다.
               // 퇴장은 그대로 짧고 빠르게 둔다 — 닫는 동작은 기다릴 이유가 없다.
               'transition-transform duration-slow ease-standard',
-              'data-starting-style:translate-y-full data-ending-style:translate-y-full',
+              'starting:translate-y-full data-starting-style:translate-y-full',
+              'data-ending-style:translate-y-full',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
               popupClassName,
             )}
