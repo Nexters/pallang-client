@@ -24,8 +24,11 @@ export function TraceBookForm() {
   const { draft, dispatch } = useTraceDraft()
   const { goBack } = useTraceNav()
   const { register } = useTraceOverlay()
+  // 모임 안에서 남기는 흔적은 그 모임의 책에 고정이다 — 다른 책으로 보내면 서버가
+  // GROUP_400_3으로 거절한다. 고를 수 없는 것을 고르게 두지 않으려고 길 자체를 없앤다.
+  const isBookLocked = draft.groupId !== null
   // 씨앗으로 책이 이미 있으면(책 상세에서 들어온 경우) 시트를 다시 열 이유가 없다 — 바로 확인 화면이다.
-  const [sheetOpen, setSheetOpen] = useState(draft.book === null)
+  const [sheetOpen, setSheetOpen] = useState(draft.book === null && draft.groupId === null)
   // 저장은 ①(대목을 물고 들어온 경로)과도 나눠 쓴다 — useTraceSubmit이 그 한 벌이다.
   const { closeMessage, isSaving, message, save } = useTraceSubmit()
   // 비로그인이면 401이라 me가 비어 있다 — BookSearchView의 처리와 같게 '나'로 떨어뜨린다.
@@ -62,9 +65,13 @@ export function TraceBookForm() {
         <div className="bg-bg-default px-4 pt-2 pb-6">
           <SelectedBookCard
             book={draft.book}
-            onEdit={() => {
-              setSheetOpen(true)
-            }}
+            onEdit={
+              isBookLocked
+                ? undefined
+                : () => {
+                    setSheetOpen(true)
+                  }
+            }
           />
         </div>
 
@@ -103,14 +110,16 @@ export function TraceBookForm() {
         </Button>
       </div>
 
-      <BookSearchSheet
-        open={sheetOpen}
-        onClose={() => {
-          setSheetOpen(false)
-        }}
-        onRegisterBack={register}
-        onSelect={handleSelectBook}
-      />
+      {!isBookLocked && (
+        <BookSearchSheet
+          open={sheetOpen}
+          onClose={() => {
+            setSheetOpen(false)
+          }}
+          onRegisterBack={register}
+          onSelect={handleSelectBook}
+        />
+      )}
 
       {/* 책을 여기서 처음 고른 경로(책 없이 시작한 흔적)는 이 자리에서야 '책 + 대목'이 갖춰진다 */}
       <TraceMergePrompt at="book" />

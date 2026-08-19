@@ -20,6 +20,8 @@ export function TraceBookHeader() {
   const { draft, dispatch } = useTraceDraft()
   const { register } = useTraceOverlay()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // 모임 흔적은 그 모임의 책에 고정이다(GROUP_400_3) — 카드가 눌리지도, 시트가 붙지도 않는다.
+  const isBookLocked = draft.groupId !== null
 
   // 시트가 떠 있는 동안에는 뒤로가기가 플로우를 나가는 대신 시트만 닫는다(③과 같은 처리)
   useOverlayBackGuard(sheetOpen, () => {
@@ -31,21 +33,27 @@ export function TraceBookHeader() {
       <SelectedBookCard
         affordance="card"
         book={draft.book}
-        onEdit={() => {
-          setSheetOpen(true)
-        }}
+        onEdit={
+          isBookLocked
+            ? undefined
+            : () => {
+                setSheetOpen(true)
+              }
+        }
       />
-      <BookSearchSheet
-        open={sheetOpen}
-        onClose={() => {
-          setSheetOpen(false)
-        }}
-        onRegisterBack={register}
-        onSelect={(book) => {
-          dispatch({ type: 'selectBook', book })
-          setSheetOpen(false)
-        }}
-      />
+      {!isBookLocked && (
+        <BookSearchSheet
+          open={sheetOpen}
+          onClose={() => {
+            setSheetOpen(false)
+          }}
+          onRegisterBack={register}
+          onSelect={(book) => {
+            dispatch({ type: 'selectBook', book })
+            setSheetOpen(false)
+          }}
+        />
+      )}
     </div>
   )
 }

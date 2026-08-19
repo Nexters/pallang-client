@@ -27,7 +27,7 @@ export function useSimilarPassageCheck(enabled: boolean) {
 
   const key = similarCheckKey(draft)
   const shouldAsk = enabled && shouldCheckSimilar(draft)
-  const { book, pageNumber, quotedText } = draft
+  const { book, groupId, pageNumber, quotedText } = draft
   // 초안의 표시는 응답이 돌아온 뒤에야 찍힌다 — 그사이 다시 렌더돼도 또 보내지 않게 붙잡아 둔다
   const requestedKeyRef = useRef<null | string>(null)
 
@@ -43,6 +43,9 @@ export function useSimilarPassageCheck(enabled: boolean) {
         // 페이지를 모를 때는 아예 빼고 보낸다. 서버는 인접 페이지(±1)에서 후보를 찾으므로
         // 0을 대신 넣으면 -1~1쪽만 뒤지게 되어 어떤 후보도 걸리지 않는다.
         ...(pageNumber === null ? {} : { pageNumber }),
+        // 모임 흔적은 그 모임 안에서만 후보를 찾는다 — 빼고 보내면 전역 대목을 후보로 물어와
+        // 모임 밖 대목에 합치려다 저장이 거절된다.
+        ...(groupId === null ? {} : { groupId }),
       },
       {
         onSuccess: (response) => {
@@ -59,7 +62,7 @@ export function useSimilarPassageCheck(enabled: boolean) {
         },
       },
     )
-  }, [book, checkSimilar, dispatch, key, pageNumber, quotedText, shouldAsk])
+  }, [book, checkSimilar, dispatch, groupId, key, pageNumber, quotedText, shouldAsk])
 
   return {
     candidate,

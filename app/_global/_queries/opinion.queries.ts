@@ -19,6 +19,12 @@ export type OpinionLikeState = {
   likeCount: number
 }
 
+/**
+ * 흔적 하나를 남기는 요청. 모임 안에서 남기면 `groupId`가 붙어 그 모임 전용 흔적이 된다.
+ * 생성 타입에 groupId가 아직 없다(서버 PR 134 미배포). ponytail: 배포 후 pnpm api:gen으로 정리
+ */
+export type CreateOpinionInput = CreateOpinionRequest & { groupId?: number }
+
 const OPINION_PAGE_SIZE = 20
 
 /**
@@ -76,7 +82,7 @@ export const opinionMutations = {
   create: () =>
     mutationOptions({
       mutationKey: [...opinionQueries.all(), 'create'],
-      mutationFn: (data: CreateOpinionRequest) => createOpinion(data),
+      mutationFn: (data: CreateOpinionInput) => createOpinion(data),
     }),
   toggleLike: (opinionId: number) =>
     mutationOptions({

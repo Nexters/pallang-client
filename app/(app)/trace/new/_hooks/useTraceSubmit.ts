@@ -51,6 +51,9 @@ export function useTraceSubmit() {
           effectType: decoration.effectType,
           color: decoration.color,
         })),
+        // 모임 안에서 남기는 흔적이면 그 모임에 붙인다. 전역 흔적은 자리째 빼고 보낸다 —
+        // 서버가 이 자리의 유무로 스코프를 가른다.
+        ...(draft.groupId === null ? {} : { groupId: draft.groupId }),
       },
       {
         onSuccess: (response) => {

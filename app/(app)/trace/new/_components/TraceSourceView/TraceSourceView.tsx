@@ -67,6 +67,10 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
         pageCount: null,
       },
     })
+    // 모임 안에서 시작한 흔적이면 그 모임을 초안에 심는다 — 저장·유사 검사·완료 화면의
+    // 되돌아갈 자리가 모두 이 값을 보고 스코프를 정한다. selectBook 뒤에 두는 이유는 없다
+    // (selectBook은 모임을 건드리지 않는다) — 씨앗을 푸는 순서대로 읽히게만 둔다.
+    dispatch({ type: 'setGroupId', groupId: pending.groupId })
 
     const { passage } = pending
     if (!passage) return

@@ -123,7 +123,7 @@ describe('traceDraftReducer', () => {
     const answered = [
       { type: 'selectBook', book } as const,
       { type: 'setQuotedText', quotedText: '어떤 문장' } as const,
-      { type: 'markSimilarChecked', key: '1:어떤 문장' } as const,
+      { type: 'markSimilarChecked', key: '1:global:어떤 문장' } as const,
       { type: 'setMergeTarget', passageId: 14 } as const,
     ].reduce(traceDraftReducer, initialTraceDraft)
 
@@ -134,7 +134,7 @@ describe('traceDraftReducer', () => {
     })
 
     expect(next.passageId).toBe(14)
-    expect(next.similarCheckedKey).toBe('1:어떤 문장')
+    expect(next.similarCheckedKey).toBe('1:global:어떤 문장')
   })
 
   it('applyDecoration은 겹치지 않는 범위를 그대로 추가한다', () => {
@@ -223,6 +223,17 @@ describe('traceDraftReducer', () => {
     expect(next.quotedText).toBe('')
     expect(next.content).toBe('')
     expect(next.result).toBeNull()
+  })
+
+  it('setGroupId는 모임을 기억하고 resetKeepingBook이 책과 함께 남긴다', () => {
+    // 모임 안에서 하나 더 남기는 흐름이다 — 여기서 모임이 떨어지면 이어 남긴 흔적만
+    // 조용히 전역으로 새어 나가고, ③의 책 잠금도 함께 풀린다.
+    const withGroup = traceDraftReducer(initialTraceDraft, { type: 'setGroupId', groupId: 3 })
+    expect(withGroup.groupId).toBe(3)
+    expect(
+      traceDraftReducer({ ...withGroup, content: 'x' }, { type: 'resetKeepingBook' }).groupId,
+    ).toBe(3)
+    expect(traceDraftReducer(withGroup, { type: 'reset' }).groupId).toBeNull()
   })
 
   it('clearQuote는 책과 입력 방식만 남기고 대목을 비운다', () => {

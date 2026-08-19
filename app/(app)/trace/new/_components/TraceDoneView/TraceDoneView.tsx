@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { cn } from '@/app/_global/_services/cn.service'
-import { buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
+import { buildTraceHref, buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
 
@@ -17,16 +17,24 @@ export function TraceDoneView() {
    * 방금 남긴 흔적이 열린 채로 보이는 자리. 책만 찍어 보내면 책의 첫 쪽에 떨어져
    * 사용자가 자기 흔적을 직접 찾아가야 한다.
    * 좌표는 쪽·대목·흔적 셋이 다 있어야 성립하므로, 쪽 번호를 모르면 책 화면으로만 보낸다.
+   *
+   * 모임 안에서 남긴 흔적은 모임 스코프로 되돌아간다 — 스코프를 빼면 전역 흔적 보기로 떨어져
+   * 방금 남긴 모임 전용 대목이 그 화면 목록에 없다.
    */
   const traceHref = () => {
     if (bookId === undefined) return '/'
-    const { result, pageNumber } = draft
-    if (!result || pageNumber === null) return `/trace/${String(bookId)}`
-    return buildTraceTargetHref(bookId, {
-      pageNumber,
-      passageId: result.passageId,
-      opinionId: result.opinionId,
-    })
+    const { groupId, result, pageNumber } = draft
+    const scope = groupId === null ? {} : { groupId }
+    if (!result || pageNumber === null) return buildTraceHref(bookId, scope)
+    return buildTraceTargetHref(
+      bookId,
+      {
+        pageNumber,
+        passageId: result.passageId,
+        opinionId: result.opinionId,
+      },
+      scope,
+    )
   }
 
   return (
