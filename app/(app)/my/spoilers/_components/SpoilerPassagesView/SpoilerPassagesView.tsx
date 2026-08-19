@@ -4,14 +4,13 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import { FlatDialog } from '@/app/_global/_components/FlatDialog/FlatDialog'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Select } from '@/app/_global/_components/Select/Select'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type MyPassage, userQueries } from '@/app/_global/_queries/user.queries'
 import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
-
-import { SpoilerPassageCard } from '../SpoilerPassageCard/SpoilerPassageCard'
+import { SpoilerPassageCard } from '@/app/_shared/user/_components/SpoilerPassageCard/SpoilerPassageCard'
+import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerReleaseDialog/SpoilerReleaseDialog'
 
 /** 책을 고르지 않은 상태. Select는 문자열 값만 다뤄 숫자 bookId와 섞이지 않을 이름을 쓴다. */
 const ALL_BOOKS = 'all'
@@ -112,19 +111,8 @@ export function SpoilerPassagesView() {
         <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">{renderList()}</div>
       </ScreenLayout>
 
-      {/* 시안 225:13010. 문구는 시안이 정한 자리에서 줄을 바꾼다 — Dialog가 pre-line이다.
-          ponytail: 확정 버튼은 죽여 둔다. 스포일러를 되돌리는 `PATCH /api/passages/{passageId}/spoiler`가
-          서버에 아직 없어 지금 눌러도 보낼 곳이 없다. API가 생기면 (1) `_apis`를 재생성하고
-          (2) `user.queries.ts`에 mutationOptions를 더한 뒤 (3) 여기서 `releasing.passageId`로 mutate하고
-          성공 시 `spoilerPassageList`를 무효화하면 된다. `confirmDisabled`만 걷어내면 나머지는 그대로다. */}
-      <FlatDialog
+      <SpoilerReleaseDialog
         open={releasing !== null}
-        illustrated={false}
-        title={'해당 문장의 스포일러를\n해제하시겠습니까?'}
-        description={'스포일러 해제 시\n해당 문장이 다른 유저들에게 바로 보이게 됩니다.'}
-        cancelLabel="뒤로"
-        confirmLabel="스포일러 해제"
-        confirmDisabled
         onCancel={() => {
           setReleasing(null)
         }}

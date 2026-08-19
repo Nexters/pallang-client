@@ -2,11 +2,7 @@
 
 import type { MyPassage } from '@/app/_global/_queries/user.queries'
 import { RecordCard } from '@/app/_shared/user/_components/RecordCard/RecordCard'
-
-// ponytail: 서버가 ISO 문자열을 주므로 필요한 자리만 잘라 쓴다 — 시안(225:12688)의 `26.08.10`은 두 자리 연도다
-function formatRecordedDate(createdAt: string): string {
-  return createdAt.slice(2, 10).replaceAll('-', '.')
-}
+import { formatRecordedDate } from '@/app/_shared/user/_services/recordDate.service'
 
 type SpoilerPassageCardProps = {
   passage: MyPassage

@@ -9,9 +9,8 @@ import { Select } from '@/app/_global/_components/Select/Select'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type LikedOpinion, userQueries } from '@/app/_global/_queries/user.queries'
+import { LikedOpinionCard } from '@/app/_shared/user/_components/LikedOpinionCard/LikedOpinionCard'
 import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
-
-import { LikedOpinionCard } from '../LikedOpinionCard/LikedOpinionCard'
 
 /** 책을 고르지 않은 상태. Select는 문자열 값만 다뤄 숫자 bookId와 섞이지 않을 이름을 쓴다. */
 const ALL_BOOKS = 'all'
