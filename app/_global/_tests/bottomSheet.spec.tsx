@@ -98,25 +98,44 @@ describe('BottomSheet', () => {
     expect(screen.getByRole('button', { name: '닫기' })).toBeTruthy()
   })
 
-  // base-ui는 'starting'을 다음 애니메이션 프레임에 걷어낸다. rAF를 붙잡아 두면
-  // 첫 커밋 상태가 그대로 남아 시작 스타일이 붙었는지 확인할 수 있다.
   describe('등장 전환', () => {
     afterEach(() => {
       vi.unstubAllGlobals()
     })
 
-    it('열린 채로 마운트해도 시작 위치에서 올라온다', () => {
-      vi.stubGlobal('requestAnimationFrame', () => 1)
-      vi.stubGlobal('cancelAnimationFrame', () => undefined)
-
+    // 시트가 열린 채로 DOM에 꽂히는 경로(화면 자체가 시트인 첫 화면 · 탭바로 들어오는 진입)에서는
+    // base-ui가 'starting'을 건너뛴다 — mounted 초기값이 open이라 닫힘→열림 경계가 없다.
+    // 그 경로를 받는 것은 CSS @starting-style뿐이라, 시작값을 CSS로 들고 있는지가 곧 보장이다.
+    // (happy-dom은 @starting-style을 계산하지 않아 실제 이동은 브라우저에서 확인한다.)
+    it('열린 채로 꽂혀도 시작 위치를 CSS가 들고 있다', () => {
       render(
         <BottomSheet open title="새로운 기록을 어떻게 남길까요?" onClose={vi.fn()}>
           <p>본문</p>
         </BottomSheet>,
       )
 
-      // 이 속성이 없으면 시트가 translate-y-full을 거치지 않고 제자리에 그려진다
-      // = 올라오는 전환이 통째로 사라진다(base-ui는 open인 채 마운트되면 starting을 건너뛴다)
+      const backdrop = document.querySelector('[data-slot="bottom-sheet-backdrop"]')
+      if (backdrop === null) throw new Error('바텀시트 백드롭을 찾지 못했다')
+
+      expect(screen.getByRole('dialog').className).toContain('starting:translate-y-full')
+      expect(backdrop.className).toContain('starting:opacity-0')
+    })
+
+    // 열림이 런타임에 토글되는 경로(시트 위에 시트를 얹는 경우 등)는 base-ui가 그대로 받는다.
+    // base-ui는 'starting'을 다음 애니메이션 프레임에 걷어내므로, rAF를 붙잡아 두면
+    // 첫 커밋 상태가 남아 시작 스타일이 붙었는지 확인할 수 있다.
+    it('열림이 토글되면 base-ui가 시작 위치를 잡는다', () => {
+      vi.stubGlobal('requestAnimationFrame', () => 1)
+      vi.stubGlobal('cancelAnimationFrame', () => undefined)
+
+      const sheet = (open: boolean) => (
+        <BottomSheet open={open} title="직접 입력" onClose={vi.fn()}>
+          <p>본문</p>
+        </BottomSheet>
+      )
+      const { rerender } = render(sheet(false))
+      rerender(sheet(true))
+
       expect(screen.getByRole('dialog')).toHaveAttribute('data-starting-style')
     })
   })
