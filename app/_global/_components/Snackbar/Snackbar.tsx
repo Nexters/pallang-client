@@ -18,6 +18,12 @@ type SnackbarProps = {
    * 대부분의 화면이 어두워 기본은 'dark'다(차단 관리 218:12142가 밝은 면 쪽 시안).
    */
   tone?: 'light' | 'dark'
+  /**
+   * 우측에 세우는 되돌리기 버튼의 문구. 주면 닫기(X) 자리를 이 버튼이 대신한다
+   * — 되돌릴 수 있는 알림은 닫기보다 되돌리기가 할 일이다(좋아요 관리 225:12867 `취소`).
+   */
+  actionLabel?: string
+  onAction?: () => void
   onClose: () => void
 }
 
@@ -35,7 +41,14 @@ function splitHighlight(message: string, highlight?: string) {
   return { head: highlight, tail: message.slice(highlight.length) }
 }
 
-export function Snackbar({ highlight, message, tone = 'dark', onClose }: SnackbarProps) {
+export function Snackbar({
+  highlight,
+  message,
+  tone = 'dark',
+  actionLabel,
+  onAction,
+  onClose,
+}: SnackbarProps) {
   const onCloseRef = useRef(onClose)
 
   // 매 렌더마다 ref 갱신 (exhaustive-deps 규칙 만족)
@@ -80,14 +93,24 @@ export function Snackbar({ highlight, message, tone = 'dark', onClose }: Snackba
         {head && <span className="text-title-14bd text-text-accent">{head}</span>}
         {tail}
       </p>
-      <button
-        type="button"
-        aria-label="닫기"
-        onClick={onClose}
-        className="flex size-5 shrink-0 items-center justify-center"
-      >
-        <CloseIcon aria-hidden="true" className="size-5" />
-      </button>
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="shrink-0 whitespace-nowrap text-body-14md text-text-accent press"
+        >
+          {actionLabel}
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label="닫기"
+          onClick={onClose}
+          className="flex size-5 shrink-0 items-center justify-center"
+        >
+          <CloseIcon aria-hidden="true" className="size-5" />
+        </button>
+      )}
     </div>
   )
 }

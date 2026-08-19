@@ -132,6 +132,9 @@ export function Select<TValue extends string>({
             data-slot="select-popup"
             className={cn(
               'min-w-(--anchor-width) rounded-t-none rounded-b-[8px] outline-none',
+              // 옵션 수가 서버에서 오는 목록(도서 필터 등)은 화면을 넘길 수 있다 —
+              // 트리거 아래 남은 높이까지만 펼치고 그 안에서 스크롤한다.
+              'scrollbar-none max-h-(--available-height) overflow-y-auto overscroll-contain',
               toneClass.surface,
               // 트리거 아래로 펼쳐지고 다시 접히는 모션 — 세로로만 눌러 두 요소가 한 덩어리로 붙어 보이게 한다.
               // Tailwind v4의 scale-*는 transform이 아니라 scale 속성이라 전환 목록에 scale을 직접 적어야 먹는다

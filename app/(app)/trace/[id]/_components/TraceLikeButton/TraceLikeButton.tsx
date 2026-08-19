@@ -2,8 +2,8 @@ import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { cn } from '@/app/_global/_services/cn.service'
+import { useOpinionLike } from '@/app/_shared/trace/_hooks/useOpinionLike'
 
-import { useOpinionLike } from '../../_hooks/useOpinionLike'
 import { formatCount } from '../../_services/traceFormat.service'
 
 type TraceLikeButtonProps = {
