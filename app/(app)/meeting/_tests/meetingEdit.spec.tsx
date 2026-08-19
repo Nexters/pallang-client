@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { groupQueries } from '@/app/_global/_queries/group.queries'
 
 import { MeetingEditView } from '../_components/MeetingEditView/MeetingEditView'
 
@@ -43,6 +44,7 @@ function renderView() {
       </HardwareBackProvider>
     </QueryClientProvider>,
   )
+  return queryClient
 }
 
 afterEach(() => {
@@ -78,7 +80,9 @@ describe('방 설정 변경', () => {
   it('상세로 폼을 채우고 책은 잠근 채 수정하기를 보낸다', async () => {
     getGroupDetail.mockResolvedValue({ data: detail })
     updateGroup.mockResolvedValue({ data: detail })
-    renderView()
+    const queryClient = renderView()
+    // 옛 목록이 남으면 /meeting이 수정 전 값으로 먼저 그려진다
+    queryClient.setQueryData(groupQueries.list().queryKey, { pageParams: [0], pages: [] })
     expect(await screen.findByDisplayValue('주말 독서 모임')).toBeInTheDocument()
     expect(screen.getByText('모순')).toBeInTheDocument()
     expect(screen.getByText('선택한 책은 변경할 수 없어요.')).toBeInTheDocument()
@@ -97,6 +101,7 @@ describe('방 설정 변경', () => {
       expect(routerMock.replace).toHaveBeenCalledWith('/meeting')
     })
     expect(window.sessionStorage.getItem('pallang.meetingNotice')).toBe('updated')
+    expect(queryClient.getQueryData(groupQueries.list().queryKey)).toBeUndefined()
   })
   it('현재 인원(3)보다 적은 정원은 고를 수 없다', async () => {
     getGroupDetail.mockResolvedValue({ data: detail })

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { groupQueries } from '@/app/_global/_queries/group.queries'
 
 import { MeetingCreateView } from '../_components/MeetingCreateView/MeetingCreateView'
 
@@ -62,6 +63,7 @@ function renderView() {
       </HardwareBackProvider>
     </QueryClientProvider>,
   )
+  return queryClient
 }
 
 async function fillForm() {
@@ -90,7 +92,9 @@ describe('모임 만들기', () => {
   })
   it('다 채우면 생성 요청을 보내고 목록으로 돌아가며 완료 표시를 남긴다', async () => {
     createGroup.mockResolvedValue({ data: { groupId: 1 } })
-    renderView()
+    const queryClient = renderView()
+    // 목록에 옛 캐시를 심어 둔다 — 성공 뒤에도 남아 있으면 /meeting이 방금 만든 모임 없이 먼저 그려진다
+    queryClient.setQueryData(groupQueries.list().queryKey, { pageParams: [0], pages: [] })
     await fillForm()
     const cta = screen.getByRole('button', { name: '모임 만들기' })
     await waitFor(() => {
@@ -110,6 +114,7 @@ describe('모임 만들기', () => {
       expect(routerMock.replace).toHaveBeenCalledWith('/meeting')
     })
     expect(window.sessionStorage.getItem('pallang.meetingNotice')).toBe('created')
+    expect(queryClient.getQueryData(groupQueries.list().queryKey)).toBeUndefined()
   })
   it('서버가 400을 주면 안내 스낵바를 띄우고 화면에 남는다', async () => {
     const { ApiError } = await import('@/app/_global/_data/api.model')

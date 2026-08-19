@@ -9,7 +9,9 @@ import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/F
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { ApiError } from '@/app/_global/_data/api.model'
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import {
   type GroupDetail,
   groupMutations,
@@ -42,6 +44,7 @@ type MeetingEditViewProps = { groupId: number }
 export function MeetingEditView({ groupId }: MeetingEditViewProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const runWithLogin = useLoginGate()
   const { status, isAuthenticated } = useAuth()
   const detail = useQuery({ ...groupQueries.detail(groupId), enabled: isAuthenticated })
   // 사용자가 고친 값. null이면 아직 손대지 않은 것 — 상세 응답을 그대로 편 값을 보여준다(effect로 복사하지 않는다).
@@ -63,11 +66,17 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
     update.mutate(toGroupUpdateInput(values), {
       onSuccess: () => {
         markMeetingNotice('updated')
-        // 이동을 막을 이유가 없다 — 갱신은 뒤에서 마저 돈다
+        // 옛 목록을 남겨 두면 /meeting이 수정 전 값으로 먼저 그려진다 — 지우고 떠나 골격부터 시작한다
+        queryClient.removeQueries({ queryKey: groupQueries.list().queryKey })
+        // 나머지 갱신은 이동을 막을 이유가 없다 — 뒤에서 마저 돈다
         void queryClient.invalidateQueries({ queryKey: groupQueries.all() })
         router.replace('/meeting')
       },
       onError: (error) => {
+        if (error instanceof ApiError && error.status === 401) {
+          runWithLogin(submit, LOGIN_GATE_MESSAGE.groupCreate)
+          return
+        }
         setMessage(updateErrorMessage(error))
       },
     })
@@ -108,7 +117,7 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
             type="submit"
             form={FORM_ID}
             variant="activated"
-            className="h-[54px] flex-1 disabled:bg-interactive-accent disabled:opacity-40"
+            className="h-[54px] flex-1 disabled:bg-interactive-accent disabled:opacity-40 aria-busy:opacity-100"
             disabled={!canSubmit}
             loading={update.isPending}
           >

@@ -53,7 +53,9 @@ export function MeetingCreateView() {
     create.mutate(input, {
       onSuccess: () => {
         markMeetingNotice('created')
-        // 목록 갱신은 이동을 막을 이유가 없다 — 뒤에서 마저 돈다(프로필 설정 선례)
+        // 옛 목록을 남겨 두면 /meeting이 방금 만든 모임이 빠진 캐시로 먼저 그려진다 — 지우고 떠나 골격부터 시작한다
+        queryClient.removeQueries({ queryKey: groupQueries.list().queryKey })
+        // 나머지 갱신은 이동을 막을 이유가 없다 — 뒤에서 마저 돈다(프로필 설정 선례)
         void queryClient.invalidateQueries({ queryKey: groupQueries.all() })
         router.replace('/meeting')
       },
@@ -77,7 +79,7 @@ export function MeetingCreateView() {
             type="submit"
             form={FORM_ID}
             variant="activated"
-            className="h-[54px] flex-1 disabled:bg-interactive-accent disabled:opacity-40"
+            className="h-[54px] flex-1 disabled:bg-interactive-accent disabled:opacity-40 aria-busy:opacity-100"
             disabled={!isValidMeetingForm(values)}
             loading={create.isPending}
           >
