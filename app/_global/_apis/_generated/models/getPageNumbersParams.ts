@@ -4,6 +4,10 @@
 
 export type GetPageNumbersParams = {
   /**
+   * 모임 ID. 없으면 전역 공개 대목 기준으로 조회합니다.
+   */
+  groupId?: number
+  /**
    * 페이지 번호 (0부터 시작, 기본값 0)
    */
   page?: number

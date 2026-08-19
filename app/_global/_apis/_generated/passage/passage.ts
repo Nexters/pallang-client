@@ -15,6 +15,8 @@ import type { DataResponseSpoilerUpdate } from '../models/dataResponseSpoilerUpd
 
 import type { GetPageNumbersParams } from '../models/getPageNumbersParams'
 
+import type { GetPassagesByPageParams } from '../models/getPassagesByPageParams'
+
 import type { SimilarCheck } from '../models/similarCheck'
 
 import type { UpdateSpoiler } from '../models/updateSpoiler'
@@ -26,7 +28,7 @@ export const getCheckSimilarPassagesUrl = () => {
 }
 
 /**
- * 저장 전 같은 도서의 인접 페이지(±1)에서 정규화 해시가 같은 대목 후보를 조회합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 저장 전 같은 도서의 인접 페이지(±1)에서 정규화 해시가 같은 대목 후보를 조회합니다. groupId를 지정하면 그 모임 전용 대목만(요청자는 모임원이어야 함), 생략하면 전역 공개 대목만 비교합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 유사 문장 후보 조회
  */
 export const checkSimilarPassages = async (
@@ -103,7 +105,7 @@ export const getGetPageNumbersUrl = (bookId: number, params?: GetPageNumbersPara
 }
 
 /**
- * 도서에서 발췌된 페이지 번호를 오름차순으로 조회합니다. 스포일러 대목이 있는 페이지도 이 목록에 포함됩니다(스포일러 블러 처리는 프론트 담당, isSpoiler 플래그 기반). 인증은 선택입니다(soft auth) — 헤더가 없어도 조회됩니다.
+ * 도서에서 발췌된 페이지 번호를 오름차순으로 조회합니다. 스포일러 대목이 있는 페이지도 이 목록에 포함됩니다(스포일러 블러 처리는 프론트 담당, isSpoiler 플래그 기반). groupId를 지정하면 그 모임 전용 대목만(요청자는 모임원이어야 함), 생략하면 전역 공개 대목만 조회합니다. 인증은 선택입니다(soft auth) — groupId 없이는 헤더가 없어도 조회됩니다.
  * @summary 대목 페이지 목록 조회
  */
 export const getPageNumbers = async (
@@ -117,20 +119,37 @@ export const getPageNumbers = async (
   })
 }
 
-export const getGetPassagesByPageUrl = (bookId: number, page: number) => {
-  return `/api/books/${bookId}/pages/${page}/passages`
+export const getGetPassagesByPageUrl = (
+  bookId: number,
+  page: number,
+  params?: GetPassagesByPageParams,
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/books/${bookId}/pages/${page}/passages?${stringifiedParams}`
+    : `/api/books/${bookId}/pages/${page}/passages`
 }
 
 /**
- * 같은 페이지에 여러 대목이 있으면 모두 반환합니다(대목 전환). 각 대목에는 좋아요 많은 순 최대 3개, 겹치지 않는 꾸밈만 병합되어 포함됩니다. 스포일러로 표기된 대목(isSpoiler=true)도 quotedText/decorations를 그대로 내려줍니다 — 블러 처리 후 [버튼]을 누르면 즉시 확인 가능해야 하므로, 블러/확인 전환은 서버 왕복 없이 프론트에서 isSpoiler 플래그로 처리합니다.
+ * 같은 페이지에 여러 대목이 있으면 모두 반환합니다(대목 전환). 각 대목에는 좋아요 많은 순 최대 3개, 겹치지 않는 꾸밈만 병합되어 포함됩니다. 스포일러로 표기된 대목(isSpoiler=true)도 quotedText/decorations를 그대로 내려줍니다 — 블러 처리 후 [버튼]을 누르면 즉시 확인 가능해야 하므로, 블러/확인 전환은 서버 왕복 없이 프론트에서 isSpoiler 플래그로 처리합니다. groupId를 지정하면 그 모임 전용 대목만(요청자는 모임원이어야 함), 생략하면 전역 공개 대목만 조회합니다.
  * @summary 특정 페이지의 대목 + 꾸밈 병합 결과 조회
  */
 export const getPassagesByPage = async (
   bookId: number,
   page: number,
+  params?: GetPassagesByPageParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<DataResponsePassagesByPage> => {
-  return customFetch<DataResponsePassagesByPage>(getGetPassagesByPageUrl(bookId, page), {
+  return customFetch<DataResponsePassagesByPage>(getGetPassagesByPageUrl(bookId, page, params), {
     ...options,
     method: 'GET',
   })

@@ -10,4 +10,9 @@ export interface SimilarCheck {
    * @maxLength 150
    */
   quotedText: string
+  /**
+   * 모임 ID. 없으면 전역 공개 대목 기준으로 비교합니다.
+   * @nullable
+   */
+  groupId?: number | null
 }
