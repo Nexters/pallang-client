@@ -8,7 +8,6 @@ import {
   ApiErrorFeedbackState,
   FeedbackState,
 } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type UserOpinion, userQueries } from '@/app/_global/_queries/user.queries'
 
@@ -81,6 +80,26 @@ const HOME_OPINION_TWO_ITEM_LAYOUT_PATTERN = [
     zIndex: 20,
   },
 ] as const
+const HOME_OPINION_SKELETON_LAYOUT_PATTERN = [
+  {
+    className: 'h-[270.111px] w-[213.333px] -rotate-3',
+    left: 128.33,
+    top: 0,
+    zIndex: 10,
+  },
+  {
+    className: 'h-[270.111px] w-[213.333px] rotate-3',
+    left: 9.33,
+    top: 153.41,
+    zIndex: 20,
+  },
+  {
+    className: 'h-[260px] w-[200px]',
+    left: 155,
+    top: 366.47,
+    zIndex: 30,
+  },
+] as const
 const HOME_OPINION_LAYOUT_GROUP_HEIGHT = 1080
 const HOME_OPINION_LAYOUT_BOTTOM_PADDING = 24
 
@@ -134,21 +153,35 @@ function getHomeOpinionListClassName(opinionCount: number): string {
   return opinionCount <= 2 ? 'overflow-visible' : '-mt-[24.5px] overflow-visible'
 }
 
+function HomeOpinionSkeletonCard() {
+  return (
+    <div className="flex h-[260px] w-[200px] flex-col justify-between bg-[#f0f0f0] p-4">
+      <div className="flex w-full flex-col gap-2.5">
+        <div className="h-4 w-full rounded bg-[#e6e6e6]" />
+        <div className="h-3 w-full rounded bg-[#e6e6e6]" />
+      </div>
+      <div className="h-[120px] w-full rounded bg-[#e6e6e6]" />
+      <div className="flex w-[155.25px] items-center justify-between">
+        <div className="h-[9px] w-[18px] rounded bg-[#e6e6e6]" />
+        <div className="h-[9px] w-[38.25px] rounded bg-[#e6e6e6]" />
+      </div>
+    </div>
+  )
+}
+
 function HomeOpinionListSkeleton() {
   return (
-    <div className="-mt-[24.5px] h-[546px] overflow-visible">
+    <div className="-mt-[24.5px] h-[650px] overflow-visible">
       <div className="relative left-1/2 h-full w-[375px] -translate-x-1/2">
-        {Array.from({ length: 3 }, (_, index) => {
-          const layout = getHomeOpinionCardLayout(index, 3)
-
-          return (
-            <Skeleton
-              key={index}
-              className={`absolute rounded-none ${layout.className}`}
-              style={getHomeOpinionCardStyle(index, 3)}
-            />
-          )
-        })}
+        {HOME_OPINION_SKELETON_LAYOUT_PATTERN.map((layout, index) => (
+          <div
+            key={index}
+            className={`absolute flex items-center justify-center ${layout.className}`}
+            style={{ left: layout.left, top: layout.top, zIndex: layout.zIndex }}
+          >
+            <HomeOpinionSkeletonCard />
+          </div>
+        ))}
       </div>
     </div>
   )
