@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 
+import { COACHMARK_TARGET } from '@/app/_global/_data/coachmarkTarget.constant'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 
@@ -31,7 +32,12 @@ export function HomeSection({ searchAction }: HomeSectionProps) {
         onTabChange={setActiveTab}
       />
 
-      {activeTab === 'library' && <HomeBookCarousel />}
+      {/* 코치마크가 책 카드를 못 찾을 때(아직 흔적을 남긴 책이 없을 때) 대신 비추는 자리다. */}
+      {activeTab === 'library' && (
+        <div data-coachmark={COACHMARK_TARGET.homeLibrary}>
+          <HomeBookCarousel />
+        </div>
+      )}
     </section>
   )
 }

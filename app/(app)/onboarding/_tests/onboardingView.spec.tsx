@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { consumeHomeCoachmarkPending } from '@/app/_shared/onboarding/_services/coachmarkPending.service'
 import { hasSeenOnboarding } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
 import { OnboardingView } from '../_components/OnboardingView/OnboardingView'
@@ -34,6 +35,7 @@ function renderView() {
 describe('온보딩 뷰', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.sessionStorage.clear()
     replace.mockClear()
   })
 
@@ -82,5 +84,14 @@ describe('온보딩 뷰', () => {
 
     expect(hasSeenOnboarding()).toBe(true)
     expect(replace).toHaveBeenCalledWith('/')
+  })
+
+  // 홈 사용법은 온보딩을 막 끝냈을 때만 안내한다 — 건너뛰기로 나가도 마찬가지다
+  it('온보딩을 마치면 홈 코치마크를 예약한다', async () => {
+    renderView()
+
+    await userEvent.click(screen.getByRole('button', { name: '건너뛰기' }))
+
+    expect(consumeHomeCoachmarkPending()).toBe(true)
   })
 })

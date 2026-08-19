@@ -8,6 +8,7 @@ import { Fragment, useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
 import { cn } from '@/app/_global/_services/cn.service'
+import { markHomeCoachmarkPending } from '@/app/_shared/onboarding/_services/coachmarkPending.service'
 import { markOnboardingSeen } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
 import { ONBOARDING_STEPS } from '../../_data/onboarding.constant'
@@ -20,6 +21,8 @@ export function OnboardingView() {
 
   const finishOnboarding = () => {
     markOnboardingSeen()
+    // 홈에 도착하면 이어서 코치마크가 뜬다 — 건너뛰기로 나갈 때도 화면 사용법은 한 번 안내한다.
+    markHomeCoachmarkPending()
     router.replace('/')
   }
 

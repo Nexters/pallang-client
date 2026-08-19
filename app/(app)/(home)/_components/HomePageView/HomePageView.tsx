@@ -10,6 +10,7 @@ import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.con
 import Logo from '@/public/images/logo.svg'
 
 import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
+import { HomeCoachmark } from '../HomeCoachmark/HomeCoachmark'
 import { HomeSection } from '../HomeSection/HomeSection'
 
 const BOOK_SEARCH_PATH = '/book/search/my-books'
@@ -54,6 +55,9 @@ export function HomePageView() {
           </button>
         }
       />
+
+      {/* 온보딩을 막 끝냈을 때만 뜬다. fixed로 떠서 탭바까지 덮으므로 셸 어디에 두어도 같다. */}
+      <HomeCoachmark />
     </TabScreenLayout>
   )
 }

@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import type { ComponentPropsWithoutRef, FC, SVGProps } from 'react'
 
+import {
+  COACHMARK_TARGET,
+  type CoachmarkTargetName,
+} from '@/app/_global/_data/coachmarkTarget.constant'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import BookFillIcon from '../Icon/assets/book-fill.svg'
@@ -29,17 +33,20 @@ const TRACE_BUTTON_CLASS =
   'press flex w-20 shrink-0 items-center justify-center rounded-full bg-interactive-accent px-4 py-3.5 text-text-primary'
 
 type TabLinkProps = {
+  /** 코치마크가 이 탭을 비출 때 찾는 표시. 스포트라이트가 rect를 재야 해서 마커로 남긴다. */
+  coachmarkTarget?: CoachmarkTargetName
   href: string
   icon: FC<SVGProps<SVGSVGElement>>
   isActive: boolean
   label: string
 }
 
-function TabLink({ href, icon: Icon, isActive, label }: TabLinkProps) {
+function TabLink({ coachmarkTarget, href, icon: Icon, isActive, label }: TabLinkProps) {
   return (
     <Link
       href={href}
       aria-current={isActive ? 'page' : undefined}
+      data-coachmark={coachmarkTarget}
       className={cn(
         'press flex w-12 shrink-0 cursor-pointer flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
         !isActive && 'opacity-60',
@@ -102,6 +109,7 @@ export function TabBar({
           <>
             <TabLink href={homeHref} icon={HomeIcon} isActive={activeTab === 'home'} label="홈" />
             <TabLink
+              coachmarkTarget={COACHMARK_TARGET.bookExplore}
               href={bookHref}
               icon={BookFillIcon}
               isActive={activeTab === 'book'}
@@ -112,6 +120,7 @@ export function TabBar({
               <button
                 type="button"
                 aria-label="흔적 남기기"
+                data-coachmark={COACHMARK_TARGET.traceCreate}
                 onClick={onTraceClick}
                 // 이동이 끝나기 전에 또 누르면 같은 화면으로 두 번 밀어 넣는다
                 disabled={isTracePending}
@@ -125,7 +134,12 @@ export function TabBar({
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
               </button>
             ) : (
-              <Link href={traceHref} aria-label="흔적 남기기" className={TRACE_BUTTON_CLASS}>
+              <Link
+                href={traceHref}
+                aria-label="흔적 남기기"
+                data-coachmark={COACHMARK_TARGET.traceCreate}
+                className={TRACE_BUTTON_CLASS}
+              >
                 <PlusIcon aria-hidden="true" className="size-6 text-icon-primary" />
               </Link>
             )}

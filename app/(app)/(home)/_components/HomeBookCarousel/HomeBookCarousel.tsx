@@ -10,6 +10,7 @@ import {
   FeedbackState,
 } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
+import { COACHMARK_TARGET } from '@/app/_global/_data/coachmarkTarget.constant'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
 
@@ -147,6 +148,10 @@ function BookCarouselTrack({
             {books.map((book, index) => (
               <div
                 key={book.bookId}
+                // 코치마크는 가운데 카드와 그 아래 정보 행을 하나로 묶어 비춘다 — 같은 마커를 나눠 단다.
+                data-coachmark={
+                  index === selectedBookIndex ? COACHMARK_TARGET.homeActiveBook : undefined
+                }
                 className="absolute top-0 flex h-[340px] w-[220px] -translate-x-1/2 snap-center items-center justify-center"
                 style={{
                   left: `${String(getBookCenterX(index))}px`,
@@ -183,7 +188,10 @@ function BookCarouselTrack({
 function ActiveBookInfo({ activeBook }: { activeBook: Book }) {
   return (
     <div className="flex w-full justify-center">
-      <div className="flex w-[220px] flex-col items-start justify-center rounded-2xl">
+      <div
+        data-coachmark={COACHMARK_TARGET.homeActiveBook}
+        className="flex w-[220px] flex-col items-start justify-center rounded-2xl"
+      >
         <h2 className="line-clamp-2 w-full text-title-18bd text-text-primary">
           {activeBook.title}
         </h2>
