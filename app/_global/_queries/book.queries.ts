@@ -11,6 +11,7 @@ import {
 } from '../_apis/_generated/book/book'
 import type { BookActivityResponse } from '../_apis/_generated/models/bookActivityResponse'
 import type { BookDetailResponse } from '../_apis/_generated/models/bookDetailResponse'
+import { BookDetailResponseMyStatus } from '../_apis/_generated/models/bookDetailResponseMyStatus'
 import type { CreateBookRequest } from '../_apis/_generated/models/createBookRequest'
 import type { GetHomeCarouselBooksParams } from '../_apis/_generated/models/getHomeCarouselBooksParams'
 import type { GetMyLibraryBooksParams } from '../_apis/_generated/models/getMyLibraryBooksParams'
@@ -19,12 +20,18 @@ import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentB
 import type { SearchBooksParams } from '../_apis/_generated/models/searchBooksParams'
 import type { SearchInternalBooksParams } from '../_apis/_generated/models/searchInternalBooksParams'
 import { SearchInternalBooksSort } from '../_apis/_generated/models/searchInternalBooksSort'
+import type { UpdateUserBookStatusRequest } from '../_apis/_generated/models/updateUserBookStatusRequest'
+import { updateBookStatus } from '../_apis/_generated/user-book-status/user-book-status'
 import { createBook } from '../_apis/book.api'
 
 export const BOOK_SEARCH_SORT = SearchInternalBooksSort
 export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
 
 export type BookActivity = BookActivityResponse
+
+/** 내가 이 책에 매긴 독서 상태. 아직 정하지 않았으면 null이다. */
+export type BookStatus = BookDetailResponseMyStatus
+export const BOOK_STATUS = BookDetailResponseMyStatus
 
 /** 책 상세 화면의 머리 정보(제목·지은이·출판사·표지·대목/흔적 수). */
 export type BookDetail = BookDetailResponse
@@ -136,5 +143,14 @@ export const bookMutations = {
     mutationOptions({
       mutationKey: [...bookMutations.all(), 'create'],
       mutationFn: (data: CreateBookVariables) => createBook(data),
+    }),
+  /**
+   * 독서 상태(+현재 페이지) 설정. 엔드포인트는 `PUT /api/users/me/book-status`지만 bookId를 받아
+   * 책 상세(myStatus)를 바꾸므로 book 쪽에 둔다 — 성공 뒤 되살릴 캐시도 `bookQueries.detail`이다.
+   */
+  updateStatus: () =>
+    mutationOptions({
+      mutationKey: [...bookMutations.all(), 'update-status'],
+      mutationFn: (request: UpdateUserBookStatusRequest) => updateBookStatus(request),
     }),
 }
