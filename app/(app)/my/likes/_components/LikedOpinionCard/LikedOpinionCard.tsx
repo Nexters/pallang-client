@@ -1,11 +1,13 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 import ChevronDownIcon from '@/app/_global/_components/Icon/assets/chevron-down.svg'
 import LikeIcon from '@/app/_global/_components/Icon/assets/like.svg'
 import type { LikedOpinion } from '@/app/_global/_queries/user.queries'
 import { cn } from '@/app/_global/_services/cn.service'
+import { buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 import { useOpinionLike } from '@/app/_shared/trace/_hooks/useOpinionLike'
 
 type LikedOpinionCardProps = {
@@ -34,7 +36,7 @@ export function LikedOpinionCard({ opinion, onUnlike }: LikedOpinionCardProps) {
   }, [opinion.content])
 
   return (
-    <article className="flex flex-col gap-4 border border-border-book bg-bg-default p-4">
+    <article className="relative flex flex-col gap-4 border border-border-book bg-bg-default p-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2 text-body-14md">
           <span className="shrink-0 text-label-strong">{opinion.pageNumber}p</span>
@@ -49,7 +51,7 @@ export function LikedOpinionCard({ opinion, onUnlike }: LikedOpinionCardProps) {
             like.toggle()
             if (wasLiked) onUnlike({ nickname: opinion.nickname, undo: like.toggle })
           }}
-          className="flex size-5 shrink-0 items-center justify-center press"
+          className="relative z-10 flex size-5 shrink-0 items-center justify-center press"
         >
           <LikeIcon
             width={20}
@@ -77,13 +79,25 @@ export function LikedOpinionCard({ opinion, onUnlike }: LikedOpinionCardProps) {
             onClick={() => {
               setExpanded(true)
             }}
-            className="flex items-center gap-0.5 px-2 py-1 text-body-14rg text-text-primary press"
+            className="relative z-10 flex items-center gap-0.5 px-2 py-1 text-body-14rg text-text-primary press"
           >
             더보기
             <ChevronDownIcon width={20} height={20} className="size-5 text-icon-primary" />
           </button>
         )}
       </div>
+
+      {/* 시안 카드에는 이동 어피던스가 없지만, 기존 화면처럼 카드를 눌러 그 흔적으로 갈 수 있어야 한다.
+          카드를 덮는 링크로 두고 하트·더보기만 z-10으로 위에 띄운다 — 링크 안에 버튼을 넣으면 안 된다. */}
+      <Link
+        href={buildTraceTargetHref(opinion.bookId, {
+          pageNumber: opinion.pageNumber,
+          passageId: opinion.passageId,
+          opinionId: opinion.opinionId,
+        })}
+        aria-label={`${opinion.nickname}님의 흔적 보기`}
+        className="absolute inset-0"
+      />
     </article>
   )
 }

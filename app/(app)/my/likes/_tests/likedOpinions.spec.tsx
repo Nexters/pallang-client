@@ -172,4 +172,14 @@ describe('좋아요 관리', () => {
 
     expect(screen.getByText(OPINION.content)).toBeInTheDocument()
   })
+
+  it('카드를 누르면 그 흔적이 열린 흔적 보기로 간다 — 시안에 어피던스는 없지만 경로는 남는다', async () => {
+    renderView()
+    await screen.findByText(OPINION.content)
+
+    expect(screen.getByRole('link', { name: '밤샘낭독가님의 흔적 보기' })).toHaveAttribute(
+      'href',
+      '/trace/3?page=128&passageId=91&opinionId=11',
+    )
+  })
 })
