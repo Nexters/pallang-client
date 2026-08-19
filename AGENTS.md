@@ -110,8 +110,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 **① 유한한 전환 (등장·퇴장·색·프레스)** — `transition`으로 만든다.
 
 - duration·easing은 `globals.css`의 토큰만 쓴다. `duration-200`, `ease-[cubic-bezier(...)]` 같은 임의값은 금지다 — `motionConvention.spec.ts`가 `app/**/*.tsx`를 훑어 막는다.
-  - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달·바텀시트) · `duration-slow`(350ms 전체화면 전환)
-  - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환)
+  - duration: `duration-instant`(120ms 프레스·색) · `duration-fast`(180ms 백드롭·토스트·팝오버) · `duration-normal`(240ms 모달) · `duration-slow`(350ms 전체화면 전환) · `duration-rise`(320ms 바텀시트 등장)
+  - easing: `ease-enter`(등장) · `ease-exit`(퇴장) · `ease-standard`(상태 전환) · `ease-rise`(화면 높이만큼 올라오는 등장)
+  - **먼 거리 등장에 `ease-enter`를 쓰지 않는다.** 제어점 y가 둘 다 1이라 거리를 앞에 몰아줘, 시트처럼 화면 높이만큼 옮기면 2프레임 만에 62%가 끝나 "올라온다"가 아니라 "번쩍"으로 읽힌다(실기기에서 확인). 그 자리는 `ease-rise`+`duration-rise`다.
 - 움직임 축소에서 이 토큰들은 **1ms로 떨어진다** = 즉시 끝.
 
 **② 무한 반복 (처리 중·불러오는 중)** — `animate-spin`(스피너) · `animate-pulse`(스켈레톤) **둘만** 쓴다.
@@ -120,6 +121,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 움직임 축소에서 반복 토큰은 1ms가 아니라 **느려진다**(2400ms / 4000ms). 무한 반복에 1ms를 주면 멈추는 게 아니라 스트로브가 되고, 아예 멈추면 "처리 중"이라는 상태 정보가 사라져 앱이 멎은 것으로 읽히기 때문이다.
 - **셋째 반복 애니메이션을 만들지 않는다.** `@keyframes`를 새로 정의하는 것도, `animate-[...]` 임의값도 막혀 있다 — 토큰 연결이 없는 움직임이 생긴다. `motionConvention.spec.ts`가 이름과 **토큰 연결 여부**를 함께 검사하고, `motionToken.spec.ts`가 움직임 축소에서 느려지는지를 잠근다.
 - 버튼 안 로딩 표시는 직접 만들지 말고 `Button`의 `loading` prop을 쓴다(`_components/Spinner`를 라벨 자리에 겹친다).
+- **`@starting-style`(Tailwind `starting:` 변형) 안에서는 `translate-*` 유틸을 쓰지 않는다.** `translate-y-full`은 값을 직접 내지 않고 `--tw-translate-*`를 거쳐 `translate: var(--tw-translate-x) var(--tw-translate-y)`로 조립하는데, iOS Safari(= iOS의 모든 브라우저)는 `@starting-style` 안에서 `var()`로 조립된 `translate`를 시작값으로 잡지 못해 **전환이 통째로 사라진다.** 데스크톱 Chrome은 정상 처리해서 눈치채기 어렵다. 실기기 판정 — 직접값+`@starting-style` 전환 발생, var 조립+`@starting-style` 전환 없음(2프레임 뒤에도 `translate:none`), var 조립이어도 토글(`data-starting-style`) 경로는 정상. 그래서 `@starting-style` 쪽만 `[translate:0_100%]`처럼 직접 값으로 쓴다(`BottomSheet` 참고). `opacity-0`처럼 값을 직접 내는 유틸은 그대로 써도 된다.
 - **Tailwind v4에서 `scale-*` / `translate-*`는 `transform`이 아니라 `scale` / `translate` 속성으로 컴파일된다.** `transition-[opacity,transform]`으로는 크기·이동이 전혀 전환되지 않는다. `transition-[opacity,scale]`처럼 실제 속성 이름을 쓰거나 `transition-transform`(네 속성을 모두 포함)을 쓴다.
 - JS에서 duration이 필요하면 `app/_global/_data/motion.constant.ts`의 `MOTION_DURATION`을 쓴다. CSS와 값이 어긋나면 `motionToken.spec.ts`가 잡는다.
 - **모달·바텀시트는 새로 만들지 않는다.** `_components/Dialog`(중앙 모달)와 `_components/BottomSheet`(하단 시트)를 쓴다. 둘 다 base-ui 위에 있어 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘이 딸려 온다. `fixed inset-0`으로 직접 오버레이를 만들지 말 것.

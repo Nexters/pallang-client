@@ -62,6 +62,13 @@ export function BottomSheet({
   // 처음 그려질 때의 시작값"을 브라우저가 직접 잡아주는 규칙이라 React가 언제 커밋하든 상관없다.
   // base-ui의 data-starting-style은 열림이 런타임에 토글되는 경로에서 그대로 동작하고,
   // starting:은 열린 채 꽂히는 경로를 받는다 — 둘은 같은 시작값이라 겹쳐도 무해하다.
+  //
+  // 단 시작값을 Tailwind의 translate 유틸로 쓰면 안 된다. translate-y-full은 값을 직접
+  // 내지 않고 --tw-translate-* 를 거쳐 translate:var(--tw-translate-x) var(--tw-translate-y)
+  // 로 조립하는데, iOS Safari(= iOS의 모든 브라우저)는 @starting-style 안에서 var()로 조립된
+  // translate를 시작값으로 잡지 못한다. 실기기 판정 결과 — 직접값+@starting-style은 전환 발생,
+  // var 조립+@starting-style은 전환 자체가 없음(2프레임 뒤에도 translate:none), var 조립이어도
+  // 토글 경로는 정상. 그래서 @starting-style 쪽만 직접 값으로 낸다.
 
   return (
     <BaseDialog.Root
@@ -90,15 +97,10 @@ export function BottomSheet({
               isDark ? 'bg-bg-dark' : 'bg-bg-default',
               // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
               'outline-none',
-              // 등장만 ease-standard·duration-slow다. ease-enter(0.16,1,0.3,1)는 제어점 y가
-              // 둘 다 1이라 거리를 앞에 몰아준다 — 팝오버처럼 몇 px 움직이는 등장에는 경쾌하지만,
-              // 시트는 화면 높이만큼(272px 시트 기준 234px) 올라오는데 그 86%가 앞 77ms,
-              // 60Hz로 4~5프레임 만에 끝나 "올라온다"가 아니라 "툭 나타난다"로 읽힌다.
-              // 길이만 늘려도 그 성질은 안 풀린다(350ms로 재도 눈에 보이는 구간은 80→100ms).
-              // ease-standard는 이동을 가운데에 배분해 같은 350ms로 그 구간이 156ms가 된다.
-              // 퇴장은 그대로 짧고 빠르게 둔다 — 닫는 동작은 기다릴 이유가 없다.
-              'transition-transform duration-slow ease-standard',
-              'starting:translate-y-full data-starting-style:translate-y-full',
+              // 시트는 화면 높이만큼 올라온다 — ease-enter로 그 거리를 옮기면 2프레임 만에 62%가
+              // 끝나 번쩍이는 것으로 읽힌다(실기기에서 확인). 먼 거리 등장 전용 토큰을 쓴다.
+              'transition-transform duration-rise ease-rise',
+              'starting:[translate:0_100%] data-starting-style:translate-y-full',
               'data-ending-style:translate-y-full',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
               popupClassName,

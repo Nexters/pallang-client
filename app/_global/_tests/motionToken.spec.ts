@@ -44,6 +44,7 @@ describe('모션 토큰', () => {
       fast: MOTION_DURATION.fast,
       normal: MOTION_DURATION.normal,
       slow: MOTION_DURATION.slow,
+      rise: MOTION_DURATION.rise,
     })
   })
 
@@ -61,6 +62,7 @@ describe('모션 토큰', () => {
       fast: 1,
       normal: 1,
       slow: 1,
+      rise: 1,
     })
   })
 
@@ -81,5 +83,6 @@ describe('모션 토큰', () => {
     expect(globalsCss).toContain('--ease-enter:')
     expect(globalsCss).toContain('--ease-exit:')
     expect(globalsCss).toContain('--ease-standard:')
+    expect(globalsCss).toContain('--ease-rise:')
   })
 })
