@@ -14,7 +14,7 @@ import { ManualQuoteForm } from '../ManualQuoteForm/ManualQuoteForm'
 import { TraceSourceOptions } from '../TraceSourceOptions/TraceSourceOptions'
 
 type TraceSourceViewProps = {
-  /** 흔적 보기 화면이 URL로 넘긴 씨앗. 마운트 때 한 번만 소비한다. */
+  /** 흔적 보기 화면이 URL로 넘긴 씨앗. 이 단계에 들어선 판마다 한 번씩 소비를 시도한다. */
   seed?: TraceSeed | null
 }
 
@@ -42,13 +42,30 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
   if (!isCurrentStep && sheet !== 'source') setSheet('source')
   const openSheet = isCurrentStep ? sheet : 'none'
 
-  // 씨앗은 첫 마운트의 것만 쓴다 — 초안을 채우면 리렌더되지만 다시 소비하면 안 된다
-  const pendingSeedRef = useRef(seed)
+  // 이 단계에 들어선 판의 번호. 들어설 때만 올린다(OcrCaptureBoundary와 같은 패턴).
+  // 두 가지가 이 번호에 매달린다 — 시트 재마운트(아래 BottomSheet key 주석)와 씨앗 소비.
+  const [visit, setVisit] = useState({ count: 0, wasCurrentStep: isCurrentStep })
+  if (visit.wasCurrentStep !== isCurrentStep) {
+    setVisit({
+      count: isCurrentStep ? visit.count + 1 : visit.count,
+      wasCurrentStep: isCurrentStep,
+    })
+    // 재진입이 소비할 대목 씨앗을 실고 왔으면 시트를 열지 않고 곧장 ①로 넘어간다
+    // — 첫 마운트의 useState 초기값과 같은 판단을 재진입에도 적용해 시트가 한 프레임 스치지 않게 한다.
+    if (isCurrentStep && seed?.passage && draft.book === null && sheet !== 'none') setSheet('none')
+  }
+
+  // 씨앗은 마운트가 아니라 '들어선 판'마다 한 번씩 소비를 시도한다. Next가 이 화면을 <Activity>로
+  // 살려 두므로 두 번째 씨앗 진입은 새 마운트를 만들지 않는다 — 마운트 기준(useRef 초기값)으로
+  // 소비하면 첫 판 이후의 씨앗이 전부 조용히 버려진다(방식 선택 시트만 뜨고 책·대목이 비는 증상).
+  // 같은 판 안의 재시도는 번호로 막고, 판이 갈려도 초안이 이미 시작돼 있으면(write→뒤로 재방문)
+  // 다시 풀지 않는다 — 플로우를 벗어날 때 초안이 리셋되므로(leaveFlow) '초안이 비어 있다 = 새 판'이다.
+  const consumedVisitRef = useRef(-1)
 
   useEffect(() => {
-    const pending = pendingSeedRef.current
-    if (!pending) return
-    pendingSeedRef.current = null
+    if (consumedVisitRef.current === visit.count) return
+    consumedVisitRef.current = visit.count
+    if (!seed || draft.book !== null) return
 
     // 씨앗은 흔적 보기가 push로만 만든다(useTraceCreateNav) — 되감을 자리가 반드시 있다.
     // 나갈 때 홈으로 튕기지 않고 보고 있던 흔적으로 되돌아가는 근거가 이 표시다.
@@ -57,22 +74,22 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
     dispatch({
       type: 'selectBook',
       book: {
-        bookId: pending.bookId,
-        title: pending.bookTitle,
+        bookId: seed.bookId,
+        title: seed.bookTitle,
         // 흔적 보기 화면은 이 둘을 모른다 — 그 화면의 책 정보는 PageNumbers 응답에서 오고
         // 제목·표지밖에 없다. 빈 채로 두면 ③의 책 카드에 저자 줄이 비고 쪽수 검사도 건너뛰므로,
         // layout의 BookDetailFiller가 내부 검색으로 뒤이어 채운다.
         author: '',
-        coverImageUrl: pending.bookCoverImageUrl,
+        coverImageUrl: seed.bookCoverImageUrl,
         pageCount: null,
       },
     })
     // 모임 안에서 시작한 흔적이면 그 모임을 초안에 심는다 — 저장·유사 검사·완료 화면의
     // 되돌아갈 자리가 모두 이 값을 보고 스코프를 정한다. selectBook 뒤에 두는 이유는 없다
     // (selectBook은 모임을 건드리지 않는다) — 씨앗을 푸는 순서대로 읽히게만 둔다.
-    dispatch({ type: 'setGroupId', groupId: pending.groupId })
+    dispatch({ type: 'setGroupId', groupId: seed.groupId })
 
-    const { passage } = pending
+    const { passage } = seed
     if (!passage) return
 
     // 순서가 중요하다 — setQuotedText가 꾸밈을 비우고 selectBook이 합칠 대목을 지우므로,
@@ -90,7 +107,7 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
     // 대목의 출처를 남긴다 — ①이 이 값을 보고 "받을 것은 의견뿐"임을 안다(seededPassage.service).
     dispatch({ type: 'setSource', source: 'passage' })
     goTo('write')
-  }, [dispatch, goTo, markReturnable])
+  }, [dispatch, draft.book, goTo, markReturnable, seed, visit.count])
 
   // 직접 입력 시트는 방식 선택 시트 위에 얹힌 한 층이다 — 뒤로가기는 화면을 떠나는 대신
   // 방식 선택 시트로 한 층만 걷어낸다. 방식 선택 시트 자체는 이 화면 그 자체라 별도 가드가 없다
@@ -106,7 +123,13 @@ export function TraceSourceView({ seed = null }: TraceSourceViewProps) {
       {/* 방식 선택과 직접 입력은 시트 하나를 나눠 쓴다. 시트를 둘로 두면 하나가 내려가는
           동안 다른 하나가 올라와 둘이 교차하고, 백드롭도 각자라 어두운 층이 꺼졌다 켜진다.
           panelKey로 패널만 다시 꽂아 등장 전환은 그대로 타되 백드롭은 이어지게 한다. */}
+      {/* key: 들어선 판마다 시트를 새로 마운트한다. base-ui는 <Activity> 감춤·복귀를 사이에 둔
+          open 토글(false→true)을 놓쳐 popup을 끝내 그리지 않는 경로가 있다 — 사진 단계에서
+          촬영을 취소하고 돌아오면 open=true로 렌더되고도 시트가 뜨지 않는 것을 실측으로 확인했다
+          (write→뒤로 복귀는 같은 코드로 정상이라 React 상태 문제가 아니다). 새 마운트는
+          '열린 채로 DOM에 꽂히는 경로'라 BottomSheet의 starting: 스타일이 등장을 보장한다. */}
       <BottomSheet
+        key={visit.count}
         open={openSheet !== 'none'}
         panelKey={openSheet}
         title={openSheet === 'manual' ? '직접 입력' : '새로운 기록을 어떻게 남길까요?'}

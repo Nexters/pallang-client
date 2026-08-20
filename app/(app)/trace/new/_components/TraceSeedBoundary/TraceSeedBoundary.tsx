@@ -1,6 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
+import { useMemo } from 'react'
 
 import { toSearchParamsRecord } from '@/app/_global/_services/searchParams.service'
 import { parseTraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
@@ -20,5 +21,7 @@ import { TraceSourceView } from '../TraceSourceView/TraceSourceView'
  */
 export function TraceSeedBoundary() {
   const searchParams = useSearchParams()
-  return <TraceSourceView seed={parseTraceSeed(toSearchParamsRecord(searchParams))} />
+  // URL이 그대로면 씨앗 객체도 같은 참조로 유지한다 — 씨앗 소비 effect가 렌더마다 헛돌지 않게.
+  const seed = useMemo(() => parseTraceSeed(toSearchParamsRecord(searchParams)), [searchParams])
+  return <TraceSourceView seed={seed} />
 }
