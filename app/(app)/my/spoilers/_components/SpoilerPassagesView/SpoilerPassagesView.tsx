@@ -6,18 +6,20 @@ import { useMemo, useRef, useState } from 'react'
 import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Select } from '@/app/_global/_components/Select/Select'
+import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type MyPassage, userQueries } from '@/app/_global/_queries/user.queries'
 import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
 import { SpoilerPassageCard } from '@/app/_shared/user/_components/SpoilerPassageCard/SpoilerPassageCard'
 import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerReleaseDialog/SpoilerReleaseDialog'
+import { useSpoilerRelease } from '@/app/_shared/user/_hooks/useSpoilerRelease'
 
 /** 책을 고르지 않은 상태. Select는 문자열 값만 다뤄 숫자 bookId와 섞이지 않을 이름을 쓴다. */
 const ALL_BOOKS = 'all'
 
 export function SpoilerPassagesView() {
   const [selectedBook, setSelectedBook] = useState<string>(ALL_BOOKS)
-  const [releasing, setReleasing] = useState<MyPassage | null>(null)
+  const release = useSpoilerRelease()
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const bookId = selectedBook === ALL_BOOKS ? undefined : Number(selectedBook)
@@ -29,8 +31,7 @@ export function SpoilerPassagesView() {
     [listQuery.data],
   )
 
-  // ponytail: 서버가 준 순서를 그대로 전부 내보낸다. 정렬 기준과 개수 상한을 백엔드에서 아직
-  // 받지 못해, 프론트에서 임의로 자르거나 다시 정렬하면 서버가 정할 규칙과 어긋난다.
+  // 서버가 최근 활동순으로 중복 없이 준다 — 프론트에서 다시 자르거나 정렬하지 않고
   // 넘치는 만큼은 Select 팝업이 스크롤한다.
   const bookOptions = useMemo(
     () => [
@@ -78,7 +79,7 @@ export function SpoilerPassagesView() {
         <ul className="flex flex-col gap-2">
           {passages.map((passage) => (
             <li key={passage.passageId}>
-              <SpoilerPassageCard passage={passage} onRelease={setReleasing} />
+              <SpoilerPassageCard passage={passage} onRelease={release.start} />
             </li>
           ))}
         </ul>
@@ -100,7 +101,7 @@ export function SpoilerPassagesView() {
             onValueChange={(value) => {
               setSelectedBook(value)
               // 필터를 바꾸면 열어 둔 대상이 화면에서 사라질 수 있어 다이얼로그도 함께 접는다
-              setReleasing(null)
+              release.close()
             }}
             // 시안의 트리거는 140px 고정 폭에 값이 왼쪽, 화살표가 오른쪽 끝이다
             className="w-35 justify-between px-2.5 text-body-14sb"
@@ -112,11 +113,14 @@ export function SpoilerPassagesView() {
       </ScreenLayout>
 
       <SpoilerReleaseDialog
-        open={releasing !== null}
-        onCancel={() => {
-          setReleasing(null)
-        }}
+        open={release.target !== null}
+        releasing={release.isPending}
+        onCancel={release.close}
+        onConfirm={release.confirm}
       />
+
+      {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
+      <Snackbar tone="light" message={release.errorMessage} onClose={release.clearError} />
     </>
   )
 }

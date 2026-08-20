@@ -7,9 +7,9 @@ import { useState } from 'react'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { bookMutations, bookQueries, type BookStatus } from '@/app/_global/_queries/book.queries'
-import type { MyPassage } from '@/app/_global/_queries/user.queries'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
 import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerReleaseDialog/SpoilerReleaseDialog'
+import { useSpoilerRelease } from '@/app/_shared/user/_hooks/useSpoilerRelease'
 
 import type { BookRecordTab } from '../../_data/bookRecordTab.constant'
 import { BookHeaderSkeleton } from '../BookHeaderSkeleton/BookHeaderSkeleton'
@@ -33,7 +33,7 @@ const PANEL_CLASS = 'flex flex-1 flex-col gap-2 bg-bg-surface p-4'
 export function BookDetailView({ bookId }: { bookId: number }) {
   const [tab, setTab] = useState<BookRecordTab>('opinion')
   const [unliked, setUnliked] = useState<UnlikedTarget | null>(null)
-  const [releasing, setReleasing] = useState<MyPassage | null>(null)
+  const release = useSpoilerRelease()
   // 시트가 들고 있는 선택값. 열 때 서버 상태로 채우고, 닫으면 다음에 열 때 다시 채운다
   const [statusDraft, setStatusDraft] = useState<BookStatus>(null)
   const [isStatusOpen, setIsStatusOpen] = useState(false)
@@ -82,7 +82,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
             setTab(next as BookRecordTab)
             // 탭을 바꾸면 되돌릴 카드도 열어 둔 대상도 화면에서 사라진다 — 안내를 함께 접는다
             setUnliked(null)
-            setReleasing(null)
+            release.close()
           }}
           className="flex min-h-0 flex-1 flex-col"
         >
@@ -125,7 +125,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
             <LikedPanel bookId={bookId} onUnlike={setUnliked} />
           </Tabs.Panel>
           <Tabs.Panel value="spoiler" className={PANEL_CLASS}>
-            <SpoilerPanel bookId={bookId} onRelease={setReleasing} />
+            <SpoilerPanel bookId={bookId} onRelease={release.start} />
           </Tabs.Panel>
         </Tabs.Root>
       </ScreenLayout>
@@ -144,6 +144,10 @@ export function BookDetailView({ bookId }: { bookId: number }) {
         }}
       />
 
+      {/* 좋아요 쪽 바와 자리가 같지만 겹치지 않는다 — 좋아요는 좋아요 탭에서만 서고,
+        탭을 옮기면 접힌다. 해제 실패는 스포일러 탭에서만 뜬다. */}
+      <Snackbar tone="light" message={release.errorMessage} onClose={release.clearError} />
+
       <BookStatusSheet
         open={isStatusOpen}
         value={statusDraft}
@@ -156,10 +160,10 @@ export function BookDetailView({ bookId }: { bookId: number }) {
       />
 
       <SpoilerReleaseDialog
-        open={releasing !== null}
-        onCancel={() => {
-          setReleasing(null)
-        }}
+        open={release.target !== null}
+        releasing={release.isPending}
+        onCancel={release.close}
+        onConfirm={release.confirm}
       />
     </>
   )

@@ -37,6 +37,11 @@ export type FilterBooksType = GetFilterBooksType
 
 const USER_OPINION_PAGE_SIZE = 20
 
+// ponytail: 드롭다운은 한 번에 다 받는다. 서버 기본값 20에 두면 21권째부터 조용히 사라지고,
+// 옵션 목록에 무한 스크롤을 다는 건 과하다. 100은 서버가 받아주는 최대치다 —
+// 이걸 넘기는 사용자가 생기면 그때 페이지네이션을 붙인다.
+const FILTER_BOOK_PAGE_SIZE = 100
+
 export const userQueries = {
   all: () => ['user'] as const,
   me: () =>
@@ -78,13 +83,15 @@ export const userQueries = {
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
       },
     }),
+  /** 스포일러 관리 화면의 목록 전체 — 도서 필터를 가리지 않고 함께 무효화할 때 쓴다 */
+  spoilerPassageListAll: () => [...userQueries.all(), 'spoiler-passage-list'] as const,
   /**
    * 내가 스포일러로 표시한 대목 목록. `bookId`를 주면 그 책만 추린다.
    * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
    */
   spoilerPassageList: (bookId?: number) =>
     infiniteQueryOptions({
-      queryKey: [...userQueries.all(), 'spoiler-passage-list', bookId ?? 'all'],
+      queryKey: [...userQueries.spoilerPassageListAll(), bookId ?? 'all'],
       queryFn: ({ pageParam }) =>
         getMyPassages({
           bookId,
@@ -102,7 +109,7 @@ export const userQueries = {
   filterBooks: (type: FilterBooksType) =>
     queryOptions({
       queryKey: [...userQueries.all(), 'filter-books', type],
-      queryFn: () => getFilterBooks({ type }),
+      queryFn: () => getFilterBooks({ type, size: FILTER_BOOK_PAGE_SIZE }),
     }),
 }
 

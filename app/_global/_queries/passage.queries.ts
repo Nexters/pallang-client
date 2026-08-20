@@ -7,6 +7,7 @@ import {
   createOcrResult,
   getPageNumbers,
   getPassagesByPage,
+  updateSpoiler,
 } from '../_apis/_generated/passage/passage'
 
 const PAGE_NUMBER_PAGE_SIZE = 100
@@ -54,5 +55,12 @@ export const passageMutations = {
     mutationOptions({
       mutationKey: [...passageMutations.all(), 'similar-check'],
       mutationFn: (data: SimilarCheck) => checkSimilarPassages(data),
+    }),
+  /** 대목의 스포일러 표기 변경. 화면에는 해제(false)만 있지만 서버는 재설정도 받는다. */
+  updateSpoiler: () =>
+    mutationOptions({
+      mutationKey: [...passageMutations.all(), 'update-spoiler'],
+      mutationFn: ({ passageId, isSpoiler }: { passageId: number; isSpoiler: boolean }) =>
+        updateSpoiler(passageId, { isSpoiler }),
     }),
 }

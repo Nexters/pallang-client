@@ -1,6 +1,7 @@
 'use client'
 
 import type { MyPassage } from '@/app/_global/_queries/user.queries'
+import { buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 import { RecordCard } from '@/app/_shared/user/_components/RecordCard/RecordCard'
 import { formatRecordedDate } from '@/app/_shared/user/_services/recordDate.service'
 
@@ -21,7 +22,14 @@ export function SpoilerPassageCard({ passage, onRelease }: SpoilerPassageCardPro
       meta={formatRecordedDate(passage.createdAt)}
       // 대목 응답에는 흔적 본문이 없다 — 스포일러로 가려 둔 인용문 자체가 이 화면의 본문이다
       body={passage.quotedText}
-      // 흔적 좌표는 opinionId까지 있어야 성립하는데 대목 목록에는 없어 이동 링크를 걸지 않는다
+      link={{
+        href: buildTraceTargetHref(passage.bookId, {
+          pageNumber: passage.pageNumber,
+          passageId: passage.passageId,
+          opinionId: passage.opinionId,
+        }),
+        label: `${String(passage.pageNumber)}쪽 흔적 보기`,
+      }}
       action={
         <button
           type="button"
