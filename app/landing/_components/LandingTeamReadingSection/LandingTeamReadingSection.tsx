@@ -1,11 +1,11 @@
 import Image from 'next/image'
 
 const teamReadingPhotos = [
-  '/images/landing/team-reading-1.png',
-  '/images/landing/team-reading-2.png',
-  '/images/landing/team-reading-3.png',
-  '/images/landing/team-reading-4.png',
-  '/images/landing/team-reading-5.png',
+  '/images/landing/team-reading-1.webp',
+  '/images/landing/team-reading-2.webp',
+  '/images/landing/team-reading-3.webp',
+  '/images/landing/team-reading-4.webp',
+  '/images/landing/team-reading-5.webp',
 ] as const
 
 export function LandingTeamReadingSection() {

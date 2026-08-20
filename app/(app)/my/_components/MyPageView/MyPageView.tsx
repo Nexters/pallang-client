@@ -91,7 +91,7 @@ function LoggedInContent({ user, onLogout }: { user: MyUser; onLogout?: () => vo
           />
         ) : (
           <Image
-            src="/images/profile-character-orange.png"
+            src="/images/profile-character-orange.webp"
             alt=""
             width={72}
             height={72}
@@ -154,7 +154,7 @@ function LoggedOutContent({ onLoginClick }: { onLoginClick?: () => void }) {
       <div className="flex flex-col gap-5">
         <section className="flex items-center gap-3 px-4">
           <Image
-            src="/images/profile-character-gray.png"
+            src="/images/profile-character-gray.webp"
             alt=""
             width={72}
             height={72}

@@ -26,7 +26,7 @@ export function WithdrawDialog({ loading, onCancel, onConfirm, open }: WithdrawD
       <Dialog.Content>
         <Dialog.Illustration>
           <Image
-            src="/images/withdraw-characters.png"
+            src="/images/withdraw-characters.webp"
             alt=""
             width={241}
             height={186}

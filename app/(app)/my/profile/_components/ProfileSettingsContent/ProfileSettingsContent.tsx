@@ -226,7 +226,7 @@ function ProfileForm({
             />
           ) : (
             <Image
-              src="/images/profile-character-orange.png"
+              src="/images/profile-character-orange.webp"
               alt=""
               width={90}
               height={90}

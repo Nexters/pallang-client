@@ -111,7 +111,7 @@ export default function LoginPage() {
 
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <Image
-            src="/images/pencil-friends.png"
+            src="/images/pencil-friends.webp"
             alt=""
             width={333}
             height={244}

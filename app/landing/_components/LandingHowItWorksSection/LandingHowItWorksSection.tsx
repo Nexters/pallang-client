@@ -81,22 +81,22 @@ const stepCopy = [
 
 const screens = [
   {
-    imageSrc: '/images/landing/how-it-works-1.png',
+    imageSrc: '/images/landing/how-it-works-1.webp',
     mobileClassName: 'top-[156px] left-[68px] h-[518px] w-[240px]',
     className: 'md:top-[307px] md:left-[1290px]',
   },
   {
-    imageSrc: '/images/landing/how-it-works-2.png',
+    imageSrc: '/images/landing/how-it-works-2.webp',
     mobileClassName: 'top-[900px] left-12 h-[605px] w-[280px]',
     className: 'md:top-[1012px] md:left-[320px]',
   },
   {
-    imageSrc: '/images/landing/how-it-works-3.png',
+    imageSrc: '/images/landing/how-it-works-3.webp',
     mobileClassName: 'top-[1753px] left-12 h-[605px] w-[280px]',
     className: 'md:top-[1718px] md:left-[1291px]',
   },
   {
-    imageSrc: '/images/landing/how-it-works-4.png',
+    imageSrc: '/images/landing/how-it-works-4.webp',
     mobileClassName: 'top-[2606px] left-12 h-[605px] w-[280px]',
     className: 'md:top-[2422px] md:left-[320px]',
   },

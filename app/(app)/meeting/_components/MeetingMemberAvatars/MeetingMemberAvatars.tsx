@@ -52,7 +52,7 @@ export function MeetingMemberAvatars({ groupId, memberCount }: MeetingMemberAvat
                 />
               ) : (
                 <Image
-                  src="/images/profile-character-orange.png"
+                  src="/images/profile-character-orange.webp"
                   alt={`멤버 ${member.nickname}`}
                   width={20}
                   height={20}

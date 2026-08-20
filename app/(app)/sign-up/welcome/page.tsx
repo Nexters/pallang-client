@@ -37,7 +37,7 @@ export default function SignUpWelcomePage() {
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <Image
-          src="/images/happy-friends.png"
+          src="/images/happy-friends.webp"
           alt=""
           width={304}
           height={215}

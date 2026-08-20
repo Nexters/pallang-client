@@ -95,7 +95,7 @@ export function BlockedUsersView() {
                 />
               ) : (
                 <Image
-                  src="/images/profile-character-gray.png"
+                  src="/images/profile-character-gray.webp"
                   alt=""
                   width={AVATAR_SIZE}
                   height={AVATAR_SIZE}

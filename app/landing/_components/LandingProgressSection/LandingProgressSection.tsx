@@ -41,7 +41,7 @@ export function LandingProgressSection() {
       </p>
 
       <Image
-        src="/images/landing/progress-character.png"
+        src="/images/landing/progress-character.webp"
         alt=""
         width={533}
         height={405}
