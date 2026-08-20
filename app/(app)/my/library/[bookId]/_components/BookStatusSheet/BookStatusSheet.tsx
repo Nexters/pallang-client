@@ -69,9 +69,8 @@ export function BookStatusSheet({
       }
     >
       <div role="radiogroup" aria-label="독서 상태" className="flex gap-2">
-        {/* ponytail: 서버가 주는 상태 enum이 READING·PLANNED뿐이라 `완독`으로 보낼 값이 없다.
-            PLANNED는 뜻이 다르므로(읽고 싶은 책) 대신 끼워 넣지 않고, 시안대로 그리되 눌리지 않게
-            둔다. 스펙에 FINISHED가 들어오면 disabled와 이 주석을 지우고 onClick만 달면 된다. */}
+        {/* ponytail: 스펙에 FINISHED가 들어왔지만 저장·해제 경로는 아직 붙이지 않았다.
+            시안대로 그리되 눌리지 않게 둔다 — 연결은 #312에서 한다. */}
         <StatusOption label="완독" selected={false} disabled />
         <StatusOption
           label="읽고 있는 책"

@@ -77,6 +77,7 @@ describe('모임 폼 규칙', () => {
       startDate: '2026-08-20',
       endDate: '2026-08-22',
       ended: false,
+      isHost: true,
     }
     expect(detailToMeetingForm(detail)).toEqual({
       name: '주말 독서 모임',
