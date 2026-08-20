@@ -50,7 +50,11 @@ function stubApi(initialStatus: string | null) {
       requests.push({ url, method: options?.method ?? 'GET', body })
 
       if (url.includes('/me/book-status')) {
-        myStatus = (JSON.parse(body ?? '{}') as { status: string }).status
+        // 해제는 body 없이 DELETE로 온다
+        myStatus =
+          options?.method === 'DELETE'
+            ? null
+            : (JSON.parse(body ?? '{}') as { status: string }).status
         return Promise.resolve(
           new Response(JSON.stringify({ data: { bookId: BOOK_ID, myStatus } })),
         )
@@ -124,18 +128,51 @@ describe('책 상세 독서 상태', () => {
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
   })
 
-  it('완독은 시안대로 그리되 고를 수 없다', async () => {
+  it('FINISHED면 책 머리에 완독 뱃지가 뜬다', async () => {
+    renderView('FINISHED')
+
+    expect(await screen.findByRole('button', { name: '완독' })).toBeInTheDocument()
+  })
+
+  it('완독을 골라 저장하면 PUT이 나가고 뱃지가 완독으로 바뀐다', async () => {
     const requests = renderView(null)
 
     await userEvent.click(await screen.findByRole('button', { name: '독서 상태' }))
+    await userEvent.click(await screen.findByRole('radio', { name: '완독' }))
+    await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
-    const finished = await screen.findByRole('radio', { name: '완독' })
-    expect(finished).toBeDisabled()
+    expect(await screen.findByRole('button', { name: '완독' })).toBeInTheDocument()
 
-    const before = requests.length
-    await userEvent.click(finished)
+    const saved = requests.filter((request) => request.url.includes('/me/book-status'))
+    expect(saved).toHaveLength(1)
+    expect(saved[0]?.method).toBe('PUT')
+    expect(JSON.parse(saved[0]?.body ?? '{}')).toMatchObject({
+      bookId: BOOK_ID,
+      status: 'FINISHED',
+    })
+  })
 
-    expect(requests).toHaveLength(before)
+  it('고른 것을 다시 눌러 풀고 저장하면 DELETE로 상태가 사라진다', async () => {
+    const requests = renderView('READING')
+
+    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    // 시트에 해제 버튼이 없다 — 고른 것을 다시 눌러 푼다
+    await userEvent.click(await screen.findByRole('radio', { name: '읽고 있는 책' }))
+    await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    expect(await screen.findByRole('button', { name: '독서 상태' })).toBeInTheDocument()
+
+    const saved = requests.filter((request) => request.url.includes('/me/book-status'))
+    expect(saved).toHaveLength(1)
+    expect(saved[0]?.method).toBe('DELETE')
+    expect(saved[0]?.url).toContain(`bookId=${String(BOOK_ID)}`)
+  })
+
+  it('고른 값이 이미 저장된 값이면 저장이 막혀 있다', async () => {
+    renderView('READING')
+
+    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
   })
 

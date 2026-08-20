@@ -41,8 +41,9 @@ export function BookDetailView({ bookId }: { bookId: number }) {
   const queryClient = useQueryClient()
   const bookQuery = useQuery(bookQueries.detail(bookId))
   const book = bookQuery.data?.data
-  const updateStatus = useMutation({
-    ...bookMutations.updateStatus(),
+  const savedStatus = book?.myStatus ?? null
+  const saveStatus = useMutation({
+    ...bookMutations.saveStatus(),
     onSuccess: async () => {
       setIsStatusOpen(false)
       // 뱃지가 읽는 myStatus는 책 상세 응답에만 실린다 — 되살릴 캐시도 그 하나뿐이다
@@ -51,9 +52,9 @@ export function BookDetailView({ bookId }: { bookId: number }) {
   })
 
   const handleSaveStatus = () => {
-    if (!statusDraft) return
-    // PUT은 상태와 현재 페이지를 함께 덮어쓴다 — 읽던 쪽을 지우지 않게 지금 값을 그대로 실어 보낸다
-    updateStatus.mutate({
+    // PUT은 상태와 현재 페이지를 함께 덮어쓴다 — 읽던 쪽을 지우지 않게 지금 값을 그대로 실어 보낸다.
+    // 고른 것을 모두 푼 채로 왔으면 status가 null이라 해제(DELETE)로 나간다.
+    saveStatus.mutate({
       bookId,
       status: statusDraft,
       currentPage: book?.myCurrentPage ?? undefined,
@@ -97,9 +98,9 @@ export function BookDetailView({ bookId }: { bookId: number }) {
                 publisher={book.publisher}
                 statusBadge={
                   <BookStatusChip
-                    status={book.myStatus ?? null}
+                    status={savedStatus}
                     onClick={() => {
-                      setStatusDraft(book.myStatus ?? null)
+                      setStatusDraft(savedStatus)
                       setIsStatusOpen(true)
                     }}
                   />
@@ -151,7 +152,9 @@ export function BookDetailView({ bookId }: { bookId: number }) {
       <BookStatusSheet
         open={isStatusOpen}
         value={statusDraft}
-        saving={updateStatus.isPending}
+        // 고른 값이 이미 저장된 값이면 보낼 것이 없다 — 상태 없음에서 아무것도 고르지 않은 경우도 여기 걸린다
+        saveDisabled={statusDraft === savedStatus}
+        saving={saveStatus.isPending}
         onChange={setStatusDraft}
         onClose={() => {
           setIsStatusOpen(false)
