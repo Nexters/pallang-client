@@ -8,7 +8,7 @@ import { cn } from '@/app/_global/_services/cn.service'
 
 // Figma(Group 2147220874) export를 200×145 컨테이너 기준 2x(400×290)로 리사이즈한 것.
 // 벡터(흰 눈·배)와 PNG가 합성된 상태여야 한다 — PNG만 쓰면 눈이 투명해져 뒤 백드롭이 비친다.
-const MASCOT_SRC = '/images/mascot-pair.png'
+const MASCOT_SRC = '/images/mascot-pair.webp'
 const MASCOT_SIZE = { width: 200, height: 145 }
 
 // ponytail: 버튼 2개 · 버튼 1개 · 일러스트 포함 전체 화면

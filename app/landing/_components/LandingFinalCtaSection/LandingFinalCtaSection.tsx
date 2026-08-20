@@ -8,7 +8,7 @@ export function LandingFinalCtaSection() {
       <div className="absolute top-0 left-1/2 h-full w-[414px] -translate-x-1/2 md:w-[1920px]">
         <div className="absolute top-[72px] left-1/2 flex w-[343px] -translate-x-1/2 flex-col items-center md:top-[148px] md:left-[320px] md:w-[472px] md:translate-x-0 md:items-start">
           <Image
-            src="/images/landing/instagram-qr.png"
+            src="/images/landing/instagram-qr.webp"
             alt="팔랑 인스타그램 QR 코드"
             width={492}
             height={492}
@@ -46,7 +46,7 @@ export function LandingFinalCtaSection() {
         </div>
 
         <Image
-          src="/images/pencil-friends.png"
+          src="/images/pencil-friends.webp"
           alt=""
           width={613}
           height={451}

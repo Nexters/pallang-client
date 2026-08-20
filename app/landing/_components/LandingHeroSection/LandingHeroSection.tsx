@@ -25,7 +25,7 @@ export function LandingHeroSection() {
       </p>
 
       <Image
-        src="/images/landing/hero-character.png"
+        src="/images/landing/hero-character.webp"
         alt=""
         width={495}
         height={312}

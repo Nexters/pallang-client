@@ -3,7 +3,7 @@ import Image from 'next/image'
 const problemCards = [
   {
     id: 'find-reader',
-    imageSrc: '/images/landing/problem-find-reader.png',
+    imageSrc: '/images/landing/problem-find-reader.webp',
     imageAlt: '',
     imageClassName: 'h-[126px] w-[178px] md:h-[169px] md:w-[238px]',
     text: (
@@ -16,7 +16,7 @@ const problemCards = [
   },
   {
     id: 'review-history',
-    imageSrc: '/images/landing/problem-review-history.png',
+    imageSrc: '/images/landing/problem-review-history.webp',
     imageAlt: '',
     imageClassName: 'h-[159px] w-[170px] md:h-[217px] md:w-[233px]',
     text: (
@@ -38,7 +38,7 @@ const problemCards = [
   },
   {
     id: 'taste',
-    imageSrc: '/images/landing/problem-reading-taste.png',
+    imageSrc: '/images/landing/problem-reading-taste.webp',
     imageAlt: '',
     imageClassName: 'h-[97px] w-[211px] md:h-[133px] md:w-[289px]',
     text: (

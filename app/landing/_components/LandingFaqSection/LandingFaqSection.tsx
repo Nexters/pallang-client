@@ -39,7 +39,7 @@ export function LandingFaqSection() {
     <section className="relative min-h-[719px] overflow-hidden bg-bg-default font-pretendard md:h-[919px]">
       <div className="relative mx-auto w-full max-w-[414px] md:absolute md:top-0 md:left-1/2 md:h-full md:w-[1920px] md:max-w-none md:-translate-x-1/2">
         <Image
-          src="/images/landing/faq-character.png"
+          src="/images/landing/faq-character.webp"
           alt=""
           width={146}
           height={106}

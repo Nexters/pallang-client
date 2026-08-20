@@ -16,7 +16,7 @@ export function MeetingEmptyState({ onCreate }: MeetingEmptyStateProps) {
       aria-label="빈 모임 목록"
       className="flex flex-1 flex-col items-center justify-center gap-2 pb-6"
     >
-      <Image src="/images/mascot-pair.png" alt="" width={240} height={173} priority />
+      <Image src="/images/mascot-pair.webp" alt="" width={240} height={173} priority />
       <div className="flex flex-col items-center gap-4 p-6">
         <div className="flex flex-col gap-2 text-center">
           <h2 className="text-title-24bd text-text-secondary">아직 참여 중인 모임이 없어요!</h2>

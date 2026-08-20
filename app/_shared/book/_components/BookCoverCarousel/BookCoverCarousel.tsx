@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { cn } from '@/app/_global/_services/cn.service'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
@@ -52,10 +54,11 @@ export function BookCoverCarousel({
                   )}
                 >
                   {book.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다
-                    <img
+                    <Image
                       src={book.coverImageUrl}
                       alt=""
+                      width={72}
+                      height={108}
                       className="size-full object-cover"
                       loading="lazy"
                     />

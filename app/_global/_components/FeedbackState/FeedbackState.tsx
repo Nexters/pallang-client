@@ -29,7 +29,7 @@ const API_ERROR_ACTION_LABEL = (
 export function FeedbackState({
   actionLabel,
   className,
-  imageSrc = '/images/sad-friends.png',
+  imageSrc = '/images/sad-friends.webp',
   message,
   onAction,
   ...props

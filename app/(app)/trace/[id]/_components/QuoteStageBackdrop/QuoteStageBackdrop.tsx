@@ -15,7 +15,7 @@ export function QuoteStageBackdrop() {
         {/* 820×530은 시안의 고정 크기 — 화면 폭과 무관한 정적 그림이다 */}
         {/* eslint-disable-next-line @next/next/no-img-element -- 고정 크기 정적 배경이라 next/image의 최적화가 붙을 자리가 없다 */}
         <img
-          src="/images/trace-grid-paper.png"
+          src="/images/trace-grid-paper.webp"
           alt=""
           className="absolute top-1/2 left-1/2 h-[820px] w-[530px] max-w-none -translate-1/2"
         />
