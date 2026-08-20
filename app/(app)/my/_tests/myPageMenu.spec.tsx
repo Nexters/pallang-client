@@ -62,12 +62,20 @@ describe('마이페이지 항목 구성', () => {
     expect(screen.getByRole('link', { name: '차단 관리' })).toHaveAttribute('href', '/my/blocks')
   })
 
+  it('알림 설정으로 가는 통로가 생겼다', () => {
+    renderLoggedIn()
+
+    expect(screen.getByRole('link', { name: '알림 설정' })).toHaveAttribute(
+      'href',
+      '/my/notifications',
+    )
+  })
+
   // 화면이 없는 항목은 링크가 아니라 버튼이라 눌러도 이동하지 않는다
   it('화면이 없는 항목은 링크로 만들지 않는다', () => {
     renderLoggedIn()
 
     expect(screen.queryByRole('link', { name: '배경색 관리' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '배경색 관리' })).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: '알림 설정' })).not.toBeInTheDocument()
   })
 })
