@@ -18,7 +18,8 @@ let package = Package(
         .package(name: "CapacitorPreferences", path: "../../../node_modules/.pnpm/@capacitor+preferences@8.0.1_@capacitor+core@8.4.2/node_modules/@capacitor/preferences"),
         .package(name: "CapacitorSplashScreen", path: "../../../node_modules/.pnpm/@capacitor+splash-screen@8.0.2_@capacitor+core@8.4.2/node_modules/@capacitor/splash-screen"),
         .package(name: "CapacitorAppSettings", path: "../../../native-plugins/app-settings"),
-        .package(name: "CapacitorKakaoLogin", path: "../../../native-plugins/kakao-login")
+        .package(name: "CapacitorKakaoLogin", path: "../../../native-plugins/kakao-login"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", exact: "12.14.0")
     ],
     targets: [
         .target(
@@ -32,7 +33,8 @@ let package = Package(
                 .product(name: "CapacitorPreferences", package: "CapacitorPreferences"),
                 .product(name: "CapacitorSplashScreen", package: "CapacitorSplashScreen"),
                 .product(name: "CapacitorAppSettings", package: "CapacitorAppSettings"),
-                .product(name: "CapacitorKakaoLogin", package: "CapacitorKakaoLogin")
+                .product(name: "CapacitorKakaoLogin", package: "CapacitorKakaoLogin"),
+                .product(name: "FirebaseMessaging", package: "firebase-ios-sdk")
             ]
         )
     ]

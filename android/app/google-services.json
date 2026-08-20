@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1046835011748",
+    "project_id": "pallang-e06ba",
+    "storage_bucket": "pallang-e06ba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046835011748:android:b30561cc6c238a558d4631",
+        "android_client_info": {
+          "package_name": "kr.co.pallang.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMd5tXAKKGo62nvpVEVPADZX7CAZrEChI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
