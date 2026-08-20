@@ -24,8 +24,11 @@ export function BookCoverCarousel({
   return (
     <section className="flex flex-col gap-3.5" aria-label={title}>
       <h2 className="text-body-16bd text-text-primary">{title}</h2>
-      {/* 표지 줄만 화면 끝까지 스크롤되도록 좌우 패딩을 상쇄한다 */}
-      <ul className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden">
+      {/* 표지 줄만 화면 끝까지 스크롤되도록 좌우 패딩을 상쇄한다.
+          overflow-x가 있으면 세로 overflow도 visible→auto로 승격돼 이 ul이 세로 클리핑
+          컨테이너가 된다 — 선택 링(바깥쪽 2px box-shadow)이 padding box 안에 들어오도록
+          py-0.5로 상하 여유를 주고 -my-0.5로 바깥 레이아웃은 그대로 둔다. */}
+      <ul className="scrollbar-none -mx-4 -my-0.5 flex gap-1.5 overflow-x-auto overflow-y-hidden px-4 py-0.5 [&::-webkit-scrollbar]:hidden">
         {isPending
           ? SKELETON_KEYS.map((key) => (
               <li
