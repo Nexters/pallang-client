@@ -2,20 +2,9 @@ import './globals.css'
 import 'galmuri/dist/galmuri.css'
 
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 
 import { IllustrationPreload } from '@/app/_global/_components/IllustrationPreload/IllustrationPreload'
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
 
 const googleAnalyticsMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 const shouldEnableGoogleAnalytics =
@@ -80,7 +69,7 @@ export default function RootLayout({
     ) : null
 
   return (
-    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="ko" className="h-full antialiased">
       <body className="min-h-dvh">
         <IllustrationPreload />
         {children}
