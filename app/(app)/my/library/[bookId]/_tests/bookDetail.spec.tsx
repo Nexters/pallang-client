@@ -53,6 +53,7 @@ const LIKED_OPINION = {
 const SPOILER_PASSAGE = {
   passageId: 91,
   bookId: BOOK_ID,
+  opinionId: 404,
   pageNumber: 128,
   quotedText: '진진이는 그 문장을 끝내 소리 내어 읽지 못했다.',
   isSpoiler: true,
@@ -105,20 +106,30 @@ function stubLayout() {
   )
 }
 
-/** 오간 요청을 순서대로 담는다 — 탭마다 어디로 물어보는지, 확정이 막혀 있는지 여기서 본다 */
+/** 오간 요청을 순서대로 담는다 — 탭마다 어디로 물어보는지, 확정이 무엇을 보내는지 여기서 본다 */
 function stubApi({ opinions = [], liked = [], passages = [] }: Records) {
-  const requests: { url: string; method: string }[] = []
+  const requests: { url: string; method: string; body?: string }[] = []
   // 서버처럼 토글이 상태를 뒤집어야 되돌리기까지 이어서 볼 수 있다
   let isLiked = true
+  // 해제한 대목은 서버처럼 목록에서 빠져야 무효화 뒤 카드가 사라지는 걸 볼 수 있다
+  let spoilers = passages
 
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string, options?: RequestInit) => {
-      requests.push({ url, method: options?.method ?? 'GET' })
+      const body = typeof options?.body === 'string' ? options.body : undefined
+      requests.push({ url, method: options?.method ?? 'GET', body })
 
+      if (url.includes('/spoiler')) {
+        const released = Number(/passages\/(\d+)\/spoiler/.exec(url)?.[1])
+        spoilers = spoilers.filter((passage) => passage.passageId !== released)
+        return Promise.resolve(
+          new Response(JSON.stringify({ data: { passageId: released, isSpoiler: false } })),
+        )
+      }
       if (url.includes('/me/opinions')) return listResponse({ opinions })
       if (url.includes('/me/likes')) return listResponse({ opinions: liked })
-      if (url.includes('/me/passages')) return listResponse({ passages })
+      if (url.includes('/me/passages')) return listResponse({ passages: spoilers })
       if (url.includes('/api/opinions/') && url.endsWith('/like')) {
         isLiked = !isLiked
         return Promise.resolve(
@@ -274,19 +285,28 @@ describe('내 서재 책 상세', () => {
     expect(await screen.findByRole('button', { name: '편집' })).toBeDisabled()
   })
 
-  it('스포일러 해제 확정은 막혀 있고 눌러도 서버로 아무것도 보내지 않는다', async () => {
+  it('스포일러를 해제하면 요청이 나가고 카드가 목록에서 빠진다', async () => {
     const requests = renderView({ passages: [SPOILER_PASSAGE] })
     await userEvent.click(await screen.findByRole('tab', { name: '스포일러' }))
     await userEvent.click(await screen.findByRole('button', { name: '128쪽 스포일러 해제' }))
+    await userEvent.click(await screen.findByRole('button', { name: '스포일러 해제' }))
 
-    const confirm = await screen.findByRole('button', { name: '스포일러 해제' })
-    expect(confirm).toBeDisabled()
+    await waitFor(() => {
+      expect(screen.queryByText(SPOILER_PASSAGE.quotedText)).not.toBeInTheDocument()
+    })
 
-    const before = requests.length
-    await userEvent.click(confirm)
+    const released = requests.filter((request) => request.url.includes('/spoiler'))
+    expect(released).toHaveLength(1)
+    expect(released[0]?.method).toBe('PATCH')
+    expect(JSON.parse(released[0]?.body ?? '{}')).toEqual({ isSpoiler: false })
+  })
 
-    expect(requests).toHaveLength(before)
-    expect(requests.every((request) => request.method === 'GET')).toBe(true)
+  it('스포일러 카드도 좋아요 카드처럼 그 흔적으로 간다', async () => {
+    renderView({ passages: [SPOILER_PASSAGE] })
+    await userEvent.click(await screen.findByRole('tab', { name: '스포일러' }))
+
+    const link = await screen.findByRole('link', { name: '128쪽 흔적 보기' })
+    expect(link).toHaveAttribute('href', expect.stringContaining('opinionId=404'))
   })
 
   it('좋아요를 해제하면 되돌릴 수 있는 안내가 뜨고, 탭을 옮기면 함께 닫힌다', async () => {

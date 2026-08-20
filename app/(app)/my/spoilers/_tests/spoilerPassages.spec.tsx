@@ -12,6 +12,7 @@ vi.mock('next/navigation', () => ({
 const PASSAGE = {
   passageId: 91,
   bookId: 3,
+  opinionId: 404,
   pageNumber: 128,
   quotedText: '진진이는 그 문장을 끝내 소리 내어 읽지 못했다.',
   isSpoiler: true,
@@ -23,15 +24,28 @@ const BOOKS = [
   { bookId: 5, title: '만조를 기다리며' },
 ]
 
-/** 오간 요청을 순서대로 담는다 — 필터가 서버까지 갔는지, 해제가 아무것도 안 보냈는지 여기서 본다 */
-function stubApi(passages: (typeof PASSAGE)[] = [PASSAGE]) {
-  const requests: { url: string; method: string }[] = []
+/** 오간 요청을 순서대로 담는다 — 필터가 서버까지 갔는지, 해제가 무엇을 보냈는지 여기서 본다 */
+function stubApi(passages: (typeof PASSAGE)[] = [PASSAGE], releaseStatus = 200) {
+  const requests: { url: string; method: string; body?: string }[] = []
+  // 해제가 성공하면 서버처럼 목록에서 빼야 무효화 뒤 카드가 사라지는 걸 볼 수 있다
+  let current = passages
 
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string, options?: RequestInit) => {
-      requests.push({ url, method: options?.method ?? 'GET' })
+      const body = typeof options?.body === 'string' ? options.body : undefined
+      requests.push({ url, method: options?.method ?? 'GET', body })
 
+      if (url.includes('/spoiler')) {
+        if (releaseStatus !== 200) {
+          return Promise.resolve(new Response('{}', { status: releaseStatus }))
+        }
+        const released = Number(/passages\/(\d+)\/spoiler/.exec(url)?.[1])
+        current = current.filter((passage) => passage.passageId !== released)
+        return Promise.resolve(
+          new Response(JSON.stringify({ data: { passageId: released, isSpoiler: false } })),
+        )
+      }
       if (url.includes('/filter-books')) {
         return Promise.resolve(new Response(JSON.stringify({ data: { books: BOOKS } })))
       }
@@ -39,11 +53,11 @@ function stubApi(passages: (typeof PASSAGE)[] = [PASSAGE]) {
         new Response(
           JSON.stringify({
             data: {
-              passages,
+              passages: current,
               pageInfo: {
                 page: 0,
                 size: 20,
-                totalElements: passages.length,
+                totalElements: current.length,
                 totalPages: 1,
                 hasNext: false,
               },
@@ -57,8 +71,8 @@ function stubApi(passages: (typeof PASSAGE)[] = [PASSAGE]) {
   return requests
 }
 
-function renderView(passages?: (typeof PASSAGE)[]) {
-  const requests = stubApi(passages)
+function renderView(passages?: (typeof PASSAGE)[], releaseStatus?: number) {
+  const requests = stubApi(passages, releaseStatus)
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -141,20 +155,50 @@ describe('스포일러 관리', () => {
     expect(await screen.findByRole('dialog')).toHaveTextContent('해당 문장의 스포일러를')
   })
 
-  it('확정 버튼은 막혀 있고 눌러도 서버로 아무것도 보내지 않는다', async () => {
+  it('확정하면 해제 요청이 나가고 카드가 목록에서 빠진다', async () => {
     const requests = renderView()
     await screen.findByText(PASSAGE.quotedText)
 
     await userEvent.click(screen.getByRole('button', { name: '128쪽 스포일러 해제' }))
+    await userEvent.click(await screen.findByRole('button', { name: '스포일러 해제' }))
 
-    const confirm = await screen.findByRole('button', { name: '스포일러 해제' })
-    expect(confirm).toBeDisabled()
+    await waitFor(() => {
+      expect(screen.queryByText(PASSAGE.quotedText)).not.toBeInTheDocument()
+    })
 
-    const before = requests.length
-    await userEvent.click(confirm)
+    const released = requests.filter((request) => request.url.includes('/spoiler'))
+    expect(released).toHaveLength(1)
+    expect(released[0]?.method).toBe('PATCH')
+    expect(released[0]?.url).toContain('/api/passages/91/spoiler')
+    expect(JSON.parse(released[0]?.body ?? '{}')).toEqual({ isSpoiler: false })
+  })
 
-    expect(requests).toHaveLength(before)
-    expect(requests.every((request) => request.method === 'GET')).toBe(true)
+  it('해제에 실패하면 다시 시도하라고 알린다', async () => {
+    renderView([PASSAGE], 500)
+    await screen.findByText(PASSAGE.quotedText)
+
+    await userEvent.click(screen.getByRole('button', { name: '128쪽 스포일러 해제' }))
+    await userEvent.click(await screen.findByRole('button', { name: '스포일러 해제' }))
+
+    expect(await screen.findByText(/스포일러를 해제하지 못했어요/)).toBeInTheDocument()
+    // 실패해도 카드는 그대로 남아 다시 시도할 수 있다
+    expect(screen.getByText(PASSAGE.quotedText)).toBeInTheDocument()
+  })
+
+  it('카드를 누르면 그 흔적으로 간다', async () => {
+    renderView()
+    await screen.findByText(PASSAGE.quotedText)
+
+    const link = screen.getByRole('link', { name: '128쪽 흔적 보기' })
+    expect(link).toHaveAttribute('href', expect.stringContaining('opinionId=404'))
+  })
+
+  it('도서 필터는 서버 기본값 20에 잘리지 않게 한 번에 받는다', async () => {
+    const requests = renderView()
+    await screen.findByText(PASSAGE.quotedText)
+
+    const filterRequest = requests.find((request) => request.url.includes('/filter-books'))
+    expect(filterRequest?.url).toContain('size=100')
   })
 
   it('뒤로를 누르면 다이얼로그가 닫힌다', async () => {
