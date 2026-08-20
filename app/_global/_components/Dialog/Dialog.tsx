@@ -131,7 +131,7 @@ function Illustration({ className, children, ...props }: ComponentProps<'div'>) 
       {...props}
     >
       {/* 다이얼로그가 열릴 때만 마운트되고 즉시 화면에 보이므로 lazy 로딩할 이유가 없다.
-          열림 시점 요청 시작으로 인한 팝인은 DialogMascotPreload(루트 레이아웃)가 선로딩으로 막는다. */}
+          열림 시점 요청 시작으로 인한 팝인은 IllustrationPreload(루트 레이아웃)가 선로딩으로 막는다. */}
       {children ?? (
         <Image
           src={DIALOG_MASCOT_SRC}

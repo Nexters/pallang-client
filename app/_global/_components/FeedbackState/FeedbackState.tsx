@@ -3,6 +3,10 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import ResetIcon from '@/app/_global/_components/Icon/assets/reset.svg'
+import {
+  FEEDBACK_ILLUSTRATION_SIZE,
+  FEEDBACK_ILLUSTRATION_SRC,
+} from '@/app/_global/_data/feedbackIllustration.constant'
 import { cn } from '@/app/_global/_services/cn.service'
 
 type FeedbackStateProps = ComponentPropsWithoutRef<'section'> & {
@@ -29,7 +33,8 @@ const API_ERROR_ACTION_LABEL = (
 export function FeedbackState({
   actionLabel,
   className,
-  imageSrc = '/images/sad-friends.webp',
+  // 기본 일러스트는 IllustrationPreload(루트 레이아웃)가 선로딩한다 — imageSrc를 바꾸면 선로딩 밖이다
+  imageSrc = FEEDBACK_ILLUSTRATION_SRC,
   message,
   onAction,
   ...props
@@ -43,8 +48,7 @@ export function FeedbackState({
         <Image
           src={imageSrc}
           alt=""
-          width={175}
-          height={140}
+          {...FEEDBACK_ILLUSTRATION_SIZE}
           aria-hidden="true"
           className="h-[140px] w-[175px] object-bottom opacity-40"
         />
