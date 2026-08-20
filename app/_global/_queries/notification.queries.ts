@@ -6,6 +6,7 @@ import {
 } from '../_apis/_generated/device-token/device-token'
 import type { NotificationResponse as GeneratedNotificationResponse } from '../_apis/_generated/models/notificationResponse'
 import type { RegisterDeviceTokenRequest } from '../_apis/_generated/models/registerDeviceTokenRequest'
+import { RegisterDeviceTokenRequestPlatform as GeneratedRegisterDeviceTokenRequestPlatform } from '../_apis/_generated/models/registerDeviceTokenRequestPlatform'
 import {
   getNotifications,
   readAllNotifications,
@@ -14,8 +15,18 @@ import {
 
 /** feature 코드는 _apis를 직접 import할 수 없어 알림 응답 타입을 여기서 재노출한다 */
 export type NotificationResponse = GeneratedNotificationResponse
+export type RegisterDeviceTokenRequestPlatform = GeneratedRegisterDeviceTokenRequestPlatform
+export const RegisterDeviceTokenRequestPlatform = GeneratedRegisterDeviceTokenRequestPlatform
 
 export const NOTIFICATION_PAGE_SIZE = 20
+
+export function registerNotificationDeviceToken(data: RegisterDeviceTokenRequest) {
+  return registerDeviceToken(data)
+}
+
+export function removeNotificationDeviceToken(token: string) {
+  return removeDeviceToken({ token })
+}
 
 export const notificationQueries = {
   all: () => ['notification'] as const,
@@ -47,11 +58,11 @@ export const notificationMutations = {
   registerDeviceToken: () =>
     mutationOptions({
       mutationKey: [...notificationQueries.all(), 'device-token', 'register'],
-      mutationFn: (data: RegisterDeviceTokenRequest) => registerDeviceToken(data),
+      mutationFn: registerNotificationDeviceToken,
     }),
   removeDeviceToken: () =>
     mutationOptions({
       mutationKey: [...notificationQueries.all(), 'device-token', 'remove'],
-      mutationFn: (token: string) => removeDeviceToken({ token }),
+      mutationFn: removeNotificationDeviceToken,
     }),
 }

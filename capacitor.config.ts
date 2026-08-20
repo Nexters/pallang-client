@@ -1,3 +1,5 @@
+/// <reference types="@capacitor-firebase/messaging" />
+
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const APP_ID = 'kr.co.pallang.app'
@@ -27,6 +29,9 @@ const config: CapacitorConfig = {
     allowNavigation: ['pallang.co.kr', 'kauth.kakao.com', 'accounts.kakao.com'],
   },
   plugins: {
+    FirebaseMessaging: {
+      presentationOptions: ['alert', 'badge', 'sound'],
+    },
     // 인증 상태(로그인/비로그인) 결정 전까지 비로그인 화면이 깜빡 보이는 것 방지 —
     // AuthProvider가 초기화를 마치면 SplashScreen.hide()로 더 일찍 내린다.
     // 상한을 네이티브에 두는 이유: 원격 URL을 로드하므로 네트워크 단절·번들 404처럼
@@ -35,6 +40,17 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 5000,
+    },
+  },
+  experimental: {
+    ios: {
+      spm: {
+        packageOptions: {
+          '@capacitor-firebase/messaging': {
+            symlink: true,
+          },
+        },
+      },
     },
   },
 }

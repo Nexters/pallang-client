@@ -14,6 +14,10 @@ import {
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { initAuthSession, signOut as signOutSession } from '@/app/_global/_queries/auth.queries'
 import { hasTokens, subscribeAuthTokens } from '@/app/_global/_services/authToken.service'
+import {
+  registerPushDeviceToken,
+  unregisterPushDeviceToken,
+} from '@/app/_global/_services/pushNotification.service'
 import { hideSplashScreen } from '@/app/_global/_services/splashScreen.service'
 import { hasPendingWithdrawalNotice } from '@/app/_global/_services/withdrawal.service'
 
@@ -72,10 +76,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    void registerPushDeviceToken().catch((error: unknown) => {
+      console.warn('푸시 토큰 등록 실패', error)
+    })
+  }, [status])
+
   // 토큰을 비우기 전에 표시해둔다 — 토큰 구독이 동기로 상태를 바꾸므로 뒤에 두면 늦는다.
   const signOut = useCallback(async () => {
     isManualSignOutRef.current = true
     try {
+      await unregisterPushDeviceToken()
       await signOutSession()
     } catch (error) {
       // 토큰이 남아 상태가 안 바뀌면 표시만 남아 다음 만료를 삼킨다
