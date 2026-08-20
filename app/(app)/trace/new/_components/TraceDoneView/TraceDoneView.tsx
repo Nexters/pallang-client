@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { cn } from '@/app/_global/_services/cn.service'
+import { toLargeCoverUrl } from '@/app/_shared/book/_services/coverVariant.service'
 import { buildTraceHref, buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
@@ -42,8 +43,10 @@ export function TraceDoneView() {
     <div className="flex flex-1 flex-col bg-bg-overlay">
       <div className="flex flex-1 items-end justify-center pb-6">
         {draft.book?.coverImageUrl ? (
+          // 144px 슬롯은 DPR 2에서 288px 원본이 필요한데 알라딘 cover200은 폭 200px이라
+          // 업스케일된다. 큰 슬롯용 cover500으로 치환해 원본 해상도를 확보한다.
           <Image
-            src={draft.book.coverImageUrl}
+            src={toLargeCoverUrl(draft.book.coverImageUrl)}
             alt={draft.book.title}
             width={144}
             height={208}
