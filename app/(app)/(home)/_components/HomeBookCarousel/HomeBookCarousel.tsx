@@ -13,6 +13,7 @@ import {
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
+import { toLargeCoverUrl } from '@/app/_shared/book/_services/coverVariant.service'
 
 import { HomeBookCarouselSkeleton } from './HomeBookCarouselSkeleton'
 
@@ -271,7 +272,9 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
             page.data?.books.map((book) => ({
               author: book.author,
               bookId: book.bookId,
-              coverImageUrl: book.coverImageUrl ?? null,
+              // 220px 슬롯은 DPR 2에서 440px 원본이 필요한데 저장된 알라딘 cover200은 폭 200px이라
+              // 2배 이상 업스케일된다. 큰 슬롯용 cover500으로 치환해 원본 해상도를 확보한다.
+              coverImageUrl: book.coverImageUrl ? toLargeCoverUrl(book.coverImageUrl) : null,
               opinionCount: book.opinionCount,
               passageCount: book.passageCount,
               title: book.title,
