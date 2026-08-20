@@ -62,10 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch((error: unknown) => {
         console.warn('인증 초기화 실패 — 저장된 토큰 기준으로 진행한다', error)
       })
-      .then(sync)
-      // 인증이 끝나면 스플래시를 내린다. 응답이 영영 오지 않는 경우의 상한은
+      // 네이티브 스플래시를 먼저 걷고(같은 그림의 웹 스플래시가 아래에 온전히 남아 이음새가 없다),
+      // 그다음 sync가 status를 바꿔 웹 스플래시 페이드아웃을 시작한다. 순서를 바꾸면 두 겹이
+      // 동시에 사라지며 전환이 끊겨 보인다(#345). hideSplashScreen은 내부에서 실패를 삼키므로
+      // 네이티브가 없는 웹에서도 sync 도달이 보장된다. 응답이 영영 오지 않는 경우의 상한은
       // capacitor.config.ts의 launchShowDuration이 네이티브에서 맡는다.
-      .finally(() => void hideSplashScreen())
+      .then(() => hideSplashScreen())
+      .then(sync)
     return () => {
       active = false
       unsubscribe()
