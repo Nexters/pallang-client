@@ -261,8 +261,6 @@ function arrangeBooksForInitialCarousel(books: Book[]): Book[] {
 
 export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean }) {
   const bookListRef = useRef<HTMLDivElement>(null)
-  // 마운트당 1회만 스크롤을 복원했는지 — state로 두면 effect가 자기 deps를 set하는 순환이 된다
-  const hasRestoredScrollRef = useRef(false)
   const [activeBookId, setActiveBookId] = useState<null | number>(null)
   const [readyBooksKey, setReadyBooksKey] = useState('')
   const libraryOptions = bookQueries.myLibrary({ opinionCountScope: 'ALL', size: PAGE_SIZE })
@@ -301,23 +299,16 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
 
   // 렌더 배열은 [1번 책, 0번 책, 2번 책...] 순서라 첫 중앙 책은 index 1이다.
   // 그 위치로 맞추기 전까지는 이미지와 하단 정보가 어긋나 보이므로 스켈레톤을 덮는다.
-  //
-  // 스크롤 복원은 최초 1회(readyBooksKey가 비어 있을 때)만 한다(#337) — 이후 booksKey
-  // 변경은 다음 페이지 append인데, 초기 정렬은 앞 2권만 스왑하므로 기존 인덱스가 그대로다.
-  // 여기서 매번 복원하면 끝쪽을 보던 스크롤이 초기 인덱스로 점프한다(실측 1712px→214px).
   useLayoutEffect(() => {
     const scrollContainer = bookListRef.current
     if (!scrollContainer || arrangedBooks.length === 0) return
 
-    setReadyBooksKey(booksKey)
-
-    if (hasRestoredScrollRef.current) return
-    hasRestoredScrollRef.current = true
-
     const nextBookIndex = getRestoredBookIndex(arrangedBooks)
+    const nextBookId = arrangedBooks[nextBookIndex]?.bookId ?? null
 
     syncScrollToBookIndex(scrollContainer, nextBookIndex)
-    setActiveBookId(arrangedBooks[nextBookIndex]?.bookId ?? null)
+    setActiveBookId(nextBookId)
+    setReadyBooksKey(booksKey)
   }, [arrangedBooks, booksKey])
 
   const handleTraceClick = (bookId: number) => {
