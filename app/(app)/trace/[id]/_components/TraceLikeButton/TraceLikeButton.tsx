@@ -12,22 +12,14 @@ type TraceLikeButtonProps = {
   likeCount: number
   /** 서버 목록이 준 내 좋아요 여부 — 같은 기준값의 나머지 반쪽이다 */
   liked: boolean
-  /** 수 앞에 붙는 말. 상세 오버레이만 '공감'을 붙인다 */
-  countLabel?: string
   className?: string
 }
 
 /**
- * 흔적 좋아요 버튼. 목록 카드와 상세 오버레이가 같은 버튼을 쓴다 —
+ * 흔적 좋아요 버튼. 목록 카드와 답글 시트의 원본 의견이 같은 버튼을 쓴다 —
  * 좋아요 캐시(useOpinionLike)와 비로그인 게이트를 여기 한 곳에서만 걸어 두 자리가 어긋나지 않게 한다.
  */
-export function TraceLikeButton({
-  opinionId,
-  likeCount,
-  liked,
-  countLabel,
-  className,
-}: TraceLikeButtonProps) {
+export function TraceLikeButton({ opinionId, likeCount, liked, className }: TraceLikeButtonProps) {
   const runWithLogin = useLoginGate()
   const like = useOpinionLike(opinionId, { liked, likeCount })
 
@@ -46,7 +38,6 @@ export function TraceLikeButton({
         height={20}
         className={like.isLiked ? 'text-icon-accent' : 'text-icon-active'}
       />
-      {countLabel !== undefined && `${countLabel} `}
       {formatCount(like.likeCount)}
     </button>
   )
