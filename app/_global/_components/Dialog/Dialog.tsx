@@ -4,12 +4,8 @@ import { Dialog as BaseDialog } from '@base-ui/react/dialog'
 import Image from 'next/image'
 import { type ComponentProps, useRef } from 'react'
 
+import { DIALOG_MASCOT_SIZE, DIALOG_MASCOT_SRC } from '@/app/_global/_data/dialogMascot.constant'
 import { cn } from '@/app/_global/_services/cn.service'
-
-// Figma(Group 2147220874) export를 200×145 컨테이너 기준 2x(400×290)로 리사이즈한 것.
-// 벡터(흰 눈·배)와 PNG가 합성된 상태여야 한다 — PNG만 쓰면 눈이 투명해져 뒤 백드롭이 비친다.
-const MASCOT_SRC = '/images/mascot-pair.webp'
-const MASCOT_SIZE = { width: 200, height: 145 }
 
 // ponytail: 버튼 2개 · 버튼 1개 · 일러스트 포함 전체 화면
 // 카드 스펙은 세 디자인 모두 동일하고 차이는 Footer 버튼 개수뿐이다.
@@ -134,9 +130,16 @@ function Illustration({ className, children, ...props }: ComponentProps<'div'>) 
       )}
       {...props}
     >
-      {/* 다이얼로그가 열릴 때만 마운트되고 즉시 화면에 보이므로 lazy 로딩할 이유가 없다 */}
+      {/* 다이얼로그가 열릴 때만 마운트되고 즉시 화면에 보이므로 lazy 로딩할 이유가 없다.
+          열림 시점 요청 시작으로 인한 팝인은 DialogMascotPreload(루트 레이아웃)가 선로딩으로 막는다. */}
       {children ?? (
-        <Image src={MASCOT_SRC} alt="" {...MASCOT_SIZE} loading="eager" className="h-auto w-full" />
+        <Image
+          src={DIALOG_MASCOT_SRC}
+          alt=""
+          {...DIALOG_MASCOT_SIZE}
+          loading="eager"
+          className="h-auto w-full"
+        />
       )}
     </div>
   )
