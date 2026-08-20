@@ -6,10 +6,13 @@ import {
   getGroupMembers,
   getInviteLink,
   getMyGroups,
+  joinGroup,
+  previewInvitation,
   updateGroup,
 } from '../_apis/_generated/group/group'
 import type { CreateGroupRequest } from '../_apis/_generated/models/createGroupRequest'
 import type { GroupDetailResponse } from '../_apis/_generated/models/groupDetailResponse'
+import type { GroupInvitationPreviewResponse } from '../_apis/_generated/models/groupInvitationPreviewResponse'
 import type { GroupMemberResponse } from '../_apis/_generated/models/groupMemberResponse'
 import type { GroupSummaryResponse } from '../_apis/_generated/models/groupSummaryResponse'
 import type { UpdateGroupRequest } from '../_apis/_generated/models/updateGroupRequest'
@@ -18,6 +21,7 @@ import type { UpdateGroupRequest } from '../_apis/_generated/models/updateGroupR
 export type GroupSummary = GroupSummaryResponse
 export type GroupDetail = GroupDetailResponse
 export type GroupMember = GroupMemberResponse
+export type GroupInvitationPreview = GroupInvitationPreviewResponse
 export type GroupCreateInput = CreateGroupRequest
 export type GroupUpdateInput = UpdateGroupRequest
 
@@ -55,6 +59,17 @@ export const groupQueries = {
       queryFn: () => getInviteLink(groupId),
       retry: false,
     }),
+  /**
+   * 초대 링크 랜딩의 가입 전 미리보기 — 인증은 선택이다. 로그인 상태면 customFetch가 토큰을 실어
+   * `alreadyJoined`가 참값으로 내려오고, 비로그인이면 항상 false로 온다.
+   * 잘못된 코드의 404는 정상 흐름(재시도해도 같은 답)이라 재시도하지 않는다.
+   */
+  invitationPreview: (inviteCode: string) =>
+    queryOptions({
+      queryKey: [...groupQueries.all(), 'invitation', inviteCode],
+      queryFn: () => previewInvitation(inviteCode),
+      retry: false,
+    }),
 }
 
 export const groupMutations = {
@@ -67,5 +82,11 @@ export const groupMutations = {
     mutationOptions({
       mutationKey: [...groupQueries.all(), 'update', groupId],
       mutationFn: (data: GroupUpdateInput) => updateGroup(groupId, data),
+    }),
+  /** 초대 코드로 가입 — 모임 id가 아니라 코드로 부른다(랜딩은 코드만 알고 있다) */
+  join: () =>
+    mutationOptions({
+      mutationKey: [...groupQueries.all(), 'join'],
+      mutationFn: (inviteCode: string) => joinGroup(inviteCode),
     }),
 }

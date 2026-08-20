@@ -11,6 +11,11 @@ describe('모임 완료 알림 플래그', () => {
     expect(consumeMeetingNotice()).toBe('created')
     expect(consumeMeetingNotice()).toBeNull()
   })
+  it('초대 참여 표시도 같은 자리를 쓴다', () => {
+    markMeetingNotice('joined')
+    expect(consumeMeetingNotice()).toBe('joined')
+    expect(consumeMeetingNotice()).toBeNull()
+  })
   it('모르는 값은 무시한다', () => {
     window.sessionStorage.setItem('pallang.meetingNotice', 'weird')
     expect(consumeMeetingNotice()).toBeNull()
