@@ -18,34 +18,52 @@ export function useSpoilerRelease() {
   const [target, setTarget] = useState<MyPassage | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
 
+  /**
+   * 응답이 늦게 와도 그 사이에 연 다른 대목의 다이얼로그를 닫지 않는다 —
+   * 요청 중에 백드롭으로 빠져나간 뒤 다른 카드를 열면 먼저 보낸 응답이 도착하기 때문이다.
+   */
+  const closeIfStill = (passageId: number) => {
+    setTarget((current) => (current?.passageId === passageId ? null : current))
+  }
+
   const release = useMutation({
     ...passageMutations.updateSpoiler(),
-    onSuccess: async () => {
-      setTarget(null)
-      // 해제한 대목은 관리 목록에서 빠지고, 흔적 보기의 블러도 함께 걷혀야 한다
+    onSuccess: async (_data, { passageId }) => {
+      closeIfStill(passageId)
+      // 앞선 실패 안내가 떠 있으면 걷는다 — 성공한 해제가 실패로 읽히면 안 된다
+      setErrorMessage('')
+      // 해제한 대목은 관리 목록에서 빠지고, 흔적 보기의 블러도 함께 걷혀야 한다.
+      // 그 책의 마지막 스포일러였으면 도서 필터에서도 빠져야 한다.
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: userQueries.spoilerPassageListAll() }),
         queryClient.invalidateQueries({ queryKey: passageQueries.all() }),
+        queryClient.invalidateQueries({ queryKey: userQueries.filterBooks('SPOILER').queryKey }),
       ])
     },
-    onError: () => {
-      setTarget(null)
+    onError: (_error, { passageId }) => {
+      closeIfStill(passageId)
       setErrorMessage('스포일러를 해제하지 못했어요. 잠시 후 다시 시도해주세요.')
     },
   })
+
+  const clearError = () => {
+    setErrorMessage('')
+  }
 
   return {
     target,
     isPending: release.isPending,
     errorMessage,
     /** `해제`를 눌러 확인 다이얼로그를 여는 자리 */
-    start: setTarget,
+    start: (passage: MyPassage) => {
+      clearError()
+      setTarget(passage)
+    },
     close: () => {
       setTarget(null)
+      clearError()
     },
-    clearError: () => {
-      setErrorMessage('')
-    },
+    clearError,
     confirm: () => {
       if (target) release.mutate({ passageId: target.passageId, isSpoiler: false })
     },
