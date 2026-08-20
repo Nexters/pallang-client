@@ -30,7 +30,7 @@ type Request = { url: string; method: string; body?: string }
  * 책 상세만 상태를 들고 온다. 저장이 성공하면 서버처럼 그 값을 물고 있어야
  * 무효화 뒤 다시 물어본 응답에서 뱃지가 바뀌는 걸 볼 수 있다.
  */
-function stubApi(initialStatus: string | null) {
+function stubApi(initialStatus: string | null, saveStatusCode = 200) {
   const requests: Request[] = []
   let myStatus = initialStatus
 
@@ -50,6 +50,9 @@ function stubApi(initialStatus: string | null) {
       requests.push({ url, method: options?.method ?? 'GET', body })
 
       if (url.includes('/me/book-status')) {
+        if (saveStatusCode !== 200) {
+          return Promise.resolve(new Response('{}', { status: saveStatusCode }))
+        }
         // 해제는 body 없이 DELETE로 온다
         myStatus =
           options?.method === 'DELETE'
@@ -73,8 +76,8 @@ function stubApi(initialStatus: string | null) {
   return requests
 }
 
-function renderView(initialStatus: string | null = null) {
-  const requests = stubApi(initialStatus)
+function renderView(initialStatus: string | null = null, saveStatusCode?: number) {
+  const requests = stubApi(initialStatus, saveStatusCode)
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -166,6 +169,17 @@ describe('책 상세 독서 상태', () => {
     expect(saved).toHaveLength(1)
     expect(saved[0]?.method).toBe('DELETE')
     expect(saved[0]?.url).toContain(`bookId=${String(BOOK_ID)}`)
+  })
+
+  it('해제에 실패하면 뱃지가 그대로인 채로 다시 시도하라고 알린다', async () => {
+    renderView('READING', 500)
+
+    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    await userEvent.click(await screen.findByRole('radio', { name: '읽고 있는 책' }))
+    await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    expect(await screen.findByText(/독서 상태를 저장하지 못했어요/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '읽고 있는 책' })).toBeInTheDocument()
   })
 
   it('고른 값이 이미 저장된 값이면 저장이 막혀 있다', async () => {

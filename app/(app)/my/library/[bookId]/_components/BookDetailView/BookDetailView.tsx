@@ -42,12 +42,19 @@ export function BookDetailView({ bookId }: { bookId: number }) {
   const bookQuery = useQuery(bookQueries.detail(bookId))
   const book = bookQuery.data?.data
   const savedStatus = book?.myStatus ?? null
+  const [statusError, setStatusError] = useState('')
   const saveStatus = useMutation({
     ...bookMutations.saveStatus(),
     onSuccess: async () => {
       setIsStatusOpen(false)
+      setStatusError('')
       // 뱃지가 읽는 myStatus는 책 상세 응답에만 실린다 — 되살릴 캐시도 그 하나뿐이다
       await queryClient.invalidateQueries({ queryKey: bookQueries.detail(bookId).queryKey })
+    },
+    // 실패하면 뱃지도 시트도 그대로라 아무 일도 없던 것처럼 보인다 — 해제는 특히 되돌아온 줄 모른다
+    onError: () => {
+      setIsStatusOpen(false)
+      setStatusError('독서 상태를 저장하지 못했어요. 잠시 후 다시 시도해주세요.')
     },
   })
 
@@ -148,6 +155,15 @@ export function BookDetailView({ bookId }: { bookId: number }) {
       {/* 좋아요 쪽 바와 자리가 같지만 겹치지 않는다 — 좋아요는 좋아요 탭에서만 서고,
         탭을 옮기면 접힌다. 해제 실패는 스포일러 탭에서만 뜬다. */}
       <Snackbar tone="light" message={release.errorMessage} onClose={release.clearError} />
+
+      {/* 독서 상태는 탭과 무관한 책 머리에서 저장한다 — 위 둘과 자리가 같지만 시트를 닫고 나서야 뜬다 */}
+      <Snackbar
+        tone="light"
+        message={statusError}
+        onClose={() => {
+          setStatusError('')
+        }}
+      />
 
       <BookStatusSheet
         open={isStatusOpen}
