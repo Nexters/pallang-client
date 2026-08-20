@@ -19,6 +19,8 @@ type TabBarProps = ComponentPropsWithoutRef<'nav'> & {
   /** 흔적 남기기 이동이 진행 중. Button과 같은 규칙으로 색은 유지한 채 pulse로 알리고 중복 탭을 막는다. */
   isTracePending?: boolean
   meetingHref?: string
+  /** 모임 목록은 로그인이 필요해 이동 전에 게이트를 거친다. 넘기지 않으면 meetingHref로 바로 이동한다. */
+  onMeetingClick?: () => void
   /** 흔적 남기기는 로그인이 필요해 이동 전에 게이트를 거친다. 넘기지 않으면 traceHref로 바로 이동한다. */
   onTraceClick?: () => void
   traceHref?: string
@@ -34,21 +36,50 @@ type TabLinkProps = {
   icon: FC<SVGProps<SVGSVGElement>>
   isActive: boolean
   label: string
+  /** 넘기면 링크 대신 버튼으로 그려 이동 전에 확인한다(흔적 남기기 버튼과 같은 로그인 게이트 경로) */
+  onClick?: () => void
 }
 
-function TabLink({ coachMarkTargetName, href, icon: Icon, isActive, label }: TabLinkProps) {
+function TabLink({
+  coachMarkTargetName,
+  href,
+  icon: Icon,
+  isActive,
+  label,
+  onClick,
+}: TabLinkProps) {
+  const className = cn(
+    'press flex w-12 shrink-0 cursor-pointer flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
+    !isActive && 'opacity-60 data-[home-coachmark-active=true]:opacity-100',
+  )
+  const content = (
+    <>
+      <Icon aria-hidden="true" className="size-7" />
+      <span>{label}</span>
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        aria-current={isActive ? 'page' : undefined}
+        data-home-coachmark-target={coachMarkTargetName}
+        onClick={onClick}
+        className={className}
+      >
+        {content}
+      </button>
+    )
+  }
   return (
     <Link
       href={href}
       aria-current={isActive ? 'page' : undefined}
       data-home-coachmark-target={coachMarkTargetName}
-      className={cn(
-        'press flex w-12 shrink-0 cursor-pointer flex-col items-center gap-0.5 text-caption-12rg uppercase text-text-inverse',
-        !isActive && 'opacity-60 data-[home-coachmark-active=true]:opacity-100',
-      )}
+      className={className}
     >
-      <Icon aria-hidden="true" className="size-7" />
-      <span>{label}</span>
+      {content}
     </Link>
   )
 }
@@ -81,6 +112,7 @@ export function TabBar({
   isLoading = false,
   isTracePending = false,
   meetingHref = '/meeting',
+  onMeetingClick,
   onTraceClick,
   traceHref = '/trace/new',
   myHref = '/my',
@@ -143,6 +175,7 @@ export function TabBar({
               icon={ChatIcon}
               isActive={activeTab === 'meeting'}
               label="모임"
+              onClick={onMeetingClick}
             />
             <TabLink href={myHref} icon={MyIcon} isActive={activeTab === 'my'} label="MY" />
           </>
