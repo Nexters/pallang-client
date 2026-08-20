@@ -45,14 +45,11 @@ export function LikedOpinionsView() {
 
   // 그 책의 좋아요를 전부 해제하면 책이 필터 목록에서 빠진다. 고른 값이 사라진 채로 두면
   // Select가 제목 대신 bookId를 그대로 그리고, 목록도 그 책에 묶인 채 비어 보인다.
+  // 고른 값을 되돌려 쓰지 않고 파생값만 쓴다 — effect로 setState하면 연쇄 렌더가 된다.
+  // 앱 안에서 책이 빠지는 경로만 있고 다시 붙는 경로는 없어, 되돌릴 필요도 없다.
   const selectedBook = bookOptions.some((option) => option.value === pickedBook)
     ? pickedBook
     : ALL_BOOKS
-
-  // 되돌린 값도 함께 지운다 — 남겨두면 그 책이 필터에 다시 나타나는 순간 고르지도 않은 필터가 걸린다
-  useEffect(() => {
-    if (selectedBook !== pickedBook) setPickedBook(selectedBook)
-  }, [selectedBook, pickedBook])
 
   const bookId = selectedBook === ALL_BOOKS ? undefined : Number(selectedBook)
   const listQuery = useInfiniteQuery({
