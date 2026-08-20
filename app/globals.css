@@ -116,7 +116,10 @@
 
   /* Typography — 글꼴 (폰트 파일 로드는 별도 작업) */
   --font-suit: 'SUIT Variable', sans-serif;
-  --font-galmuri: 'Galmuri11', sans-serif;
+  /* layout.tsx의 next/font(local)가 --font-galmuri11로 실제 로드 패밀리(+메트릭 보정 폴백)를
+     html에 주입한다. 주입이 없는 지면(Storybook은 globals.css만 import)은 원래 패밀리명으로
+     폴백하는데 거기서는 폰트 파일도 없어 결국 sans-serif로 떨어진다 — 종전과 동일. */
+  --font-galmuri: var(--font-galmuri11, 'Galmuri11'), sans-serif;
   --font-pretendard: 'Pretendard', sans-serif; /* Reader 화면 fontFamily/base */
 
   /* Typography — 스타일 (text-title-24bd 형태로 사용) */
