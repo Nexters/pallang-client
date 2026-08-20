@@ -1,10 +1,14 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect } from 'react'
 
 import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import SettingIcon from '@/app/_global/_components/Icon/assets/setting.svg'
 import type { GroupSummary } from '@/app/_global/_queries/group.queries'
+
+/** 최적화 URL을 거치면 미리 받아 둔 것과 주소가 어긋난다 — 9KB 원본이라 그대로 쓴다 */
+const KAKAO_ICON_SRC = '/images/kakaotalk-app-icon.png'
 
 type MeetingMoreSheetProps = {
   /** 열린 대상. null이면 닫힘 */
@@ -26,12 +30,22 @@ export function MeetingMoreSheet({
   onShareInvite,
   onEditSettings,
 }: MeetingMoreSheetProps) {
+  // 시트가 열리는 프레임에 아이콘을 처음 받으면 등장 전환 중에 로드·디코드가 끼어들어
+  // 올라오는 동안 프레임이 떨어진다(실기기) — 목록 화면에 있는 동안 미리 받아 둔다
+  useEffect(() => {
+    const icon = new window.Image()
+    icon.src = KAKAO_ICON_SRC
+    void icon.decode().catch(() => undefined)
+  }, [])
+
   return (
     <BottomSheet
       open={group !== null}
       title="더보기"
       onClose={onClose}
-      contentClassName="flex gap-2 p-4"
+      // 기본 본문이 flex-col이다. flex만 쓰면 방향은 그대로 남아 타일이 세로로 쌓인다 —
+      // 같은 병합 그룹인 flex-row로 밀어내야 시안(3321:30404)의 좌우 배치가 된다.
+      contentClassName="flex-row gap-2 p-4"
     >
       <button
         type="button"
@@ -43,10 +57,11 @@ export function MeetingMoreSheet({
       >
         {/* 시안은 카카오톡 앱 아이콘(PNG) — 공유는 OS 시트로 나가지만 '카카오로 보낸다'는 기대를 아이콘이 전한다 */}
         <Image
-          src="/images/kakaotalk-app-icon.png"
+          src={KAKAO_ICON_SRC}
           alt=""
           width={56}
           height={56}
+          unoptimized
           className="rounded-2xl"
         />
         초대 링크 보내기
