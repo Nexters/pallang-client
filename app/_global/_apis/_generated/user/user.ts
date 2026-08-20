@@ -253,7 +253,7 @@ export const getGetFilterBooksUrl = (params: GetFilterBooksParams) => {
 }
 
 /**
- * 좋아요 관리·스포일러 관리 화면의 "전체 책 보기" 드롭다운에 쓸 도서 목록입니다. type=LIKE면 내가 좋아요를 누른 흔적이 있는 도서를, type=SPOILER면 내가 스포일러로 남긴 대목이 있는 도서를 최근 활동순으로 중복 없이 반환합니다. 여기서 고른 bookId를 흔적/좋아요/대목 목록 API의 bookId 파라미터로 전달합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 좋아요 관리·스포일러 관리 화면의 "전체 책 보기" 드롭다운에 쓸 도서 목록입니다. type=LIKE면 내가 좋아요를 누른 흔적이 있는 도서를, type=SPOILER면 내가 스포일러로 남긴 대목이 있는 도서를 최근 활동순으로 중복 없이 반환합니다. 다른 목록 API와 동일하게 page/size로 페이지네이션됩니다. 여기서 고른 bookId를 흔적/좋아요/대목 목록 API의 bookId 파라미터로 전달합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 도서 필터 목록
  */
 export const getFilterBooks = async (

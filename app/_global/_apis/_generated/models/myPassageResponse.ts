@@ -5,6 +5,7 @@
 export interface MyPassageResponse {
   passageId: number
   bookId: number
+  opinionId: number
   pageNumber: number
   quotedText: string
   isSpoiler: boolean

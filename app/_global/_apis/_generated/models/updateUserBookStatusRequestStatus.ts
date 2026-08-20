@@ -7,6 +7,5 @@ export type UpdateUserBookStatusRequestStatus =
 
 export const UpdateUserBookStatusRequestStatus = {
   READING: 'READING',
-  PLANNED: 'PLANNED',
   FINISHED: 'FINISHED',
 } as const

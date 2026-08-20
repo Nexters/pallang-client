@@ -8,4 +8,12 @@ export type GetFilterBooksParams = {
    * 필터 종류 (LIKE: 좋아요 관리, SPOILER: 스포일러 대목 관리)
    */
   type: GetFilterBooksType
+  /**
+   * 페이지 번호 (0부터 시작, 기본값 0)
+   */
+  page?: number
+  /**
+   * 페이지 크기 (기본값 20, 최대 100)
+   */
+  size?: number
 }

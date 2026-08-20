@@ -12,8 +12,6 @@ import { cn } from '@/app/_global/_services/cn.service'
  * 낮춰 `독서 상태`로 남긴다 — 새 모양을 만들지 않고 자리만 지킨다.
  */
 export function BookStatusChip({ status, onClick }: { status: BookStatus; onClick: () => void }) {
-  // 시안에 PLANNED(읽고 싶은 책) 뱃지가 없다. 없는 라벨을 지어내는 대신 상태 없음과 같이 다룬다
-  // — 시트의 선택지에도 PLANNED가 없어 저장 경로로 되돌아오지 않는다.
   const isReading = status === BOOK_STATUS.READING
 
   return (

@@ -101,12 +101,6 @@ describe('책 상세 독서 상태', () => {
     expect(await screen.findByRole('button', { name: '읽고 있는 책' })).toBeInTheDocument()
   })
 
-  it('시안에 없는 PLANNED는 뱃지로 그리지 않는다', async () => {
-    renderView('PLANNED')
-
-    expect(await screen.findByRole('button', { name: '독서 상태' })).toBeInTheDocument()
-  })
-
   it('시트는 현재 상태를 고른 채 열린다', async () => {
     renderView('READING')
 

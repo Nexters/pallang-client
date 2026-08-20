@@ -10,6 +10,5 @@ export type BookDetailResponseMyStatus =
 
 export const BookDetailResponseMyStatus = {
   READING: 'READING',
-  PLANNED: 'PLANNED',
   FINISHED: 'FINISHED',
 } as const
