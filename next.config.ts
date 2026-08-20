@@ -49,10 +49,14 @@ const nextConfig: NextConfig = {
               svgProps: { className: 'text-icon-primary' },
               // SVGO로 인라인 SVG를 경량화한다(effect-wave 28.7KB 등이 JS 청크에 통째로 들어간다).
               // 단 removeViewBox만 끈다 — viewBox가 없으면 width/height 재정의 시 스케일이 안 되고 잘린다.
+              // prefixIds 필수 — svgoConfig를 직접 주면 SVGR 기본 플러그인이 통째로 대체된다.
+              // preset-default의 cleanupIds가 id를 파일별로 'a'로 축약하는데, 인라인 SVG의 <use href="#a">는
+              // 문서 전체에서 첫 id를 집으므로 여러 아이콘이 한 화면에 뜨면(EffectPicker) 남의 도형을 그린다.
               svgo: true,
               svgoConfig: {
                 plugins: [
                   { name: 'preset-default', params: { overrides: { removeViewBox: false } } },
+                  'prefixIds',
                 ],
               },
             },
