@@ -214,9 +214,16 @@ function ProfileForm({
           className="relative rounded-3xl press disabled:pointer-events-none"
         >
           {profileImageUrl ? (
-            // 외부 이미지 도메인이 유동적이라 next/image 대신 img 사용
+            // 프로필 이미지 도메인이 유동적이라(카카오 CDN 등) next/image 대신 img 사용 — 크기·디코딩만 정비
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profileImageUrl} alt="" className="size-[90px] rounded-3xl object-cover" />
+            <img
+              src={profileImageUrl}
+              alt=""
+              width={90}
+              height={90}
+              decoding="async"
+              className="size-[90px] rounded-3xl object-cover"
+            />
           ) : (
             <Image
               src="/images/profile-character-orange.png"

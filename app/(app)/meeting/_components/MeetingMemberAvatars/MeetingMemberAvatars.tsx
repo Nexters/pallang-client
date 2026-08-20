@@ -40,10 +40,14 @@ export function MeetingMemberAvatars({ groupId, memberCount }: MeetingMemberAvat
           >
             {member &&
               (member.profileImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- 외부 도메인 프로필 이미지
+                // eslint-disable-next-line @next/next/no-img-element -- 프로필 이미지 도메인이 유동적(카카오 CDN 등)
                 <img
                   src={member.profileImageUrl}
                   alt={`멤버 ${member.nickname}`}
+                  width={20}
+                  height={20}
+                  loading="lazy"
+                  decoding="async"
                   className="size-full object-cover"
                 />
               ) : (

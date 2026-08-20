@@ -82,11 +82,15 @@ export function BlockedUsersView() {
               className="flex items-center gap-2 border-b border-border-default py-4"
             >
               {user.profileImageUrl ? (
-                // 외부 이미지 도메인이 유동적이라 next/image 대신 img 사용
+                // 프로필 이미지 도메인이 유동적이라(카카오 CDN 등) next/image 대신 img 사용 — 크기·지연 로드만 정비
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={user.profileImageUrl}
                   alt=""
+                  width={AVATAR_SIZE}
+                  height={AVATAR_SIZE}
+                  loading="lazy"
+                  decoding="async"
                   className="size-8 shrink-0 rounded-lg object-cover"
                 />
               ) : (

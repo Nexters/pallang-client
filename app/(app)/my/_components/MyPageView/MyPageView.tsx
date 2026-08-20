@@ -79,11 +79,14 @@ function LoggedInContent({ user, onLogout }: { user: MyUser; onLogout?: () => vo
     <div className="flex flex-1 flex-col gap-8 py-4">
       <section className="flex items-center gap-3 px-4">
         {user.profileImageUrl ? (
-          // 외부 이미지 도메인이 유동적이라 next/image 대신 img 사용
+          // 프로필 이미지 도메인이 유동적이라(카카오 CDN 등) next/image 대신 img 사용 — 크기·디코딩만 정비
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.profileImageUrl}
             alt=""
+            width={72}
+            height={72}
+            decoding="async"
             className="size-18 shrink-0 rounded-3xl object-cover"
           />
         ) : (

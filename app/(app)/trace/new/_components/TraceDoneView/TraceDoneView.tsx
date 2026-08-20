@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -41,10 +42,11 @@ export function TraceDoneView() {
     <div className="flex flex-1 flex-col bg-bg-overlay">
       <div className="flex flex-1 items-end justify-center pb-6">
         {draft.book?.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다
-          <img
+          <Image
             src={draft.book.coverImageUrl}
             alt={draft.book.title}
+            width={144}
+            height={208}
             className="h-52 w-36 rounded-[2px] object-cover"
           />
         ) : (

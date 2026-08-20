@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import type { FC, SVGProps } from 'react'
 
 import CameraIcon from '@/app/_global/_components/Icon/assets/camera.svg'
@@ -63,10 +64,11 @@ export function TraceSourceOptions({
           </span>
           <div className="flex items-center gap-3 rounded-lg bg-bg-surface p-3">
             {book.coverImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다
-              <img
+              <Image
                 src={book.coverImageUrl}
                 alt=""
+                width={36}
+                height={48}
                 className="h-12 w-9 rounded-[2px] object-cover"
               />
             ) : (
