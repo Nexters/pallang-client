@@ -75,8 +75,10 @@ export function BottomSheet({
   // 내지 않고 --tw-translate-* 를 거쳐 translate:var(--tw-translate-x) var(--tw-translate-y)
   // 로 조립하는데, iOS Safari(= iOS의 모든 브라우저)는 @starting-style 안에서 var()로 조립된
   // translate를 시작값으로 잡지 못한다. 실기기 판정 결과 — 직접값+@starting-style은 전환 발생,
-  // var 조립+@starting-style은 전환 자체가 없음(2프레임 뒤에도 translate:none), var 조립이어도
-  // 토글 경로는 정상. 그래서 @starting-style 쪽만 직접 값으로 낸다.
+  // var 조립+@starting-style은 전환 자체가 없음(2프레임 뒤에도 translate:none).
+  // 토글(data-starting-style) 경로는 당시 판정에선 var 조립도 정상이었지만, 이후 모임 더보기
+  // 시트(토글 경로)에서 등장이 안 보이는 사례가 나와(#309) 경계 프레임의 시작·종료값은
+  // 전부 직접 값으로 통일한다 — var 조립을 남겨 얻는 것이 없다.
 
   return (
     <BaseDialog.Root
@@ -109,8 +111,8 @@ export function BottomSheet({
               // 시트는 화면 높이만큼 올라온다 — ease-enter로 그 거리를 옮기면 2프레임 만에 62%가
               // 끝나 번쩍이는 것으로 읽힌다(실기기에서 확인). 먼 거리 등장 전용 토큰을 쓴다.
               'transition-transform duration-rise ease-rise',
-              'starting:[translate:0_100%] data-starting-style:translate-y-full',
-              'data-ending-style:translate-y-full',
+              'starting:[translate:0_100%] data-starting-style:[translate:0_100%]',
+              'data-ending-style:[translate:0_100%]',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
               popupClassName,
             )}
