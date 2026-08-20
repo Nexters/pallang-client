@@ -185,6 +185,37 @@ describe('스포일러 관리', () => {
     expect(screen.getByText(PASSAGE.quotedText)).toBeInTheDocument()
   })
 
+  it('해제한 책이 마지막 스포일러였을 수 있어 도서 필터도 다시 받는다', async () => {
+    const requests = renderView()
+    await screen.findByText(PASSAGE.quotedText)
+    const before = requests.filter((request) => request.url.includes('/filter-books')).length
+
+    await userEvent.click(screen.getByRole('button', { name: '128쪽 스포일러 해제' }))
+    await userEvent.click(await screen.findByRole('button', { name: '스포일러 해제' }))
+
+    await waitFor(() => {
+      expect(
+        requests.filter((request) => request.url.includes('/filter-books')).length,
+      ).toBeGreaterThan(before)
+    })
+  })
+
+  it('실패 안내는 다음 대목의 해제를 시작하면 걷힌다', async () => {
+    const other = { ...PASSAGE, passageId: 92, pageNumber: 200, quotedText: '다른 대목입니다.' }
+    renderView([PASSAGE, other], 500)
+    await screen.findByText(PASSAGE.quotedText)
+
+    await userEvent.click(screen.getByRole('button', { name: '128쪽 스포일러 해제' }))
+    await userEvent.click(await screen.findByRole('button', { name: '스포일러 해제' }))
+    await screen.findByText(/스포일러를 해제하지 못했어요/)
+
+    await userEvent.click(screen.getByRole('button', { name: '200쪽 스포일러 해제' }))
+
+    await waitFor(() => {
+      expect(screen.queryByText(/스포일러를 해제하지 못했어요/)).not.toBeInTheDocument()
+    })
+  })
+
   it('카드를 누르면 그 흔적으로 간다', async () => {
     renderView()
     await screen.findByText(PASSAGE.quotedText)
