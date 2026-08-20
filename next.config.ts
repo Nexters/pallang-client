@@ -17,10 +17,7 @@ const nextConfig: NextConfig = {
   // 내용만 갈아끼우면 1년간 옛 파일이 보인다. (meta_og.png 교체 시에도 파일명 변경 필수)
   headers() {
     const immutable = [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }]
-    return Promise.resolve([
-      { source: '/images/:path*', headers: immutable },
-      { source: '/decorations/:path*', headers: immutable },
-    ])
+    return Promise.resolve([{ source: '/images/:path*', headers: immutable }])
   },
   images: {
     // svg.d.ts의 SVGR 타입 선언과 충돌하는 기본 '*.svg' 타입(any) 주입을 막는다

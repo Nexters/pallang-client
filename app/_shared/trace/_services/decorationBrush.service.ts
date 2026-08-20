@@ -1,19 +1,15 @@
 import type { CSSProperties } from 'react'
 
 import type { Decoration, EffectType } from '../_data/decoration.model'
+import { BRUSH_COLOR_PLACEHOLDER, BRUSH_SVG_BY_EFFECT } from '../_data/decorationBrush.constant'
 import { DECORATION_COLORS, DEFAULT_DECORATION_COLOR } from '../_data/decorationColor.constant'
 
 /**
  * 효과 자국은 시안 아이콘에서 뽑은 붓 벡터를 글자 뒤에 배경으로 깐다.
- * mask로 칠하면 글자까지 같이 잘려서, 팔레트 색마다 미리 만든 파일을 쓴다.
+ * mask로 칠하면 글자까지 같이 잘려서 background-image를 쓰고, 색은 붓 SVG 텍스트의
+ * fill만 갈아 끼워 data URI로 인라인한다 — 모양당 SVG 한 벌로 모든 팔레트 색을
+ * 그리고, 파일 요청이 없어 자국이 글자와 동시에 뜬다(#322).
  */
-const BRUSH_BY_EFFECT: Record<Exclude<EffectType, 'HIGHLIGHT'>, string> = {
-  CIRCLE: 'circle',
-  DOTTED: 'dots',
-  DOUBLE_LINE: 'underline',
-  UNDERLINE: 'pencil',
-  WAVY: 'wave',
-}
 
 /** 글자를 감싸는 효과는 칸 전체로 늘이고, 밑줄 계열은 아랫단에 정해진 높이로 깐다. */
 const LAYOUT_BY_EFFECT: Record<
@@ -65,9 +61,31 @@ const LAYOUT_BY_EFFECT: Record<
 }
 
 function toPaletteColor(color: string): string {
-  // 파일은 팔레트 색으로만 만들어 둔다. 서버가 다른 값을 주면 기본색으로 떨어뜨린다.
+  // 붓 색은 팔레트 색만 허용한다. 서버가 다른 값을 주면 기본색으로 떨어뜨린다.
   const match = DECORATION_COLORS.find((item) => item.toLowerCase() === color.toLowerCase())
-  return (match ?? DEFAULT_DECORATION_COLOR).slice(1).toLowerCase()
+  return (match ?? DEFAULT_DECORATION_COLOR).toLowerCase()
+}
+
+/** data URI에 그대로 못 넣는 문자만 바꾼다. 공백·작은따옴표는 url("...") 안에서 유효해 남긴다. */
+function encodeSvg(svg: string): string {
+  return svg
+    .replaceAll('%', '%25')
+    .replaceAll('#', '%23')
+    .replaceAll('<', '%3C')
+    .replaceAll('>', '%3E')
+}
+
+const brushImageCache = new Map<string, string>()
+
+/** 붓 SVG에 팔레트 색을 넣어 background-image 값으로 만든다. 조합이 20개뿐이라 캐시한다. */
+function toBrushImage(effectType: Exclude<EffectType, 'HIGHLIGHT'>, color: string): string {
+  const key = `${effectType}:${color}`
+  const cached = brushImageCache.get(key)
+  if (cached) return cached
+  const svg = BRUSH_SVG_BY_EFFECT[effectType].replace(BRUSH_COLOR_PLACEHOLDER, color)
+  const image = `url("data:image/svg+xml,${encodeSvg(svg)}")`
+  brushImageCache.set(key, image)
+  return image
 }
 
 export function decorationBrushStyle({ color, effectType }: Decoration): CSSProperties {
@@ -76,7 +94,7 @@ export function decorationBrushStyle({ color, effectType }: Decoration): CSSProp
     return { backgroundColor: `color-mix(in srgb, ${color} 40%, transparent)` }
   }
   return {
-    backgroundImage: `url(/decorations/${BRUSH_BY_EFFECT[effectType]}-${toPaletteColor(color)}.svg)`,
+    backgroundImage: toBrushImage(effectType, toPaletteColor(color)),
     ...LAYOUT_BY_EFFECT[effectType],
   }
 }

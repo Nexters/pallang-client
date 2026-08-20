@@ -2,12 +2,8 @@
 
 import type { FC, SVGProps } from 'react'
 
-import EffectCircleIcon from '@/app/_global/_components/Icon/assets/effect-circle.svg'
 import EffectDotsIcon from '@/app/_global/_components/Icon/assets/effect-dots.svg'
 import EffectHighlightIcon from '@/app/_global/_components/Icon/assets/effect-highlight.svg'
-import EffectPencilIcon from '@/app/_global/_components/Icon/assets/effect-pencil.svg'
-import EffectUnderlineIcon from '@/app/_global/_components/Icon/assets/effect-underline.svg'
-import EffectWaveIcon from '@/app/_global/_components/Icon/assets/effect-wave.svg'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { EFFECT_OPTIONS, type EffectOption } from '../../_data/effect.constant'
@@ -19,20 +15,19 @@ type EffectPickerProps = {
   selectedKey?: EffectOption['key'] | null
 }
 
-const iconByKey: Record<EffectOption['key'], FC<SVGProps<SVGSVGElement>>> = {
-  circle: EffectCircleIcon,
+// 동그라미·색연필·점선 아이콘 등 붓 자국이 든 4종은 스탬프 반복 수백 개짜리 벡터(57.7KB)라
+// 표시 크기(30px)의 3배 래스터로 대체했다(#322) — 색이 에셋에 박힌 일러스트라 currentColor가
+// 필요 없다. 점선·형광펜은 단순 벡터(각 350B)라 SVG를 유지한다.
+const svgIconByKey: Partial<Record<EffectOption['key'], FC<SVGProps<SVGSVGElement>>>> = {
   dots: EffectDotsIcon,
   highlight: EffectHighlightIcon,
-  pencil: EffectPencilIcon,
-  underline: EffectUnderlineIcon,
-  wave: EffectWaveIcon,
 }
 
 export function EffectPicker({ disabled, onPick, selectedKey }: EffectPickerProps) {
   return (
     <div className="grid grid-cols-3 gap-2 px-2">
       {EFFECT_OPTIONS.map((option) => {
-        const Icon = iconByKey[option.key]
+        const SvgIcon = svgIconByKey[option.key]
         const isSelected = option.key === selectedKey
         return (
           <button
@@ -53,7 +48,19 @@ export function EffectPicker({ disabled, onPick, selectedKey }: EffectPickerProp
               disabled && 'cursor-not-allowed opacity-40',
             )}
           >
-            <Icon aria-hidden="true" className="size-[30px]" />
+            {SvgIcon ? (
+              <SvgIcon aria-hidden="true" className="size-[30px]" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- 30px 고정 크기 로컬 에셋이라 next/image 최적화가 붙을 자리가 없다
+              <img
+                aria-hidden="true"
+                alt=""
+                src={`/images/effects/effect-${option.key}.webp`}
+                width={30}
+                height={30}
+                className="size-[30px]"
+              />
+            )}
             {/* 고른 효과는 라벨까지 굵어진다(시안 I3082:36368;2200:14222) */}
             <span className={cn('w-full text-center', isSelected && 'text-title-14bd')}>
               {option.label}
