@@ -31,7 +31,9 @@ export function MeetingMoreSheet({
       open={group !== null}
       title="더보기"
       onClose={onClose}
-      contentClassName="flex gap-2 p-4"
+      // 기본 본문이 flex-col이다. flex만 쓰면 방향은 그대로 남아 타일이 세로로 쌓인다 —
+      // 같은 병합 그룹인 flex-row로 밀어내야 시안(3321:30404)의 좌우 배치가 된다.
+      contentClassName="flex-row gap-2 p-4"
     >
       <button
         type="button"
