@@ -13,7 +13,9 @@ const config: StorybookConfig = {
     viteConfig.plugins.push(
       svgr({
         include: /\/app\/.+\.svg(\?.*)?$/,
-        // next.config.ts의 @svgr/webpack 옵션과 동일하게 기본 색 지정, viewBox 보존 위해 svgo 비활성
+        // next.config.ts의 @svgr/webpack 옵션과 동일하게 기본 색을 지정한다.
+        // 단 SVGO는 여기서만 끈다 — vite-plugin-svgr에는 @svgr/plugin-svgo가 동봉되지 않아
+        // 켜려면 의존성 추가가 필요하고, 실제 번들은 next(turbopack) 쪽이므로 시각 판정도 그쪽 기준이다.
         svgrOptions: { svgProps: { className: 'text-icon-primary' }, svgo: false },
       }),
     )
