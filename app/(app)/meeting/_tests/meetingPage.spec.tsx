@@ -124,7 +124,7 @@ describe('모임 탭', () => {
     stubFetch([])
     renderPage()
     expect(screen.getByRole('heading', { name: '모임' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '모임' })).toBeInTheDocument() // 탭바
+    expect(screen.getByRole('button', { name: '모임' })).toBeInTheDocument() // 탭바 — 로그인 게이트 때문에 링크가 아니라 버튼이다
     expect(screen.getByRole('status', { name: '모임을 불러오는 중' })).toBeInTheDocument()
   })
   it('모임이 없으면 빈 상태와 모임 만들기 버튼을 보여주고 헤더에 +가 없다', async () => {
