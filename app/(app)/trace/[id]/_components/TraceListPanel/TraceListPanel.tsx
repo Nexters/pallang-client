@@ -4,12 +4,12 @@ import { type RefObject, useRef } from 'react'
 
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 
-import { useOpinionSheet } from '../../_hooks/useOpinionSheet'
+import { useCommentSheet } from '../../_hooks/useCommentSheet'
 import { useTraceList } from '../../_hooks/useTraceList'
 import type { TraceSheet } from '../../_hooks/useTraceSheet'
+import { TraceCommentSheet } from '../TraceCommentSheet/TraceCommentSheet'
 import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
-import { TraceReplySheet } from '../TraceReplySheet/TraceReplySheet'
 
 type TraceListPanelProps = {
   passageId: number | undefined
@@ -24,13 +24,13 @@ type TraceListPanelProps = {
    * 셸이 형제로 든 남기기 FAB이 같은 자리를 다투므로 그때는 FAB을 숨긴다.
    */
   onBottomBusyChange: (isBusy: boolean) => void
-  /** 딥링크로 지목된 흔적 — 목록이 도착하면 그 의견의 답글 시트가 올라온 채 시작한다 */
+  /** 딥링크로 지목된 흔적 — 목록이 도착하면 그 의견의 댓글 시트가 올라온 채 시작한다 */
   initialTraceId?: number
   /** 이 목록을 담고 있는 바텀시트 — 손잡이와 "N개의 의견 ›"이 높이를 바꾼다 */
   sheet: TraceSheet
 }
 
-/** 흔적 목록 흐름의 컴포넌트 경계 — 목록·무한스크롤·에러·답글 시트를 소유한다 */
+/** 흔적 목록 흐름의 컴포넌트 경계 — 목록·무한스크롤·에러·댓글 시트를 소유한다 */
 export function TraceListPanel({
   passageId,
   isMasked,
@@ -42,7 +42,7 @@ export function TraceListPanel({
 }: TraceListPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const list = useTraceList({ passageId, initialTraceId, stageError })
-  const opinions = useOpinionSheet({
+  const opinions = useCommentSheet({
     passageId,
     isMasked,
     selectedTrace: list.selectedTrace,
@@ -73,18 +73,18 @@ export function TraceListPanel({
             isSheetExpanded={sheet.isExpanded}
             onToggleSheet={sheet.toggle}
             onExpandSheet={sheet.expand}
-            onOpenReply={(trace) => {
-              opinions.openReply(trace.opinionId)
+            onOpenComments={(trace) => {
+              opinions.openComments(trace.opinionId)
             }}
           />
           {/* 목록 끝 sentinel — 화면에 들어오면 다음 흔적 페이지를 불러온다. 목록 여백(pb-10)을 건드리지 않도록 1px만 차지한다 */}
           <div ref={loadMoreRef} aria-hidden className="h-px w-full" />
         </>
       )}
-      <TraceReplySheet
-        trace={list.findTrace(opinions.replyOpinionId)}
+      <TraceCommentSheet
+        trace={list.findTrace(opinions.commentOpinionId)}
         onClose={() => {
-          opinions.closeReply()
+          opinions.closeComments()
           // 딥링크가 지목한 흔적도 함께 놓아준다 — 남겨두면 시트가 곧바로 다시 올라온다
           list.closeTrace()
         }}

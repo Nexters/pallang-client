@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import ReplyIcon from '@/app/_global/_components/Icon/assets/reply.svg'
+import { ProfileAvatar } from '@/app/_global/_components/ProfileAvatar/ProfileAvatar'
 import type { CommentResponse } from '@/app/_global/_queries/comment.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -28,8 +29,14 @@ export function CommentItem({ comment, isMine, isReply, onUpdate, onRemove }: Co
         <p className="text-body-16md text-text-inverse/50">삭제된 댓글입니다</p>
       ) : (
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <span className="text-body-14sb text-text-inverse/50">{comment.nickname}</span>
+          <div className="flex items-center justify-between gap-2">
+            {/* 시안의 프로필-닉네임 간격은 6px — 닉네임만 흐리고 사진은 또렷하게 둔다 */}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <ProfileAvatar src={comment.profileImageUrl} size={24} />
+              <span className="truncate text-body-14sb text-text-inverse/50">
+                {comment.nickname}
+              </span>
+            </span>
             {/* 내 댓글에는 ⋯ 대신 아래의 수정/삭제가 붙는다 — 남의 댓글에만 신고·차단 메뉴를 연다 */}
             {!isMine && (
               <ModerationMenu

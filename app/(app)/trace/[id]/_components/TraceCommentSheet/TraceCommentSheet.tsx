@@ -9,27 +9,30 @@ import { TraceCommentComposer } from '../TraceCommentComposer/TraceCommentCompos
 import { TraceCommentSection } from '../TraceCommentSection/TraceCommentSection'
 import { TraceItem } from '../TraceItem/TraceItem'
 
-type TraceReplySheetProps = {
-  /** 답글을 보고 있는 의견 — null이면 시트가 내려가 있다 */
+type TraceCommentSheetProps = {
+  /** 댓글을 보고 있는 의견 — null이면 시트가 내려가 있다 */
   trace: Trace | null
   onClose: () => void
 }
 
 /**
- * 흔적의 댓글 아이콘으로 올라오는 답글 시트(디자인 주석 229:18243).
+ * 흔적의 댓글 아이콘으로 올라오는 댓글 시트(디자인 주석 229:18243).
  *
  * 의견 목록 시트 위로 한 겹 더 올라와 그것을 통째로 덮는다 — 목록을 옆으로 밀어내는 대신
  * 시트를 겹치면 내려서 닫는 길이 그대로 남고, 뒤의 목록도 자리를 지킨다.
+ *
+ * 이 화면의 위계는 의견 → 댓글 → 답글 3단계다. 여기 실리는 것은 의견에 달린 '댓글'이고,
+ * '답글'은 각 댓글 아래로 펼쳐지는 한 단계 더 아래를 가리킨다(CommentThread).
  */
-export function TraceReplySheet({ trace, onClose }: TraceReplySheetProps) {
-  // 내려가는 동안에도 원본 의견과 답글이 남아 있어야 퇴장이 빈 시트로 보이지 않는다
+export function TraceCommentSheet({ trace, onClose }: TraceCommentSheetProps) {
+  // 내려가는 동안에도 원본 의견과 댓글이 남아 있어야 퇴장이 빈 시트로 보이지 않는다
   const shownTrace = useLastPresent(trace)
 
   return (
     <BottomSheet
       open={trace !== null}
       tone="dark"
-      title={`답글 (${String(shownTrace?.commentCount ?? 0)})`}
+      title={`댓글 (${String(shownTrace?.commentCount ?? 0)})`}
       onClose={onClose}
       // 이미 어두운 의견 시트 위에 겹치는 시트라 한 겹 더 어둡게 덮지 않는다
       dim={false}
@@ -46,7 +49,7 @@ export function TraceReplySheet({ trace, onClose }: TraceReplySheetProps) {
       {shownTrace && (
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto px-4">
-            {/* 원본 의견은 답글의 머리라 자르지 않고 전부 보여준다.
+            {/* 원본 의견은 댓글의 머리라 자르지 않고 전부 보여준다.
                 onOpenComments를 넘기지 않아 개수는 버튼이 아니라 표시로만 남는다 — 이미 그 화면이다 */}
             <TraceItem trace={shownTrace} isContentClamped={false} />
             <TraceCommentSection opinionId={shownTrace.opinionId} />
