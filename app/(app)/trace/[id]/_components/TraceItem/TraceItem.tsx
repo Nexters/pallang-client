@@ -14,13 +14,8 @@ type TraceItemProps = {
   isContentClamped?: boolean
   /** 본문 탭 동작. 없으면 본문은 버튼이 아니라 문단으로 그려진다 */
   onSelect?: () => void
-  /** 답글 진입 동작. 없으면(이미 답글 화면) 개수는 버튼이 아니라 표시로만 남는다 */
+  /** 답글 시트로 가는 동작. 없으면(이미 답글 시트 안) 개수는 버튼이 아니라 표시로만 남는다 */
   onOpenComments?: () => void
-  /**
-   * 댓글이 이 카드 아래로 펼쳐져 있는지. 흔적 목록처럼 제자리에서 여닫는 자리에서만 넘긴다 —
-   * 시트로 넘어가는 자리는 펼침이 아니라 이동이라 aria-expanded를 달면 거짓말이 된다
-   */
-  isCommentsOpen?: boolean
 }
 
 export function TraceItem({
@@ -28,7 +23,6 @@ export function TraceItem({
   isContentClamped = true,
   onSelect,
   onOpenComments,
-  isCommentsOpen,
 }: TraceItemProps) {
   // 프리렌더에서는 현재 시각을 쓸 수 없어 결정적인 날짜로 먼저 그리고, hydration 후 상대 표기로 바꾼다
   const isHydrated = useIsHydrated()
@@ -86,7 +80,6 @@ export function TraceItem({
               type="button"
               onClick={onOpenComments}
               aria-label="댓글 보기"
-              aria-expanded={isCommentsOpen}
               className="flex items-center gap-0.5 text-body-14rg text-text-inverse"
             >
               <CommentIcon width={20} height={20} className="text-icon-active" />

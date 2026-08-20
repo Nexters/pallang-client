@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { opinionQueries } from '@/app/_global/_queries/opinion.queries'
 import { passageQueries } from '@/app/_global/_queries/passage.queries'
 
-import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
 import { TracePrefetchBoundary } from '../_components/TracePrefetchBoundary/TracePrefetchBoundary'
+import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 import { DEFAULT_OPINION_SORT_TYPE } from '../_data/readerHighlights.constant'
 import { parseBookId, prefetchTraceScreen } from '../_services/tracePrefetch.service'
 
@@ -29,8 +29,8 @@ vi.mock('next/headers', () => ({
 vi.mock('next/navigation', () => ({ notFound: notFoundMock }))
 
 // 이 스펙이 보는 건 서버 경계(검증·프리페치·하이드레이션)뿐이라 클라이언트 화면은 자리표시자로 둔다
-vi.mock('../_components/TraceCollapseView/TraceCollapseView', () => ({
-  TraceCollapseView: () => null,
+vi.mock('../_components/TraceScreen/TraceScreen', () => ({
+  TraceScreen: () => null,
 }))
 
 const BOOK_ID = 1
@@ -234,7 +234,7 @@ describe('TracePrefetchBoundary', () => {
     })) as ReactElement<{ children: ReactElement<{ bookId: number }> }>
 
     expect(notFoundMock).not.toHaveBeenCalled()
-    expect(boundary.props.children.type).toBe(TraceCollapseView)
+    expect(boundary.props.children.type).toBe(TraceScreen)
     expect(boundary.props.children.props.bookId).toBe(BOOK_ID)
   })
 

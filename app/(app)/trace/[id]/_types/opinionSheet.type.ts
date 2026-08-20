@@ -1,17 +1,19 @@
-/** 의견 바텀시트 화면 — null이면 닫힘, opinionId가 null이면 의견 목록, 있으면 그 의견의 답글 화면 */
-export type OpinionSheetState = { opinionId: number | null } | null
-
 /**
- * 의견 시트 흐름의 상태 전부.
+ * 답글 시트 흐름의 상태 전부.
  *
- * 시트와 펼친 댓글은 보고 있는 대목(passageId)과 가림막(isMasked)에 매여 있다 —
- * 대목이 바뀌거나 가림막이 다시 씌워지면 둘 다 닫혀야 한다. 넷을 나눠 들면
- * 그 규칙을 여러 곳에서 따로 집행하게 되므로 한 상태로 묶어 리듀서 하나에 맡긴다.
+ * 의견 목록은 화면에 늘 붙어 있는 시트(useTraceSheet)가 맡고, 여기서 다루는 것은
+ * 그 위로 겹쳐 올라오는 답글 시트뿐이다. 답글 시트는 보고 있는 대목(passageId)과
+ * 가림막(isMasked)에 매여 있다 — 대목이 바뀌거나 가림막이 다시 씌워지면 닫혀야 한다.
+ * 딥링크가 지목한 흔적을 여는 것도 같은 규칙 아래 있어야 해서 함께 둔다.
  */
 export type OpinionSheetModel = {
-  sheet: OpinionSheetState
-  /** 흔적 목록에서 댓글이 펼쳐진 의견 — 한 번에 하나만 편다 */
-  expandedOpinionId: number | null
+  /** 답글 시트가 올라와 있는 의견 — null이면 닫힘 */
+  replyOpinionId: number | null
+  /**
+   * 딥링크로 이미 열어 준 의견. 한 번만 여는 데 쓴다 —
+   * 기억하지 않으면 사용자가 다른 의견의 답글로 옮겨가도 딥링크가 매 렌더 다시 끌어온다.
+   */
+  appliedDeepLinkOpinionId: number | null
   /** 마지막으로 반영한 대목 — 이 값이 바뀌면 목록이 통째로 갈린다 */
   passageId: number | undefined
   /** 마지막으로 반영한 가림막 상태 */
@@ -19,14 +21,14 @@ export type OpinionSheetModel = {
 }
 
 export type OpinionSheetAction =
-  /** 렌더마다 현재 대목·가림막을 흘려 넣어 상태를 맞춘다 */
-  | { type: 'sync'; passageId: number | undefined; isMasked: boolean }
-  /** "N개의 의견" — 의견 목록 화면으로 시트를 연다 */
-  | { type: 'openSheet' }
-  /** 시트 안에서 그 의견의 답글 화면으로 들어간다 */
-  | { type: 'selectOpinion'; opinionId: number }
-  /** 답글 화면에서 의견 목록 화면으로 되돌아간다 */
-  | { type: 'showList' }
-  | { type: 'closeSheet' }
-  /** 흔적 목록에서 그 의견의 댓글을 제자리에 여닫는다 */
-  | { type: 'toggleComments'; opinionId: number }
+  /** 렌더마다 현재 대목·가림막·딥링크를 흘려 넣어 상태를 맞춘다 */
+  | {
+      type: 'sync'
+      passageId: number | undefined
+      isMasked: boolean
+      /** 목록에서 찾아낸 딥링크 대상 — 아직 못 찾았거나 닫혔으면 null */
+      deepLinkOpinionId: number | null
+    }
+  /** 흔적의 댓글 아이콘 — 그 의견의 답글 시트를 올린다(디자인 주석 229:18243) */
+  | { type: 'openReply'; opinionId: number }
+  | { type: 'closeReply' }

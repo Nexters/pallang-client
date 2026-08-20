@@ -14,7 +14,7 @@ import type { SwipeDirection } from '../_types/readerHighlights.type'
 import { useHighlightViewer } from './useHighlightViewer'
 
 /** 인용문 무대 흐름 — 대목 페이지 목록 → 페이지 선택 → 페이지별 대목 조회 체인을 소유한다.
-    activePassage·isRevealed는 흔적 목록 흐름도 쓰므로 이 훅은 셸(TraceCollapseView)에서 호출한다 */
+    activePassage·isRevealed는 흔적 목록 흐름도 쓰므로 이 훅은 셸(TraceScreen)에서 호출한다 */
 export function usePassageViewer(bookId: number, target?: TraceTarget | null, groupId?: number) {
   const pageNumbersQuery = useInfiniteQuery(passageQueries.pageNumbers(bookId, groupId))
   const pages = useMemo(
@@ -86,6 +86,17 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null, gr
     void fetchNextPage()
   }, [canLoadMorePages, isActivePageMissing, pageIndex, pages.length, fetchNextPage])
 
+  // 대목 이동의 판정은 한 곳뿐이다 — 화살표(QuotePager)의 활성 여부와 스와이프의 실제 이동이
+  // 같은 함수를 보므로, 눌러도 아무 일 없는 화살표나 막힌 척하는 화살표가 생기지 않는다
+  const resolveTarget = (direction: SwipeDirection) =>
+    resolveSwipeTarget({
+      direction,
+      quoteIndex,
+      quoteCount: passages.length,
+      pages,
+      activePage: viewer.activePage,
+    })
+
   const failedQueries = [pageNumbersQuery, passagesQuery].filter((query) => query.isError)
   const loadMorePages = canLoadMorePages
     ? () => {
@@ -116,14 +127,13 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null, gr
         viewer.reveal(activePassage.passageId)
       }
     },
+    // 갈 곳이 있는 방향 — 쪽 경계를 넘는 이동까지 포함한다(불러온 범위의 처음/끝에서만 막힌다)
+    canSwipe: {
+      prev: resolveTarget('prev') !== undefined,
+      next: resolveTarget('next') !== undefined,
+    },
     swipeQuote: (direction: SwipeDirection) => {
-      const target = resolveSwipeTarget({
-        direction,
-        quoteIndex,
-        quoteCount: passages.length,
-        pages,
-        activePage: viewer.activePage,
-      })
+      const target = resolveTarget(direction)
       if (!target) return
       if (target.type === 'quote') {
         viewer.goToQuote(target.quoteIndex)
