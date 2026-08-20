@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
     if (!apiOrigin) return Promise.resolve([])
     return Promise.resolve([{ source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }])
   },
+  // Capacitor 셸이 원격 URL을 로드해 정적 자산이 앱 실행마다 네트워크를 탄다.
+  // public/ 자산은 빌드 해시가 없어 기본으로는 장기 캐시를 못 받으므로 직접 immutable을 준다.
+  // 전제: 이 경로들의 파일은 내용이 바뀌면 파일명도 바꾼다(예: -v2 접미사). 같은 이름으로
+  // 내용만 갈아끼우면 1년간 옛 파일이 보인다. (meta_og.png 교체 시에도 파일명 변경 필수)
+  headers() {
+    const immutable = [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }]
+    return Promise.resolve([
+      { source: '/images/:path*', headers: immutable },
+      { source: '/decorations/:path*', headers: immutable },
+    ])
+  },
   images: {
     // svg.d.ts의 SVGR 타입 선언과 충돌하는 기본 '*.svg' 타입(any) 주입을 막는다
     disableStaticImages: true,
@@ -23,6 +34,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'api.pallang.co.kr', pathname: '/images/**' },
       { protocol: 'https', hostname: 'api-dev.pallang.co.kr', pathname: '/images/**' },
     ],
+    // AVIF 우선, 미지원 브라우저는 WebP 폴백. 포맷별로 캐시가 따로 쌓이는 비용은
+    // 표지·프로필처럼 반복 조회되는 이미지라 절감 폭(약 20%)이 더 크다고 판단.
+    formats: ['image/avif', 'image/webp'],
   },
   turbopack: {
     rules: {
