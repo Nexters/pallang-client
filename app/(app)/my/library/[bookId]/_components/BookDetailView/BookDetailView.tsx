@@ -41,19 +41,27 @@ export function BookDetailView({ bookId }: { bookId: number }) {
   const queryClient = useQueryClient()
   const bookQuery = useQuery(bookQueries.detail(bookId))
   const book = bookQuery.data?.data
-  const updateStatus = useMutation({
-    ...bookMutations.updateStatus(),
+  const savedStatus = book?.myStatus ?? null
+  const [statusError, setStatusError] = useState('')
+  const saveStatus = useMutation({
+    ...bookMutations.saveStatus(),
     onSuccess: async () => {
       setIsStatusOpen(false)
+      setStatusError('')
       // 뱃지가 읽는 myStatus는 책 상세 응답에만 실린다 — 되살릴 캐시도 그 하나뿐이다
       await queryClient.invalidateQueries({ queryKey: bookQueries.detail(bookId).queryKey })
+    },
+    // 실패하면 뱃지도 시트도 그대로라 아무 일도 없던 것처럼 보인다 — 해제는 특히 되돌아온 줄 모른다
+    onError: () => {
+      setIsStatusOpen(false)
+      setStatusError('독서 상태를 저장하지 못했어요. 잠시 후 다시 시도해주세요.')
     },
   })
 
   const handleSaveStatus = () => {
-    if (!statusDraft) return
-    // PUT은 상태와 현재 페이지를 함께 덮어쓴다 — 읽던 쪽을 지우지 않게 지금 값을 그대로 실어 보낸다
-    updateStatus.mutate({
+    // PUT은 상태와 현재 페이지를 함께 덮어쓴다 — 읽던 쪽을 지우지 않게 지금 값을 그대로 실어 보낸다.
+    // 고른 것을 모두 푼 채로 왔으면 status가 null이라 해제(DELETE)로 나간다.
+    saveStatus.mutate({
       bookId,
       status: statusDraft,
       currentPage: book?.myCurrentPage ?? undefined,
@@ -97,9 +105,9 @@ export function BookDetailView({ bookId }: { bookId: number }) {
                 publisher={book.publisher}
                 statusBadge={
                   <BookStatusChip
-                    status={book.myStatus ?? null}
+                    status={savedStatus}
                     onClick={() => {
-                      setStatusDraft(book.myStatus ?? null)
+                      setStatusDraft(savedStatus)
                       setIsStatusOpen(true)
                     }}
                   />
@@ -148,10 +156,21 @@ export function BookDetailView({ bookId }: { bookId: number }) {
         탭을 옮기면 접힌다. 해제 실패는 스포일러 탭에서만 뜬다. */}
       <Snackbar tone="light" message={release.errorMessage} onClose={release.clearError} />
 
+      {/* 독서 상태는 탭과 무관한 책 머리에서 저장한다 — 위 둘과 자리가 같지만 시트를 닫고 나서야 뜬다 */}
+      <Snackbar
+        tone="light"
+        message={statusError}
+        onClose={() => {
+          setStatusError('')
+        }}
+      />
+
       <BookStatusSheet
         open={isStatusOpen}
         value={statusDraft}
-        saving={updateStatus.isPending}
+        // 고른 값이 이미 저장된 값이면 보낼 것이 없다 — 상태 없음에서 아무것도 고르지 않은 경우도 여기 걸린다
+        saveDisabled={statusDraft === savedStatus}
+        saving={saveStatus.isPending}
         onChange={setStatusDraft}
         onClose={() => {
           setIsStatusOpen(false)

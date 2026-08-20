@@ -18,8 +18,10 @@ import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentB
 import type { SearchBooksParams } from '../_apis/_generated/models/searchBooksParams'
 import type { SearchInternalBooksParams } from '../_apis/_generated/models/searchInternalBooksParams'
 import { SearchInternalBooksSort } from '../_apis/_generated/models/searchInternalBooksSort'
-import type { UpdateUserBookStatusRequest } from '../_apis/_generated/models/updateUserBookStatusRequest'
-import { updateBookStatus } from '../_apis/_generated/user-book-status/user-book-status'
+import {
+  deleteBookStatus,
+  updateBookStatus,
+} from '../_apis/_generated/user-book-status/user-book-status'
 import { createBook } from '../_apis/book.api'
 
 export const BOOK_SEARCH_SORT = SearchInternalBooksSort
@@ -117,6 +119,13 @@ type CreateBookVariables = {
   coverImage?: Blob
 }
 
+type SaveBookStatusVariables = {
+  bookId: number
+  /** null이면 이 책의 독서 상태를 지운다 */
+  status: BookStatus
+  currentPage?: number
+}
+
 export const bookMutations = {
   all: () => ['book'] as const,
   create: () =>
@@ -125,12 +134,18 @@ export const bookMutations = {
       mutationFn: (data: CreateBookVariables) => createBook(data),
     }),
   /**
-   * 독서 상태(+현재 페이지) 설정. 엔드포인트는 `PUT /api/users/me/book-status`지만 bookId를 받아
+   * 독서 상태(+현재 페이지) 저장. 엔드포인트는 `/api/users/me/book-status`지만 bookId를 받아
    * 책 상세(myStatus)를 바꾸므로 book 쪽에 둔다 — 성공 뒤 되살릴 캐시도 `bookQueries.detail`이다.
+   *
+   * 시트에는 저장 버튼 하나뿐이라 상태를 푸는 것도 저장으로 들어온다.
+   * `status`가 null이면 해제(DELETE), 아니면 설정(PUT)이다 — 부르는 쪽은 한 갈래만 보면 된다.
    */
-  updateStatus: () =>
+  saveStatus: () =>
     mutationOptions({
-      mutationKey: [...bookMutations.all(), 'update-status'],
-      mutationFn: (request: UpdateUserBookStatusRequest) => updateBookStatus(request),
+      mutationKey: [...bookMutations.all(), 'save-status'],
+      mutationFn: ({ bookId, status, currentPage }: SaveBookStatusVariables) =>
+        status === null
+          ? deleteBookStatus({ bookId })
+          : updateBookStatus({ bookId, status, currentPage }),
     }),
 }
