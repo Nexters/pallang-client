@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { RefObject, UIEvent } from 'react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -182,15 +183,22 @@ function BookCarouselTrack({
                   onClick={() => {
                     onTraceClick(book.bookId)
                   }}
-                  style={{
-                    scale: getBookScale(index),
-                    ...(book.coverImageUrl && {
-                      backgroundImage: `url(${book.coverImageUrl})`,
-                      backgroundPosition: 'center',
-                      backgroundSize: 'cover',
-                    }),
-                  }}
+                  style={{ scale: getBookScale(index) }}
                 >
+                  {book.coverImageUrl && (
+                    // 인라인 background-image는 프리로드 힌트를 못 받고 원본 해상도를 그대로 받는다.
+                    // next/image로 표시 크기(220px) 리사이즈 + WebP/AVIF 변환을 태우고,
+                    // 첫 화면에 보이는 중앙±1권만 즉시 로드, 나머지는 스크롤로 가까워질 때 로드한다.
+                    <Image
+                      src={book.coverImageUrl}
+                      alt=""
+                      fill
+                      sizes="220px"
+                      loading={Math.abs(index - selectedBookIndex) <= 1 ? 'eager' : 'lazy'}
+                      fetchPriority={index === selectedBookIndex ? 'high' : undefined}
+                      className="rounded-sm object-cover"
+                    />
+                  )}
                   <SampleBookLabel show={showSampleLabel} />
                   <span className="sr-only">{book.title} 표지</span>
                 </Link>

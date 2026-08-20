@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
   images: {
     // svg.d.ts의 SVGR 타입 선언과 충돌하는 기본 '*.svg' 타입(any) 주입을 막는다
     disableStaticImages: true,
+    // 표지 이미지의 원본 호스트. 실제 데이터(GET /api/books/*)의 coverImageUrl은
+    // 알라딘 CDN(외부 검색 도서)과 API 서버(/images/book-covers/*, 직접 업로드 도서) 둘뿐이다.
+    // API 서버는 배포 환경마다 도메인이 달라(dev/prod) 둘 다 등록한다.
+    // 프로필 이미지는 도메인이 유동적이라(카카오 CDN 등) next/image 대상에서 제외한다 — raw <img> 유지.
+    remotePatterns: [
+      { protocol: 'https', hostname: 'image.aladin.co.kr', pathname: '/product/**' },
+      { protocol: 'https', hostname: 'api.pallang.co.kr', pathname: '/images/**' },
+      { protocol: 'https', hostname: 'api-dev.pallang.co.kr', pathname: '/images/**' },
+    ],
   },
   turbopack: {
     rules: {
