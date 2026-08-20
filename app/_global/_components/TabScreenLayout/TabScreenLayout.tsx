@@ -15,6 +15,7 @@ type TabScreenLayoutProps = ComponentPropsWithoutRef<'section'> & {
 }
 
 const TRACE_CREATE_PATH = '/trace/new'
+const MEETING_PATH = '/meeting'
 
 // 하단 TabBar가 있는 화면 공통 쉘 — 검정 배경 위에 rounded 컨텐츠 시트가 TabBar를 28px 덮는 구조
 export function TabScreenLayout({
@@ -28,10 +29,11 @@ export function TabScreenLayout({
   const runWithLogin = useLoginGate()
   const [isTracePending, startTransition] = useTransition()
 
-  // 이 버튼은 로그인 게이트 때문에 Link가 아니라 button이다 — Link가 대신 해주던 프리페치가
+  // 이 버튼들은 로그인 게이트 때문에 Link가 아니라 button이다 — Link가 대신 해주던 프리페치가
   // 없어 첫 탭에서 라우트를 받아오는 동안 화면이 잠깐 멈춰 있었다. 들어설 때 미리 받아둔다.
   useEffect(() => {
     router.prefetch(TRACE_CREATE_PATH)
+    router.prefetch(MEETING_PATH)
   }, [router])
 
   return (
@@ -49,6 +51,13 @@ export function TabScreenLayout({
         className="-mt-7 shrink-0"
         isLoading={isTabBarLoading}
         isTracePending={isTracePending}
+        // 모임 목록도 로그인 기반이다 — 비로그인은 들어가 봐야 빈 화면이라 이동 전에 게이트를 거친다.
+        // 초대 링크 랜딩(/meeting/invite)은 탭이 아니라 링크로 들어와 이 게이트와 무관하다.
+        onMeetingClick={() => {
+          runWithLogin(() => {
+            router.push(MEETING_PATH)
+          }, LOGIN_GATE_MESSAGE.groupList)
+        }}
         // 흔적 저장은 로그인이 필요하다. 그냥 들여보내면 다 작성한 뒤 저장에서 401로 막힌다.
         onTraceClick={() => {
           runWithLogin(() => {
