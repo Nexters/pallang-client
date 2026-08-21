@@ -7,6 +7,7 @@ import { Button } from '@/app/_global/_components/Button/Button'
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackRegistry'
+import { useIsHydrated } from '@/app/_global/_hooks/useIsHydrated'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import {
@@ -47,7 +48,9 @@ export function MeetingPeriodSheet({
   onConfirm,
 }: MeetingPeriodSheetProps) {
   const [draft, setDraft] = useState<MeetingPeriod>({ startDate, endDate })
-  const [month, setMonth] = useState(() => initialMonth(startDate))
+  // 열 때 정한다 — 첫 렌더(프리렌더)에는 현재 시각이 없어 '이번 달'을 만들 수 없다
+  const [month, setMonth] = useState<Date | null>(null)
+  const isHydrated = useIsHydrated()
   const { register } = useHardwareBackRegistry()
   // onClose는 매 렌더 새로 만들어져 의존성에 걸면 시트가 열려 있는 동안 등록·해제가 반복된다(useHardwareBack 선례)
   const onCloseRef = useRef(onClose)
@@ -74,8 +77,13 @@ export function MeetingPeriodSheet({
     })
   }, [open, register])
 
+  // 달력은 '오늘'과 '이번 달'을 읽어야 그려지는데 프리렌더에는 현재 시각이 없다(useIsHydrated 참고).
+  // 시트는 하이드레이션 뒤에야 열리므로 이때 그릴 것도 없다 — 닫힌 시트와 같은 빈 DOM이다.
+  if (!isHydrated) return null
+
   const today = toIsoDate(new Date())
-  const cells = buildMonthGrid(month.getFullYear(), month.getMonth())
+  const shownMonth = month ?? initialMonth(startDate)
+  const cells = buildMonthGrid(shownMonth.getFullYear(), shownMonth.getMonth())
   const complete = isValidMeetingPeriod(draft.startDate, draft.endDate)
 
   return (
@@ -110,20 +118,20 @@ export function MeetingPeriodSheet({
           aria-label="이전 달"
           className="press flex size-10 items-center justify-center rounded-full"
           onClick={() => {
-            setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))
+            setMonth(new Date(shownMonth.getFullYear(), shownMonth.getMonth() - 1, 1))
           }}
         >
           <BackIcon className="size-6 text-icon-primary" />
         </button>
         <span className="text-title-16sb text-text-primary">
-          {month.getFullYear()}년 {month.getMonth() + 1}월
+          {shownMonth.getFullYear()}년 {shownMonth.getMonth() + 1}월
         </span>
         <button
           type="button"
           aria-label="다음 달"
           className="press flex size-10 items-center justify-center rounded-full"
           onClick={() => {
-            setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))
+            setMonth(new Date(shownMonth.getFullYear(), shownMonth.getMonth() + 1, 1))
           }}
         >
           <NextIcon className="size-6 text-icon-primary" />
