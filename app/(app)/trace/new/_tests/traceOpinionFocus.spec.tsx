@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
@@ -58,7 +58,7 @@ function renderForm(seeded: boolean) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <LoginGateProvider>
           <TraceDraftProvider>
             <TraceOverlayProvider>
@@ -68,7 +68,7 @@ function renderForm(seeded: boolean) {
             </TraceOverlayProvider>
           </TraceDraftProvider>
         </LoginGateProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
 }

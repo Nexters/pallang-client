@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { TraceDoneView } from '../_components/TraceDoneView/TraceDoneView'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
@@ -65,7 +65,7 @@ function renderDone({ withPage = true }: { withPage?: boolean } = {}) {
   navState.pathname = '/trace/new/done'
   render(
     // 가드는 nav 안에서만 성립한다(나가는 중에는 물러나야 하므로) — layout과 같은 순서로 감싼다
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceOverlayProvider>
           <TraceNavProvider>
@@ -73,7 +73,7 @@ function renderDone({ withPage = true }: { withPage?: boolean } = {}) {
           </TraceNavProvider>
         </TraceOverlayProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
   fireEvent.click(screen.getByRole('button', { name: '흔적 저장됨' }))
   // 초안이 채워지기 전 첫 렌더에서 가드가 부른 것은 이 테스트의 관심사가 아니다

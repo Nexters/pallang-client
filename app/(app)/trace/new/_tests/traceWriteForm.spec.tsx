@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 // ①이 저장까지 맡게 되면서(대목을 물고 들어온 경로) useTraceSubmit이 딸려 온다 —
 // useMutation은 QueryClientProvider를, useLoginGate는 LoginGateProvider를 요구한다.
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
@@ -84,7 +84,7 @@ function renderForm({ fromPassage = false } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <LoginGateProvider>
           <TraceDraftProvider>
             <TraceOverlayProvider>
@@ -95,7 +95,7 @@ function renderForm({ fromPassage = false } = {}) {
             </TraceOverlayProvider>
           </TraceDraftProvider>
         </LoginGateProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
   return queryClient

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Activity, type ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
@@ -48,7 +48,7 @@ vi.mock('@/app/_global/_components/BottomSheet/BottomSheet', () => ({
  */
 function renderStep(seed: Parameters<typeof TraceSourceView>[0]['seed'] = null) {
   const tree = (mode: 'hidden' | 'visible') => (
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceCaptureProvider>
           <TraceOverlayProvider>
@@ -60,7 +60,7 @@ function renderStep(seed: Parameters<typeof TraceSourceView>[0]['seed'] = null) 
           </TraceOverlayProvider>
         </TraceCaptureProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>
+    </AppBackProvider>
   )
   const { rerender } = render(tree('visible'))
   return {

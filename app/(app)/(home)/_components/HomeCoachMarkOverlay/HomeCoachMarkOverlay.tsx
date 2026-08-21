@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react'
 import { useLayoutEffect, useRef, useState } from 'react'
 
-import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
+import { useAppBack } from '@/app/_global/_hooks/useAppBack'
 import { cn } from '@/app/_global/_services/cn.service'
 import { markHomeCoachMarkSeen } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 
@@ -77,7 +77,7 @@ export function HomeCoachMarkOverlay({ onFinish }: HomeCoachMarkOverlayProps) {
 
   // 안내에 갇히지 않도록 안드로이드 back으로 언제든 빠져나갈 수 있게 한다.
   // 가로채지 않으면 기본 동작이 히스토리를 되감아 안내 도중 다른 화면으로 튄다.
-  useHardwareBack(finish)
+  useAppBack(finish)
 
   // 좌표는 전부 실제 엘리먼트에서 잰다. 시안(375px) 좌표를 박아 두면 폭이 다른 기기에서
   // 어긋나고, 특히 탭바는 pb-(--safe-bottom)으로 늘어나므로 하단 고정값은 홈 인디케이터가

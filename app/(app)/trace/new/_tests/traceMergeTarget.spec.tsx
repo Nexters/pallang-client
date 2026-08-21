@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
 import { TraceBookForm } from '../_components/TraceBookForm/TraceBookForm'
@@ -84,7 +84,7 @@ function renderBookStep(mergeTargetId: number | null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <LoginGateProvider>
           <TraceDraftProvider>
             <TraceOverlayProvider>
@@ -94,7 +94,7 @@ function renderBookStep(mergeTargetId: number | null) {
             </TraceOverlayProvider>
           </TraceDraftProvider>
         </LoginGateProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
 }

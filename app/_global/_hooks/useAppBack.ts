@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 
-import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackRegistry'
+import { useAppBackRegistry } from '@/app/_global/_hooks/useAppBackRegistry'
 
 /**
  * 이 화면이 살아 있는 동안 하드웨어/제스처 back을 가져간다.
@@ -12,8 +12,8 @@ import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackReg
  * onBack은 매 렌더 새로 만들어지는 경우가 많아 ref로 최신 값을 참조한다
  * (등록을 의존성에 걸면 화면이 살아 있는 동안 등록·해제가 반복된다).
  */
-export function useHardwareBack(onBack: () => void): void {
-  const { register } = useHardwareBackRegistry()
+export function useAppBack(onBack: () => void): void {
+  const { register } = useAppBackRegistry()
   const onBackRef = useRef(onBack)
 
   useEffect(() => {

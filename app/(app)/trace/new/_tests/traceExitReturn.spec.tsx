@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ReactElement } from 'react'
+import type { MockInstance } from 'vitest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import type { TraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
 import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
@@ -15,14 +16,13 @@ import { useTraceNav } from '../_hooks/useTraceNav'
 
 const { navState } = vi.hoisted(() => ({ navState: { pathname: '/trace/new' } }))
 const replaceMock = vi.fn<(path: string) => void>()
-const backMock = vi.fn()
 
 vi.mock('next/navigation', () => ({
   usePathname: () => navState.pathname,
   useRouter: () => ({
     push: vi.fn(),
     replace: replaceMock,
-    back: backMock,
+    back: vi.fn(),
     prefetch: vi.fn(),
   }),
 }))
@@ -58,7 +58,7 @@ function ExitProbe() {
 /** layout과 같은 순서로 감싼다 — 가드는 nav 안에서만 성립한다 */
 function tree(seed: TraceSeed | null): ReactElement {
   return (
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceCaptureProvider>
           <TraceOverlayProvider>
@@ -72,9 +72,19 @@ function tree(seed: TraceSeed | null): ReactElement {
           </TraceOverlayProvider>
         </TraceCaptureProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>
+    </AppBackProvider>
   )
 }
+
+/**
+ * 되감기는 라우터가 아니라 뒤로가기 소유자(AppBackProvider)를 거친다 — 이 화면은 이탈 가드
+ * 때문에 언제나 back을 물고 있어, router.back()을 그냥 부르면 자기 가드가 그 되감기를
+ * 가로챈다. 소유자는 심어 둔 엔트리까지 함께 걷으려고 history.go로 여러 칸을 되감는다.
+ *
+ * 되감기 폭으로 판별한다 — 이 화면은 언제나 가드 엔트리를 물고 있어 이탈은 두 칸(-2)이다.
+ * 한 칸(-1)은 가드가 스스로 심은 엔트리를 걷는 뒷정리라 이탈과 구분해야 한다.
+ */
+const LEAVE_FLOW_STEPS = -2
 
 /** 되감을 칸이 있는 히스토리 — 흔적 보기에서 push로 넘어온 자리를 흉내 낸다 */
 function pushEntry() {
@@ -104,10 +114,15 @@ function confirmExit() {
 }
 
 describe('흔적 작성 플로우에서 나가기', () => {
+  // 이미 스파이된 속성에 다시 spyOn하면 vitest가 같은 스파이를 돌려준다 —
+  // 테스트마다 새로 만들어 쓰지 않으면 앞선 테스트의 호출이 그대로 쌓인 채 읽힌다.
+  let go: MockInstance<History['go']>
+
   beforeEach(() => {
     navState.pathname = '/trace/new'
     replaceMock.mockClear()
-    backMock.mockClear()
+    go = vi.spyOn(window.history, 'go').mockImplementation(() => undefined)
+    go.mockClear()
   })
 
   it('씨앗을 물고 들어왔으면 홈이 아니라 들어온 자리로 되감는다', async () => {
@@ -116,7 +131,7 @@ describe('흔적 작성 플로우에서 나가기', () => {
 
     confirmExit()
 
-    expect(backMock).toHaveBeenCalledTimes(1)
+    expect(go).toHaveBeenCalledWith(LEAVE_FLOW_STEPS)
     expect(replaceMock).not.toHaveBeenCalledWith('/')
   })
 
@@ -140,7 +155,7 @@ describe('흔적 작성 플로우에서 나가기', () => {
     fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
     expect(replaceMock).toHaveBeenCalledWith('/')
-    expect(backMock).not.toHaveBeenCalled()
+    expect(go).not.toHaveBeenCalledWith(LEAVE_FLOW_STEPS)
   })
 
   it('씨앗이 있어도 되감을 칸이 없으면 홈으로 나간다', async () => {
@@ -150,7 +165,7 @@ describe('흔적 작성 플로우에서 나가기', () => {
 
     confirmExit()
 
-    expect(backMock).not.toHaveBeenCalled()
+    expect(go).not.toHaveBeenCalledWith(LEAVE_FLOW_STEPS)
     expect(replaceMock).toHaveBeenCalledWith('/')
     lengthSpy.mockRestore()
   })

@@ -10,7 +10,7 @@ import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabScreenLayout'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
-import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackRegistry'
+import { useAppBackRegistry } from '@/app/_global/_hooks/useAppBackRegistry'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
@@ -29,7 +29,7 @@ export function MeetingPageView() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const runWithLogin = useLoginGate()
-  const { register } = useHardwareBackRegistry()
+  const { register } = useAppBackRegistry()
   const { status, isAuthenticated } = useAuth()
   const list = useInfiniteQuery({ ...groupQueries.list(), enabled: isAuthenticated })
   const groups = useMemo(

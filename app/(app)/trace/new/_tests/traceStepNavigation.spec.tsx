@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
@@ -65,7 +65,7 @@ function Probe() {
 function renderAt(pathname: string) {
   navState.pathname = pathname
   return render(
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceOverlayProvider>
           <TraceNavProvider>
@@ -73,7 +73,7 @@ function renderAt(pathname: string) {
           </TraceNavProvider>
         </TraceOverlayProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
 }
 

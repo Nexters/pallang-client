@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { Activity } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { OcrCaptureBoundary } from '../_components/OcrCaptureBoundary/OcrCaptureBoundary'
 import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
@@ -55,7 +55,7 @@ function renderStep() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const tree = (mode: 'hidden' | 'visible') => (
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <TraceDraftProvider>
           <TraceCaptureProvider>
             <TraceOverlayProvider>
@@ -67,7 +67,7 @@ function renderStep() {
             </TraceOverlayProvider>
           </TraceCaptureProvider>
         </TraceDraftProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>
   )
   const { rerender } = render(tree('visible'))

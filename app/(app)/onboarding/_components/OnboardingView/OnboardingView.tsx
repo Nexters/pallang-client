@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Fragment, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
-import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
+import { useAppBack } from '@/app/_global/_hooks/useAppBack'
 import { cn } from '@/app/_global/_services/cn.service'
 import { markHomeCoachMarkPending } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { markOnboardingSeen } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
@@ -34,7 +34,7 @@ export function OnboardingView() {
   }
 
   // 첫 단계에서는 홈을 replace로 떠나온 뒤라 되돌아갈 화면이 없다 — 안드로이드 관례대로 앱을 닫는다
-  useHardwareBack(() => {
+  useAppBack(() => {
     if (stepIndex > 0) setStepIndex((index) => index - 1)
     else void App.exitApp()
   })

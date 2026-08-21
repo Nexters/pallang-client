@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 // 브리프의 원 파일 목록에는 없던 의존성이다 — useLoginGate가 LoginGateProvider 밖에서 던지는
 // 문제를 테스트가 provider 없이 렌더해 놓쳤던 것을 바로잡았다(bookSearchSheet.spec.tsx가
 // useOverlayBackGuard에 대해 같은 문제를 이렇게 해결한 선례를 따른다).
@@ -133,7 +133,7 @@ function renderForm({
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <LoginGateProvider>
           <TraceDraftProvider>
             <TraceOverlayProvider>
@@ -144,7 +144,7 @@ function renderForm({
             </TraceOverlayProvider>
           </TraceDraftProvider>
         </LoginGateProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
 }

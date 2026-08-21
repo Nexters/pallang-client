@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from 'react'
 
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
-import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackRegistry'
+import { useAppBackRegistry } from '@/app/_global/_hooks/useAppBackRegistry'
 import { BookSearchSheet } from '@/app/_shared/book/_components/BookSearchSheet/BookSearchSheet'
 import { SelectedBookCard } from '@/app/_shared/book/_components/SelectedBookCard/SelectedBookCard'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
@@ -27,7 +27,7 @@ export function MeetingBookField({ value, onChange, locked = false }: MeetingBoo
   // 버튼의 접근성 이름 = 라벨 + 본문(플레이스홀더) — 라벨만 이으면 이름이 '책 선택'뿐이라 무엇을 고르는지 읽히지 않는다
   const textId = useId()
   const [open, setOpen] = useState(false)
-  const { register } = useHardwareBackRegistry()
+  const { register } = useAppBackRegistry()
 
   useEffect(() => {
     if (!open) return

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { MeetingForm } from '../_components/MeetingForm/MeetingForm'
 import { emptyMeetingForm } from '../_services/meetingForm.service'
@@ -50,9 +50,9 @@ function renderForm(props?: Parameters<typeof Harness>[0]) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <Harness {...props} />
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
 }

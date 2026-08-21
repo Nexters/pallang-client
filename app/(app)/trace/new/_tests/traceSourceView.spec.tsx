@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
@@ -45,7 +45,7 @@ function DraftProbe() {
 
 function renderView(seed: Parameters<typeof TraceSourceView>[0]['seed'] = null) {
   return render(
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceCaptureProvider>
           <TraceOverlayProvider>
@@ -56,7 +56,7 @@ function renderView(seed: Parameters<typeof TraceSourceView>[0]['seed'] = null) 
           </TraceOverlayProvider>
         </TraceCaptureProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
 }
 

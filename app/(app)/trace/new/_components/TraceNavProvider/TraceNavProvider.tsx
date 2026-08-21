@@ -3,7 +3,8 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 
-import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
+import { useAppBack } from '@/app/_global/_hooks/useAppBack'
+import { useAppBackRegistry } from '@/app/_global/_hooks/useAppBackRegistry'
 
 import { type TraceNav, TraceNavContext } from '../../_data/traceNav.store'
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
@@ -30,6 +31,7 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { dispatch, draft } = useTraceDraft()
   const overlay = useTraceOverlay()
+  const appBack = useAppBackRegistry()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   // 나가기를 건 경로. 아직 그 자리에 서 있는 동안만 '나가는 중'이라, 이동이 성사되면 저절로 풀린다
   // — 되살아나 플로우를 다시 걷게 돼도 가드가 멈춘 채로 남지 않는다.
@@ -50,13 +52,6 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
     isReturnableRef.current = true
   }, [])
 
-  /**
-   * 들어온 자리로 되돌릴 수 있는지. 두 조건을 모두 본다.
-   * - 씨앗을 물고 들어왔는가(흔적 보기의 '의견 남기기'·'기록'은 push로만 이 플로우를 연다)
-   * - 히스토리에 되감을 칸이 남아 있는가 — 씨앗 URL을 직접 열면 되감을 곳이 앱 밖이다
-   */
-  const canReturn = () => isReturnableRef.current && window.history.length > 1
-
   const leaveFlow = () => {
     setIsConfirmOpen(false)
     // 초안을 비우기 전에 알린다. 순서가 뒤바뀌면 가드가 빈 초안을 보고 첫 화면(`/trace/new`)으로
@@ -64,10 +59,11 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
     setExitingFrom(pathname)
     dispatch({ type: 'reset' })
     // 저장까지 마친 뒤라면 들어온 자리는 방금 남긴 흔적을 아직 모르는 목록이다 — 홈으로 보낸다.
-    if (step !== 'done' && canReturn()) {
-      router.back()
-      return
-    }
+    // 씨앗을 물고 들어온 경우에만 되돌린다(흔적 보기의 '기록'은 push로만 이 플로우를 연다).
+    // router.back()이 아니라 소유자를 거치는 이유: 이 화면은 이탈 가드 때문에 언제나 back을
+    // 물고 있어, 그냥 되감으면 그 되감기를 자기 가드가 가로채 제자리에 남는다.
+    // 씨앗 URL을 직접 열어 되감을 곳이 앱 밖이면 back()이 false를 주고 홈으로 간다.
+    if (step !== 'done' && isReturnableRef.current && appBack.back()) return
     router.replace(HOME_PATH)
   }
 
@@ -85,7 +81,7 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
   }
 
   // 하드웨어 back도 닫기 버튼과 같은 판정을 거친다
-  useHardwareBack(requestExit)
+  useAppBack(requestExit)
 
   const value: TraceNav = {
     goBack: () => {

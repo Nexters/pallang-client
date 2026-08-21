@@ -6,7 +6,7 @@ import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
 import { Button } from '@/app/_global/_components/Button/Button'
 import BackIcon from '@/app/_global/_components/Icon/assets/back.svg'
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
-import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackRegistry'
+import { useAppBackRegistry } from '@/app/_global/_hooks/useAppBackRegistry'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import {
@@ -48,8 +48,8 @@ export function MeetingPeriodSheet({
 }: MeetingPeriodSheetProps) {
   const [draft, setDraft] = useState<MeetingPeriod>({ startDate, endDate })
   const [month, setMonth] = useState(() => initialMonth(startDate))
-  const { register } = useHardwareBackRegistry()
-  // onClose는 매 렌더 새로 만들어져 의존성에 걸면 시트가 열려 있는 동안 등록·해제가 반복된다(useHardwareBack 선례)
+  const { register } = useAppBackRegistry()
+  // onClose는 매 렌더 새로 만들어져 의존성에 걸면 시트가 열려 있는 동안 등록·해제가 반복된다(useAppBack 선례)
   const onCloseRef = useRef(onClose)
 
   // 열 때마다 필드의 현재 값으로 다시 시작한다 — 렌더 도중의 상태 조정 패턴(ReportDialog와 같은 이유,
