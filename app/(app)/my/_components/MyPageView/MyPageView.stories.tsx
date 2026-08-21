@@ -34,3 +34,17 @@ export const LoggedInWithoutOpinions: Story = {
 export const LoggedOut: Story = {
   args: { user: null },
 }
+
+export const LoggingOut: Story = {
+  args: { user: mockMyUser, isLoggingOut: true, onLogout: () => undefined },
+}
+
+/** 로그인 상태에서 프로필 조회만 실패한 화면 — 메뉴와 로그아웃은 그대로 남는다 */
+export const ProfileLoadFailed: Story = {
+  args: {
+    user: null,
+    isProfileError: true,
+    onRetryProfile: () => undefined,
+    onLogout: () => undefined,
+  },
+}

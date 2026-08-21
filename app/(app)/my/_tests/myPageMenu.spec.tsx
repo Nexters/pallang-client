@@ -62,12 +62,26 @@ describe('마이페이지 항목 구성', () => {
     expect(screen.getByRole('link', { name: '차단 관리' })).toHaveAttribute('href', '/my/blocks')
   })
 
-  // 화면이 없는 항목은 링크가 아니라 버튼이라 눌러도 이동하지 않는다
-  it('화면이 없는 항목은 링크로 만들지 않는다', () => {
+  // 화면이 없는 항목을 누를 수 있게 두면 눌러도 아무 일이 없어 앱이 고장 난 것으로 읽힌다.
+  // 링크가 아닌 것에 더해 비활성으로 잠그고, 이동을 뜻하는 chevron도 빼야 한다.
+  it('화면이 없는 항목은 눌리지 않게 잠근다', () => {
     renderLoggedIn()
 
     expect(screen.queryByRole('link', { name: '배경색 관리' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '배경색 관리' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '배경색 관리' })).toBeDisabled()
     expect(screen.queryByRole('link', { name: '알림 설정' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '알림 설정' })).toBeDisabled()
+  })
+
+  it('갈 곳이 없는 항목에는 이동을 뜻하는 chevron을 두지 않는다', () => {
+    renderLoggedIn()
+
+    const dead = screen.getByRole('button', { name: '배경색 관리' })
+    const alive = screen.getByRole('link', { name: '공지사항' })
+
+    // vitest는 svg import를 data URI 문자열로 넘겨 태그가 <svg>로 서지 않는다 —
+    // chevron에만 붙는 aria-hidden 자식이 있는지로 확인한다
+    expect(dead.querySelector('[aria-hidden="true"]')).toBeNull()
+    expect(alive.querySelector('[aria-hidden="true"]')).not.toBeNull()
   })
 })
