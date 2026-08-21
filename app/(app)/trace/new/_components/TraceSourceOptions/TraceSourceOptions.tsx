@@ -55,27 +55,32 @@ export function TraceSourceOptions({
   return (
     <>
       {book && (
-        <div className="flex flex-col gap-2">
+        // 시안(흔적 남기기_01_selected)의 세로 간격은 몸통 공통값(16)과 다르다 — 제목줄→필 8,
+        // 책 카드→방식 카드 24. 몸통 패딩·gap을 조건부로 바꾸는 대신 이 블록의 마진으로 당기고 민다.
+        <div className="-mt-2 mb-2 flex flex-col gap-2">
           {/* text-body-12md·text-body-12rg는 존재하지 않는 토큰이라 클래스가 생성되지 않았고,
               그 자리의 글씨가 12px이 아니라 상속값(16px)으로 그려지고 있었다.
               12px 토큰은 text-caption-12rg 하나뿐이다. */}
-          <span className="w-fit rounded-full bg-interactive-accent px-2 py-1 text-caption-12rg text-text-inverse">
+          {/* 시안 필 높이 30 — caption-12rg 행간이 시안 텍스트 행간(18)보다 낮아 py로는 28에 그친다 */}
+          <span className="inline-flex h-[30px] w-fit items-center rounded-full bg-interactive-accent px-3 text-caption-12rg text-text-inverse">
             지금 기록을 남기는 책
           </span>
-          <div className="flex items-center gap-3 rounded-lg bg-bg-surface p-3">
+          {/* 시안 카드 높이 64 = 세로 패딩 8 + 표지 48. 표지는 32×48 */}
+          <div className="flex items-center gap-2.5 rounded-lg bg-bg-surface px-4 py-2">
             {book.coverImageUrl ? (
               <Image
                 src={book.coverImageUrl}
                 alt=""
-                width={36}
+                width={32}
                 height={48}
-                className="h-12 w-9 rounded-[2px] object-cover"
+                className="h-12 w-8 rounded-[2px] object-cover"
               />
             ) : (
-              <span className="h-12 w-9 rounded-[2px] bg-bg-gray" />
+              <span className="h-12 w-8 rounded-[2px] bg-bg-gray" />
             )}
             <span className="flex min-w-px flex-col">
-              <span className="truncate text-body-14md text-text-secondary">{book.title}</span>
+              {/* 시안은 Title/Body/S/Bold(700) — 14px 토큰 중 최근접은 sb(600, letter-spacing 0 동일) */}
+              <span className="truncate text-body-14sb text-text-secondary">{book.title}</span>
               <span className="truncate text-caption-12rg text-text-tertiary">{book.author}</span>
             </span>
           </div>

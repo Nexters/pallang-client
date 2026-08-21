@@ -11,11 +11,25 @@ import CloseIcon from '../Icon/assets/close.svg'
 
 type SnackbarProps = {
   message: string
+  /**
+   * 이번에 띄운 안내를 가리키는 값. 바뀌면 문구가 같아도 새 안내로 보고 자동 닫힘 타이머를
+   * 처음부터 다시 센다.
+   *
+   * 타이머는 문구가 바뀔 때만 다시 시작한다 — 부모가 다른 이유로 리렌더할 때마다 3초가
+   * 연장되면 안 되기 때문이다. 그래서 문구가 글자 그대로 같으면(차단 해제 안내처럼 대상이
+   * 안 들어간 고정 문구, 닉네임이 같은 카드 두 장) 이전 타이머가 그대로 흘러 두 번째 안내는
+   * 남은 시간만 보인다. 그런 화면은 대상 id처럼 매번 달라지는 값을 여기에 넘긴다.
+   */
+  messageKey?: string | number
   /** message 앞머리에서 강조할 부분. 시안의 오렌지 볼드 대목이다. */
   highlight?: string
   /**
-   * 놓이는 배경. 어두운 화면에는 흰 바, 밝은 화면에는 어두운 바를 얹어야 배경과 붙지 않는다.
-   * 대부분의 화면이 어두워 기본은 'dark'다(차단 관리가 밝은 면 쪽 시안).
+   * **바의 색이 아니라 바를 얹는 화면의 밝기다.** 이름이 직관과 반대로 읽히니 주의한다:
+   * - `'light'` = 밝은 화면용 → 어두운 바
+   * - `'dark'` = 어두운 화면용 → 흰 바
+   *
+   * 대부분의 화면이 어두워 기본은 'dark'(= 흰 바)다. 마이페이지 계열처럼 흰 화면에 얹을
+   * 때는 반드시 `tone="light"`를 명시한다 — 빠뜨리면 흰 바가 흰 배경에 묻혀 안 보인다.
    */
   tone?: 'light' | 'dark'
   /**
@@ -44,6 +58,7 @@ function splitHighlight(message: string, highlight?: string) {
 export function Snackbar({
   highlight,
   message,
+  messageKey,
   tone = 'dark',
   actionLabel,
   onAction,
@@ -56,16 +71,19 @@ export function Snackbar({
     onCloseRef.current = onClose
   })
 
-  // 타이머는 message에만 의존 (부모 리렌더 시 리셋 안 됨)
+  // 타이머를 다시 셀 기준. 문구나 messageKey가 바뀔 때만 값이 달라지므로, 부모가 같은 props로
+  // 리렌더해도 남은 시간이 늘어나지 않는다. 두 값을 배열로 직렬화해 경계를 흐리지 않는다.
+  const dismissKey = message ? JSON.stringify([messageKey ?? '', message]) : ''
+
   useEffect(() => {
-    if (!message) return
+    if (!dismissKey) return
     const timer = setTimeout(() => {
       onCloseRef.current()
     }, AUTO_DISMISS_MS)
     return () => {
       clearTimeout(timer)
     }
-  }, [message])
+  }, [dismissKey])
 
   const { shouldRender, state } = useExitTransition(Boolean(message), MOTION_DURATION.fast)
   // 빈 문자열이 '닫힘'을 뜻하므로 null로 정규화해서 넘긴다 — 퇴장 중 문구가 비지 않게 한다
