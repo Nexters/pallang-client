@@ -6,6 +6,11 @@ import { useAsyncCommentField } from '../../_hooks/useAsyncCommentField'
 
 type CommentBarProps = {
   /**
+   * 열리는 즉시 쓰라고 연 자리(의견 입력바)에서만 켠다 — 시트에 딸린 입력바는 목록 읽기가
+   * 먼저라 키보드가 바로 올라오면 화면부터 가린다.
+   */
+  autoFocus?: boolean
+  /**
    * 등록 처리. 실제로 등록됐으면 true를 돌려준다 — 그때만 입력창을 비운다.
    * 미지정이면 등록 없이 입력 UI로만 동작하며, 등록된 적이 없으므로 입력도 그대로 남는다.
    */
@@ -16,6 +21,7 @@ type CommentBarProps = {
 }
 
 export function CommentBar({
+  autoFocus,
   onSubmit,
   placeholder = '댓글을 입력해주세요',
   submitLabel = '댓글 등록',
@@ -36,6 +42,7 @@ export function CommentBar({
       <div className="flex items-center gap-2">
         <input
           type="text"
+          autoFocus={autoFocus}
           value={field.content}
           maxLength={COMMENT_MAX_LENGTH}
           onChange={(event) => {

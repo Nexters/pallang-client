@@ -710,6 +710,8 @@ describe('ReaderHighlightsPage', () => {
     clickFabAction('의견 남기기')
 
     expect(screen.getByPlaceholderText('의견을 입력해주세요')).toBeInTheDocument()
+    // 남기려고 연 자리다 — 열리는 즉시 입력할 수 있어야 한 번 더 누르지 않는다(#374)
+    expect(screen.getByPlaceholderText('의견을 입력해주세요')).toHaveFocus()
     expect(pushMock).not.toHaveBeenCalled()
     // 남기기 버튼은 입력바와 같은 자리를 다투므로 입력바가 떠 있는 동안 사라진다
     expect(screen.queryByRole('button', { name: '남기기' })).not.toBeInTheDocument()
