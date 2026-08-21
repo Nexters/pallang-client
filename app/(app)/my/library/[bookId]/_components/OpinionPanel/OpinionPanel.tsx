@@ -7,9 +7,8 @@ import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type UserOpinion, userQueries } from '@/app/_global/_queries/user.queries'
 import { buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 import { RecordCard } from '@/app/_shared/user/_components/RecordCard/RecordCard'
+import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 import { formatRecordedDate } from '@/app/_shared/user/_services/recordDate.service'
-
-import { RecordPanel } from '../RecordPanel/RecordPanel'
 
 /** 이 책에 내가 남긴 흔적 목록. */
 export function OpinionPanel({ bookId }: { bookId: number }) {
@@ -41,6 +40,7 @@ export function OpinionPanel({ bookId }: { bookId: number }) {
       isFetching={listQuery.isFetching}
       hasNextPage={listQuery.hasNextPage}
       isFetchNextPageError={listQuery.isFetchNextPageError}
+      isFetchingNextPage={listQuery.isFetchingNextPage}
       onRetry={() => {
         void listQuery.refetch()
       }}

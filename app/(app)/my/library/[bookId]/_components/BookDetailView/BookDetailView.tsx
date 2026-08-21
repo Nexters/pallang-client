@@ -26,7 +26,7 @@ import { OpinionPanel } from '../OpinionPanel/OpinionPanel'
 import { SpoilerPanel } from '../SpoilerPanel/SpoilerPanel'
 
 /** 좋아요를 되돌릴 대상 — 스낵바가 닫히거나 탭이 바뀌면 비운다 */
-type UnlikedTarget = { nickname: string; undo: () => void }
+type UnlikedTarget = { opinionId: number; nickname: string; undo: () => void }
 
 /** 화면 아래 같은 자리를 쓰는 안내의 종류 — 한 번에 하나만 선다 */
 type NoticeKind = 'unliked' | 'release' | 'status'
@@ -34,6 +34,8 @@ type NoticeKind = 'unliked' | 'release' | 'status'
 /** Snackbar에 그대로 펴는 안내 한 벌 */
 type Notice = {
   message: string
+  /** 문구가 같아도 대상이 다르면 자동 닫힘 타이머를 처음부터 다시 센다 */
+  messageKey?: string | number
   actionLabel?: string
   onAction?: () => void
   onClose: () => void
@@ -163,6 +165,8 @@ export function BookDetailView({ bookId }: { bookId: number }) {
     if (noticeKind === 'unliked') {
       return {
         message: unliked ? `${unliked.nickname}님의 좋아요를 해제했어요` : '',
+        // 닉네임이 같은 카드를 연달아 해제하면 문구가 그대로라 타이머가 리셋되지 않는다
+        messageKey: unliked?.opinionId,
         actionLabel: '취소',
         onAction: () => {
           unliked?.undo()
@@ -216,6 +220,10 @@ export function BookDetailView({ bookId }: { bookId: number }) {
               onUnlike={(target) => {
                 clearNotices()
                 setUnliked(target)
+              }}
+              onRelike={(opinionId) => {
+                // 직접 다시 켰으면 되돌릴 것이 없다 — 그 카드의 안내만 걷는다
+                if (unliked?.opinionId === opinionId) setUnliked(null)
               }}
             />
           </Tabs.Panel>

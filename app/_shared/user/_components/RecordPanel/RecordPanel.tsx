@@ -20,6 +20,8 @@ type RecordPanelProps = {
   hasNextPage: boolean
   /** 다음 페이지 요청만 실패했는지 — 목록은 두고 하단만 재시도 줄로 바꾼다 */
   isFetchNextPageError: boolean
+  /** 다음 페이지 재시도가 도는 중인지 — 재시도 줄은 실패 상태 그대로라 이걸로만 진행을 알린다 */
+  isFetchingNextPage: boolean
   onRetry: () => void
   onRetryNextPage: () => void
   /** 목록 끝 sentinel에 붙일 ref — 다음 페이지를 언제 부를지는 패널이 정한다 */
@@ -41,6 +43,7 @@ export function RecordPanel({
   isFetching,
   hasNextPage,
   isFetchNextPageError,
+  isFetchingNextPage,
   onRetry,
   onRetryNextPage,
   loadMoreRef,
@@ -48,7 +51,9 @@ export function RecordPanel({
 }: RecordPanelProps) {
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   if (isPending) return <RecordListSkeleton />
-  if (isError && isEmpty) {
+  // 다음 페이지 실패는 아래 재시도 줄이 받는다 — 첫 페이지가 통째로 걸러져 비어 있을 때
+  // 여기로 흘러들면 이미 받은 목록 자리가 오류 화면으로 덮인다
+  if (isError && !isFetchNextPageError && isEmpty) {
     return (
       <ApiErrorFeedbackState
         aria-label={`${label} 오류`}
@@ -70,10 +75,14 @@ export function RecordPanel({
   return (
     <>
       {/* 붙은 페이지가 전부 비었을 뿐 다음 페이지는 남았다 — 자리를 비우지 않고 골격으로 채운다 */}
-      {isEmpty && <RecordListSkeleton />}
+      {isEmpty && !isFetchNextPageError && <RecordListSkeleton />}
       <ul className="flex flex-col gap-2">{children}</ul>
       {isFetchNextPageError ? (
-        <RetryMessage message="더 불러오지 못했어요." onRetry={onRetryNextPage} />
+        <RetryMessage
+          message="더 불러오지 못했어요."
+          loading={isFetchingNextPage}
+          onRetry={onRetryNextPage}
+        />
       ) : (
         // 목록 끝 sentinel — 화면에 들어오면 다음 페이지를 불러온다
         <div ref={loadMoreRef} aria-hidden className="h-6 w-full shrink-0" />

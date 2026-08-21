@@ -3,15 +3,13 @@
 import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Select } from '@/app/_global/_components/Select/Select'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type LikedOpinion, userQueries } from '@/app/_global/_queries/user.queries'
 import { LikedOpinionCard } from '@/app/_shared/user/_components/LikedOpinionCard/LikedOpinionCard'
-import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
+import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 
 /** 책을 고르지 않은 상태. Select는 문자열 값만 다뤄 숫자 bookId와 섞이지 않을 이름을 쓴다. */
 const ALL_BOOKS = 'all'
@@ -108,65 +106,6 @@ export function LikedOpinionsView() {
     setUnliked(null)
   }
 
-  /** 분기가 많아 삼항을 겹치지 않고 guard로 가른다 */
-  function renderList() {
-    if (listQuery.isPending) return <RecordListSkeleton />
-    // placeholder는 pending에서만 붙는다 — 실패하면 이전 필터의 목록이 걷혀 여기로 온다.
-    // 다음 페이지 실패는 목록 아래 재시도 줄이 받는다. refetch는 이미 받은 페이지만 다시 부른다.
-    if (listQuery.isError && !listQuery.isFetchNextPageError && opinions.length === 0) {
-      return (
-        <ApiErrorFeedbackState
-          aria-label="좋아요 관리 오류"
-          title="목록을 불러오지 못했어요."
-          onRetry={() => {
-            void listQuery.refetch()
-          }}
-        />
-      )
-    }
-    return (
-      <>
-        {opinions.length > 0 && (
-          <ul className="flex flex-col gap-2">
-            {opinions.map((opinion) => (
-              <li key={opinion.opinionId}>
-                <LikedOpinionCard
-                  opinion={opinion}
-                  onUnlike={startUndoWindow}
-                  onRelike={(opinionId) => {
-                    // 직접 다시 켰으면 되돌릴 것이 없다 — 그 카드의 안내만 걷는다
-                    if (unliked?.opinionId === opinionId) cancelUndoWindow()
-                  }}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-        {opinions.length === 0 && !listQuery.hasNextPage && (
-          // 시안의 빈 상태는 일러스트 없이 문구 한 줄뿐이라 FeedbackState를 쓰지 않는다
-          <p className="flex flex-1 items-center justify-center text-center text-title-18md text-text-secondary">
-            등록한 좋아요가 없습니다
-          </p>
-        )}
-        {opinions.length === 0 && listQuery.hasNextPage && !listQuery.isFetchNextPageError && (
-          // 서버가 차단 사용자 등을 걸러 첫 페이지가 통째로 빌 수 있다 — 다음 페이지가 올 자리다
-          <RecordListSkeleton />
-        )}
-        {listQuery.isFetchNextPageError ? (
-          <RetryMessage
-            message="더 불러오지 못했어요."
-            onRetry={() => {
-              void listQuery.fetchNextPage()
-            }}
-          />
-        ) : (
-          /* 목록 끝 sentinel — 화면에 들어오면 다음 페이지를 불러온다 */
-          <div ref={loadMoreRef} aria-hidden className="h-6 w-full shrink-0" />
-        )}
-      </>
-    )
-  }
-
   return (
     <>
       <ScreenLayout title="좋아요 관리">
@@ -187,13 +126,47 @@ export function LikedOpinionsView() {
         </div>
 
         {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다 */}
-        <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">{renderList()}</div>
+        <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">
+          <RecordPanel
+            label="좋아요 관리"
+            emptyMessage="등록한 좋아요가 없습니다"
+            isPending={listQuery.isPending}
+            isError={listQuery.isError}
+            isEmpty={opinions.length === 0}
+            isFetching={listQuery.isFetching}
+            hasNextPage={listQuery.hasNextPage}
+            isFetchNextPageError={listQuery.isFetchNextPageError}
+            isFetchingNextPage={listQuery.isFetchingNextPage}
+            onRetry={() => {
+              void listQuery.refetch()
+            }}
+            onRetryNextPage={() => {
+              void listQuery.fetchNextPage()
+            }}
+            loadMoreRef={loadMoreRef}
+          >
+            {opinions.map((opinion) => (
+              <li key={opinion.opinionId}>
+                <LikedOpinionCard
+                  opinion={opinion}
+                  onUnlike={startUndoWindow}
+                  onRelike={(opinionId) => {
+                    // 직접 다시 켰으면 되돌릴 것이 없다 — 그 카드의 안내만 걷는다
+                    if (unliked?.opinionId === opinionId) cancelUndoWindow()
+                  }}
+                />
+              </li>
+            ))}
+          </RecordPanel>
+        </div>
       </ScreenLayout>
 
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
         tone="light"
         message={unliked ? `${unliked.nickname}님의 좋아요를 해제했어요` : ''}
+        // 닉네임이 같은 카드를 연달아 해제하면 문구가 그대로라 타이머가 리셋되지 않는다
+        messageKey={unliked?.opinionId}
         actionLabel="취소"
         onAction={() => {
           unliked?.undo()
