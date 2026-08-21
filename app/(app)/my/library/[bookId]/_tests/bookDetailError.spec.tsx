@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -169,12 +169,15 @@ describe('책 상세 조회 실패', () => {
     renderView({ liked: [LIKED_OPINION], saveStatusCode: 500 })
 
     await userEvent.click(await screen.findByRole('tab', { name: '좋아요' }))
-    await userEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    // 하트는 카드마다 이름이 달라야 스크린리더에서 구분된다 — 닉네임이 앞에 붙는다
+    await userEvent.click(await screen.findByRole('button', { name: '밤샘낭독가님의 흔적 좋아요' }))
     expect(await screen.findByText('밤샘낭독가님의 좋아요를 해제했어요')).toBeInTheDocument()
 
     // 되돌릴 수 있는 3초 안에 독서 상태 저장이 실패한다 — 두 안내가 같은 자리를 노린다
     await userEvent.click(screen.getByRole('button', { name: '독서 상태' }))
-    await userEvent.click(await screen.findByRole('radio', { name: '완독' }))
+    // 시트의 선택지는 라디오가 아니라 눌림 토글이다. 책 머리 뱃지와 이름이 같아 시트 안으로 좁힌다
+    const statusSheet = await screen.findByRole('dialog')
+    await userEvent.click(within(statusSheet).getByRole('button', { name: '완독' }))
     await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
     expect(await screen.findByText(/독서 상태를 저장하지 못했어요/)).toBeInTheDocument()
