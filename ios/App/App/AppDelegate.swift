@@ -46,9 +46,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     /// 공개 API만 만지므로 심사에 걸리는 비공개 심볼 참조가 없다.
     /// 플래그를 켤 때마다 인식기가 다시 붙을 수 있어 이 함수도 매번 함께 부른다.
     private func disableForwardSwipe(on webView: WKWebView) {
-        for recognizer in webView.gestureRecognizers ?? [] {
-            guard let edgePan = recognizer as? UIScreenEdgePanGestureRecognizer else { continue }
-            if edgePan.edges == .right { edgePan.isEnabled = false }
+        for case let edgePan as UIScreenEdgePanGestureRecognizer in webView.gestureRecognizers ?? []
+        where edgePan.edges == .right {
+            edgePan.isEnabled = false
         }
     }
 

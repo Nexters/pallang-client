@@ -79,10 +79,8 @@ function tree(seed: TraceSeed | null): ReactElement {
 /**
  * 되감기는 라우터가 아니라 뒤로가기 소유자(AppBackProvider)를 거친다 — 이 화면은 이탈 가드
  * 때문에 언제나 back을 물고 있어, router.back()을 그냥 부르면 자기 가드가 그 되감기를
- * 가로챈다. 소유자는 심어 둔 엔트리까지 함께 걷으려고 history.go로 여러 칸을 되감는다.
- *
- * 되감기 폭으로 판별한다 — 이 화면은 언제나 가드 엔트리를 물고 있어 이탈은 두 칸(-2)이다.
- * 한 칸(-1)은 가드가 스스로 심은 엔트리를 걷는 뒷정리라 이탈과 구분해야 한다.
+ * 가로챈다. 소유자는 심어 둔 엔트리까지 함께 걷으려고 history.go로 여러 칸을 되감는다 —
+ * 이 화면은 언제나 가드 엔트리를 물고 있어 이탈은 두 칸이다.
  */
 const LEAVE_FLOW_STEPS = -2
 
@@ -114,15 +112,15 @@ function confirmExit() {
 }
 
 describe('흔적 작성 플로우에서 나가기', () => {
-  // 이미 스파이된 속성에 다시 spyOn하면 vitest가 같은 스파이를 돌려준다 —
-  // 테스트마다 새로 만들어 쓰지 않으면 앞선 테스트의 호출이 그대로 쌓인 채 읽힌다.
   let go: MockInstance<History['go']>
 
   beforeEach(() => {
+    // 스파이를 되돌리지 않으면 vitest가 이미 스파이된 속성에 같은 스파이를 돌려줘,
+    // 앞선 테스트의 호출이 그대로 쌓인 채 읽힌다
+    vi.restoreAllMocks()
     navState.pathname = '/trace/new'
     replaceMock.mockClear()
     go = vi.spyOn(window.history, 'go').mockImplementation(() => undefined)
-    go.mockClear()
   })
 
   it('씨앗을 물고 들어왔으면 홈이 아니라 들어온 자리로 되감는다', async () => {
@@ -160,13 +158,12 @@ describe('흔적 작성 플로우에서 나가기', () => {
 
   it('씨앗이 있어도 되감을 칸이 없으면 홈으로 나간다', async () => {
     // 씨앗 URL을 직접 연 경우다. 그대로 되감으면 앱 바깥으로 나간다.
-    const lengthSpy = vi.spyOn(window.history, 'length', 'get').mockReturnValue(1)
+    vi.spyOn(window.history, 'length', 'get').mockReturnValue(1)
     await enterWithSeed()
 
     confirmExit()
 
     expect(go).not.toHaveBeenCalledWith(LEAVE_FLOW_STEPS)
     expect(replaceMock).toHaveBeenCalledWith('/')
-    lengthSpy.mockRestore()
   })
 })

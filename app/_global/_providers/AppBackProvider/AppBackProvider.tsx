@@ -6,7 +6,10 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { AppBackContext, type AppBackRegistry } from '@/app/_global/_data/appBack.store'
 
-/** 우리가 심은 히스토리 엔트리임을 알아보는 표식. Next가 넣어 둔 state는 그대로 두고 옆에 얹는다. */
+/**
+ * 우리가 심은 엔트리임을 알아보는 표식. Next가 넣어 둔 state는 그대로 두고 옆에 얹는다.
+ * 뒤로 갈 때는 엔트리를 벗어나므로 읽히지 않지만, 앞으로 갈 때는 그 위에 올라서므로 읽힌다.
+ */
 const BACK_GUARD_KEY = '__pallangBackGuard'
 
 /**
@@ -22,6 +25,10 @@ const BACK_GUARD_KEY = '__pallangBackGuard'
  * iOS 엣지 스와이프는 UIKit이 `WKWebView.goBack()`을 직접 구동해 JS가 가로챌 방법이 없다.
  * 히스토리를 통로로 쓰면 그 경로도 결국 `popstate`로 도착해 같은 판정을 받는다.
  */
+function isGuardEntry(state: unknown): boolean {
+  return typeof state === 'object' && state !== null && BACK_GUARD_KEY in state
+}
+
 export function AppBackProvider({ children }: { children: ReactNode }) {
   // 스택은 ref에 둔다 — 등록·해제가 렌더를 유발하면 화면이 열릴 때마다 한 번 더 그려진다.
   const stackRef = useRef<(() => void)[]>([])
@@ -32,7 +39,7 @@ export function AppBackProvider({ children }: { children: ReactNode }) {
 
   /** 닫을 층이 생겼는데 엔트리가 없으면 심는다 */
   const guard = useCallback(() => {
-    if (isGuardedRef.current || stackRef.current.length === 0) return
+    if (isGuardedRef.current) return
     isGuardedRef.current = true
     // URL을 바꾸지 않는다 — 라우터가 보기에 같은 화면이라 아무 것도 다시 그리지 않는다.
     // Next가 엔트리에 넣어 둔 내부 state를 그대로 실어야 라우터가 이 엔트리를 알아본다.
@@ -76,6 +83,15 @@ export function AppBackProvider({ children }: { children: ReactNode }) {
       // 우리가 unguard로 되감은 것 — 여기서 멈추지 않으면 자기 뒷정리를 뒤로가기로 오해한다
       if (isSelfPopRef.current) {
         isSelfPopRef.current = false
+        return
+      }
+
+      // 앞으로 가기로 우리가 심어 둔 엔트리에 도로 올라섰다(층을 화면 안 버튼으로 닫으면 그 엔트리가
+      // 앞쪽에 남는다). 지키던 층은 이미 닫혀 되돌릴 것이 없고, 그냥 두면 다음 뒤로가기 한 번이
+      // 아무 일도 없이 삼켜진다 — 같은 URL이라 화면을 바꾸지 않고 그 자리에서 물러난다.
+      if (isGuardEntry(window.history.state)) {
+        isSelfPopRef.current = true
+        window.history.back()
         return
       }
 

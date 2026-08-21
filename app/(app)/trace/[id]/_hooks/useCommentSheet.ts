@@ -1,8 +1,8 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { AppBackContext } from '@/app/_global/_data/appBack.store'
+import { useAppBack } from '@/app/_global/_hooks/useAppBack'
 
 import { commentSheetReducer, createCommentSheetModel } from '../_services/commentSheet.service'
 import type { CommentSheetAction } from '../_types/commentSheet.type'
@@ -66,16 +66,13 @@ export function useCommentSheet({
   const commentOpinionId = synced.commentOpinionId
   const isCommentsOpen = commentOpinionId !== null
 
-  // 댓글 시트가 떠 있는 동안만 하드웨어 back을 가져간다 — 항상 등록하면 닫힌 시트가 페이지의 back을
-  // 삼킨다. 조건부 등록이라 useAppBack(무조건 등록) 대신 레지스트리를 직접 읽는다.
-  // 레지스트리가 없는 곳(프로바이더 밖에서 목록만 렌더하는 경우)에서는 가로채지 않고 지나간다.
-  const appBack = use(AppBackContext)
-  useEffect(() => {
-    if (!isCommentsOpen || !appBack) return undefined
-    return appBack.register(() => {
+  // 댓글 시트가 떠 있는 동안만 back을 가져간다 — 항상 등록하면 닫힌 시트가 페이지의 back을 삼킨다
+  useAppBack(
+    () => {
       setModel((current) => commentSheetReducer(current, { type: 'closeComments' }))
-    })
-  }, [isCommentsOpen, appBack])
+    },
+    { enabled: isCommentsOpen },
+  )
 
   // 댓글 시트는 FAB과 같은 자리를 덮는다 — 겹치지 않게 셸에 알린다.
   // 시안(229:24405·229:24447)에는 시트 위에도 FAB이 그려져 있지만 하단 입력바와 겹쳐, 숨기기로 정했다

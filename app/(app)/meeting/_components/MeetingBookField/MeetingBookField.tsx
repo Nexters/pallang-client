@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 
 import SearchIcon from '@/app/_global/_components/Icon/assets/search.svg'
+import { useAppBack } from '@/app/_global/_hooks/useAppBack'
 import { useAppBackRegistry } from '@/app/_global/_hooks/useAppBackRegistry'
 import { BookSearchSheet } from '@/app/_shared/book/_components/BookSearchSheet/BookSearchSheet'
 import { SelectedBookCard } from '@/app/_shared/book/_components/SelectedBookCard/SelectedBookCard'
@@ -27,14 +28,15 @@ export function MeetingBookField({ value, onChange, locked = false }: MeetingBoo
   // 버튼의 접근성 이름 = 라벨 + 본문(플레이스홀더) — 라벨만 이으면 이름이 '책 선택'뿐이라 무엇을 고르는지 읽히지 않는다
   const textId = useId()
   const [open, setOpen] = useState(false)
+  // 시트 안 등록 폼 층은 시트가 onRegisterBack으로 직접 등록한다 — 그쪽은 층 소유자가 시트다
   const { register } = useAppBackRegistry()
 
-  useEffect(() => {
-    if (!open) return
-    return register(() => {
+  useAppBack(
+    () => {
       setOpen(false)
-    })
-  }, [open, register])
+    },
+    { enabled: open },
+  )
 
   const helperText = locked ? '선택한 책은 변경할 수 없어요.' : undefined
 

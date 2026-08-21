@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 
@@ -112,17 +113,21 @@ async function renderPage({
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
-  // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
+  // 로그인 게이트와 뒤로가기 소유자는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   render(
     <QueryClientProvider client={client}>
-      <LoginGateProvider>
-        <TraceScreen
-          bookId={BOOK_ID}
-          target={
-            withDetail ? { pageNumber: 7, passageId: 71, opinionId: opinion.opinionId } : undefined
-          }
-        />
-      </LoginGateProvider>
+      <AppBackProvider>
+        <LoginGateProvider>
+          <TraceScreen
+            bookId={BOOK_ID}
+            target={
+              withDetail
+                ? { pageNumber: 7, passageId: 71, opinionId: opinion.opinionId }
+                : undefined
+            }
+          />
+        </LoginGateProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
   // 딥링크로 상세가 열린 채 시작하면 목록과 오버레이에 같은 본문이 둘 나온다
