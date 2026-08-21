@@ -46,10 +46,8 @@ describe('마이페이지 항목 구성', () => {
 
     expect(itemsOf('설정')).toEqual([
       '공지사항',
-      '배경색 관리',
       '스포일러 관리',
       '좋아요 관리',
-      '알림 설정',
       '차단 관리',
       '고객지원',
     ])
@@ -62,26 +60,16 @@ describe('마이페이지 항목 구성', () => {
     expect(screen.getByRole('link', { name: '차단 관리' })).toHaveAttribute('href', '/my/blocks')
   })
 
-  // 화면이 없는 항목을 누를 수 있게 두면 눌러도 아무 일이 없어 앱이 고장 난 것으로 읽힌다.
-  // 링크가 아닌 것에 더해 비활성으로 잠그고, 이동을 뜻하는 chevron도 빼야 한다.
-  it('화면이 없는 항목은 눌리지 않게 잠근다', () => {
+  // 갈 곳이 없는 항목을 목록에 두면 눌러도 아무 일이 없어 앱이 고장 난 것으로 읽힌다.
+  // 비활성으로 잠가 두는 대신 아예 세우지 않는다 — 화면이 생기면 그때 항목을 추가한다.
+  it('설정 항목은 모두 갈 곳이 있는 링크다', () => {
     renderLoggedIn()
 
-    expect(screen.queryByRole('link', { name: '배경색 관리' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '배경색 관리' })).toBeDisabled()
-    expect(screen.queryByRole('link', { name: '알림 설정' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '알림 설정' })).toBeDisabled()
-  })
-
-  it('갈 곳이 없는 항목에는 이동을 뜻하는 chevron을 두지 않는다', () => {
-    renderLoggedIn()
-
-    const dead = screen.getByRole('button', { name: '배경색 관리' })
-    const alive = screen.getByRole('link', { name: '공지사항' })
-
-    // vitest는 svg import를 data URI 문자열로 넘겨 태그가 <svg>로 서지 않는다 —
-    // chevron에만 붙는 aria-hidden 자식이 있는지로 확인한다
-    expect(dead.querySelector('[aria-hidden="true"]')).toBeNull()
-    expect(alive.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    for (const label of itemsOf('설정')) {
+      const item = screen.getByRole('link', { name: label })
+      expect(item).toHaveAttribute('href')
+      // chevron은 이동을 뜻한다 — 링크에는 언제나 붙는다
+      expect(item.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    }
   })
 })

@@ -11,19 +11,16 @@ import { POLICY_META_BY_SLUG } from '@/app/_shared/terms/_data/policy.constant'
 import type { MyUser } from '../../_types/myUser.type'
 import { MyPageSkeleton } from '../MyPageSkeleton/MyPageSkeleton'
 
-/** 갈 곳이 없는 항목(path 없음)은 아직 화면이 없는 것 — 버튼으로만 그린다 */
-type SettingItem = { label: string; path?: string }
+/** 설정 목록에는 갈 곳이 있는 항목만 둔다 — 화면이 생기면 그때 항목을 추가한다 */
+type SettingItem = { label: string; path: string }
 
 // 확정 시안에서 내 기록은 서재 하나로 좁혀졌다.
 // 책별 기록은 서재 > 책 상세의 의견·좋아요·스포일러 탭이 대신한다.
 const myRecords: SettingItem[] = [{ label: '내 서재', path: '/my/library' }]
 const loggedInSettings: SettingItem[] = [
   { label: '공지사항', path: '/my/notices' },
-  // 화면·API가 아직 없는 기능 — 생기면 path를 연결한다
-  { label: '배경색 관리' },
   { label: '스포일러 관리', path: '/my/spoilers' },
   { label: '좋아요 관리', path: '/my/likes' },
-  { label: '알림 설정' },
   // 시안에는 없지만 남긴다 — 차단 유저 관리 화면이 확정 디자인으로 살아 있어
   // 여기서 빼면 /my/blocks에 접근할 통로가 사라진다. 고객지원도 같은 이유다.
   { label: '차단 관리', path: '/my/blocks' },
@@ -259,21 +256,13 @@ function SettingSection({ title, items }: { title: string; items: SettingItem[] 
       <ul className="flex w-full flex-col gap-4">
         {items.map(({ label, path }) => (
           <li key={label}>
-            {path ? (
-              <Link href={path} className="flex w-full items-center gap-2">
-                <span className="flex-1 text-left text-body-14md text-text-secondary">{label}</span>
-                <NextIcon
-                  aria-hidden="true"
-                  className="size-5 shrink-0 text-icon-primary opacity-30"
-                />
-              </Link>
-            ) : (
-              // 아직 화면이 없는 항목. 눌러도 갈 곳이 없으니 비활성으로 두고 이동을 뜻하는
-              // chevron도 뺀다 — 누를 수 있게 두면 눌러도 아무 일이 없어 오류로 읽힌다.
-              <button type="button" disabled className="flex w-full items-center gap-2 opacity-40">
-                <span className="flex-1 text-left text-body-14md text-text-secondary">{label}</span>
-              </button>
-            )}
+            <Link href={path} className="flex w-full items-center gap-2">
+              <span className="flex-1 text-left text-body-14md text-text-secondary">{label}</span>
+              <NextIcon
+                aria-hidden="true"
+                className="size-5 shrink-0 text-icon-primary opacity-30"
+              />
+            </Link>
           </li>
         ))}
       </ul>
