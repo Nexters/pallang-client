@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 
@@ -219,6 +221,9 @@ function scrollSentinelsIntoView() {
 /** 상세 오버레이로 들어가는 유일한 길인 딥링크 좌표(쪽 → 대목 → 흔적) */
 type DeepLinkTarget = { pageNumber: number; passageId: number; opinionId: number }
 
+/** 마지막으로 렌더한 화면의 캐시 */
+let lastClient: QueryClient
+
 async function renderPage(
   pages = [7, 9, 12, 13, 23, 34, 123],
   failing?: 'passages' | 'opinions',
@@ -316,6 +321,7 @@ async function renderPage(
     }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  lastClient = client
   // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   const { container } = render(
     <QueryClientProvider client={client}>
@@ -720,6 +726,11 @@ describe('ReaderHighlightsPage', () => {
   it('입력바에서 등록하면 보고 있는 대목과 꾸밈이 실려 그 자리에서 의견이 생성된다', async () => {
     await renderPage([8])
     await screen.findByText('꾸며진 대목 인용문')
+    // 내 흔적 관리·서재를 먼저 보고 온 상황
+    const myOpinionsKey = userQueries.opinionList().queryKey
+    const libraryKey = bookQueries.myLibrary().queryKey
+    lastClient.setQueryData(myOpinionsKey, { pages: [], pageParams: [] })
+    lastClient.setQueryData(libraryKey, { pages: [], pageParams: [] })
 
     clickFabAction('의견 남기기')
     fireEvent.change(screen.getByPlaceholderText('의견을 입력해주세요'), {
@@ -742,6 +753,8 @@ describe('ReaderHighlightsPage', () => {
     expect(body['decorations']).toEqual([
       { startOffset: 0, endOffset: 10, effectType: 'WAVY', color: '#06D6A0' },
     ])
+    expect(lastClient.getQueryState(myOpinionsKey)?.isInvalidated).toBe(true)
+    expect(lastClient.getQueryState(libraryKey)?.isInvalidated).toBe(true)
   })
 
   it('입력바 바깥을 탭하면 등록 없이 입력바만 접힌다', async () => {

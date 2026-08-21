@@ -2,7 +2,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { opinionMutations, opinionQueries } from '@/app/_global/_queries/opinion.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 import type { TraceSeedPassage } from '@/app/_shared/trace/_data/traceSeed.model'
 
 type OpinionSubmitInput = {
@@ -59,6 +61,9 @@ export function useOpinionSubmit({
           // 새 의견이 목록과 "N개의 의견"에 보이고 나서 입력창이 비워진다.
           // 개수도 의견 목록 응답에서 오므로 목록 키 하나로 함께 갱신된다
           onSuccess: () => {
+            // 내 흔적·스포일러 관리, 서재도 이 흔적을 센다 — 기다리지 않고 stale로만 돌린다
+            void queryClient.invalidateQueries({ queryKey: userQueries.all() })
+            void queryClient.invalidateQueries({ queryKey: bookQueries.all() })
             void queryClient.invalidateQueries({ queryKey: opinionQueries.listAll() }).then(() => {
               resolve(true)
             })

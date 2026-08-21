@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 
@@ -128,6 +129,7 @@ async function renderPage({
   await screen.findAllByText('첫 번째 흔적')
 
   return {
+    client,
     releaseLike: () => {
       pendingLike?.()
       pendingLike = null
@@ -224,6 +226,28 @@ describe('흔적 좋아요', () => {
     releaseLike()
     await expectLike(false, '4')
     expect(postLikeCalls()).toHaveLength(1)
+  })
+
+  it('좋아요가 바뀌면 좋아요 관리 목록과 도서 필터 캐시를 stale로 돌린다 — 돌아갔을 때 빈 목록이 남지 않는다', async () => {
+    const { client } = await renderPage()
+    // 좋아요 관리를 먼저 보고 온 상황
+    const listKey = userQueries.likedOpinionList().queryKey
+    const filterKey = userQueries.filterBooks('LIKE').queryKey
+    client.setQueryData(listKey, { pages: [], pageParams: [] })
+    client.setQueryData(filterKey, {
+      data: {
+        books: [],
+        pageInfo: { page: 0, size: 100, totalElements: 0, totalPages: 1, hasNext: false },
+      },
+    })
+
+    fireEvent.click(likeButton())
+    await expectLike(true, '10')
+
+    await waitFor(() => {
+      expect(client.getQueryState(listKey)?.isInvalidated).toBe(true)
+      expect(client.getQueryState(filterKey)?.isInvalidated).toBe(true)
+    })
   })
 
   it('댓글 시트에서 누른 좋아요가 목록에도 반영된다', async () => {
