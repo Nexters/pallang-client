@@ -16,6 +16,20 @@ type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   title: string
 }
 
+/**
+ * 표지 URL은 알라딘·API 서버에서 오는 통제 밖 값이다. 그대로 `url()`에 넣으면 URL 안의
+ * `)`·공백·따옴표가 선언을 끊어 `background-image`가 통째로 무효가 되고, 오류 없이 배경색만 남는다.
+ * 따옴표로 감싸 `)`·공백을 무해화하고, 그 문자열을 깨는 `\`·`"`는 이스케이프한다.
+ * 줄바꿈은 CSS 문자열 안에 올 수 없어(이스케이프해도 마찬가지) 퍼센트 인코딩한다.
+ */
+function toCoverBackgroundImage(coverImageUrl: string) {
+  const escaped = coverImageUrl.replace(/["\\\f\n\r]/g, (char) =>
+    char === '"' || char === '\\' ? `\\${char}` : encodeURIComponent(char),
+  )
+
+  return `url("${escaped}")`
+}
+
 function BookStat({ icon, value }: { icon: 'content' | 'pencil'; value: number }) {
   const Icon = icon === 'content' ? ContentIcon : PencilIcon
 
@@ -50,7 +64,7 @@ export function BookItem({
         style={
           coverImageUrl
             ? {
-                backgroundImage: `url(${coverImageUrl})`,
+                backgroundImage: toCoverBackgroundImage(coverImageUrl),
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
               }
