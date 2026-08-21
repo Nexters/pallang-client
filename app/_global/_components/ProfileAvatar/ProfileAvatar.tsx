@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 import { cn } from '@/app/_global/_services/cn.service'
 
 /** 프로필 이미지를 올리지 않은 사람 자리에 서는 기본 캐릭터 — 주황 배경까지 그림에 들어 있다 */
@@ -22,14 +26,23 @@ type ProfileAvatarProps = {
  * 최적화가 붙을 자리가 없다.
  */
 export function ProfileAvatar({ src, size, className }: ProfileAvatarProps) {
+  // 카카오 CDN URL은 만료된다 — 404가 나면 웹뷰가 사진 대신 깨진 이미지 표시를 낸다.
+  // 실패한 URL을 기억해 기본 캐릭터로 떨어뜨리고, src가 새로 오면 값이 달라져 다시 시도한다.
+  const [brokenSrc, setBrokenSrc] = useState<null | string>(null)
+  const shownSrc = src && src !== brokenSrc ? src : FALLBACK_SRC
+
   return (
     // eslint-disable-next-line @next/next/no-img-element -- 위 주석 참고(도메인 유동·고정 크기)
     <img
-      src={src ?? FALLBACK_SRC}
+      src={shownSrc}
       alt=""
       width={size}
       height={size}
       decoding="async"
+      onError={() => {
+        // 기본 캐릭터까지 실패했으면 갈 곳이 없다 — 여기서 기록하면 다시 원래 URL로 돌아가 무한히 돈다
+        if (shownSrc !== FALLBACK_SRC) setBrokenSrc(shownSrc)
+      }}
       style={{ width: size, height: size }}
       className={cn('shrink-0 rounded-full object-cover', className)}
     />
