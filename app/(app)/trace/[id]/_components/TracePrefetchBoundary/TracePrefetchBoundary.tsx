@@ -5,7 +5,7 @@ import { getQueryClient } from '@/app/_global/_services/queryClient.service'
 import { parseTraceGroupId, parseTraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { parseBookId, prefetchTraceScreen } from '../../_services/tracePrefetch.service'
-import { TraceCollapseView } from '../TraceCollapseView/TraceCollapseView'
+import { TraceScreen } from '../TraceScreen/TraceScreen'
 
 type TracePrefetchBoundaryProps = {
   params: Promise<{ id: string }>
@@ -36,7 +36,7 @@ export async function TracePrefetchBoundary({ params, searchParams }: TracePrefe
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <TraceCollapseView bookId={bookId} target={target} groupId={groupId} />
+      <TraceScreen bookId={bookId} target={target} groupId={groupId} />
     </HydrationBoundary>
   )
 }

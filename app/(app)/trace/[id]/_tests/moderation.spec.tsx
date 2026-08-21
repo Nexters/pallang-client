@@ -6,7 +6,7 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
-import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
+import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 
 const { authState } = vi.hoisted(() => ({ authState: { isAuthenticated: true } }))
 
@@ -170,7 +170,7 @@ async function renderView() {
     <QueryClientProvider client={client}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <TraceCollapseView bookId={BOOK_ID} />
+          <TraceScreen bookId={BOOK_ID} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,

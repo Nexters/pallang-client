@@ -27,9 +27,9 @@ export function TraceHeader({ title, onBack, pageNav, className, scopeLabel }: T
       </TopBar.Action>
       {scopeLabel && (
         // Title 안이 아니라 형제로 둔다 — Root의 gap-2(8px)가 시안의 뱃지-제목 간격이다(Title 안은 gap-1)
-        // 시안(3453:10103)은 주황 배경 위 white/20이다. 지금 무대 배경은 크림 모눈종이라 white/20은 보이지 않아
-        // '배경보다 밝은 알약'이라는 뜻만 살려 white/60으로 올렸다 — 주황 배경 시안을 반영할 때 bg-white-a20로 되돌린다.
-        <span className="flex h-6 shrink-0 items-center rounded-full bg-white-a60 px-2 font-pretendard text-caption-12rg text-text-primary">
+        // 시안(3453:10103)대로 주황 배경 위 white/20이다 — 크림 모눈종이 배경 시절 잠시 white/60으로
+        // 올려두었던 것을 배경이 주황으로 바뀌면서 되돌렸다.
+        <span className="flex h-6 shrink-0 items-center rounded-full bg-white-a20 px-2 font-pretendard text-caption-12rg text-text-primary">
           {scopeLabel}
         </span>
       )}

@@ -60,7 +60,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **셸은 로딩 분기 바깥에 둔다** — 레이아웃·탭바·헤더는 데이터를 기다릴 이유가 없다. `if (isPending) return null`로 화면 전체를 지우지 말고, 셸은 그대로 두고 데이터가 필요한 안쪽만 골격으로 채운다. 셸을 분기 안쪽에 두면 탭바까지 사라진다(`myPageShell.spec.tsx`가 이 회귀를 잠근다).
 - **골격 조각은 `_components/Skeleton`을 쓴다** — 크기·모양은 `className`으로 정하고, 어두운 면에 얹을 때만 `tone="dark"`를 준다. 색을 직접 고르면 같은 배경에서 세기가 갈린다.
 - **`<Suspense>`에 fallback을 반드시 준다** — 비워두면 PPR 셸이 빈 채로 나가, 직접 진입에서는 빈 화면이 뜨고 링크 이동에서는 이전 화면이 멈춘 것처럼 보인다(`tracePageFallback.spec.tsx`).
-- 골격은 실제 화면과 **같은 좌표**를 쓴다. 수치가 상수로 있으면 그 상수를 가져다 쓴다(`TracePageSkeleton`이 `quoteCollapse.service`의 값을 그대로 쓰는 식) — 도착했을 때 자리가 튀지 않는다.
+- 골격은 실제 화면과 **같은 좌표**를 쓴다. 수치가 상수로 있으면 그 상수를 가져다 쓴다(`TracePageSkeleton`이 `quoteStage.constant`의 값을 그대로 쓰는 식) — 도착했을 때 자리가 튀지 않는다.
 - 골격은 움직이지 않는다. 반복 애니메이션이 필요하면 모션 섹션의 `animate-pulse`만 쓴다.
 
 ## 이슈 / 브랜치 / PR 컨벤션
@@ -98,7 +98,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - 상단 인셋 토큰은 `globals.css`의 `:root { --safe-top: env(safe-area-inset-top, 0px) }` 하나뿐이다. 화면 코드에서 `env(safe-area-inset-top)`을 직접 쓰지 않는다 — 셸 패딩과 겹쳐 두 번 내려간다.
 - 레이아웃 셸(`app/layout.tsx`의 `main`)이 `pt-(--safe-top)`으로 일괄 소비한다 — **새 페이지는 노치 처리를 하지 않는다.**
-- 노치 뒤까지 배경을 깔아야 하는 풀블리드 화면만 `-mt-(--safe-top)`(CSS는 `margin-top: calc(-1 * var(--safe-top))`)으로 셸 패딩을 되돌린 뒤 내부에서 직접 오프셋한다. 예: 탭 화면(`TabScreenLayout` — 시트가 되돌리고 `pt-(--safe-top)`으로 다시 더한다), 흔적 페이지(`TraceCollapseView`/`QuoteStage`).
+- 노치 뒤까지 배경을 깔아야 하는 풀블리드 화면만 `-mt-(--safe-top)`(CSS는 `margin-top: calc(-1 * var(--safe-top))`)으로 셸 패딩을 되돌린 뒤 내부에서 직접 오프셋한다. 예: 탭 화면(`TabScreenLayout` — 시트가 되돌리고 `pt-(--safe-top)`으로 다시 더한다), 흔적 페이지(`TraceScreen`/`QuoteStage`).
 - `fixed` 오버레이는 셸 패딩을 받지 않는다 — 상단에 콘텐츠가 붙는 오버레이만 `var(--safe-top)`만큼 패딩한다. 예: `TraceDetailOverlay`. 중앙 정렬 모달·바텀시트는 처리 불필요.
 - 하단 인셋 토큰은 `--safe-bottom`이다. 상단과 달리 **셸이 소비하지 않는다** — 하단에 붙는 요소(탭바·고정 CTA·바텀시트)가 각자 `max(<기본값>, var(--safe-bottom))`으로 더한다. `env(safe-area-inset-bottom)`을 직접 쓰지 않는다.
 - **두 토큰 모두 값을 env()에서만 받지 않는다.** Android는 시스템 바 인셋을 `env(safe-area-inset-*)`로 주지 않는 웹뷰(Chromium < 140)가 있어 `MainActivity`가 실제 인셋을 두 토큰에 덮어쓴다(API 35+에서만 — 그 아래는 창이 시스템 바를 침범하지 않아 넣으면 두 번 밀린다). 그래서 인셋은 언제나 토큰을 거쳐 읽는다.

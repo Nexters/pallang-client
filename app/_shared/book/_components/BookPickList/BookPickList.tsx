@@ -5,6 +5,7 @@ import {
   FeedbackState,
 } from '@/app/_global/_components/FeedbackState/FeedbackState'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
+import { BookSelectRibbon } from '@/app/_shared/book/_components/BookSelectRibbon/BookSelectRibbon'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 // 시안의 결과 항목은 표지·제목·'출판사 · 저자' 세 줄뿐이다 — 대목/의견 수 배지는
@@ -95,30 +96,7 @@ export function BookPickList({
                 publisher={book.publisher}
                 title={book.title}
               />
-              {isSelected && (
-                // 시안의 '선택' 리본(40×49) — 상단 모서리 r2, 아래는 양 꼬리 + 가운데 V 노치. 24px 아이콘
-                // 파이프라인에 맞지 않는 모양이라 Icon 에셋으로 넣지 않고 여기 인라인으로 둔다.
-                <span
-                  aria-hidden="true"
-                  className="absolute top-0 right-0 h-[49px] w-10 text-interactive-accent"
-                >
-                  <svg
-                    className="absolute inset-x-0 top-0"
-                    width="40"
-                    height="47.4707"
-                    viewBox="0 0 40 47.4707"
-                    fill="none"
-                  >
-                    <path
-                      d="M0 2C0 0.89543 0.895431 0 2 0H38C39.1046 0 40 0.89543 40 2V45.4676C40 47.0222 38.3041 47.9824 36.971 47.1826L21.029 37.6174C20.3956 37.2374 19.6044 37.2374 18.971 37.6174L3.02899 47.1826C1.69594 47.9824 0 47.0222 0 45.4676V2Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  <span className="absolute inset-x-0 top-[11px] text-center text-title-14bd text-text-inverse">
-                    선택
-                  </span>
-                </span>
-              )}
+              {isSelected && <BookSelectRibbon />}
             </button>
             {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}
           </li>
