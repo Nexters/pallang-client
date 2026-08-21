@@ -35,6 +35,9 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 5000,
+      // Android는 기본 ImageView 경로가 splash drawable을 scaleType으로 통째로 늘려
+      // layer-list의 로고 240dp 고정이 깨진다 — 커스텀 레이아웃으로 background 렌더를 쓴다.
+      layoutName: 'launch_splash',
     },
   },
 }

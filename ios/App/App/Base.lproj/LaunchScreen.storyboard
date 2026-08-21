@@ -4,7 +4,6 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17105"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -12,11 +11,37 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
+                    <view key="view" contentMode="scaleToFill" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                    </imageView>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <!-- 배경(격자+하단 그라디언트)은 화면을 꽉 채우는 aspectFill.
+                                 웹 스플래시 CSS를 iPhone 세로(844pt) 기준으로 환산해 그린 2732px 정사각 이미지라
+                                 세로 긴 화면에서 좌우만 잘리고 격자는 화면에서 약 24pt로 보인다. -->
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" image="SplashBackground" translatesAutoresizingMaskIntoConstraints="NO" id="bgV-01-img">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                            </imageView>
+                            <!-- 로고+태그라인 블록은 웹 스플래시와 같은 240×125pt 고정, 중앙에서 -1pt.
+                                 배경과 분리해 고정 pt로 두어야 기기 크기와 무관하게 웹 스플래시의 로고와
+                                 같은 크기로 그려져 전환 순간 로고가 튀지 않는다(#345). -->
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="SplashLogo" translatesAutoresizingMaskIntoConstraints="NO" id="lgV-02-img">
+                                <rect key="frame" x="67.5" y="270" width="240" height="125"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="240" id="lgW-c1-www"/>
+                                    <constraint firstAttribute="height" constant="125" id="lgH-c2-hhh"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
+                        <color key="backgroundColor" red="0.96862745099999999" green="0.96862745099999999" blue="0.97254901959999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="bgV-01-img" firstAttribute="top" secondItem="snD-IY-ifK" secondAttribute="top" id="bgT-c3-top"/>
+                            <constraint firstItem="bgV-01-img" firstAttribute="bottom" secondItem="snD-IY-ifK" secondAttribute="bottom" id="bgB-c4-bot"/>
+                            <constraint firstItem="bgV-01-img" firstAttribute="leading" secondItem="snD-IY-ifK" secondAttribute="leading" id="bgL-c5-lea"/>
+                            <constraint firstItem="bgV-01-img" firstAttribute="trailing" secondItem="snD-IY-ifK" secondAttribute="trailing" id="bgR-c6-tra"/>
+                            <constraint firstItem="lgV-02-img" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="lgX-c7-cex"/>
+                            <constraint firstItem="lgV-02-img" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" constant="-1" id="lgY-c8-cey"/>
+                        </constraints>
+                    </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -24,9 +49,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Splash" width="1366" height="1366"/>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
+        <image name="SplashBackground" width="2732" height="2732"/>
+        <image name="SplashLogo" width="240" height="125"/>
     </resources>
 </document>

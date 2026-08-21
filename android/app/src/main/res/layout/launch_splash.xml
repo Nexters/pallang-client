@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Capacitor SplashScreen이 띄우는 뷰(capacitor.config.ts의 layoutName).
+     기본 ImageView 경로는 scaleType으로 drawable 전체를 늘려 로고의 240dp 고정이 깨진다 —
+     background로 그리면 layer-list의 gravity/크기 지정이 windowBackground와 동일하게 동작해
+     콜드 스타트 첫 프레임(styles.xml)과 플러그인 스플래시가 같은 그림이 된다(#345). -->
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splash" />
