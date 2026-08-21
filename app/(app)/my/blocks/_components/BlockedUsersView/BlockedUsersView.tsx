@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useMemo, useState } from 'react'
 
 import { FlatDialog } from '@/app/_global/_components/FlatDialog/FlatDialog'
+import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
@@ -18,7 +19,11 @@ const AVATAR_SIZE = 32
 
 export function BlockedUsersView() {
   const queryClient = useQueryClient()
-  const [message, setMessage] = useState('')
+  /**
+   * 띄워 둔 안내. 문구에 대상이 들어가지 않아(고정 문구) 대상만 바꿔 연달아 해제하면
+   * 두 번째 안내가 첫 타이머의 남은 시간만 보이고 사라진다 — 대상 id를 함께 들어 새 안내로 센다.
+   */
+  const [notice, setNotice] = useState<{ text: string; userId: number } | null>(null)
   const [target, setTarget] = useState<BlockedUserResponse | null>(null)
   // 다이얼로그가 닫히는 동안에도 문구가 비지 않아야 한다
   const shownTarget = useLastPresent(target)
@@ -31,39 +36,35 @@ export function BlockedUsersView() {
 
   const unblock = useMutation({
     ...blockMutations.unblock(),
-    onSuccess: async () => {
-      setTarget(null)
-      setMessage('차단이 해제되었습니다.')
+    onSuccess: async (_data, userId) => {
+      // 목록이 갱신된 뒤에 닫는다 — 먼저 닫으면 해제된 행이 남아 있어 같은 사용자에게 DELETE가 한 번 더 간다
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: blockQueries.all() }),
         // 해제한 사용자의 흔적·댓글이 목록에 다시 보이려면 새로 받아와야 한다
         queryClient.invalidateQueries({ queryKey: opinionQueries.all() }),
         queryClient.invalidateQueries({ queryKey: commentQueries.all() }),
       ])
-    },
-    onError: () => {
       setTarget(null)
-      setMessage('차단을 해제하지 못했어요. 잠시 후 다시 시도해주세요.')
+      setNotice({ text: '차단이 해제되었습니다.', userId })
+    },
+    onError: (_error, userId) => {
+      setTarget(null)
+      setNotice({ text: '차단을 해제하지 못했어요. 잠시 후 다시 시도해주세요.', userId })
     },
   })
 
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   function renderList() {
     if (listQuery.isPending) return <BlockedUsersSkeleton />
+    // 캐시가 살아 있는 채로 백그라운드 refetch만 실패하면 목록을 지우지 않는다
     if (listQuery.isError && users.length === 0) {
       return (
-        <div className="flex flex-col items-center gap-2 py-10 text-body-14rg text-text-tertiary">
-          <p>차단 목록을 불러오지 못했어요.</p>
-          <button
-            type="button"
-            onClick={() => {
-              void listQuery.refetch()
-            }}
-            className="text-body-14sb text-text-secondary underline"
-          >
-            다시 불러오기
-          </button>
-        </div>
+        <RetryMessage
+          message="차단 목록을 불러오지 못했어요."
+          onRetry={() => {
+            void listQuery.refetch()
+          }}
+        />
       )
     }
     if (users.length === 0) {
@@ -107,10 +108,14 @@ export function BlockedUsersView() {
               </span>
               <button
                 type="button"
+                // 행마다 라벨이 같아 스크린리더에서 어느 사용자인지 구분되지 않는다
+                aria-label={`${user.nickname}님 차단 해제`}
+                // 해제 요청이 도는 동안은 잠근다 — 목록이 갱신되기 전이라 이미 해제된 행이 남아 있다
+                disabled={unblock.isPending}
                 onClick={() => {
                   setTarget(user)
                 }}
-                className="flex h-8 w-16 shrink-0 items-center justify-center rounded-full border border-border-default bg-bg-default text-center text-title-12bd text-text-tertiary press"
+                className="flex h-8 w-16 shrink-0 items-center justify-center rounded-full border border-border-default bg-bg-default text-center text-title-12bd text-text-tertiary press disabled:text-text-disabled"
               >
                 차단 해제
               </button>
@@ -148,6 +153,7 @@ export function BlockedUsersView() {
         confirmLabel="차단 해제"
         loading={unblock.isPending}
         illustrated={false}
+        // 요청 중에 닫아도 안전하다 — 목록 행이 함께 잠겨 있어 중복 요청으로 이어지지 않는다
         onCancel={() => {
           setTarget(null)
         }}
@@ -159,16 +165,17 @@ export function BlockedUsersView() {
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
         tone="light"
-        message={message}
+        message={notice?.text ?? ''}
+        messageKey={notice?.userId}
         onClose={() => {
-          setMessage('')
+          setNotice(null)
         }}
       />
     </>
   )
 }
 
-/** 목록과 같은 좌표(프로필 32px + 행 py-4 + 구분선)로 자리를 지킨다 */
+/** 목록과 같은 좌표(프로필 32px + 닉네임 + 우측 해제 칩 h-8 w-16 + 행 py-4 + 구분선)로 자리를 지킨다 */
 function BlockedUsersSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col">
@@ -176,6 +183,7 @@ function BlockedUsersSkeleton() {
         <div key={index} className="flex items-center gap-2 border-b border-border-default py-4">
           <Skeleton className="size-8 shrink-0 rounded-lg" />
           <Skeleton className="h-5 w-28" />
+          <Skeleton className="ml-auto h-8 w-16 shrink-0 rounded-full" />
         </div>
       ))}
     </div>
