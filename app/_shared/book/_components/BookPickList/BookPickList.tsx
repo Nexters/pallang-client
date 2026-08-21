@@ -92,9 +92,11 @@ export function BookPickList({
             >
               <BookItem
                 author={book.author}
+                className="pr-12"
                 coverImageUrl={book.coverImageUrl}
                 publisher={book.publisher}
                 title={book.title}
+                titleBehavior="clamp"
               />
               {isSelected && <BookSelectRibbon />}
             </button>

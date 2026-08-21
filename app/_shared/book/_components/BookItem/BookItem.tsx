@@ -14,6 +14,8 @@ type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   /** 대목·흔적 수 오른쪽에 붙는 자리. 책 상세의 독서 상태 뱃지가 여기로 들어온다. */
   statusBadge?: ReactNode
   title: string
+  /** 기본 목록은 한 줄 말줄임이고, 선택 리본이 붙는 검색 결과만 두 줄까지 보여준다. */
+  titleBehavior?: 'clamp' | 'truncate'
 }
 
 /**
@@ -52,6 +54,7 @@ export function BookItem({
   publisher,
   statusBadge,
   title,
+  titleBehavior = 'truncate',
   ...props
 }: BookItemProps) {
   const description = publisher ? `${publisher} · ${author}` : author
@@ -73,7 +76,14 @@ export function BookItem({
       />
       <div className="flex min-w-0 flex-1 flex-col items-start gap-4 pt-1">
         <div className="flex w-full min-w-0 flex-col items-start gap-1.5">
-          <h2 className="w-full truncate text-title-18bd text-text-primary">{title}</h2>
+          <h2
+            className={cn(
+              'w-full text-title-18bd text-text-primary',
+              titleBehavior === 'clamp' ? 'line-clamp-2 whitespace-normal break-words' : 'truncate',
+            )}
+          >
+            {title}
+          </h2>
           <p className="w-full truncate text-body-14md text-text-secondary/50">{description}</p>
         </div>
         {passageCount !== undefined && opinionCount !== undefined && (
