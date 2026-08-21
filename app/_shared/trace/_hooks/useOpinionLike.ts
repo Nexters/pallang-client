@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { OpinionLikeState } from '@/app/_global/_queries/opinion.queries'
 import { opinionMutations, opinionQueries } from '@/app/_global/_queries/opinion.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
 /**
  * 흔적 좋아요 토글. 목록 아이템과 상세 오버레이가 같은 캐시 키를 읽어 한쪽에서 누르면 다른 쪽도 함께 바뀐다.
@@ -38,6 +39,11 @@ export function useOpinionLike(opinionId: number, serverState: OpinionLikeState)
         liked: result.liked,
         likeCount: result.likeCount,
       })
+      // 좋아요 관리·서재 좋아요 탭이 읽는 목록은 따로 캐시된다(staleTime 60초). 여기서 stale로
+      // 돌려두지 않으면 빈 목록을 보고 나와 좋아요를 누른 뒤 돌아가도 그대로 비어 있다.
+      // 마지막·첫 좋아요면 도서 필터도 바뀌므로 함께 돌린다.
+      void queryClient.invalidateQueries({ queryKey: userQueries.likedOpinionListAll() })
+      void queryClient.invalidateQueries({ queryKey: userQueries.filterBooks('LIKE').queryKey })
     },
   })
 

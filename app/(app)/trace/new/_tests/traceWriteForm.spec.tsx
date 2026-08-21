@@ -7,6 +7,8 @@ import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvi
 // ①이 저장까지 맡게 되면서(대목을 물고 들어온 경로) useTraceSubmit이 딸려 온다 —
 // useMutation은 QueryClientProvider를, useLoginGate는 LoginGateProvider를 요구한다.
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
@@ -80,7 +82,7 @@ function DraftProbe() {
 
 function renderForm({ fromPassage = false } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  render(
     <QueryClientProvider client={queryClient}>
       <HardwareBackProvider>
         <LoginGateProvider>
@@ -96,6 +98,7 @@ function renderForm({ fromPassage = false } = {}) {
       </HardwareBackProvider>
     </QueryClientProvider>,
   )
+  return queryClient
 }
 
 const OPINION_PLACEHOLDER = '문장에 대한 생각이나 의견을 작성해보세요.'
@@ -162,7 +165,12 @@ describe('생각 작성 단계 — 흔적 보기에서 대목을 물고 온 경�
   it('이 화면이 마지막이라 다음이 아니라 기록 완료다 — 눌러 저장하고 완료로 간다', async () => {
     replaceMock.mockClear()
     createOpinionMock.mockClear()
-    renderForm({ fromPassage: true })
+    const queryClient = renderForm({ fromPassage: true })
+    // 내 흔적 관리·서재를 먼저 보고 온 상황 — 60초 캐시가 살아 있다
+    const myOpinionsKey = userQueries.opinionList().queryKey
+    const libraryKey = bookQueries.myLibrary().queryKey
+    queryClient.setQueryData(myOpinionsKey, { pages: [], pageParams: [] })
+    queryClient.setQueryData(libraryKey, { pages: [], pageParams: [] })
 
     expect(screen.queryByRole('button', { name: '다음' })).toBeNull()
     const submit = await screen.findByRole('button', { name: '기록 완료' })
@@ -189,6 +197,9 @@ describe('생각 작성 단계 — 흔적 보기에서 대목을 물고 온 경�
     // ②·③을 거치지 않는다
     expect(replaceMock).not.toHaveBeenCalledWith('/trace/new/decorate')
     expect(replaceMock).not.toHaveBeenCalledWith('/trace/new/book')
+    // 완료 화면에서 바로 내 흔적 관리·서재로 가도 방금 남긴 흔적이 보여야 한다
+    expect(queryClient.getQueryState(myOpinionsKey)?.isInvalidated).toBe(true)
+    expect(queryClient.getQueryState(libraryKey)?.isInvalidated).toBe(true)
   })
 
   it('뒤로 가면 물고 온 대목을 놓고 방식 선택으로 돌아간다 — 이어받은 상태가 남지 않는다', async () => {

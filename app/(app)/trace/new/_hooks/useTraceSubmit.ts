@@ -1,12 +1,14 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { ApiError } from '@/app/_global/_data/api.model'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
-import { opinionMutations } from '@/app/_global/_queries/opinion.queries'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { opinionMutations, opinionQueries } from '@/app/_global/_queries/opinion.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
 import { useTraceDraft } from './useTraceDraft'
 import { useTraceNav } from './useTraceNav'
@@ -21,6 +23,7 @@ import { useTraceNav } from './useTraceNav'
 export function useTraceSubmit() {
   const { draft, dispatch } = useTraceDraft()
   const { goTo } = useTraceNav()
+  const queryClient = useQueryClient()
   const createOpinion = useMutation(opinionMutations.create())
   const runWithLogin = useLoginGate()
   const [message, setMessage] = useState('')
@@ -61,6 +64,11 @@ export function useTraceSubmit() {
             setMessage('흔적을 남기지 못했어요. 잠시 후 다시 시도해주세요.')
             return
           }
+          // 내 흔적·스포일러 관리, 서재, 흔적 보기 목록이 60초 캐시를 들고 있다 — 완료 화면에서
+          // 바로 돌아가도 방금 남긴 흔적이 보이도록 stale로 돌린다
+          void queryClient.invalidateQueries({ queryKey: userQueries.all() })
+          void queryClient.invalidateQueries({ queryKey: bookQueries.all() })
+          void queryClient.invalidateQueries({ queryKey: opinionQueries.listAll() })
           dispatch({
             type: 'setResult',
             result: {
