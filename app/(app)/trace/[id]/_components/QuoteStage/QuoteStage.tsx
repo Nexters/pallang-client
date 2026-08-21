@@ -14,6 +14,7 @@ import {
 import { useQuoteSwipe } from '../../_hooks/useQuoteSwipe'
 import { isSpoilerCovered } from '../../_services/spoiler.service'
 import type { QuoteStageProps } from '../../_types/readerHighlights.type'
+import { GroupTraceEmpty } from '../GroupTraceEmpty/GroupTraceEmpty'
 import { QuoteLoadError } from '../QuoteLoadError/QuoteLoadError'
 import { QuotePager } from '../QuotePager/QuotePager'
 import { QuoteSpoilerCover } from '../QuoteSpoilerCover/QuoteSpoilerCover'
@@ -32,6 +33,7 @@ export function QuoteStage({
   quoteIndex,
   isRevealed,
   stageError,
+  emptyState,
   canSwipe,
   onBack,
   onClickQuote,
@@ -42,6 +44,22 @@ export function QuoteStage({
   const activeQuote = highlight.quotes[quoteIndex]
   // 가림막은 지금 보고 있는 대목이 스포일러일 때만 씌운다 — 같은 페이지의 다른 대목은 영향을 주지 않는다
   const isCovered = isSpoilerCovered({ isSpoiler: activeQuote?.isSpoiler, isRevealed })
+
+  // 카드 안은 셋 중 하나다 — 재시도(조회 실패) > 남기기 안내(빈 모임) > 대목. 중첩 삼항 대신 순서대로 정한다
+  const renderCardContent = () => {
+    if (stageError?.isError) return <QuoteLoadError onRetry={stageError.retry} />
+    if (emptyState) return <GroupTraceEmpty onCreate={emptyState.onCreate} />
+    return (
+      /* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
+         반각 여백은 5px뿐이라 첫 줄·끝 줄이 잘린다). 음수 마진과 같은 크기의 패딩으로
+         글자 위치와 차지하는 자리는 그대로 두고 overflow에 잘리는 경계만 넓힌다 */
+      <DecoratedQuote
+        quotedText={activeQuote?.text ?? ''}
+        decorations={activeQuote?.decorations ?? []}
+        className="-m-4 min-h-0 flex-1 overflow-hidden p-4 text-body-20md text-text-secondary"
+      />
+    )
+  }
 
   return (
     // 밴드 아래로 드러나는 흰 면이 이 컨테이너의 배경이다
@@ -70,23 +88,13 @@ export function QuoteStage({
           height: px(CARD_HEIGHT),
         }}
       >
-        {stageError?.isError ? (
-          <QuoteLoadError onRetry={stageError.retry} />
-        ) : (
-          /* 동그라미 효과는 글자 사방으로 삐져나온다(paddingBlock 0.3em=6px인데 line-height 1.5의
-             반각 여백은 5px뿐이라 첫 줄·끝 줄이 잘린다). 음수 마진과 같은 크기의 패딩으로
-             글자 위치와 차지하는 자리는 그대로 두고 overflow에 잘리는 경계만 넓힌다 */
-          <DecoratedQuote
-            quotedText={activeQuote?.text ?? ''}
-            decorations={activeQuote?.decorations ?? []}
-            className="-m-4 min-h-0 flex-1 overflow-hidden p-4 text-body-20md text-text-secondary"
-          />
-        )}
+        {renderCardContent()}
         {isCovered && <QuoteSpoilerCover onReveal={onClickQuote} />}
       </div>
       <QuotePager
         index={quoteIndex}
-        total={highlight.quotes.length}
+        // 대목이 0개여도 "01 / 00"이 아니라 시안(3556:29129)의 "01 / 01"로 선다
+        total={Math.max(highlight.quotes.length, 1)}
         canSwipe={canSwipe}
         onMove={onSwipeQuote}
         className="absolute left-1/2 -translate-x-1/2"

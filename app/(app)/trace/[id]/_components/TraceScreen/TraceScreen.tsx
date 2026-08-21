@@ -81,6 +81,11 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
           quoteIndex={stage.quoteIndex}
           isRevealed={stage.isRevealed}
           stageError={{ isError: stage.isError, retry: stage.retry }}
+          // 모임에 남긴 대목이 아직 없으면 카드가 남기러 가기 안내로 바뀐다(시안 3556:29129).
+          // CTA는 새 대목을 만드는 기록 플로우다 — 대목이 없으니 의견을 붙일 곳도 없다
+          emptyState={
+            groupId !== undefined && stage.isEmpty ? { onCreate: createNav.addRecord } : undefined
+          }
           canSwipe={stage.canSwipe}
           onBack={() => {
             router.back()
