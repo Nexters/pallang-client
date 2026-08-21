@@ -5,32 +5,47 @@ import { shouldDismissSheet } from '@/app/_global/_services/sheetDrag.service'
 import { type SheetDragBind, useSheetDrag } from './useSheetDrag'
 
 /**
- * 시트를 아래로 끌어 닫는다 — 끄는 동안 손가락을 따라 내려가고, 손을 떼면 거리·속도로 닫을지 정한다.
- * 반환한 props를 시트 패널에 스프레드한다.
- *
- * 높이가 두 자리인 시트(흔적 화면의 의견 시트)는 자기 스냅 규칙이 따로 있고(useTraceSheet),
- * 이 훅은 "내리면 닫힘" 하나뿐인 바텀시트(BottomSheet)를 위한 것이다.
- *
- * 위치는 React 상태가 아니라 팝업의 인라인 스타일에 직접 쓴다 — 팝업은 닫히면 언마운트되어
- * 다음에 열릴 때 깨끗한 요소로 시작하고, 닫을 때 인라인 translate를 100%로 두면 base-ui의
- * 퇴장 스타일이 한 프레임 늦게 붙어도 끌던 자리에서 그대로 이어 내려간다.
+ * "내리면 닫힘" 하나뿐인 시트(BottomSheet)의 드래그. 손가락을 따라 내려가고 백드롭은 그만큼 옅어진다.
+ * 위치는 인라인 스타일에 직접 쓴다 — 팝업은 닫히면 언마운트되어 다음 열림은 깨끗하다.
  */
-export function useSheetDragDismiss(onDismiss: () => void): SheetDragBind {
+export function useSheetDragDismiss(
+  onDismiss: () => void,
+  { enabled = true }: { enabled?: boolean } = {},
+): SheetDragBind {
   return useSheetDrag({
+    enabled,
     onMove: (dy, popup) => {
-      // 위로는 끌리지 않는다 — 올라갈 자리가 없는 시트다
+      const y = Math.max(0, dy)
       popup.style.transition = 'none'
-      popup.style.translate = `0 ${String(Math.max(0, dy))}px`
+      popup.style.translate = `0 ${String(y)}px`
+      const backdrop = findBackdrop(popup)
+      if (backdrop) {
+        backdrop.style.transition = 'none'
+        backdrop.style.opacity = String(Math.max(0, 1 - y / popup.offsetHeight))
+      }
     },
     onEnd: ({ dy, velocity }, popup) => {
-      // 인라인 전환을 걷어 클래스의 전환(duration-rise · 퇴장은 duration-fast)이 돌아온다
+      const backdrop = findBackdrop(popup)
       popup.style.transition = ''
+      if (backdrop) backdrop.style.transition = ''
       if (shouldDismissSheet({ dy, velocity, height: popup.offsetHeight })) {
+        // 인라인을 남겨야 base-ui 퇴장 스타일이 한 프레임 늦어도 끌던 자리에서 이어진다
         popup.style.translate = '0 100%'
+        if (backdrop) backdrop.style.opacity = '0'
         onDismiss()
         return
       }
       popup.style.translate = ''
+      if (backdrop) backdrop.style.opacity = ''
     },
   })
+}
+
+/** 백드롭은 포털 노드 아래 Viewport(→Popup)의 형제다. ref로 받으면 React Compiler가 인자 변형으로 막는다 */
+function findBackdrop(popup: HTMLElement): HTMLElement | null {
+  return (
+    popup.parentElement?.parentElement?.querySelector<HTMLElement>(
+      ':scope > [data-slot="bottom-sheet-backdrop"]',
+    ) ?? null
+  )
 }

@@ -93,16 +93,13 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
           onClickQuote={stage.clickQuote}
           onSwipeQuote={stage.swipeQuote}
         />
-        {/* 어두운 시트 — 무대 위를 덮으며 오르내린다. 화면에서 유일하게 스크롤하는 자리이기도 하다.
-            높이는 top으로 정한다(bottom은 화면 바닥에 못박혀 있다) — 목록이 실제로 그만큼만
-            차지해야 접힌 상태에서도 마지막 흔적까지 스크롤로 닿는다 */}
+        {/* 어두운 시트 — 높이를 top으로 정해야 접힌 상태에서도 목록 끝까지 스크롤로 닿는다 */}
         <div
           ref={panelRef}
           {...sheet.bind()}
           style={{ top: `calc(var(--safe-top) + ${px(sheet.top)})` }}
           className={cn(
             'absolute inset-x-0 bottom-0 overflow-y-auto rounded-t-[32px] bg-bg-dark overscroll-y-contain',
-            // 끄는 동안에는 손가락을 그대로 따라가고, 손을 뗀 뒤에만 붙는 자리까지 미끄러진다
             !sheet.isDragging && 'transition-[top] duration-rise ease-rise',
           )}
         >
