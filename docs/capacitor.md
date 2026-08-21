@@ -206,19 +206,74 @@ iOS만큼 함정은 없다(Gradle 프로젝트라 pbxproj 손상 같은 문제 �
 - **카메라 권한 불필요**: `@capacitor/camera`가 매니페스트(`queries` IMAGE_CAPTURE 등)를 자동 병합. `CAMERA` 권한 선언 불필요.
 - **하이드레이션 정상**: Android WebView는 Chromium이라 iOS의 WKWebView 문제가 없다. 그래도 배포 아키텍처 일관성을 위해 iOS와 동일하게 **prod 빌드 권장**.
 
-### 최초 1회 셋업 (SDK/에뮬레이터)
+### 최초 1회 셋업 (SDK)
+
+**Android 빌드에는 JDK 21과 Android SDK가 **둘 다** 있어야 한다.** JDK만 깔고 `./gradlew`를 돌리면
+`SDK location not found. Define a valid SDK location with an ANDROID_HOME environment variable...`로 멈춘다.
+
+**빌드만 확인할 거면 에뮬레이터 패키지는 받지 않는다** — system-image가 수 GB인데 컴파일 검증에는 쓰이지 않는다.
 
 ```bash
-export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools   # commandlinetools 설치 경로
-# SDK 구성요소
-sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator" \
-  "system-images;android-36;google_apis;arm64-v8a"
-# AVD 생성
+# 1. JDK 21 + 커맨드라인 툴
+brew install openjdk@21                        # keg-only — 아래 JAVA_HOME 주의 참고
+brew install --cask android-commandlinetools   # sudo 불필요
+
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+
+# 2. 라이선스 수락 — 건너뛰면 다음 단계에서 패키지 설치가 거부된다
+yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+
+# 3. 빌드에 필요한 최소 구성요소 (버전은 android/variables.gradle의 compileSdkVersion을 따른다)
+sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+# 4. Gradle이 SDK를 찾도록 (git-ignored)
+echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+```
+
+- **`--sdk_root`를 빼지 말 것** — cask가 깐 `cmdline-tools/latest` 옆이 아니라 엉뚱한 경로에 설치된다.
+- **`JAVA_HOME`에 `$(/usr/libexec/java_home -v 21)`을 쓰려면 심볼릭 링크가 먼저 있어야 한다.** Homebrew의 `openjdk@21`은 keg-only라 시스템 Java 래퍼가 못 찾는다. 링크를 만들려면 **sudo가 필요하다**:
+
+  ```bash
+  sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+  ```
+
+  sudo를 쓰고 싶지 않으면 위 셋업처럼 keg 경로(`/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`)를 `JAVA_HOME`에 직접 넣는다. 아래 명령들이 `$(/usr/libexec/java_home -v 21)`을 쓰는 건 링크가 있는 환경 기준이다 — 없으면 keg 경로로 바꿔 쓴다.
+
+- `local.properties`를 만들어 두면 이후 빌드에는 `JAVA_HOME`만 있으면 된다(`ANDROID_HOME` 불필요).
+
+에뮬레이터까지 필요하면 추가로 받는다(디스크 여유 확인 — 아래 주의 참고).
+
+```bash
+sdkmanager --sdk_root="$ANDROID_HOME" "emulator" "system-images;android-36;google_apis;arm64-v8a"
 avdmanager create avd -n pallang_test -k "system-images;android-36;google_apis;arm64-v8a" -d pixel_7
 ```
 
-- **JDK 21**은 `~/jdk21`(Temurin)에 로컬 설치돼 있음. Homebrew cask는 sudo가 필요해서, tarball을 풀어 씀.
-- Gradle이 SDK를 찾도록 `android/local.properties`에 `sdk.dir=$ANDROID_HOME` (git-ignored).
+### 네이티브 코드만 검증할 때 (에뮬레이터 없이)
+
+Android 네이티브를 건드렸는데 기기·에뮬레이터가 없으면, **컴파일과 APK 반영 여부까지는 확인할 수 있다.**
+
+```bash
+cd android
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:assembleDebug
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:compileReleaseJavaWithJavac  # release 변형도 컴파일되는지
+```
+
+앱 모듈에 직접 둔 Capacitor 플러그인(`AppSettingsPlugin` 등)은 소스에 있어도 **등록되지 않으면 웹에서 부를 수 없다.**
+dex를 열어 클래스와 등록 호출을 함께 확인한다.
+
+```bash
+APK=android/app/build/outputs/apk/debug/app-debug.apk
+apkanalyzer dex packages "$APK" | grep AppSettingsPlugin          # 클래스·메서드가 들어갔는지
+apkanalyzer dex code --class kr.co.pallang.app.MainActivity "$APK" | grep -iE "registerPlugin|AppSettingsPlugin"
+#   const-class    v0, Lkr/co/pallang/app/AppSettingsPlugin;
+#   invoke-virtual {p0, v0}, MainActivity;->registerPlugin(Ljava/lang/Class;)V
+```
+
+`release`는 `minifyEnabled false`(`android/app/build.gradle`)라 R8이 플러그인 클래스를 걷어낼 걱정은 없다.
+이걸 켜게 되면 `registerPlugin`으로만 참조되는 클래스가 살아남는지 다시 확인할 것.
+
+**이 방법으로 확인되지 않는 것**: 런타임 동작. 인텐트가 실제로 설정 화면을 여는지, 권한 흐름이 도는지는 기기·에뮬레이터가 필요하다.
 
 ### APK 빌드 → 에뮬레이터 실행 → 카메라 확인 (검증된 절차)
 
@@ -231,7 +286,7 @@ CAP_SERVER_URL=http://10.0.2.2:3000 npx cap sync android
 
 # 3. APK 빌드 (JDK 21 필수)
 cd android
-JAVA_HOME=~/jdk21/jdk-21*/Contents/Home ANDROID_HOME=$ANDROID_HOME ./gradlew assembleDebug
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
 # 산출물: android/app/build/outputs/apk/debug/app-debug.apk
 
 # 4. 에뮬레이터 실행 (직접 볼 땐 -no-window 빼기. -camera-back webcam0 = 맥 웹캠)
