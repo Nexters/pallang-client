@@ -16,6 +16,7 @@ import { initAuthSession, signOut as signOutSession } from '@/app/_global/_queri
 import { hasTokens, subscribeAuthTokens } from '@/app/_global/_services/authToken.service'
 import {
   registerPushDeviceToken,
+  registerPushNotificationActionHandler,
   unregisterPushDeviceToken,
 } from '@/app/_global/_services/pushNotification.service'
 import { hideSplashScreen } from '@/app/_global/_services/splashScreen.service'
@@ -78,10 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (status !== 'authenticated') return
+    void registerPushNotificationActionHandler((href) => {
+      router.push(href)
+    }).catch((error: unknown) => {
+      console.warn('푸시 알림 이동 리스너 등록 실패', error)
+    })
     void registerPushDeviceToken().catch((error: unknown) => {
       console.warn('푸시 토큰 등록 실패', error)
     })
-  }, [status])
+  }, [status, router])
 
   // 토큰을 비우기 전에 표시해둔다 — 토큰 구독이 동기로 상태를 바꾸므로 뒤에 두면 늦는다.
   const signOut = useCallback(async () => {

@@ -8,8 +8,17 @@ import { notificationQueries } from '@/app/_global/_queries/notification.queries
 
 import { NotificationSettingsView } from '../_components/NotificationSettingsView/NotificationSettingsView'
 
+const { routerMock } = vi.hoisted(() => ({
+  routerMock: {
+    back: vi.fn(),
+    prefetch: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+  },
+}))
+
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => routerMock,
 }))
 
 const NOTIFICATION: NotificationResponse = {
@@ -56,6 +65,7 @@ function renderView(notifications: NotificationResponse[] = [NOTIFICATION]) {
 describe('알림 설정 임시 화면', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.clearAllMocks()
   })
 
   it('알림 목록을 보여준다', () => {
@@ -65,7 +75,6 @@ describe('알림 설정 임시 화면', () => {
     expect(screen.getByText('새 댓글이 달렸어요')).toBeInTheDocument()
     expect(screen.getByText('내 의견에 댓글이 달렸어요.')).toBeInTheDocument()
     expect(screen.getByText('2026-08-20 12:30')).toBeInTheDocument()
-    expect(screen.getByLabelText('읽지 않은 알림')).toBeInTheDocument()
   })
 
   it('단건 읽음 버튼을 누르면 읽음 처리 API를 호출한다', async () => {
@@ -79,6 +88,15 @@ describe('알림 설정 임시 화면', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/notifications/42/read', expect.any(Object))
     })
+  })
+
+  it('알림 본문을 누르면 관련 화면으로 이동한다', async () => {
+    const user = userEvent.setup()
+    renderView()
+
+    await user.click(screen.getByRole('button', { name: /새 댓글이 달렸어요/ }))
+
+    expect(routerMock.push).toHaveBeenCalledWith('/trace/11?opinionId=7')
   })
 
   it('전체 읽음 버튼을 누르면 전체 읽음 처리 API를 호출한다', async () => {

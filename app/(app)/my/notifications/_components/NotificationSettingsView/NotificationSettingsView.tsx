@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { useMemo } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
@@ -10,6 +11,7 @@ import {
   notificationQueries,
   type NotificationResponse,
 } from '@/app/_global/_queries/notification.queries'
+import { buildNotificationHref } from '@/app/_global/_services/notificationNavigation.service'
 
 function formatNotificationDate(createdAt: string): string {
   return createdAt.slice(0, 16).replace('T', ' ')
@@ -17,6 +19,7 @@ function formatNotificationDate(createdAt: string): string {
 
 export function NotificationSettingsView() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const listQuery = useInfiniteQuery(notificationQueries.list())
   const readMutation = useMutation({
     ...notificationMutations.read(),
@@ -64,6 +67,9 @@ export function NotificationSettingsView() {
             onRead={() => {
               readMutation.mutate(notification.notificationId)
             }}
+            onOpen={() => {
+              router.push(buildNotificationHref(notification))
+            }}
           />
         ))}
       </ul>
@@ -91,29 +97,29 @@ function NotificationItem({
   notification,
   isReading,
   onRead,
+  onOpen,
 }: {
   notification: NotificationResponse
   isReading: boolean
   onRead: () => void
+  onOpen: () => void
 }) {
   return (
     <li className="flex flex-col gap-2 border-b border-border-default py-4">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-center gap-2">
-            {!notification.isRead && (
-              <span
-                aria-label="읽지 않은 알림"
-                className="size-2 shrink-0 rounded-full bg-fill-primary"
-              />
-            )}
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+        >
+          <div className="flex items-center">
             <strong className="text-body-16bd text-text-primary">{notification.title}</strong>
           </div>
           <p className="text-body-14rg text-text-secondary">{notification.body}</p>
           <time dateTime={notification.createdAt} className="text-body-14rg text-text-tertiary">
             {formatNotificationDate(notification.createdAt)}
           </time>
-        </div>
+        </button>
         <button
           type="button"
           disabled={notification.isRead || isReading}

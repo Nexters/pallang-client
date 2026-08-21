@@ -8,11 +8,14 @@ import {
   registerNotificationDeviceToken,
   removeNotificationDeviceToken,
 } from '../_queries/notification.queries'
+import { buildPushNotificationHref } from './notificationNavigation.service'
 
 const PUSH_DEVICE_TOKEN_KEY = 'pallang:push-device-token'
 
 let tokenListenerPromise: Promise<PluginListenerHandle> | null = null
+let actionListenerPromise: Promise<PluginListenerHandle> | null = null
 let registrationPromise: Promise<void> | null = null
+let notificationActionNavigate: ((href: string) => void) | null = null
 
 export function getPushDevicePlatform(): DeviceTokenPlatform | null {
   const platform = Capacitor.getPlatform()
@@ -52,6 +55,21 @@ async function ensureTokenRefreshListener(): Promise<void> {
     })
   })
   await tokenListenerPromise
+}
+
+export async function registerPushNotificationActionHandler(
+  navigate: (href: string) => void,
+): Promise<void> {
+  if (!canUseNativePush()) return
+
+  notificationActionNavigate = navigate
+  actionListenerPromise ??= FirebaseMessaging.addListener(
+    'notificationActionPerformed',
+    (event) => {
+      notificationActionNavigate?.(buildPushNotificationHref(event.notification.data))
+    },
+  )
+  await actionListenerPromise
 }
 
 export async function registerPushDeviceToken(): Promise<void> {

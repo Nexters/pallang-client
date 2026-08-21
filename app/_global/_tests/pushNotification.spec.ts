@@ -111,6 +111,37 @@ describe('pushNotification.service', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('푸시 알림을 누르면 data에 맞는 화면으로 이동한다', async () => {
+    capacitorState.isNative = true
+    capacitorState.platform = 'android'
+    type NotificationActionEvent = { actionId: string; notification: { data: unknown } }
+    let actionListener: ((event: NotificationActionEvent) => void) | undefined
+    firebaseMessagingMock.addListener.mockImplementation(
+      (eventName: string, listener: (event: NotificationActionEvent) => void) => {
+        if (eventName === 'notificationActionPerformed') actionListener = listener
+        return Promise.resolve({ remove: vi.fn() })
+      },
+    )
+    const navigate = vi.fn()
+    const { registerPushNotificationActionHandler } = await importService()
+
+    await registerPushNotificationActionHandler(navigate)
+
+    actionListener?.({
+      actionId: 'tap',
+      notification: {
+        data: {
+          type: 'OPINION_COMMENTED',
+          bookId: '11',
+          opinionId: '7',
+          commentId: '3',
+        },
+      },
+    })
+
+    expect(navigate).toHaveBeenCalledWith('/trace/11?opinionId=7')
+  })
+
   it('로그아웃 시 저장된 토큰을 서버와 로컬에서 삭제한다', async () => {
     capacitorState.isNative = true
     capacitorState.platform = 'ios'
