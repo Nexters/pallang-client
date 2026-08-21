@@ -43,7 +43,7 @@ type RenderOptions = {
   shouldFail?: boolean
   /** 응답을 releaseLike() 호출 전까지 붙잡아 낙관적 갱신 상태를 관찰할 수 있게 한다 */
   holdLike?: boolean
-  /** 답글 시트가 올라온 채로 시작한다 — 딥링크가 지목한 흔적이 곧바로 시트로 열린다 */
+  /** 댓글 시트가 올라온 채로 시작한다 — 딥링크가 지목한 흔적이 곧바로 시트로 열린다 */
   withDetail?: boolean
   /** 목록 응답이 '내가 이미 좋아요한 흔적'으로 온다 */
   likedByMe?: boolean
@@ -226,10 +226,10 @@ describe('흔적 좋아요', () => {
     expect(postLikeCalls()).toHaveLength(1)
   })
 
-  it('답글 시트에서 누른 좋아요가 목록에도 반영된다', async () => {
+  it('댓글 시트에서 누른 좋아요가 목록에도 반영된다', async () => {
     await renderPage({ withDetail: true })
 
-    const sheet = await screen.findByRole('dialog', { name: /^답글 \(/ })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
     fireEvent.click(within(sheet).getByRole('button', { name: '좋아요' }))
     await waitFor(() => {
       expect(within(sheet).getByRole('button', { name: '좋아요' })).toHaveTextContent('10')
@@ -254,11 +254,11 @@ describe('흔적 좋아요', () => {
     expect(likeButtonBehindGate()).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('답글 시트의 좋아요도 좋아요 문구로 막는다', async () => {
+  it('댓글 시트의 좋아요도 좋아요 문구로 막는다', async () => {
     authState.isAuthenticated = false
     await renderPage({ withDetail: true })
 
-    const sheet = await screen.findByRole('dialog', { name: /^답글 \(/ })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
     fireEvent.click(within(sheet).getByRole('button', { name: '좋아요' }))
 
     expect(screen.getByText(LOGIN_GATE_MESSAGE.like)).toBeInTheDocument()

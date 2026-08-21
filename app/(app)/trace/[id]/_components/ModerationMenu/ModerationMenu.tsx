@@ -19,6 +19,8 @@ type ModerationMenuProps = {
   target: ModerationTarget
   authorUserId: number
   authorNickname: string
+  /** 트리거 겉모습 — 의견 카드는 시안대로 알약을 씌우고, 댓글 카드는 아이콘만 둔다 */
+  triggerClassName?: string
 }
 
 /**
@@ -26,7 +28,12 @@ type ModerationMenuProps = {
  * 내 글에는 그리지 않는다(서버도 본인 신고·차단을 4xx로 거부한다).
  * 두 액션 모두 로그인 게이트를 지나야 시트/다이얼로그가 열린다.
  */
-export function ModerationMenu({ target, authorUserId, authorNickname }: ModerationMenuProps) {
+export function ModerationMenu({
+  target,
+  authorUserId,
+  authorNickname,
+  triggerClassName,
+}: ModerationMenuProps) {
   const runWithLogin = useLoginGate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -53,7 +60,7 @@ export function ModerationMenu({ target, authorUserId, authorNickname }: Moderat
         onClick={() => {
           setIsMenuOpen((prev) => !prev)
         }}
-        className="press flex size-6 items-center justify-center"
+        className={cn('press flex size-6 items-center justify-center', triggerClassName)}
       >
         <MeatballsMenuIcon width={20} height={20} className="text-icon-active" />
       </button>

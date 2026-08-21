@@ -26,8 +26,8 @@ type TraceListSectionProps = {
   onToggleSheet: () => void
   /** "N개의 의견 ›" — 시트를 화면 가득 올린다 */
   onExpandSheet: () => void
-  /** 흔적의 댓글 아이콘 — 그 의견의 답글 시트를 올린다(디자인 주석 229:18243) */
-  onOpenReply: (trace: Trace) => void
+  /** 흔적의 댓글 아이콘 — 그 의견의 댓글 시트를 올린다(디자인 주석 229:18243) */
+  onOpenComments: (trace: Trace) => void
 }
 
 export function TraceListSection({
@@ -40,13 +40,13 @@ export function TraceListSection({
   isSheetExpanded,
   onToggleSheet,
   onExpandSheet,
-  onOpenReply,
+  onOpenComments,
 }: TraceListSectionProps) {
   return (
     <section className="flex flex-col">
       {/* 시트 손잡이 — 끌면 시트가 손가락을 따라 오르내리고, 누르면 두 높이를 오간다.
           목록과 함께 스크롤돼 올라가고, 그 아래 정렬 바만 상단에 남는다.
-          위로 겹쳐 올라오는 답글 시트도 같은 손잡이를 쓴다(BottomSheet의 showHandle) */}
+          위로 겹쳐 올라오는 댓글 시트도 같은 손잡이를 쓴다(BottomSheet의 showHandle) */}
       <SheetHandle
         ref={onSheetHandle}
         label={isSheetExpanded ? '의견 목록 접기' : '의견 목록 펼치기'}
@@ -88,12 +88,12 @@ export function TraceListSection({
             className={index > 0 ? 'mt-6 border-t border-dashed border-white/50 pt-6' : undefined}
           >
             {/* 본문은 탭 대상이 아니다 — 열어 볼 곳이 없으니 자르지 않고 전부 보여준다.
-                댓글 아이콘만 답글 시트로 가는 입구다 */}
+                댓글 아이콘만 댓글 시트로 가는 입구다 */}
             <TraceItem
               trace={trace}
               isContentClamped={false}
               onOpenComments={() => {
-                onOpenReply(trace)
+                onOpenComments(trace)
               }}
             />
           </li>

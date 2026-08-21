@@ -1,12 +1,10 @@
 import { useCommentSubmit } from '../../_hooks/useCommentSubmit'
 import { CommentBar } from '../CommentBar/CommentBar'
 
-/** 의견에 원댓글을 남기는 입력바 — 답글 시트 하단에 붙는다 */
+/** 의견에 댓글을 남기는 입력바 — 댓글 시트 하단에 붙는다.
+    문구는 CommentBar의 기본값(댓글)을 그대로 쓴다 — 의견에 달리는 것이 곧 댓글이다 */
 export function TraceCommentComposer({ opinionId }: { opinionId: number }) {
   const submit = useCommentSubmit(opinionId)
 
-  return (
-    // 화면에서는 의견에 달리는 것이 '답글'로 읽혀 댓글이 아니라 답글로 부른다
-    <CommentBar placeholder="답글을 입력해주세요" submitLabel="답글 등록" onSubmit={submit} />
-  )
+  return <CommentBar onSubmit={submit} />
 }

@@ -403,12 +403,12 @@ describe('ReaderHighlightsPage', () => {
     const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
     if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
     fireEvent.click(toggle)
-    expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
 
     swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
 
     // 입력바는 blur 바깥의 fixed라, 남으면 목록에 없는 흔적에 댓글을 달 수 있다
-    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
@@ -423,7 +423,7 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(toggle)
 
     // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
-    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('딥링크가 아직 안 받은 묶음의 쪽을 가리키면 그 쪽이 나올 때까지 쪽 목록을 이어 받는다', async () => {
@@ -587,7 +587,7 @@ describe('ReaderHighlightsPage', () => {
   })
 
   // 가림막을 우회해 스포일러 원문을 보던 경로 — 딥링크로 지목돼도 상세가 열려선 안 된다
-  it('가림막 해제 전에는 딥링크로 지목된 흔적도 답글 시트로 열리지 않는다', async () => {
+  it('가림막 해제 전에는 딥링크로 지목된 흔적도 댓글 시트로 열리지 않는다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 9, passageId: 91, opinionId: 4 })
 
     await screen.findByText('스포일러가 포함되어있어요!')
@@ -595,7 +595,7 @@ describe('ReaderHighlightsPage', () => {
 
     // 해제하면 지목된 흔적이 그제야 시트로 올라온다
     fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
-    expect(await screen.findByRole('dialog', { name: /^답글 \(/ })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /^댓글 \(/ })).toBeInTheDocument()
   })
 
   it('스포일러 대목이 섞인 페이지에서도 일반 대목을 보는 동안에는 가림막이 없다', async () => {
@@ -764,10 +764,10 @@ describe('ReaderHighlightsPage', () => {
     ).toBe(true)
   })
 
-  it('딥링크로 지목된 의견은 답글 시트로 열리고 X로 닫힌다', async () => {
+  it('딥링크로 지목된 의견은 댓글 시트로 열리고 X로 닫힌다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 2 })
 
-    const sheet = await screen.findByRole('dialog', { name: /^답글 \(/ })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
     expect(within(sheet).getByText('밤의독서가')).toBeInTheDocument()
 
     fireEvent.click(within(sheet).getByLabelText('닫기'))
@@ -781,7 +781,7 @@ describe('ReaderHighlightsPage', () => {
     // 흔적은 20개씩 온다 — 21번째(opinionId 120)는 첫 묶음에 없다
     await renderPage([15], undefined, { pageNumber: 15, passageId: 151, opinionId: 120 })
 
-    const sheet = await screen.findByRole('dialog', { name: /^답글 \(/ })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
 
     expect(within(sheet).getByText('많은 흔적 21')).toBeInTheDocument()
   })
@@ -795,10 +795,10 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('답글 시트에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록으로 돌아가서 한다', async () => {
+  it('댓글 시트에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록으로 돌아가서 한다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 1 })
 
-    const sheet = await screen.findByRole('dialog', { name: /^답글 \(/ })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
 
     expect(within(sheet).queryByLabelText('이전 의견')).not.toBeInTheDocument()
     expect(within(sheet).queryByLabelText('다음 의견')).not.toBeInTheDocument()
