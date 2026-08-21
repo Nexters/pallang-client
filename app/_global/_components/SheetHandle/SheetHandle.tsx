@@ -1,8 +1,4 @@
-import type { Ref } from 'react'
-
 type SheetHandleProps = {
-  /** 손잡이 요소를 끌어 쓰는 쪽(드래그 판정)에 알린다 */
-  ref?: Ref<HTMLButtonElement>
   /** 누르면 무엇이 일어나는지 — 시트마다 다르다(펼치기·접기·닫기) */
   label: string
   /** 두 높이를 오가는 시트에서만 넘긴다. 닫히기만 하는 시트에 달면 거짓말이 된다 */
@@ -11,12 +7,13 @@ type SheetHandleProps = {
 }
 
 /** 시트 위쪽 손잡이 — 끌어서 높이를 바꾸거나 닫는다. 누르는 것도 같은 일을 한다.
-    바텀시트가 두 겹으로 겹치는 화면(흔적 보기)에서 두 시트가 같은 손잡이를 쓴다. */
-export function SheetHandle({ ref, label, isExpanded, onSelect }: SheetHandleProps) {
+    바텀시트가 두 겹으로 겹치는 화면(흔적 보기)에서 두 시트가 같은 손잡이를 쓴다.
+    data-sheet-handle: 시트 드래그(useSheetDrag)가 여기서 시작한 손짓은 묻지 않고 시트에 준다 */
+export function SheetHandle({ label, isExpanded, onSelect }: SheetHandleProps) {
   return (
     <button
-      ref={ref}
       type="button"
+      data-sheet-handle
       aria-label={label}
       aria-expanded={isExpanded}
       onClick={onSelect}

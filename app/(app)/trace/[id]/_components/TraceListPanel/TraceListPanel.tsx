@@ -26,7 +26,7 @@ type TraceListPanelProps = {
   onBottomBusyChange: (isBusy: boolean) => void
   /** 딥링크로 지목된 흔적 — 목록이 도착하면 그 의견의 댓글 시트가 올라온 채 시작한다 */
   initialTraceId?: number
-  /** 이 목록을 담고 있는 바텀시트 — 손잡이와 "N개의 의견 ›"이 높이를 바꾼다 */
+  /** 이 목록을 담고 있는 바텀시트 — 손잡이 탭과 "N개의 의견 ›"이 높이를 바꾼다 */
   sheet: TraceSheet
 }
 
@@ -69,7 +69,6 @@ export function TraceListPanel({
             isMasked={isMasked}
             sortType={list.sortType}
             onChangeSort={list.changeSort}
-            onSheetHandle={sheet.setHandle}
             isSheetExpanded={sheet.isExpanded}
             onToggleSheet={sheet.toggle}
             onExpandSheet={sheet.expand}
