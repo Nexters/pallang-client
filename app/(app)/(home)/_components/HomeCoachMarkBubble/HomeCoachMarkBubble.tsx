@@ -28,7 +28,16 @@ export function HomeCoachMarkBubble({
   totalSteps,
 }: HomeCoachMarkBubbleProps) {
   return (
-    <div ref={rootRef} className={cn('flex w-[250px] flex-col', className)} style={style}>
+    // 첫 등장(opacity)과 단계 이동(left·top·꼬리 margin)을 한 곡선으로 묶는다 — 한 엘리먼트에 easing을 둘 못 쓰고,
+    // 전환 타이밍이 꼬리와 어긋나지 않도록 이 파일이 셋을 모두 가진다
+    <div
+      ref={rootRef}
+      className={cn(
+        'flex w-[250px] flex-col transition-[opacity,left,top] duration-normal ease-standard',
+        className,
+      )}
+      style={style}
+    >
       <div className="flex w-full flex-col gap-2 rounded-lg bg-bg-dark px-4 py-3 text-text-inverse backdrop-blur-[1px]">
         {/* 시안 값(14px·500·1.3·-0.04em)이 그대로 나오는 기존 토큰이다.
             원시값으로 쓰던 font-pretendard는 이 앱이 Pretendard를 로드하지 않아 효과가 없었다. */}
@@ -51,7 +60,7 @@ export function HomeCoachMarkBubble({
       <div
         aria-hidden="true"
         className={cn(
-          '-mt-1 h-0 w-0 border-x-[10px] border-t-[14px] border-x-transparent border-t-bg-dark',
+          '-mt-1 h-0 w-0 border-x-[10px] border-t-[14px] border-x-transparent border-t-bg-dark transition-[margin-left] duration-normal ease-standard',
           tailLeft === undefined && 'self-center',
         )}
         style={tailLeft === undefined ? undefined : { marginLeft: tailLeft }}
