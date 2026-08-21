@@ -35,7 +35,7 @@ type BottomSheetProps = {
    */
   dim?: boolean
   /**
-   * 제목 줄 위에 손잡이를 세운다 — 누르면 닫히고, 시트 어디서나 아래로 끌어 닫을 수 있게 된다(손잡이가 없으면 끌리지 않는다).
+   * 제목 줄 위에 손잡이를 세운다 — 누르면 닫히고, 시트를 끌어 닫을 수 있게 된다(없으면 끌리지 않는다).
    * 늘 화면에 붙어 있는 시트 위로 겹쳐 올라오는 시트에 쓴다: 백드롭이 투명하면(dim=false)
    * 바깥 탭으로 닫는 길이 눈에 보이지 않아, 내리는 길을 손잡이로 드러낸다.
    */
@@ -74,7 +74,6 @@ export function BottomSheet({
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
   // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
   const popupRef = useRef<HTMLDivElement>(null)
-  // 손잡이가 "끌 수 있다"는 신호다 — 손잡이 없는 시트(폼·선택지)는 끌리지 않는 정적 모달로 남아 실수 닫힘이 없다
   const bindSheetDrag = useSheetDragDismiss(onClose, { enabled: showHandle })
 
   // 시트가 "열린 채로" DOM에 꽂히는 경로가 있다 — 화면 자체가 시트인 첫 화면(TraceSourceView)이

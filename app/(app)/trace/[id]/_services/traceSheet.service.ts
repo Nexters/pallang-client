@@ -21,8 +21,7 @@ export function clampSheetTop(top: number): number {
   return top
 }
 
-/** 손을 뗐을 때 붙을 자리 — 두 지점 중 하나로만 떨어진다(중간 높이는 없다).
-    빠르게 튕긴 손짓(velocity: px/ms, 아래가 양수)은 거리와 무관하게 그 방향으로 간다 */
+/** 손을 뗐을 때 붙을 자리 — 두 지점 중 하나. velocity(px/ms, 아래가 양수)가 플릭이면 그 방향 */
 export function snapSheetExpanded(top: number, velocity = 0): boolean {
   if (velocity < -FLICK_VELOCITY) return true
   if (velocity > FLICK_VELOCITY) return false
