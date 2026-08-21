@@ -142,6 +142,9 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null, gr
       viewer.goToPage(target.page, target.cursor)
     },
     activePassage,
+    // 첫 응답이 도착했는데 쪽이 하나도 없다 — 로딩·실패와 구분되는 "정말 비어 있음"이다.
+    // 로딩 중을 비어 있음으로 읽으면 스켈레톤 대신 빈 상태 안내가 번쩍인다
+    isEmpty: !pageNumbersQuery.isPending && !pageNumbersQuery.isError && pages.length === 0,
     isError: failedQueries.length > 0,
     retry: () => {
       for (const query of failedQueries) void query.refetch()

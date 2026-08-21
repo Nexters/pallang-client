@@ -45,6 +45,9 @@ export type QuoteStageProps = {
   isRevealed: boolean
   /** 대목 조회가 깨졌으면 카드 안이 재시도 화면으로 바뀐다(시안 229:24303) */
   stageError?: { isError: boolean; retry: () => void }
+  /** 모임에 남긴 대목이 아직 없으면 카드 안이 남기기 안내로 바뀐다(시안 3556:29129).
+      에러보다 뒤 순위다 — 조회가 깨졌을 때는 비어 보여도 재시도 화면이 우선이다 */
+  emptyState?: { onCreate: () => void }
   onBack: () => void
   onClickQuote: () => void
   /** 그 방향에 갈 곳이 있는지 — 페이저 화살표의 활성 여부이자 스와이프가 실제로 움직이는 조건이다 */

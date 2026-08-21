@@ -223,6 +223,7 @@ async function renderPage(
   pages = [7, 9, 12, 13, 23, 34, 123],
   failing?: 'passages' | 'opinions',
   target?: DeepLinkTarget,
+  groupId?: number,
 ) {
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
   vi.stubGlobal(
@@ -296,11 +297,16 @@ async function renderPage(
     <QueryClientProvider client={client}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <TraceScreen bookId={BOOK_ID} target={target} />
+          <TraceScreen bookId={BOOK_ID} target={target} groupId={groupId} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,
   )
+  // 빈 모임은 쪽 표시가 서지 않는다 — 카드의 남기러 가기 안내가 곧 로드 완료 신호다
+  if (pages.length === 0) {
+    await screen.findByText(/아직 모임에서 남긴/)
+    return container.firstElementChild as HTMLElement
+  }
   // 쪽이 하나뿐이면 선택기 대신 라벨만 있는 알약이 서므로, 두 경우 모두 잡히는 현재 쪽 표시를
   // 기다린다. 딥링크로 들어오면 첫 쪽이 아니라 지목된 쪽에서 시작한다.
   await screen.findByText(`${String(target?.pageNumber ?? pages[0])}p`)
@@ -330,6 +336,26 @@ describe('ReaderHighlightsPage', () => {
   afterEach(() => {
     mountedObservers.clear()
     vi.unstubAllGlobals()
+  })
+
+  it('모임에 대목이 없으면 카드가 남기러 가기 안내로 바뀐다', async () => {
+    await renderPage([], undefined, undefined, 55)
+
+    expect(screen.getByText(/아직 모임에서 남긴 문장과/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '바로 남기러 가기' })).toBeInTheDocument()
+    // 페이저는 "01 / 00"이 아니라 시안의 "01 / 01"로 선다
+    expect(screen.getByLabelText('전체 1개 대목 중 1번째')).toBeInTheDocument()
+  })
+
+  it('바로 남기러 가기는 모임을 실은 기록 남기기 플로우로 보낸다', async () => {
+    await renderPage([], undefined, undefined, 55)
+
+    fireEvent.click(screen.getByRole('button', { name: '바로 남기러 가기' }))
+
+    expect(pushMock).toHaveBeenCalledTimes(1)
+    const href = pushMock.mock.calls[0]?.[0] as string
+    expect(href).toContain('/trace/new')
+    expect(href).toContain('groupId=55')
   })
 
   it('헤더 쪽 선택기는 API의 대목 페이지 목록으로 채운다', async () => {
