@@ -10,6 +10,7 @@ import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
+import { shouldSearchExternalBooks } from '@/app/_shared/book/_services/bookSearch.service'
 
 import { BookCoverCarousel } from '../BookCoverCarousel/BookCoverCarousel'
 import { BookPickList } from '../BookPickList/BookPickList'
@@ -17,12 +18,10 @@ import { type ExternalBook, ExternalBookList } from '../ExternalBookList/Externa
 
 const PAGE_SIZE = 20
 
-type BookSearchViewProps = {
+type BookSearchSheetViewProps = {
   /** 도서 추가 폼이 같은 시트 위에 열려 있는 동안 이 화면을 감춘다. 마운트는 유지해
    *  검색어·목록·페이지네이션 상태가 폼을 닫고 돌아왔을 때도 그대로 남게 한다. */
   hidden?: boolean
-  /** 알라딘 결과의 '직접 추가하기'가 부른다 — 검색바 옆 버튼이 사라진 뒤로는 이 자리뿐이다. */
-  onAddManually: () => void
   onPick: (book: SelectedBook) => void
   /** 외부(알라딘) 책도 탭은 후보 선택이다(#343) — 확정은 시트 footer의 '등록하기'가 맡는다. */
   onPickExternal: (book: ExternalBook) => void
@@ -32,14 +31,13 @@ type BookSearchViewProps = {
   selectedExternalBook: ExternalBook | null
 }
 
-export function BookSearchView({
+export function BookSearchSheetView({
   hidden,
-  onAddManually,
   onPick,
   onPickExternal,
   selectedBookId,
   selectedExternalBook,
-}: BookSearchViewProps) {
+}: BookSearchSheetViewProps) {
   const [keyword, setKeyword] = useState('')
   // 스크롤은 이제 시트(BookSearchSheet가 contentClassName으로 잡는 본문)가 갖는다. 무한스크롤 관찰자가
   // 볼 스크롤 컨테이너는 이 뷰의 DOM 바깥에 있어, 여기서는 그 조상을 찾아 담아 둔다.
@@ -96,8 +94,13 @@ export function BookSearchView({
     ) ?? []
 
   // 내부에 있는 책이면 그걸 고르는 게 맞다. 없을 때만 알라딘을 부른다.
-  const shouldSearchExternal =
-    isSearching && !isTypingAhead && !searched.isPending && searchResults.length === 0
+  const shouldSearchExternal = shouldSearchExternalBooks({
+    internalResultCount: searchResults.length,
+    isInternalError: searched.isError,
+    isInternalPending: searched.isPending,
+    isSearching,
+    isTypingAhead,
+  })
   const external = useQuery({
     ...bookQueries.searchExternal({ keyword: debouncedKeyword, size: PAGE_SIZE }),
     enabled: shouldSearchExternal,
@@ -132,7 +135,7 @@ export function BookSearchView({
   const showRecent = recent.isPending || recentBooks.length > 0
   const showPopular = popular.isPending || popularBooks.length > 0
   // 내부 결과가 없고 서버 오류도 아니면 알라딘 결과로 이어 붙인다.
-  const showExternalFallback = shouldSearchExternal && !isError
+  const showExternalFallback = shouldSearchExternal
 
   return (
     // hidden 속성으로 감춘다 — display:none은 레이아웃과 접근성 트리에서 동시에 빠지면서도
@@ -158,7 +161,6 @@ export function BookSearchView({
                 books={externalBooks}
                 isPending={external.isPending}
                 selectedBook={selectedExternalBook}
-                onAddManually={onAddManually}
                 onSelect={onPickExternal}
               />
             ) : (

@@ -246,6 +246,8 @@ describe('책 등록 시트', () => {
     // 내부 검색이 빈 뒤에야 알라딘으로 넘어가므로 디바운스+쿼리 두 번을 기다린다
     fireEvent.click(await screen.findByText('프랑켄슈타인', {}, { timeout: 3000 }))
 
+    expect(screen.getByText(/검색하신 책은 현재 팔랑에 남겨지지 않았어요/)).toBeInTheDocument()
+    expect(screen.getByText(/오탈자인지 먼저 확인해주시고/)).toBeInTheDocument()
     expect(screen.queryByText('책 추가하기')).toBeNull()
     expect(screen.getByText('선택')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '등록하기' })).toBeEnabled()

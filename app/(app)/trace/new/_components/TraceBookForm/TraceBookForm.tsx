@@ -31,7 +31,7 @@ export function TraceBookForm() {
   const [sheetOpen, setSheetOpen] = useState(draft.book === null && draft.groupId === null)
   // 저장은 ①(대목을 물고 들어온 경로)과도 나눠 쓴다 — useTraceSubmit이 그 한 벌이다.
   const { closeMessage, isSaving, message, save } = useTraceSubmit()
-  // 비로그인이면 401이라 me가 비어 있다 — BookSearchView의 처리와 같게 '나'로 떨어뜨린다.
+  // 비로그인이면 401이라 me가 비어 있다 — BookSearchSheetView의 처리와 같게 '나'로 떨어뜨린다.
   const me = useQuery(userQueries.me())
   const nickname = me.data?.data?.nickname ?? '나'
 

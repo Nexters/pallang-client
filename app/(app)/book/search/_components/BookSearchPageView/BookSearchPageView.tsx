@@ -1,127 +1,37 @@
 'use client'
 
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
-import { Button } from '@/app/_global/_components/Button/Button'
 import CloseIcon from '@/app/_global/_components/Icon/assets/close.svg'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
-import {
-  FEEDBACK_ILLUSTRATION_SIZE,
-  FEEDBACK_ILLUSTRATION_SRC,
-} from '@/app/_global/_data/feedbackIllustration.constant'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 import { cn } from '@/app/_global/_services/cn.service'
-import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
-import {
-  BookNewForm,
-  type BookNewFormStatus,
-} from '@/app/_shared/book/_components/BookNewForm/BookNewForm'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
 import {
-  type BookFormValues,
-  normalizeExternalAuthor,
+  type ExternalBook,
+  ExternalBookList,
+} from '@/app/_shared/book/_components/ExternalBookList/ExternalBookList'
+import {
+  type ExternalBookFormState,
+  toExternalBookFormState,
 } from '@/app/_shared/book/_services/bookForm.service'
+import { shouldSearchExternalBooks } from '@/app/_shared/book/_services/bookSearch.service'
 
 import { BookCoverCarousel } from '../BookCoverCarousel/BookCoverCarousel'
+import { BookSearchAddFormView } from '../BookSearchAddFormView/BookSearchAddFormView'
 import { BookSearchResultList } from '../BookSearchResultList/BookSearchResultList'
 
 const PAGE_SIZE = 20
-const SKELETON_KEYS = ['a', 'b', 'c']
-const BOOK_ADD_FORM_ID = 'book-search-add-form'
-const IDLE_FORM_STATUS: BookNewFormStatus = { canSubmit: false, isPending: false }
-
-type ExternalBookResult = {
-  author: string
-  coverImageUrl: null | string
-  isbn: string
-  publisher: string
-  title: string
-}
-
-type AddFormState = { coverImageUrl: null | string; values: BookFormValues }
-
-function ExternalSearchFallback({
-  books,
-  isPending,
-  onSelect,
-}: {
-  books: ExternalBookResult[]
-  isPending: boolean
-  onSelect: (book: ExternalBookResult) => void
-}) {
-  return (
-    <section aria-label="팔랑에 없는 책 검색 결과" className="flex flex-col">
-      <div className="flex flex-col items-center gap-4 px-4 pt-3">
-        <Image
-          src={FEEDBACK_ILLUSTRATION_SRC}
-          alt=""
-          {...FEEDBACK_ILLUSTRATION_SIZE}
-          aria-hidden="true"
-          className="h-24 w-[120px] object-bottom opacity-40"
-        />
-        <p className="text-center font-pretendard text-title-18md text-text-secondary">
-          검색하신 책은 현재 팔랑에 남겨지지 않았어요!
-          <br />
-          오탈자인지 먼저 확인해주시고,
-          <br />
-          아니라면 직접 첫 기록을 남겨주세요!
-        </p>
-      </div>
-
-      {isPending ? (
-        <div
-          role="status"
-          aria-label="외부 책을 불러오는 중"
-          className="flex flex-col gap-3 px-4 py-6"
-        >
-          {SKELETON_KEYS.map((key) => (
-            <div key={key} className="flex animate-pulse gap-4">
-              <div className="h-[120px] w-20 shrink-0 rounded-[2px] bg-bg-surface" />
-              <div className="flex flex-1 flex-col gap-2 pt-1">
-                <div className="h-5 w-2/3 rounded bg-bg-surface" />
-                <div className="h-4 w-1/2 rounded bg-bg-surface" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <ul aria-label="외부 도서 검색 결과" className="flex flex-col gap-3 px-4 py-6">
-          {books.map((book, index) => (
-            <li key={`${book.isbn}-${book.title}-${String(index)}`} className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  onSelect(book)
-                }}
-                className="press w-full text-left"
-              >
-                <BookItem
-                  author={book.author}
-                  coverImageUrl={book.coverImageUrl}
-                  publisher={book.publisher}
-                  title={book.title}
-                />
-              </button>
-              {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  )
-}
 
 export function BookSearchPageView() {
   const router = useRouter()
   const [keyword, setKeyword] = useState('')
-  const [form, setForm] = useState<AddFormState | null>(null)
-  const [formStatus, setFormStatus] = useState<BookNewFormStatus>(IDLE_FORM_STATUS)
+  const [form, setForm] = useState<ExternalBookFormState | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 300)
@@ -145,17 +55,18 @@ export function BookSearchPageView() {
         book.bookId == null ? [] : [{ ...book, bookId: book.bookId }],
       ),
     ) ?? []
-  const shouldSearchExternal =
-    isSearching &&
-    !isTypingAhead &&
-    !searched.isPending &&
-    !searched.isError &&
-    searchedBooks.length === 0
+  const shouldSearchExternal = shouldSearchExternalBooks({
+    internalResultCount: searchedBooks.length,
+    isInternalError: searched.isError,
+    isInternalPending: searched.isPending,
+    isSearching,
+    isTypingAhead,
+  })
   const external = useQuery({
     ...bookQueries.searchExternal({ keyword: debouncedKeyword, size: PAGE_SIZE }),
     enabled: shouldSearchExternal,
   })
-  const externalBooks: ExternalBookResult[] = (external.data?.data?.books ?? []).map((book) => ({
+  const externalBooks: ExternalBook[] = (external.data?.data?.books ?? []).map((book) => ({
     author: book.author,
     coverImageUrl: book.coverImageUrl ?? null,
     isbn: book.isbn ?? '',
@@ -169,7 +80,7 @@ export function BookSearchPageView() {
   })()
   const showRecent = recent.isPending || (recent.data?.data?.books.length ?? 0) > 0
   const showPopular = popular.isPending || (popular.data?.data?.books.length ?? 0) > 0
-  const showExternalFallback = shouldSearchExternal && !searched.isError
+  const showExternalFallback = shouldSearchExternal
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
@@ -194,59 +105,23 @@ export function BookSearchPageView() {
     router.push(`/trace/${String(bookId)}`)
   }
 
-  const openExternalForm = (book: ExternalBookResult) => {
-    setForm({
-      coverImageUrl: book.coverImageUrl,
-      values: {
-        author: normalizeExternalAuthor(book.author),
-        isbn: book.isbn,
-        pageCount: '',
-        publisher: book.publisher,
-        title: book.title,
-      },
-    })
+  const openExternalForm = (book: ExternalBook) => {
+    setForm(toExternalBookFormState(book))
   }
 
   const closeForm = () => {
     setForm(null)
-    setFormStatus(IDLE_FORM_STATUS)
   }
 
   if (form) {
     return (
-      <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
-        <TopBar.Root>
-          <TopBar.Title as="h1">책 추가하기</TopBar.Title>
-          <TopBar.Spacer />
-          <TopBar.Action aria-label="닫기" onClick={closeForm}>
-            <CloseIcon />
-          </TopBar.Action>
-        </TopBar.Root>
-
-        <div className="scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden">
-          <BookNewForm
-            formId={BOOK_ADD_FORM_ID}
-            initialCoverImageUrl={form.coverImageUrl}
-            initialValues={form.values}
-            onCreated={() => {
-              router.replace('/book/list')
-            }}
-            onStatusChange={setFormStatus}
-          />
-        </div>
-
-        <div className="mt-auto flex shrink-0 px-4 pt-4 pb-safe">
-          <Button
-            type="submit"
-            form={BOOK_ADD_FORM_ID}
-            className="h-[54px] flex-1"
-            disabled={!formStatus.canSubmit}
-            loading={formStatus.isPending}
-          >
-            저장하기
-          </Button>
-        </div>
-      </main>
+      <BookSearchAddFormView
+        form={form}
+        onClose={closeForm}
+        onCreated={() => {
+          router.replace('/book/list')
+        }}
+      />
     )
   }
 
@@ -286,7 +161,7 @@ export function BookSearchPageView() {
         {isSearching ? (
           <>
             {showExternalFallback ? (
-              <ExternalSearchFallback
+              <ExternalBookList
                 books={externalBooks}
                 isPending={external.isPending}
                 onSelect={openExternalForm}
