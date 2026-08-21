@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { shouldShowHomeCoachMark } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { hasSeenOnboarding } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
@@ -26,9 +26,9 @@ vi.mock('next/image', () => ({
 
 function renderView() {
   render(
-    <HardwareBackProvider>
+    <AppBackProvider>
       <OnboardingView />
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
 }
 

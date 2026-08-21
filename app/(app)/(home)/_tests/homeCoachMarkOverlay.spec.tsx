@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { HomeCoachMarkOverlay } from '../_components/HomeCoachMarkOverlay/HomeCoachMarkOverlay'
 
@@ -57,12 +57,12 @@ function stubLayout(targetRects: Record<string, StubRect>) {
 
 function renderOverlay(targetNames: string[]) {
   return render(
-    <HardwareBackProvider>
+    <AppBackProvider>
       {targetNames.map((targetName) => (
         <div key={targetName} data-home-coachmark-target={targetName} />
       ))}
       <HomeCoachMarkOverlay onFinish={vi.fn()} />
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
 }
 

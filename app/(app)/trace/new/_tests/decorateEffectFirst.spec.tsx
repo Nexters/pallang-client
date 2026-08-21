@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { TraceDecorateForm } from '../_components/TraceDecorateForm/TraceDecorateForm'
 import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraftProvider'
@@ -49,7 +49,7 @@ function dragOver(from: number, to: number) {
 
 function renderForm(onDraft: (count: number) => void) {
   return render(
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceOverlayProvider>
           <TraceNavProvider>
@@ -57,7 +57,7 @@ function renderForm(onDraft: (count: number) => void) {
           </TraceNavProvider>
         </TraceOverlayProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
 }
 

@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { Activity, type ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import type { TraceSeed } from '@/app/_shared/trace/_data/traceSeed.model'
 
 import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
@@ -76,7 +76,7 @@ const PASSAGE_SEED: TraceSeed = {
  */
 function renderFlow(seed: TraceSeed | null = null) {
   const tree = (mode: 'hidden' | 'visible', currentSeed: TraceSeed | null) => (
-    <HardwareBackProvider>
+    <AppBackProvider>
       <TraceDraftProvider>
         <TraceCaptureProvider>
           <TraceOverlayProvider>
@@ -88,7 +88,7 @@ function renderFlow(seed: TraceSeed | null = null) {
           </TraceOverlayProvider>
         </TraceCaptureProvider>
       </TraceDraftProvider>
-    </HardwareBackProvider>
+    </AppBackProvider>
   )
   let lastSeed = seed
   const { rerender } = render(tree('visible', seed))

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 
 import { OcrSelector } from '../_components/OcrSelector/OcrSelector'
 import { TraceCaptureProvider } from '../_components/TraceCaptureProvider/TraceCaptureProvider'
@@ -32,7 +32,7 @@ function renderSelector() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <TraceDraftProvider>
           <TraceCaptureProvider>
             <TraceOverlayProvider>
@@ -42,7 +42,7 @@ function renderSelector() {
             </TraceOverlayProvider>
           </TraceCaptureProvider>
         </TraceDraftProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
 }

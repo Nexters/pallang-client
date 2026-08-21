@@ -1,6 +1,6 @@
 'use client'
 
-import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
+import { useAppBack } from '@/app/_global/_hooks/useAppBack'
 import type { TraceSeedPassage } from '@/app/_shared/trace/_data/traceSeed.model'
 
 import { useOpinionSubmit } from '../../_hooks/useOpinionSubmit'
@@ -31,7 +31,7 @@ export function OpinionComposer({
   const submit = useOpinionSubmit({ bookId, activePassage, pageNumber, groupId })
 
   // 뒤로가기(하드웨어/제스처)가 화면을 나가는 대신 입력바만 접는다 — 마운트 동안만 최상단에 선다
-  useHardwareBack(onClose)
+  useAppBack(onClose)
 
   return (
     <>

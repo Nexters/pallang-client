@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -30,7 +31,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // WKWebView는 엣지 스와이프 뒤로/앞으로 가기가 기본 비활성이다.
         // didFinishLaunching 시점에는 웹뷰가 아직 준비되지 않아 여기서 설정한다(반복 호출 무해).
-        (window?.rootViewController as? CAPBridgeViewController)?.webView?.allowsBackForwardNavigationGestures = true
+        guard let webView = (window?.rootViewController as? CAPBridgeViewController)?.webView else { return }
+        webView.allowsBackForwardNavigationGestures = true
+        disableForwardSwipe(on: webView)
+    }
+
+    /// 오른쪽 엣지 스와이프(앞으로 가기)만 끈다.
+    ///
+    /// `allowsBackForwardNavigationGestures`는 뒤로/앞으로를 함께 켜는 단일 boolean이라
+    /// 이 플래그만으로는 방향을 나눌 수 없다. 네이티브 iOS 앱에 앞으로 가기 제스처는 없고,
+    /// 오른쪽 가장자리는 TopBar의 액션 버튼이 놓이는 자리라 오조작 여지도 있다.
+    ///
+    /// 웹뷰가 다는 인식기는 `UIScreenEdgePanGestureRecognizer`라 `edges`로 방향을 가릴 수 있다.
+    /// 공개 API만 만지므로 심사에 걸리는 비공개 심볼 참조가 없다.
+    /// 플래그를 켤 때마다 인식기가 다시 붙을 수 있어 이 함수도 매번 함께 부른다.
+    private func disableForwardSwipe(on webView: WKWebView) {
+        for case let edgePan as UIScreenEdgePanGestureRecognizer in webView.gestureRecognizers ?? []
+        where edgePan.edges == .right {
+            edgePan.isEnabled = false
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
@@ -140,7 +140,7 @@ function renderFlow({ book = SEED_BOOK, pageNumber = 10 }: Partial<SeedOptions> 
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const rendered = render(
     <QueryClientProvider client={queryClient}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <LoginGateProvider>
           <TraceDraftProvider>
             <BookDetailFiller />
@@ -152,7 +152,7 @@ function renderFlow({ book = SEED_BOOK, pageNumber = 10 }: Partial<SeedOptions> 
             </TraceOverlayProvider>
           </TraceDraftProvider>
         </LoginGateProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
   return { ...rendered, queryClient }

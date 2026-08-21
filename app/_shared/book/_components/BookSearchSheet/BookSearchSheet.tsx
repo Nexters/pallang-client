@@ -26,7 +26,7 @@ type BookSearchSheetProps = {
   onSelect: (book: SelectedBook) => void
   /**
    * 시트 안 도서 등록 폼이 열린 동안 뒤로가기(하드웨어/제스처)가 폼만 닫게 등록한다.
-   * 흔적 플로우는 TraceOverlayProvider의 register, 모임은 HardwareBackProvider의 register를 넘긴다.
+   * 흔적 플로우는 TraceOverlayProvider의 register, 모임은 AppBackProvider의 register를 넘긴다.
    * 시트 자체의 열림 가드는 여는 쪽이 등록한다(여기서는 폼 층만).
    */
   onRegisterBack?: (close: () => void) => () => void
@@ -96,7 +96,7 @@ export function BookSearchSheet({
   }
 
   // 폼이 본문을 차지하는 동안에는 하드웨어 뒤로가기가 시트를 나가는 대신 폼만 닫는다.
-  // register는 여는 쪽(흔적은 TraceOverlayProvider, 모임은 HardwareBackProvider)이 넘긴다.
+  // register는 여는 쪽(흔적은 TraceOverlayProvider, 모임은 AppBackProvider)이 넘긴다.
   const closeFormRef = useRef(closeForm)
   useEffect(() => {
     closeFormRef.current = closeForm

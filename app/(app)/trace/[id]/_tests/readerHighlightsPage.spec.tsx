@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
@@ -325,11 +325,11 @@ async function renderPage(
   // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   const { container } = render(
     <QueryClientProvider client={client}>
-      <HardwareBackProvider>
+      <AppBackProvider>
         <LoginGateProvider>
           <TraceScreen bookId={BOOK_ID} target={target} groupId={groupId} />
         </LoginGateProvider>
-      </HardwareBackProvider>
+      </AppBackProvider>
     </QueryClientProvider>,
   )
   // 빈 모임은 쪽 표시가 서지 않는다 — 카드의 남기러 가기 안내가 곧 로드 완료 신호다

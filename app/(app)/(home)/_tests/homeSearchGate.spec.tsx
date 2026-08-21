@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { AppBackProvider } from '@/app/_global/_providers/AppBackProvider/AppBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import {
   markHomeCoachMarkPending,
@@ -46,11 +46,11 @@ vi.mock('../_components/HomeSection/HomeSection', () => {
 // 코치마크가 하드웨어 back을 가져가므로 레지스트리가 있어야 한다
 function renderHome() {
   return render(
-    <HardwareBackProvider>
+    <AppBackProvider>
       <LoginGateProvider>
         <HomePageView />
       </LoginGateProvider>
-    </HardwareBackProvider>,
+    </AppBackProvider>,
   )
 }
 
