@@ -19,8 +19,6 @@ type TraceListSectionProps = {
   onChangeSort: (sortType: OpinionSortType) => void
   /* 목록을 담은 바텀시트를 여는 손잡이 한 벌. 시트 상태 자체는 셸(TraceScreen)이 든다 —
      묶어서 넘기면 lint가 이 객체를 ref로 오인한다(react-hooks/refs) */
-  /** 손잡이 요소를 시트에 알린다 — 여기서 시작한 세로 드래그가 높이를 바꾼다 */
-  onSheetHandle: (node: HTMLButtonElement | null) => void
   isSheetExpanded: boolean
   /** 손잡이 탭 — 두 높이를 오간다 */
   onToggleSheet: () => void
@@ -36,7 +34,6 @@ export function TraceListSection({
   isMasked,
   sortType,
   onChangeSort,
-  onSheetHandle,
   isSheetExpanded,
   onToggleSheet,
   onExpandSheet,
@@ -44,11 +41,10 @@ export function TraceListSection({
 }: TraceListSectionProps) {
   return (
     <section className="flex flex-col">
-      {/* 시트 손잡이 — 끌면 시트가 손가락을 따라 오르내리고, 누르면 두 높이를 오간다.
+      {/* 시트 손잡이 — 누르면 두 높이를 오간다. 끄는 건 손잡이만이 아니라 시트 어디서나 된다(useSheetDrag).
           목록과 함께 스크롤돼 올라가고, 그 아래 정렬 바만 상단에 남는다.
           위로 겹쳐 올라오는 댓글 시트도 같은 손잡이를 쓴다(BottomSheet의 showHandle) */}
       <SheetHandle
-        ref={onSheetHandle}
         label={isSheetExpanded ? '의견 목록 접기' : '의견 목록 펼치기'}
         isExpanded={isSheetExpanded}
         onSelect={onToggleSheet}

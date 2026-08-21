@@ -74,7 +74,7 @@ export function BottomSheet({
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
   // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
   const popupRef = useRef<HTMLDivElement>(null)
-  const setHandle = useSheetDragDismiss(onClose)
+  const bindSheetDrag = useSheetDragDismiss(onClose)
 
   // 시트가 "열린 채로" DOM에 꽂히는 경로가 있다 — 화면 자체가 시트인 첫 화면(TraceSourceView)이
   // 그렇고, 탭바로 들어오면 특히 그렇다. base-ui는 mounted 초기값을 open으로 잡아
@@ -123,6 +123,7 @@ export function BottomSheet({
             data-slot="bottom-sheet-popup"
             ref={popupRef}
             initialFocus={popupRef}
+            {...bindSheetDrag()}
             className={cn(
               // 모서리 32px — v2 시트 시안들의 공통값이다(더보기 3321:30402 · 책 선택 3321:28335)
               'relative flex flex-col rounded-t-4xl pb-safe',
@@ -142,7 +143,7 @@ export function BottomSheet({
             style={popupStyle}
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
           >
-            {showHandle && <SheetHandle ref={setHandle} label="시트 내리기" onSelect={onClose} />}
+            {showHandle && <SheetHandle label="시트 내리기" onSelect={onClose} />}
             <div className="flex items-center gap-2.5 px-4 py-2.5">
               {(onBack !== undefined || reserveBackSlot) && (
                 <button

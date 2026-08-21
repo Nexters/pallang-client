@@ -28,7 +28,7 @@ type TraceScreenProps = {
 }
 
 /** 셸 — 인용문 무대 흐름(usePassageViewer)과 흔적 목록 흐름(TraceListPanel)을 연결한다.
-    무대는 고정이고, 그 위에 어두운 시트가 덮여 높이를 오르내린다(useTraceSheet). */
+    무대는 고정이고, 그 위에 어두운 시트가 덮여 높이를 오르내린다(useTraceSheet — 시트 어디서나 끌 수 있다). */
 export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const router = useRouter()
@@ -98,9 +98,10 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
             차지해야 접힌 상태에서도 마지막 흔적까지 스크롤로 닿는다 */}
         <div
           ref={panelRef}
+          {...sheet.bind()}
           style={{ top: `calc(var(--safe-top) + ${px(sheet.top)})` }}
           className={cn(
-            'absolute inset-x-0 bottom-0 overflow-y-auto rounded-t-[32px] bg-bg-dark',
+            'absolute inset-x-0 bottom-0 overflow-y-auto rounded-t-[32px] bg-bg-dark overscroll-y-contain',
             // 끄는 동안에는 손가락을 그대로 따라가고, 손을 뗀 뒤에만 붙는 자리까지 미끄러진다
             !sheet.isDragging && 'transition-[top] duration-rise ease-rise',
           )}
