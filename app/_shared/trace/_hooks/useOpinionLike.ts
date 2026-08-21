@@ -39,9 +39,7 @@ export function useOpinionLike(opinionId: number, serverState: OpinionLikeState)
         liked: result.liked,
         likeCount: result.likeCount,
       })
-      // 좋아요 관리·서재 좋아요 탭이 읽는 목록은 따로 캐시된다(staleTime 60초). 여기서 stale로
-      // 돌려두지 않으면 빈 목록을 보고 나와 좋아요를 누른 뒤 돌아가도 그대로 비어 있다.
-      // 마지막·첫 좋아요면 도서 필터도 바뀌므로 함께 돌린다.
+      // 좋아요 관리 목록·도서 필터는 따로 캐시된다 — 돌아갔을 때 빈 목록이 남지 않게 stale로 돌린다
       void queryClient.invalidateQueries({ queryKey: userQueries.likedOpinionListAll() })
       void queryClient.invalidateQueries({ queryKey: userQueries.filterBooks('LIKE').queryKey })
     },

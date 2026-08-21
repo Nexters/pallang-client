@@ -230,7 +230,7 @@ describe('흔적 좋아요', () => {
 
   it('좋아요가 바뀌면 좋아요 관리 목록과 도서 필터 캐시를 stale로 돌린다 — 돌아갔을 때 빈 목록이 남지 않는다', async () => {
     const { client } = await renderPage()
-    // 좋아요 관리를 먼저 보고 온 상황 — 60초 캐시가 살아 있다
+    // 좋아요 관리를 먼저 보고 온 상황
     const listKey = userQueries.likedOpinionList().queryKey
     const filterKey = userQueries.filterBooks('LIKE').queryKey
     client.setQueryData(listKey, { pages: [], pageParams: [] })

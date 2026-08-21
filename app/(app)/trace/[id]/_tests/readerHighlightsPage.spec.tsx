@@ -221,7 +221,7 @@ function scrollSentinelsIntoView() {
 /** 상세 오버레이로 들어가는 유일한 길인 딥링크 좌표(쪽 → 대목 → 흔적) */
 type DeepLinkTarget = { pageNumber: number; passageId: number; opinionId: number }
 
-/** 마지막으로 렌더한 화면의 캐시 — 등록 뒤 무효화 여부를 들여다볼 때 쓴다 */
+/** 마지막으로 렌더한 화면의 캐시 */
 let lastClient: QueryClient
 
 async function renderPage(
@@ -726,7 +726,7 @@ describe('ReaderHighlightsPage', () => {
   it('입력바에서 등록하면 보고 있는 대목과 꾸밈이 실려 그 자리에서 의견이 생성된다', async () => {
     await renderPage([8])
     await screen.findByText('꾸며진 대목 인용문')
-    // 내 흔적 관리·서재를 먼저 보고 온 상황 — 60초 캐시가 살아 있다
+    // 내 흔적 관리·서재를 먼저 보고 온 상황
     const myOpinionsKey = userQueries.opinionList().queryKey
     const libraryKey = bookQueries.myLibrary().queryKey
     lastClient.setQueryData(myOpinionsKey, { pages: [], pageParams: [] })
@@ -753,7 +753,6 @@ describe('ReaderHighlightsPage', () => {
     expect(body['decorations']).toEqual([
       { startOffset: 0, endOffset: 10, effectType: 'WAVY', color: '#06D6A0' },
     ])
-    // 내 흔적 관리·서재로 돌아가도 방금 남긴 의견이 보여야 한다
     expect(lastClient.getQueryState(myOpinionsKey)?.isInvalidated).toBe(true)
     expect(lastClient.getQueryState(libraryKey)?.isInvalidated).toBe(true)
   })

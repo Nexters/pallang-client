@@ -64,8 +64,7 @@ export function useTraceSubmit() {
             setMessage('흔적을 남기지 못했어요. 잠시 후 다시 시도해주세요.')
             return
           }
-          // 내 흔적·스포일러 관리, 서재, 흔적 보기 목록이 60초 캐시를 들고 있다 — 완료 화면에서
-          // 바로 돌아가도 방금 남긴 흔적이 보이도록 stale로 돌린다
+          // 내 흔적·스포일러 관리, 서재, 흔적 보기가 읽는 목록을 stale로 돌린다
           void queryClient.invalidateQueries({ queryKey: userQueries.all() })
           void queryClient.invalidateQueries({ queryKey: bookQueries.all() })
           void queryClient.invalidateQueries({ queryKey: opinionQueries.listAll() })

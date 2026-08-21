@@ -166,7 +166,7 @@ describe('생각 작성 단계 — 흔적 보기에서 대목을 물고 온 경�
     replaceMock.mockClear()
     createOpinionMock.mockClear()
     const queryClient = renderForm({ fromPassage: true })
-    // 내 흔적 관리·서재를 먼저 보고 온 상황 — 60초 캐시가 살아 있다
+    // 내 흔적 관리·서재를 먼저 보고 온 상황
     const myOpinionsKey = userQueries.opinionList().queryKey
     const libraryKey = bookQueries.myLibrary().queryKey
     queryClient.setQueryData(myOpinionsKey, { pages: [], pageParams: [] })
@@ -197,7 +197,6 @@ describe('생각 작성 단계 — 흔적 보기에서 대목을 물고 온 경�
     // ②·③을 거치지 않는다
     expect(replaceMock).not.toHaveBeenCalledWith('/trace/new/decorate')
     expect(replaceMock).not.toHaveBeenCalledWith('/trace/new/book')
-    // 완료 화면에서 바로 내 흔적 관리·서재로 가도 방금 남긴 흔적이 보여야 한다
     expect(queryClient.getQueryState(myOpinionsKey)?.isInvalidated).toBe(true)
     expect(queryClient.getQueryState(libraryKey)?.isInvalidated).toBe(true)
   })

@@ -61,8 +61,7 @@ export function useOpinionSubmit({
           // 새 의견이 목록과 "N개의 의견"에 보이고 나서 입력창이 비워진다.
           // 개수도 의견 목록 응답에서 오므로 목록 키 하나로 함께 갱신된다
           onSuccess: () => {
-            // 내 흔적·스포일러 관리, 서재 목록·책 상세도 이 흔적을 세어야 한다 — 기다리지 않고
-            // stale로만 돌린다(refetchType 기본값 'active'라 마운트된 화면만 다시 받는다)
+            // 내 흔적·스포일러 관리, 서재도 이 흔적을 센다 — 기다리지 않고 stale로만 돌린다
             void queryClient.invalidateQueries({ queryKey: userQueries.all() })
             void queryClient.invalidateQueries({ queryKey: bookQueries.all() })
             void queryClient.invalidateQueries({ queryKey: opinionQueries.listAll() }).then(() => {
