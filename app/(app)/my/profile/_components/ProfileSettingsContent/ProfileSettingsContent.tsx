@@ -38,9 +38,45 @@ export function ProfileSettingsContent() {
   // 사진 권한이 이미 거부된 상태. 스낵바로는 풀 방법을 안내할 수 없어 모달로 띄운다.
   const [isPhotoPermissionOpen, setIsPhotoPermissionOpen] = useState(false)
 
-  const modifyNickname = useMutation(userMutations.modifyNickname())
-  const modifyProfileImage = useMutation(userMutations.modifyProfileImage())
-  const withdrawMutation = useMutation(userMutations.withdraw())
+  // 콜백은 useMutation 옵션에 둔다. mutate(vars, { onSuccess })로 넘기면 observer가
+  // 언마운트될 때 통째로 버려져, 요청 중 화면을 떠나면 캐시 정리·무효화가 돌지 않는다.
+  // 화면 이동만 mutate 쪽에 남긴다 — 떠난 뒤에 부르면 히스토리를 한 칸 더 밀어낸다.
+  const modifyNickname = useMutation({
+    ...userMutations.modifyNickname(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: userQueries.me().queryKey })
+    },
+    onError: (error) => {
+      // 중복·하루 1회 제한 등 서버 사유는 메시지에 담겨 온다
+      setNicknameError(
+        error instanceof ApiError && error.message
+          ? error.message
+          : '닉네임을 변경하지 못했어요. 잠시 후 다시 시도해주세요.',
+      )
+    },
+  })
+
+  const modifyProfileImage = useMutation({
+    ...userMutations.modifyProfileImage(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: userQueries.me().queryKey })
+    },
+    onError: () => {
+      setMessage('프로필 이미지를 변경하지 못했어요. 잠시 후 다시 시도해주세요.')
+    },
+  })
+
+  const withdrawMutation = useMutation({
+    ...userMutations.withdraw(),
+    onSuccess: () => {
+      // 탈퇴한 계정의 캐시(프로필·흔적)를 남기지 않는다
+      queryClient.clear()
+    },
+    onError: () => {
+      setIsWithdrawOpen(false)
+      setMessage('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.')
+    },
+  })
 
   // 비로그인으로 확정되면 볼 내용이 없다. 탈퇴 직후에도 이 경로로 마이페이지에 안착한다.
   useEffect(() => {
@@ -51,17 +87,7 @@ export function ProfileSettingsContent() {
     try {
       const photo = await takePhoto('gallery')
       if (!photo) return
-      modifyProfileImage.mutate(
-        { image: photo.blob },
-        {
-          onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: userQueries.me().queryKey })
-          },
-          onError: () => {
-            setMessage('프로필 이미지를 변경하지 못했어요. 잠시 후 다시 시도해주세요.')
-          },
-        },
-      )
+      modifyProfileImage.mutate({ image: photo.blob })
     } catch (error) {
       // 권한 거부는 다시 시도해도 같은 벽이다. "잠시 후"가 아니라 설정으로 안내한다.
       if (error instanceof CameraPermissionDeniedError) {
@@ -75,26 +101,22 @@ export function ProfileSettingsContent() {
   const handleSave = () => {
     if (!me) return
     const nextNickname = (nicknameInput ?? me.nickname).trim()
+    // 비운 채로 저장을 누른 것은 "변경 없음"이 아니다 — 조용히 돌아가면 편집이 사라진다
+    if (!nextNickname) {
+      setNicknameError('닉네임을 입력해 주세요.')
+      return
+    }
     // 바뀐 게 없으면 서버를 부르지 않고 그대로 돌아간다
-    if (!nextNickname || nextNickname === me.nickname) {
+    if (nextNickname === me.nickname) {
       router.back()
       return
     }
     modifyNickname.mutate(
       { nickname: nextNickname },
       {
+        // 이동을 막을 이유가 없다 — 갱신은 뒤에서 마저 돈다
         onSuccess: () => {
-          // 이동을 막을 이유가 없다 — 갱신은 뒤에서 마저 돈다
-          void queryClient.invalidateQueries({ queryKey: userQueries.me().queryKey })
           router.back()
-        },
-        onError: (error) => {
-          // 중복·하루 1회 제한 등 서버 사유는 메시지에 담겨 온다
-          setNicknameError(
-            error instanceof ApiError && error.message
-              ? error.message
-              : '닉네임을 변경하지 못했어요. 잠시 후 다시 시도해주세요.',
-          )
         },
       },
     )
@@ -103,13 +125,7 @@ export function ProfileSettingsContent() {
   const handleWithdraw = () => {
     withdrawMutation.mutate(undefined, {
       onSuccess: () => {
-        // 탈퇴한 계정의 캐시(프로필·흔적)를 남기지 않는다
-        queryClient.clear()
         router.replace('/my')
-      },
-      onError: () => {
-        setIsWithdrawOpen(false)
-        setMessage('회원 탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.')
       },
     })
   }
@@ -174,7 +190,9 @@ export function ProfileSettingsContent() {
       />
 
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
+      {/* 이 화면은 흰 배경(ScreenLayout)이라 어두운 바를 얹어야 보인다 */}
       <Snackbar
+        tone="light"
         message={message}
         onClose={() => {
           setMessage('')
@@ -203,8 +221,14 @@ function ProfileForm({
   onEditImage: () => void
   onWithdrawClick: () => void
 }) {
+  // 카카오 CDN URL은 만료된다 — 실패한 URL을 기억해 기본 캐릭터로 떨어뜨린다.
+  // URL이 새로 오면(업로드 성공) 값이 달라져 자동으로 다시 시도한다.
+  const [brokenImageUrl, setBrokenImageUrl] = useState<null | string>(null)
+  const shownImageUrl = profileImageUrl === brokenImageUrl ? null : profileImageUrl
+
   return (
-    <div className="flex flex-col px-4">
+    // 스크롤 body를 끝까지 채워야 회원탈퇴의 mt-auto가 밀어낼 여백이 생긴다
+    <div className="flex min-h-0 flex-1 flex-col px-4">
       <div className="flex justify-center py-6">
         <button
           type="button"
@@ -213,15 +237,18 @@ function ProfileForm({
           onClick={onEditImage}
           className="relative rounded-3xl press disabled:pointer-events-none"
         >
-          {profileImageUrl ? (
+          {shownImageUrl ? (
             // 프로필 이미지 도메인이 유동적이라(카카오 CDN 등) next/image 대신 img 사용 — 크기·디코딩만 정비
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={profileImageUrl}
+              src={shownImageUrl}
               alt=""
               width={90}
               height={90}
               decoding="async"
+              onError={() => {
+                setBrokenImageUrl(shownImageUrl)
+              }}
               className="size-[90px] rounded-3xl object-cover"
             />
           ) : (
