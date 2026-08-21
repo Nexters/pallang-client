@@ -443,6 +443,19 @@ describe('스포일러 관리', () => {
     expect(screen.queryByText('등록한 스포일러가 없습니다')).not.toBeInTheDocument()
   })
 
+  it('첫 페이지가 빈 채로 이어받기가 끊기면 오류 화면이 아니라 재시도 줄을 남긴다', async () => {
+    const { scrollToEnd } = renderView({
+      pages: [page([], true), page([PASSAGE])],
+      failNextPageTimes: 1,
+    })
+
+    await scrollToEnd()
+
+    // 목록 전체를 못 받은 것이 아니라 이어받기만 끊긴 것이다 — 전면 오류로 덮으면 되돌아올 길이 없다
+    expect(await screen.findByText('더 불러오지 못했어요.')).toBeInTheDocument()
+    expect(screen.queryByText('목록을 불러오지 못했어요.')).not.toBeInTheDocument()
+  })
+
   it('고른 책이 도서 필터에서 빠지면 전체로 되돌아간다', async () => {
     const { requests } = renderView({
       pages: [page([PASSAGE, BOOK_5_PASSAGE])],

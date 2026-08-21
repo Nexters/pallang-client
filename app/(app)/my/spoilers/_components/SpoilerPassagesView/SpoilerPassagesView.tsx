@@ -72,7 +72,9 @@ export function SpoilerPassagesView() {
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   function renderList() {
     if (listQuery.isPending) return <RecordListSkeleton />
-    if (listQuery.isError && passages.length === 0) {
+    // 다음 페이지 실패는 아래 재시도 줄이 받는다 — 첫 페이지가 통째로 걸러져 비어 있을 때
+    // 여기로 흘러들면 이미 받은 목록 자리가 오류 화면으로 덮인다
+    if (listQuery.isError && !listQuery.isFetchNextPageError && passages.length === 0) {
       return (
         <ApiErrorFeedbackState
           aria-label="스포일러 관리 오류"
@@ -95,6 +97,8 @@ export function SpoilerPassagesView() {
     }
     return (
       <>
+        {/* 붙은 페이지가 전부 비었을 뿐 다음 페이지는 남았다 — 자리를 비우지 않고 골격으로 채운다 */}
+        {passages.length === 0 && !listQuery.isFetchNextPageError && <RecordListSkeleton />}
         <ul className="flex flex-col gap-2">
           {passages.map((passage) => (
             <li key={passage.passageId}>
