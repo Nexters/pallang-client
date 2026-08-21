@@ -1,9 +1,12 @@
+import { useState } from 'react'
+
 import PlusIcon from '@/app/_global/_components/Icon/assets/plus.svg'
 import { Spinner } from '@/app/_global/_components/Spinner/Spinner'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { useTraceComments } from '../../_hooks/useTraceComments'
 import { CommentThread } from '../CommentThread/CommentThread'
+import { TraceReplySheet } from '../TraceReplySheet/TraceReplySheet'
 
 type TraceCommentSectionProps = {
   opinionId: number
@@ -34,6 +37,12 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
     update,
     remove,
   } = useTraceComments(opinionId)
+  // 답글 시트가 보고 있는 원댓글 — id로 들고 최신 객체는 목록에서 찾는다.
+  // 객체 스냅샷을 들면 답글을 단 뒤에도 제목의 개수·미리보기가 낡은 채 남는다.
+  // 댓글 시트가 내려가면 이 컴포넌트째 언마운트되므로(BottomSheet는 닫히면 내용을 걷는다)
+  // 답글 시트도 함께 접히고, 다시 열면 처음부터 시작한다 — 별도 리셋이 필요 없다
+  const [replyTargetId, setReplyTargetId] = useState<number | null>(null)
+  const replyTarget = comments.find((comment) => comment.commentId === replyTargetId) ?? null
 
   if (view === 'pending') {
     return (
@@ -98,8 +107,19 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
           myUserId={myUserId}
           onUpdate={update}
           onRemove={remove}
+          onOpenReplies={setReplyTargetId}
         />
       ))}
+      <TraceReplySheet
+        opinionId={opinionId}
+        comment={replyTarget}
+        myUserId={myUserId}
+        onUpdate={update}
+        onRemove={remove}
+        onClose={() => {
+          setReplyTargetId(null)
+        }}
+      />
       {/* 데이터가 있는 상태의 실패는 목록을 지우지 않고 더보기 자리에서만 알린다 */}
       {hasInlineError ? (
         <button
