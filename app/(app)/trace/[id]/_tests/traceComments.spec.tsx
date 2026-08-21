@@ -86,24 +86,9 @@ const commentBase = {
 
 type SeededComment = ReturnType<typeof seedComments>[number]
 
-/** 1번 흔적: 원댓글 7개(더보기 대상) + 2번 원댓글에 답글 6개(답글 더보기 대상) */
+/** 1번 흔적: 원댓글 7개(더보기 대상) + 내 원댓글(1번)에 답글 6개(답글 뷰 대상).
+    답글 달린 원댓글이 내 것이어야 답글 뷰 안에서 삭제 흐름(캐시 무효화 검증)까지 태울 수 있다 */
 function seedComments() {
-  const withReplies = {
-    ...commentBase,
-    commentId: 2,
-    userId: 2,
-    nickname: '다른사람',
-    content: '남이 쓴 댓글',
-    replies: Array.from({ length: 5 }, (_, index) => ({
-      ...commentBase,
-      commentId: 30 + index,
-      userId: 2,
-      nickname: '다른사람',
-      content: `${String(index + 1)}번째 답글`,
-    })),
-    replyCount: 6,
-    hasMoreReplies: true,
-  }
   const rest = Array.from({ length: 5 }, (_, index) => ({
     ...commentBase,
     commentId: 10 + index,
@@ -122,11 +107,26 @@ function seedComments() {
       userId: 10,
       nickname: '나',
       content: '내가 쓴 댓글',
+      replies: Array.from({ length: 5 }, (_, index) => ({
+        ...commentBase,
+        commentId: 30 + index,
+        userId: 2,
+        nickname: '다른사람',
+        content: `${String(index + 1)}번째 답글`,
+      })),
+      replyCount: 6,
+      hasMoreReplies: true,
+    },
+    {
+      ...commentBase,
+      commentId: 2,
+      userId: 2,
+      nickname: '다른사람',
+      content: '남이 쓴 댓글',
       replies: [],
       replyCount: 0,
       hasMoreReplies: false,
     },
-    withReplies,
     ...rest,
   ]
 }
@@ -375,7 +375,7 @@ async function revealAllReplies() {
   await screen.findByText('6번째 답글')
 }
 
-/** 답글 시트만 내린다 — 아래 댓글 시트는 그대로 남는다 */
+/** 답글 뷰만 접는다 — 시트는 그대로 남아 댓글 뷰로 돌아온다 */
 async function closeReplySheet() {
   fireEvent.click(screen.getByRole('button', { name: '닫기' }))
   await waitFor(() => {
@@ -497,6 +497,20 @@ describe('의견 목록 시트와 댓글 시트 흐름', () => {
     expect(await screen.findByText('6번째 답글')).toBeInTheDocument()
     expect(screen.getByText('1번째 답글')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '답글 더보기' })).not.toBeInTheDocument()
+  })
+
+  it('답글 뷰는 같은 시트 안에서 전환된다 — 시트가 한 겹뿐이고 뒤로가 댓글 뷰로 되돌린다', async () => {
+    await openFirstTraceComments()
+
+    fireEvent.click(screen.getByRole('button', { name: '답글 6개 보기' }))
+    await screen.findByText('답글 (6)')
+
+    // 새 시트가 또 올라오는 게 아니라 본문·헤더가 갈아끼워진다(#373)
+    expect(screen.getAllByRole('dialog')).toHaveLength(1)
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
+    expect(await screen.findByText(/^댓글 \(/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('답글 목록')).not.toBeInTheDocument()
   })
 
   it('답글이 없는 댓글에는 답글 달기 줄이, 있는 댓글에는 개수 줄이 선다', async () => {
@@ -848,17 +862,16 @@ describe('의견 목록 시트와 댓글 시트 흐름', () => {
     const client = await openFirstTraceComments()
     await revealAllReplies()
 
-    const repliesKey = commentQueries.replies(2).queryKey
+    const repliesKey = commentQueries.replies(1).queryKey
     const countRepliesCalls = () =>
       vi
         .mocked(fetch)
         .mock.calls.filter(([url]) => typeof url === 'string' && url.includes('/replies')).length
     const repliesCallsBeforeRemove = countRepliesCalls()
 
-    // 삭제 버튼은 뒤(댓글 시트)에 있는 내 댓글의 것이다 — 답글이 달린 원댓글은 남의 것이라
-    // 답글 시트 안에는 삭제가 없고, 위 시트가 뒤를 접근성에서 가리므로 hidden으로 잡는다
-    fireEvent.click(screen.getByRole('button', { name: '삭제', hidden: true }))
-    // 삭제가 끝나기 전에 시트를 다 내리면 답글 쿼리의 관찰자가 사라진다
+    // 답글 뷰 안 원댓글(내 것)의 삭제다 — 본문이 갈아끼워져 뒤에 다른 삭제 버튼이 없다
+    fireEvent.click(screen.getByRole('button', { name: '삭제' }))
+    // 삭제가 끝나기 전에 답글 뷰를 접으면 답글 쿼리의 관찰자가 사라진다
     await closeReplySheet()
     await collapseComments()
     gate.open()
