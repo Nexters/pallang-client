@@ -19,7 +19,11 @@ const AVATAR_SIZE = 32
 
 export function BlockedUsersView() {
   const queryClient = useQueryClient()
-  const [message, setMessage] = useState('')
+  /**
+   * 띄워 둔 안내. 문구에 대상이 들어가지 않아(고정 문구) 대상만 바꿔 연달아 해제하면
+   * 두 번째 안내가 첫 타이머의 남은 시간만 보이고 사라진다 — 대상 id를 함께 들어 새 안내로 센다.
+   */
+  const [notice, setNotice] = useState<{ text: string; userId: number } | null>(null)
   const [target, setTarget] = useState<BlockedUserResponse | null>(null)
   // 다이얼로그가 닫히는 동안에도 문구가 비지 않아야 한다
   const shownTarget = useLastPresent(target)
@@ -32,7 +36,7 @@ export function BlockedUsersView() {
 
   const unblock = useMutation({
     ...blockMutations.unblock(),
-    onSuccess: async () => {
+    onSuccess: async (_data, userId) => {
       // 목록이 갱신된 뒤에 닫는다 — 먼저 닫으면 해제된 행이 남아 있어 같은 사용자에게 DELETE가 한 번 더 간다
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: blockQueries.all() }),
@@ -41,11 +45,11 @@ export function BlockedUsersView() {
         queryClient.invalidateQueries({ queryKey: commentQueries.all() }),
       ])
       setTarget(null)
-      setMessage('차단이 해제되었습니다.')
+      setNotice({ text: '차단이 해제되었습니다.', userId })
     },
-    onError: () => {
+    onError: (_error, userId) => {
       setTarget(null)
-      setMessage('차단을 해제하지 못했어요. 잠시 후 다시 시도해주세요.')
+      setNotice({ text: '차단을 해제하지 못했어요. 잠시 후 다시 시도해주세요.', userId })
     },
   })
 
@@ -161,9 +165,10 @@ export function BlockedUsersView() {
       {/* absolute라 스크롤 컨테이너 안에 두면 함께 밀린다 — 셸 밖에 세운다 */}
       <Snackbar
         tone="light"
-        message={message}
+        message={notice?.text ?? ''}
+        messageKey={notice?.userId}
         onClose={() => {
-          setMessage('')
+          setNotice(null)
         }}
       />
     </>
