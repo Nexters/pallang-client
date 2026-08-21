@@ -85,6 +85,70 @@ describe('Snackbar', () => {
     expect(onClose3).toHaveBeenCalledOnce()
   })
 
+  it('같은 props로 리렌더해도 남은 시간이 늘어나지 않는다', () => {
+    const onClose = vi.fn()
+    const { rerender } = render(
+      <Snackbar message="차단이 해제되었습니다." messageKey="user-a" onClose={onClose} />,
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    rerender(<Snackbar message="차단이 해제되었습니다." messageKey="user-a" onClose={onClose} />)
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  // 차단 해제 안내는 대상이 안 들어간 고정 문구다. 대상만 바꿔 연달아 해제하면 문구가 글자
+  // 그대로 같아, 두 번째 안내가 첫 타이머의 남은 시간(1초)만 보이고 사라졌다.
+  it('같은 문구라도 messageKey가 바뀌면 타이머를 처음부터 다시 센다', () => {
+    const onClose = vi.fn()
+    const { rerender } = render(
+      <Snackbar message="차단이 해제되었습니다." messageKey="user-a" onClose={onClose} />,
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    rerender(<Snackbar message="차단이 해제되었습니다." messageKey="user-b" onClose={onClose} />)
+
+    // 첫 표시 기준 3초가 지나도 닫히지 않는다
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(onClose).not.toHaveBeenCalled()
+
+    // 두 번째 표시 기준 3초 = 처음부터 5초
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('문구가 바뀌면 messageKey 없이도 타이머를 다시 센다', () => {
+    const onClose = vi.fn()
+    const { rerender } = render(<Snackbar message="차단이 해제되었습니다." onClose={onClose} />)
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    rerender(<Snackbar message="차단을 해제하지 못했어요." onClose={onClose} />)
+
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(onClose).not.toHaveBeenCalled()
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
   // 흰 화면(마이페이지 계열)에 기본 흰 바를 얹으면 배경과 붙어 읽히지 않는다
   it('밝은 면에 얹으면 어두운 바로 뒤집힌다', () => {
     render(<Snackbar tone="light" message="차단이 해제되었습니다." onClose={vi.fn()} />)

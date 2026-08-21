@@ -1,11 +1,13 @@
+'use client'
+
 import NextIcon from '@/app/_global/_components/Icon/assets/next.svg'
 import { Select } from '@/app/_global/_components/Select/Select'
+import { SheetHandle } from '@/app/_global/_components/SheetHandle/SheetHandle'
 import type { OpinionSortType } from '@/app/_global/_queries/opinion.queries'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import { OPINION_SORT_OPTIONS } from '../../_data/readerHighlights.constant'
 import type { Trace } from '../../_types/readerHighlights.type'
-import { TraceCommentSection } from '../TraceCommentSection/TraceCommentSection'
 import { TraceItem } from '../TraceItem/TraceItem'
 
 type TraceListSectionProps = {
@@ -15,13 +17,17 @@ type TraceListSectionProps = {
   isMasked: boolean
   sortType: OpinionSortType
   onChangeSort: (sortType: OpinionSortType) => void
-  /** "N개의 의견" — 의견 목록 바텀시트로 진입한다(디자인 주석) */
-  onOpenOpinionSheet: () => void
-  /** 댓글이 펼쳐진 의견 — null이면 모두 접혀 있다 */
-  expandedOpinionId: number | null
-  /** 흔적의 댓글 버튼 — 그 자리에서 댓글을 여닫는다(디자인 주석) */
-  onToggleComments: (trace: Trace) => void
-  className?: string
+  /* 목록을 담은 바텀시트를 여는 손잡이 한 벌. 시트 상태 자체는 셸(TraceScreen)이 든다 —
+     묶어서 넘기면 lint가 이 객체를 ref로 오인한다(react-hooks/refs) */
+  /** 손잡이 요소를 시트에 알린다 — 여기서 시작한 세로 드래그가 높이를 바꾼다 */
+  onSheetHandle: (node: HTMLButtonElement | null) => void
+  isSheetExpanded: boolean
+  /** 손잡이 탭 — 두 높이를 오간다 */
+  onToggleSheet: () => void
+  /** "N개의 의견 ›" — 시트를 화면 가득 올린다 */
+  onExpandSheet: () => void
+  /** 흔적의 댓글 아이콘 — 그 의견의 답글 시트를 올린다(디자인 주석 229:18243) */
+  onOpenReply: (trace: Trace) => void
 }
 
 export function TraceListSection({
@@ -30,20 +36,30 @@ export function TraceListSection({
   isMasked,
   sortType,
   onChangeSort,
-  onOpenOpinionSheet,
-  expandedOpinionId,
-  onToggleComments,
-  className,
+  onSheetHandle,
+  isSheetExpanded,
+  onToggleSheet,
+  onExpandSheet,
+  onOpenReply,
 }: TraceListSectionProps) {
   return (
-    <section className={cn('flex flex-col', className)}>
-      {/* 축소된 스테이지 바로 아래에 멈춘다 — 전환이 끝나는 지점과 같다. h-15는 시안 헤더 높이 */}
-      <div className="sticky top-[calc(var(--safe-top)+var(--stage-collapsed))] z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
+    <section className="flex flex-col">
+      {/* 시트 손잡이 — 끌면 시트가 손가락을 따라 오르내리고, 누르면 두 높이를 오간다.
+          목록과 함께 스크롤돼 올라가고, 그 아래 정렬 바만 상단에 남는다.
+          위로 겹쳐 올라오는 답글 시트도 같은 손잡이를 쓴다(BottomSheet의 showHandle) */}
+      <SheetHandle
+        ref={onSheetHandle}
+        label={isSheetExpanded ? '의견 목록 접기' : '의견 목록 펼치기'}
+        isExpanded={isSheetExpanded}
+        onSelect={onToggleSheet}
+      />
+      {/* 패널이 스스로 스크롤하므로 정렬 바는 그 스크롤 상단에 붙는다. h-15는 시안 헤더 높이 */}
+      <div className="sticky top-0 z-1 flex h-15 items-center justify-between bg-bg-dark px-4">
         <div className="flex items-center gap-1">
-          {/* 시안에서 장식이던 셰브론이 의견 바텀시트라는 목적지를 얻었다 */}
+          {/* 시안에서 장식이던 셰브론이 목적지를 얻었다 — 시트를 화면 가득 끌어올린다 */}
           <button
             type="button"
-            onClick={onOpenOpinionSheet}
+            onClick={onExpandSheet}
             className="press flex items-center gap-0.5 text-title-16sb text-text-inverse"
           >
             {traceCount}개의 의견
@@ -62,36 +78,24 @@ export function TraceListSection({
           pointer-events-none과 달리 포커스까지 막아 상세 오버레이로 새는 길을 함께 끊는다. */}
       <ul
         inert={isMasked}
-        className={cn(
-          'flex flex-col px-4',
-          // 입력바가 화면 하단에 고정으로 뜨는 동안에는 그 높이만큼 더 비운다 —
-          // pb-32(128px)는 CommentBar(입력 h-9 + pt-4 + 하단 인셋)를 손으로 계산해 예약한 값이다.
-          // 그러지 않으면 마지막 댓글이 바 뒤에 깔려 읽을 수도 스크롤할 수도 없다
-          expandedOpinionId === null ? 'pb-10' : 'pb-32',
-          isMasked && 'blur-md select-none',
-        )}
+        className={cn('flex flex-col px-4', 'pb-10', isMasked && 'blur-md select-none')}
       >
         {traces.map((trace, index) => (
           <li
             key={trace.opinionId}
             // 구분선 양옆으로 24px씩(디자인의 Content gap) — 흔적끼리 붙어 보이지 않게 한다.
             // 첫 흔적 위에는 두지 않는다 — 헤더와 붙어 두 줄로 보인다
-            className={index > 0 ? 'mt-6 border-t border-dashed border-white/30 pt-6' : undefined}
+            className={index > 0 ? 'mt-6 border-t border-dashed border-white/50 pt-6' : undefined}
           >
-            {/* 본문은 탭 대상이 아니다 — 열어 볼 곳이 없으니 자르지 않고 전부 보여준다 */}
+            {/* 본문은 탭 대상이 아니다 — 열어 볼 곳이 없으니 자르지 않고 전부 보여준다.
+                댓글 아이콘만 답글 시트로 가는 입구다 */}
             <TraceItem
               trace={trace}
               isContentClamped={false}
-              isCommentsOpen={trace.opinionId === expandedOpinionId}
               onOpenComments={() => {
-                onToggleComments(trace)
+                onOpenReply(trace)
               }}
             />
-            {/* 댓글은 다른 화면으로 넘기지 않고 흔적 바로 아래로 펼친다.
-                입력바는 이 안이 아니라 화면 하단 고정이라 목록 바깥(TraceListPanel)에 있다 */}
-            {trace.opinionId === expandedOpinionId && (
-              <TraceCommentSection opinionId={trace.opinionId} />
-            )}
           </li>
         ))}
       </ul>

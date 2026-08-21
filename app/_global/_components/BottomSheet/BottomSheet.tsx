@@ -1,12 +1,14 @@
 'use client'
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
-import { type ReactNode, useRef } from 'react'
+import { type CSSProperties, type ReactNode, useRef } from 'react'
 
+import { useSheetDragDismiss } from '@/app/_global/_hooks/useSheetDragDismiss'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import BackIcon from '../Icon/assets/back.svg'
 import CloseIcon from '../Icon/assets/close.svg'
+import { SheetHandle } from '../SheetHandle/SheetHandle'
 
 type BottomSheetProps = {
   open: boolean
@@ -24,6 +26,20 @@ type BottomSheetProps = {
   contentClassName?: string
   /** 시트 패널 자체에 덧붙일 클래스 — 기본은 내용 높이만큼이고, 높이를 고정하고 싶을 때 쓴다 */
   popupClassName?: string
+  /** 높이 같은 계산값을 넘길 때 — 상수에서 만든 calc()는 클래스로 쓰면 Tailwind가 못 본다 */
+  popupStyle?: CSSProperties
+  /**
+   * 뒤를 어둡게 덮을지. 끄면 백드롭은 투명해지지만 자리는 지킨다 —
+   * 바깥 탭으로 닫는 길과 뒤쪽 조작을 막는 역할은 그대로 남는다.
+   * 이미 어두운 시트 위에 겹쳐 올리는 시트(흔적 화면의 답글 시트)는 한 겹 더 어두워질 이유가 없다.
+   */
+  dim?: boolean
+  /**
+   * 제목 줄 위에 손잡이를 세운다 — 아래로 끌거나 누르면 닫힌다.
+   * 늘 화면에 붙어 있는 시트 위로 겹쳐 올라오는 시트에 쓴다: 백드롭이 투명하면(dim=false)
+   * 바깥 탭으로 닫는 길이 눈에 보이지 않아, 내리는 길을 손잡이로 드러낸다.
+   */
+  showHandle?: boolean
   /** 본문 아래 고정 영역. 본문이 안에서 스크롤돼도 딸려 올라가지 않는다 */
   footer?: ReactNode
   /**
@@ -48,13 +64,17 @@ export function BottomSheet({
   reserveBackSlot = false,
   contentClassName,
   popupClassName,
+  popupStyle,
   footer,
   panelKey,
+  dim = true,
+  showHandle = false,
 }: BottomSheetProps) {
   const isDark = tone === 'dark'
   // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
   // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
   const popupRef = useRef<HTMLDivElement>(null)
+  const setHandle = useSheetDragDismiss(onClose)
 
   // 시트가 "열린 채로" DOM에 꽂히는 경로가 있다 — 화면 자체가 시트인 첫 화면(TraceSourceView)이
   // 그렇고, 탭바로 들어오면 특히 그렇다. base-ui는 mounted 초기값을 open으로 잡아
@@ -91,7 +111,8 @@ export function BottomSheet({
         <BaseDialog.Backdrop
           data-slot="bottom-sheet-backdrop"
           className={cn(
-            'fixed inset-0 z-50 bg-bg-black/50 transition-opacity duration-fast ease-enter',
+            'fixed inset-0 z-50 transition-opacity duration-fast ease-enter',
+            dim && 'bg-bg-black/50',
             'starting:opacity-0 data-starting-style:opacity-0',
             'data-ending-style:opacity-0 data-ending-style:ease-exit',
           )}
@@ -104,7 +125,9 @@ export function BottomSheet({
             initialFocus={popupRef}
             className={cn(
               // 모서리 32px — v2 시트 시안들의 공통값이다(더보기 3321:30402 · 책 선택 3321:28335)
-              'relative flex flex-col rounded-t-4xl pt-6 pb-safe',
+              'relative flex flex-col rounded-t-4xl pb-safe',
+              // 손잡이가 서면 그 자신이 위 여백을 진다(시안의 시트 상단 16px)
+              showHandle ? 'pt-0' : 'pt-6',
               isDark ? 'bg-bg-dark' : 'bg-bg-default',
               // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
               'outline-none',
@@ -116,8 +139,10 @@ export function BottomSheet({
               'data-ending-style:duration-fast data-ending-style:ease-exit',
               popupClassName,
             )}
+            style={popupStyle}
             // 홈 인디케이터에 시트 내용이 가리지 않게 한다
           >
+            {showHandle && <SheetHandle ref={setHandle} label="시트 내리기" onSelect={onClose} />}
             <div className="flex items-center gap-2.5 px-4 py-2.5">
               {(onBack !== undefined || reserveBackSlot) && (
                 <button

@@ -43,10 +43,13 @@ export type QuoteStageProps = {
   highlight: Highlight
   quoteIndex: number
   isRevealed: boolean
-  isCollapsed: boolean
+  /** 대목 조회가 깨졌으면 카드 안이 재시도 화면으로 바뀐다(시안 229:24303) */
+  stageError?: { isError: boolean; retry: () => void }
   onBack: () => void
   onClickQuote: () => void
-  /** 카드 위 좌우 스와이프와 카드 안 화살표로 대목·페이지를 옮긴다 */
+  /** 그 방향에 갈 곳이 있는지 — 페이저 화살표의 활성 여부이자 스와이프가 실제로 움직이는 조건이다 */
+  canSwipe: { prev: boolean; next: boolean }
+  /** 좌우 스와이프와 페이저 화살표가 함께 부른다. 둘 다 쪽 경계를 넘는다 */
   onSwipeQuote: (direction: SwipeDirection) => void
 }
 

@@ -1,7 +1,7 @@
 /* 인용문 카드 좌우 스와이프의 판정 규칙.
-   접힘 전환과 마찬가지로 스크럽이 아니라 제스처 한 번 = 이동 한 번이다(#76).
-   좌표를 읽는 훅(useQuoteSwipe)과 상태를 옮기는 훅(usePassageViewer)이 같은 규칙을 보도록
-   판정은 전부 순수 함수로 여기에만 둔다. */
+   스크럽이 아니라 제스처 한 번 = 이동 한 번이다(#76).
+   좌표를 읽는 훅(useQuoteSwipe)·상태를 옮기는 훅(usePassageViewer)·화살표를 그리는
+   컴포넌트(QuotePager)가 모두 같은 규칙을 보도록 판정은 전부 순수 함수로 여기에만 둔다. */
 
 import type { QuoteCursor, SwipeDirection } from '../_types/readerHighlights.type'
 

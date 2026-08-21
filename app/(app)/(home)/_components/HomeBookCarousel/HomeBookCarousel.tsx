@@ -188,14 +188,17 @@ function BookCarouselTrack({
                 >
                   {book.coverImageUrl && (
                     // 인라인 background-image는 프리로드 힌트를 못 받고 원본 해상도를 그대로 받는다.
-                    // next/image로 표시 크기(220px) 리사이즈 + WebP/AVIF 변환을 태우고,
-                    // 첫 화면에 보이는 중앙±1권만 즉시 로드, 나머지는 스크롤로 가까워질 때 로드한다.
+                    // next/image로 표시 크기(220px) 리사이즈 + WebP/AVIF 변환을 태운다.
+                    // 전량 eager인 이유(#336): 이 캐러셀은 사용자가 좌우로 다 훑는 지면이라
+                    // lazy로 아끼는 바이트가 작고, 스와이프로 드러나는 순간에야 요청이 시작되면
+                    // placeholder가 보였다가 표지가 늦게 뜨는 깜빡임이 된다(실측 310~560ms).
+                    // next/image 기본값이 lazy라 명시해야 한다. 우선순위는 중앙 표지에만 준다.
                     <Image
                       src={book.coverImageUrl}
                       alt=""
                       fill
                       sizes="220px"
-                      loading={Math.abs(index - selectedBookIndex) <= 1 ? 'eager' : 'lazy'}
+                      loading="eager"
                       fetchPriority={index === selectedBookIndex ? 'high' : undefined}
                       className="rounded-sm object-cover"
                     />
