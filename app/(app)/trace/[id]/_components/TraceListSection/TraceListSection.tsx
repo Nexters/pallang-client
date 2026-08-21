@@ -41,9 +41,7 @@ export function TraceListSection({
 }: TraceListSectionProps) {
   return (
     <section className="flex flex-col">
-      {/* 시트 손잡이 — 누르면 두 높이를 오간다. 끄는 건 손잡이만이 아니라 시트 어디서나 된다(useSheetDrag).
-          목록과 함께 스크롤돼 올라가고, 그 아래 정렬 바만 상단에 남는다.
-          위로 겹쳐 올라오는 댓글 시트도 같은 손잡이를 쓴다(BottomSheet의 showHandle) */}
+      {/* 손잡이는 목록과 함께 스크롤돼 올라가고 정렬 바만 상단에 남는다 — 끄는 건 시트 어디서나 된다 */}
       <SheetHandle
         label={isSheetExpanded ? '의견 목록 접기' : '의견 목록 펼치기'}
         isExpanded={isSheetExpanded}
