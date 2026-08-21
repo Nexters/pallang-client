@@ -216,6 +216,36 @@ describe('책 등록 시트', () => {
     expect(screen.getByRole('button', { name: '등록하기' })).toBeEnabled()
   })
 
+  it('고른 후보를 다시 누르면 선택이 해제된다', async () => {
+    searchInternalBooksMock.mockResolvedValueOnce({
+      data: {
+        books: [
+          {
+            bookId: 42,
+            title: '여름',
+            author: '김영하',
+            publisher: '문학동네',
+            coverImageUrl: null,
+            pageCount: 200,
+          },
+        ],
+        pageInfo: { page: 0, hasNext: false },
+      },
+    })
+    renderSheet()
+
+    fireEvent.change(await screen.findByPlaceholderText('책 제목을 입력해 주세요.'), {
+      target: { value: '여름' },
+    })
+    const book = await screen.findByText('여름')
+
+    fireEvent.click(book)
+    fireEvent.click(book)
+
+    expect(screen.queryByText('선택')).toBeNull()
+    expect(screen.getByRole('button', { name: '등록하기' })).toBeDisabled()
+  })
+
   it('캐러셀에서 고른 표지에도 선택 리본이 붙는다', async () => {
     renderSheet()
 
@@ -251,6 +281,34 @@ describe('책 등록 시트', () => {
     expect(screen.queryByText('책 추가하기')).toBeNull()
     expect(screen.getByText('선택')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '등록하기' })).toBeEnabled()
+  })
+
+  it('고른 외부 검색 결과를 다시 누르면 선택이 해제된다', async () => {
+    searchBooksMock.mockResolvedValue({
+      data: {
+        books: [
+          {
+            title: '프랑켄슈타인',
+            author: '메리 셸리',
+            publisher: '문학동네',
+            coverImageUrl: null,
+            isbn: '9788954618373',
+          },
+        ],
+      },
+    })
+    renderSheet()
+
+    fireEvent.change(await screen.findByPlaceholderText('책 제목을 입력해 주세요.'), {
+      target: { value: '프랑켄슈타인' },
+    })
+    const book = await screen.findByText('프랑켄슈타인', {}, { timeout: 3000 })
+
+    fireEvent.click(book)
+    fireEvent.click(book)
+
+    expect(screen.queryByText('선택')).toBeNull()
+    expect(screen.getByRole('button', { name: '등록하기' })).toBeDisabled()
   })
 
   it('외부 후보를 고르고 등록하기를 누르면 값이 채워진 도서 추가 폼이 열린다', async () => {

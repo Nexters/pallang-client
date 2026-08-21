@@ -116,6 +116,24 @@ export function BookSearchSheet({
     onSelect(book)
   }
 
+  const togglePickedBook = (book: SelectedBook) => {
+    setPicked((current) =>
+      current?.kind === 'pallang' && current.book.bookId === book.bookId
+        ? null
+        : { kind: 'pallang', book },
+    )
+  }
+
+  const togglePickedExternalBook = (book: ExternalBook) => {
+    setPicked((current) =>
+      current?.kind === 'external' &&
+      current.book.isbn === book.isbn &&
+      current.book.title === book.title
+        ? null
+        : { kind: 'external', book },
+    )
+  }
+
   return (
     <BottomSheet
       open={open}
@@ -170,12 +188,8 @@ export function BookSearchSheet({
         hidden={form !== null}
         selectedBookId={picked?.kind === 'pallang' ? picked.book.bookId : null}
         selectedExternalBook={picked?.kind === 'external' ? picked.book : null}
-        onPick={(book: SelectedBook) => {
-          setPicked({ kind: 'pallang', book })
-        }}
-        onPickExternal={(book: ExternalBook) => {
-          setPicked({ kind: 'external', book })
-        }}
+        onPick={togglePickedBook}
+        onPickExternal={togglePickedExternalBook}
       />
       {form && (
         <BookNewForm
