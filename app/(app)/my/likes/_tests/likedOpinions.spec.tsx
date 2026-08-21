@@ -35,6 +35,13 @@ const NEXT_PAGE_OPINION = {
   nickname: '느린독서',
 }
 
+/** 닉네임이 같은 다른 카드 — 안내 문구가 글자까지 같아지는 자리를 만든다 */
+const SAME_NICKNAME_OPINION = {
+  ...OPINION,
+  opinionId: 13,
+  content: '같은 닉네임으로 남긴 다른 흔적입니다.',
+}
+
 const BOOKS = [
   { bookId: 3, title: '모순' },
   { bookId: 5, title: '만조를 기다리며' },
@@ -405,6 +412,31 @@ describe('좋아요 관리', () => {
       expect(after.some((request) => request.url.includes('/me/likes'))).toBe(true)
       expect(after.some((request) => request.url.includes('/filter-books'))).toBe(true)
     })
+  })
+
+  it('닉네임이 같은 카드를 연달아 해제해도 두 번째 안내가 3초를 온전히 받는다', async () => {
+    // 자동 닫힘 타이머가 문구 문자열만 보고 돈다면, 문구가 같은 두 번째 해제는 첫 번째의
+    // 남은 시간을 물려받아 1초 만에 닫힌다 — 되돌릴 창이 그만큼 짧아진다(#358)
+    renderView({ opinions: [OPINION, SAME_NICKNAME_OPINION] })
+    await screen.findByText(OPINION.content)
+    const [firstHeart, secondHeart] = screen.getAllByRole('button', { name: HEART_LABEL })
+    if (!firstHeart || !secondHeart) throw new Error('같은 닉네임 카드 두 장이 서야 한다')
+
+    vi.useFakeTimers()
+    fireEvent.click(firstHeart)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SNACKBAR_DISMISS_MS - 1000)
+    })
+
+    fireEvent.click(secondHeart)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(SNACKBAR_DISMISS_MS - 1000)
+    })
+
+    // 문구가 같아도 대상이 다르면 타이머는 처음부터 다시 센다
+    expect(screen.getByText('밤샘낭독가님의 좋아요를 해제했어요')).toBeInTheDocument()
+    await waitForSnackbarToClose()
+    vi.useRealTimers()
   })
 
   it('고른 책이 도서 필터에서 사라지면 전체 보기로 되돌린다', async () => {

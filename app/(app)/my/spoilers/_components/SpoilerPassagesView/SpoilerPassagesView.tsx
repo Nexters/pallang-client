@@ -3,14 +3,12 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 
-import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
-import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { Select } from '@/app/_global/_components/Select/Select'
 import { Snackbar } from '@/app/_global/_components/Snackbar/Snackbar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type MyPassage, userQueries } from '@/app/_global/_queries/user.queries'
-import { RecordListSkeleton } from '@/app/_shared/user/_components/RecordListSkeleton/RecordListSkeleton'
+import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 import { SpoilerPassageCard } from '@/app/_shared/user/_components/SpoilerPassageCard/SpoilerPassageCard'
 import { SpoilerReleaseDialog } from '@/app/_shared/user/_components/SpoilerReleaseDialog/SpoilerReleaseDialog'
 import { useSpoilerRelease } from '@/app/_shared/user/_hooks/useSpoilerRelease'
@@ -69,59 +67,6 @@ export function SpoilerPassagesView() {
     },
   })
 
-  /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
-  function renderList() {
-    if (listQuery.isPending) return <RecordListSkeleton />
-    // 다음 페이지 실패는 아래 재시도 줄이 받는다 — 첫 페이지가 통째로 걸러져 비어 있을 때
-    // 여기로 흘러들면 이미 받은 목록 자리가 오류 화면으로 덮인다
-    if (listQuery.isError && !listQuery.isFetchNextPageError && passages.length === 0) {
-      return (
-        <ApiErrorFeedbackState
-          aria-label="스포일러 관리 오류"
-          title="목록을 불러오지 못했어요."
-          onRetry={() => {
-            void listQuery.refetch()
-          }}
-        />
-      )
-    }
-    // 다음 페이지가 남아 있으면 비어도 빈 상태로 끝내지 않는다 — sentinel이 유일한 트리거라
-    // 여기서 return하면 서버가 첫 20건을 통째로 걸러낸 경우 다음 페이지를 영영 못 부른다
-    if (passages.length === 0 && !listQuery.hasNextPage) {
-      // 시안의 빈 상태는 일러스트 없이 문구 한 줄뿐이라 FeedbackState를 쓰지 않는다
-      return (
-        <p className="flex flex-1 items-center justify-center text-center text-title-18md text-text-secondary">
-          등록한 스포일러가 없습니다
-        </p>
-      )
-    }
-    return (
-      <>
-        {/* 붙은 페이지가 전부 비었을 뿐 다음 페이지는 남았다 — 자리를 비우지 않고 골격으로 채운다 */}
-        {passages.length === 0 && !listQuery.isFetchNextPageError && <RecordListSkeleton />}
-        <ul className="flex flex-col gap-2">
-          {passages.map((passage) => (
-            <li key={passage.passageId}>
-              <SpoilerPassageCard passage={passage} onRelease={release.start} />
-            </li>
-          ))}
-        </ul>
-        {listQuery.isFetchNextPageError ? (
-          // 이어받기가 끊기면 목록이 조용히 멈춘다 — 끝자리에 다시 시도할 자리를 남긴다
-          <RetryMessage
-            message="더 불러오지 못했어요."
-            onRetry={() => {
-              void listQuery.fetchNextPage()
-            }}
-          />
-        ) : (
-          /* 목록 끝 sentinel — 화면에 들어오면 다음 페이지를 불러온다 */
-          <div ref={loadMoreRef} aria-hidden className="h-6 w-full shrink-0" />
-        )}
-      </>
-    )
-  }
-
   return (
     <>
       <ScreenLayout title="스포일러 관리">
@@ -142,7 +87,32 @@ export function SpoilerPassagesView() {
         </div>
 
         {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다 */}
-        <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">{renderList()}</div>
+        <div className="flex flex-1 flex-col gap-2 bg-bg-surface p-4">
+          <RecordPanel
+            label="스포일러 관리"
+            emptyMessage="등록한 스포일러가 없습니다"
+            isPending={listQuery.isPending}
+            isError={listQuery.isError}
+            isEmpty={passages.length === 0}
+            isFetching={listQuery.isFetching}
+            hasNextPage={listQuery.hasNextPage}
+            isFetchNextPageError={listQuery.isFetchNextPageError}
+            isFetchingNextPage={listQuery.isFetchingNextPage}
+            onRetry={() => {
+              void listQuery.refetch()
+            }}
+            onRetryNextPage={() => {
+              void listQuery.fetchNextPage()
+            }}
+            loadMoreRef={loadMoreRef}
+          >
+            {passages.map((passage) => (
+              <li key={passage.passageId}>
+                <SpoilerPassageCard passage={passage} onRelease={release.start} />
+              </li>
+            ))}
+          </RecordPanel>
+        </div>
       </ScreenLayout>
 
       <SpoilerReleaseDialog

@@ -5,9 +5,8 @@ import { useMemo, useRef } from 'react'
 
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type MyPassage, userQueries } from '@/app/_global/_queries/user.queries'
+import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 import { SpoilerPassageCard } from '@/app/_shared/user/_components/SpoilerPassageCard/SpoilerPassageCard'
-
-import { RecordPanel } from '../RecordPanel/RecordPanel'
 
 type SpoilerPanelProps = {
   bookId: number
@@ -44,6 +43,7 @@ export function SpoilerPanel({ bookId, onRelease }: SpoilerPanelProps) {
       isFetching={listQuery.isFetching}
       hasNextPage={listQuery.hasNextPage}
       isFetchNextPageError={listQuery.isFetchNextPageError}
+      isFetchingNextPage={listQuery.isFetchingNextPage}
       onRetry={() => {
         void listQuery.refetch()
       }}

@@ -48,7 +48,14 @@ describe('decorationBrushStyle', () => {
   it('형광펜은 붓 SVG 대신 반투명 띠를 깐다', () => {
     const style = decorationBrushStyle(decoration('HIGHLIGHT', '#FFA600'))
     expect(style.backgroundImage).toBeUndefined()
-    expect(style.backgroundColor).toBe('color-mix(in srgb, #FFA600 40%, transparent)')
+    expect(style.backgroundColor).toBe('color-mix(in srgb, #ffa600 40%, transparent)')
+  })
+
+  it('형광펜도 팔레트에 없는 색은 기본색으로 떨어뜨린다', () => {
+    // 모르는 색을 그대로 넘기면 color-mix(...)가 무효해져 CSSOM이 선언을 통째로 버리고,
+    // 하이라이트가 오류 없이 조용히 사라진다(#146)
+    const style = decorationBrushStyle(decoration('HIGHLIGHT', 'not-a-color'))
+    expect(style.backgroundColor).toBe('color-mix(in srgb, #ed6243 40%, transparent)')
   })
 
   it('동그라미만 배경 영역을 사방으로 넓힌다', () => {

@@ -91,7 +91,7 @@ function toBrushImage(effectType: Exclude<EffectType, 'HIGHLIGHT'>, color: strin
 export function decorationBrushStyle({ color, effectType }: Decoration): CSSProperties {
   // 형광펜은 붓 자국이 아니라 형광펜으로 그은 띠다. 글자가 읽히도록 반투명하게 깐다.
   if (effectType === 'HIGHLIGHT') {
-    return { backgroundColor: `color-mix(in srgb, ${color} 40%, transparent)` }
+    return { backgroundColor: `color-mix(in srgb, ${toPaletteColor(color)} 40%, transparent)` }
   }
   return {
     backgroundImage: toBrushImage(effectType, toPaletteColor(color)),
