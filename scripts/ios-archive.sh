@@ -67,8 +67,9 @@ echo "✅ ${EXPORT_DIR}/ 에 .ipa 생성 완료 — Transporter 앱으로 App St
 # 그 사이 실제로 올라간 빌드가 있으면 레포의 카운터가 App Store Connect보다 뒤처진다.
 # (1.3.0/빌드 12에서 1.3.1(15)이 올라가 있던 실제 사고가 있었다.) 그래서 사람 손에 맡기지 않는다.
 # 태그는 올린 ipa와 커밋을 잇는 유일한 표식이라 dev/운영을 이름에서 가른다.
+# annotated로 단다 — lightweight 태그는 push --follow-tags가 그냥 무시한다.
 BUILD_NUMBER=$(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ")
 TAG="ios-v${MARKETING_VERSION}-b${BUILD_NUMBER}$([ "$BUILD_PARITY" -eq 0 ] || echo '-dev')"
 git commit -q -m "chore: iOS ${BUILD_KIND%% *} 아카이브 ${TAG}" -- "$PBXPROJ"
-git tag "$TAG"
+git tag -a "$TAG" -m "iOS ${BUILD_KIND}"
 echo "✅ 커밋 + 태그 ${TAG} — 푸시: git push origin HEAD --follow-tags"

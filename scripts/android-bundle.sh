@@ -40,5 +40,5 @@ echo "   Play Console → 앱 번들 탐색기 또는 프로덕션 트랙에 업
 # iOS와 같은 이유로 여기서 커밋한다 — scripts/ios-archive.sh의 주석 참고.
 TAG="aos-v${VERSION_NAME}-vc${VERSION_CODE}$([ -z "${CAP_SERVER_URL:-}" ] || echo '-dev')"
 git commit -q -m "chore: Android 번들 ${TAG}" -- "$BUILD_GRADLE"
-git tag "$TAG"
+git tag -a "$TAG" -m "Android ${CAP_SERVER_URL:+dev }번들 ${VERSION_NAME} / versionCode ${VERSION_CODE}"
 echo "✅ 커밋 + 태그 ${TAG} — 푸시: git push origin HEAD --follow-tags"
