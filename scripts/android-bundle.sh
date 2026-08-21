@@ -20,7 +20,7 @@ echo "▶ versionName ← package.json: ${VERSION_NAME}"
 # Play는 같은 versionCode를 두 번 받지 않는다. 빌드마다 올려 둔다(iOS의 CURRENT_PROJECT_VERSION과 같은 역할).
 perl -pi -e 's/(versionCode )(\d+)/$1 . ($2 + 1)/e' "$BUILD_GRADLE"
 VERSION_CODE=$(perl -ne 'print "$1\n" and last if /versionCode (\d+)/' "$BUILD_GRADLE")
-echo "▶ versionCode 올림 → ${VERSION_CODE} (build.gradle 변경 — 커밋할 것)"
+echo "▶ versionCode 올림 → ${VERSION_CODE}"
 
 if [ ! -f android/keystore.properties ]; then
   echo "✖ android/keystore.properties가 없어 서명할 수 없습니다." >&2
@@ -36,3 +36,9 @@ cd ..
 AAB=android/app/build/outputs/bundle/release/app-release.aab
 echo "✅ ${AAB} 생성 완료 (${VERSION_NAME} / versionCode ${VERSION_CODE})"
 echo "   Play Console → 앱 번들 탐색기 또는 프로덕션 트랙에 업로드하세요."
+
+# iOS와 같은 이유로 여기서 커밋한다 — scripts/ios-archive.sh의 주석 참고.
+TAG="aos-v${VERSION_NAME}-vc${VERSION_CODE}$([ -z "${CAP_SERVER_URL:-}" ] || echo '-dev')"
+git commit -q -m "chore: Android 번들 ${TAG}" -- "$BUILD_GRADLE"
+git tag "$TAG"
+echo "✅ 커밋 + 태그 ${TAG} — 푸시: git push origin HEAD --follow-tags"

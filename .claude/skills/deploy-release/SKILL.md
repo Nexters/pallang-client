@@ -130,7 +130,7 @@ git push origin HEAD:develop --follow-tags
 | 값                        | 출처                                           | 비고                                                                               |
 | ------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `MARKETING_VERSION`       | `package.json` 버전에서 prerelease 접미사 제거 | App Store 노출 버전. **마침표로 나뉜 정수만 허용** — `1.1.0-3`은 업로드가 거부된다 |
-| `CURRENT_PROJECT_VERSION` | 아카이브마다 +1                                | TestFlight 구분자. 같은 번호를 두 번 못 올린다                                     |
+| `CURRENT_PROJECT_VERSION` | 아카이브마다 +1 (dev=홀수, 운영=짝수)          | TestFlight 구분자. 같은 번호를 두 번 못 올린다                                     |
 
 ```bash
 pnpm ios:archive        # 운영 URL 로드 (www) — 제출용
@@ -138,16 +138,37 @@ pnpm ios:archive:dev    # dev URL 로드 — 내부 테스트용
 ```
 
 **dev 빌드와 운영 빌드는 표시 버전이 같다.** 가르는 건 빌드 번호와 로드하는 서버 URL이다.
-TestFlight에서 어느 쪽인지 구분하려면 빌드 번호를 적어둔다.
 
-아카이브가 `pbxproj`를 고치므로 **끝나면 커밋한다.** 안 하면 다음 아카이브가 같은 빌드
-번호에서 다시 시작해 App Store Connect가 거부한다.
+아카이브가 `pbxproj`를 고치고 **스스로 커밋·태그까지 한다.** 태그가 dev/운영을 가른다:
+
+```
+ios-v1.3.2-b18       운영 아카이브 (짝수)
+ios-v1.3.2-b17-dev   dev 아카이브 (홀수)
+aos-v1.3.2-vc5       Android 운영 번들 / -dev
+```
+
+`v*` 릴리스 태그와 접두사가 달라 `git tag -l 'v*'`(2번)에 섞이지 않는다.
+
+**푸시는 스크립트가 하지 않는다 — 업로드 전에 사람이 민다.**
+
+```bash
+git push origin HEAD --follow-tags
+```
+
+이 커밋을 안 밀고 ipa만 올리면 레포의 빌드 카운터가 App Store Connect보다 뒤처지고,
+다음 아카이브가 이미 올라간 빌드보다 낮은 번호를 달고 나온다. 그 빌드는 업로드가 통과해도
+TestFlight에서 최신으로 잡히지 않아 테스터가 옛 빌드를 계속 본다.
+(`1.3.1 (15)`가 올라가 있는데 레포는 `1.3.0` / 빌드 12였던 실제 사고.)
+
+**아카이브 전에 `git tag -l 'ios-*' | tail -1`이 App Store Connect의 최신 빌드와 맞는지 본다.**
+어긋나 있으면 `package.json` 버전과 `CURRENT_PROJECT_VERSION`을 실제 상태 위로 올려 맞춘 뒤 아카이브한다.
 
 **앱 배포는 웹 배포 뒤에 한다.** 앱이 운영 URL을 원격 로드하므로, 웹이 먼저 나가야
 제출한 빌드가 의도한 화면을 띄운다.
 
 ---
 
-ponytail: 로컬 머지 없이 원격 ref만 밀어 fast-forward. 체인지로그 생성은 `--generate-notes`에 위임.
+ponytail: 아카이브 커밋·태그는 스크립트가 직접 한다 — 문서로 "커밋할 것"이라 적어둔 3개월이
+실제로 안 지켜졌다. 푸시만 사람에게 남긴다. 로컬 머지 없이 원격 ref만 밀어 fast-forward. 체인지로그 생성은 `--generate-notes`에 위임.
 버전은 `pnpm version`이 이미 하는 일에 얹었다 — 커스텀 스크립트 없음.
 배포 후 헬스체크, 롤백 절차는 실제로 필요해질 때 추가.

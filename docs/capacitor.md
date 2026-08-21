@@ -347,9 +347,12 @@ API 서버는 앱이 고르지 않는다. 앱은 웹을 로드할 뿐이고, 그
    pnpm ios:archive       # 운영(www.pallang.co.kr) 빌드 — 심사 제출용
    ```
    `build-ios/export/`에 .ipa가 생성된다. 서명은 자동(팀 DQ3Q4Z82DZ, `ExportOptions.plist`).
+   아카이브가 끝나면 스크립트가 `pbxproj`를 **스스로 커밋하고 태그를 단다** — `ios-v1.3.2-b18`(운영) / `ios-v1.3.2-b17-dev`(dev). 푸시는 하지 않으니 `git push origin HEAD --follow-tags`로 올린다.
 3. **업로드**: Transporter 앱(App Store에서 설치)에 .ipa를 드래그해 업로드.
 4. App Store Connect → TestFlight 탭에서 처리 완료(수 분) 후 내부 테스터 추가. 수출 규정 질문은 `ITSAppUsesNonExemptEncryption=false`로 생략된다.
 5. 버전은 `MARKETING_VERSION`, 빌드 번호는 `CURRENT_PROJECT_VERSION`(pbxproj) — 같은 버전을 다시 올릴 땐 빌드 번호를 올려야 한다.
+
+**올리기 전에 레포의 카운터가 App Store Connect보다 뒤처지지 않았는지 본다.** 아카이브 커밋을 푸시하지 않은 채 업로드하면 다음 아카이브가 이미 올라간 빌드보다 낮은 번호를 달고 나온다 — 업로드는 통과해도 TestFlight에서 최신으로 잡히지 않아 테스터가 옛 빌드를 계속 본다. 실제로 `1.3.1 (15)`가 올라가 있는데 레포는 `1.3.0` / 빌드 12에 머물러 있던 적이 있다. `git tag -l 'ios-*' | tail -1`이 ASC의 최신 빌드와 맞는지 확인하면 된다.
 
 ## Google Play 배포 (릴리스 번들 · AAB)
 
@@ -404,7 +407,7 @@ pnpm android:bundle:dev    # dev 서버를 보는 내부 테스트 빌드
 
 산출물은 `android/app/build/outputs/bundle/release/app-release.aab`.
 
-**빌드가 `build.gradle`을 고치므로 끝나면 커밋한다.** 안 하면 다음 빌드가 같은 `versionCode`에서 다시 시작해 Play가 거부한다(iOS의 `pbxproj`와 같은 함정).
+**빌드가 `build.gradle`을 고치고 스스로 커밋·태그한다**(`aos-v1.3.2-vc5`, dev는 `-dev` 접미사). 커밋을 빠뜨리면 다음 빌드가 같은 `versionCode`에서 다시 시작해 Play가 거부하므로 사람 손에 맡기지 않는다. 푸시는 하지 않는다 — `git push origin HEAD --follow-tags`.
 
 ### 올리기 전 확인
 

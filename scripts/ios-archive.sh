@@ -45,7 +45,7 @@ echo "▶ 표시 버전 ← package.json: ${MARKETING_VERSION}"
 # ponytail: pbxproj를 직접 치환 — agvtool은 프로젝트 설정을 따로 요구한다. 값이 여러 개라도
 # 각각 제 값에서 오르므로 Debug/Release가 갈라져도 견딘다.
 perl -pi -e "s/(CURRENT_PROJECT_VERSION = )(\d+)/\$1 . do { my \$n = \$2 + 1; \$n++ if \$n % 2 != ${BUILD_PARITY}; \$n }/e" "$PBXPROJ"
-echo "▶ 빌드 번호 올림 → $(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ") ($([ "$BUILD_PARITY" -eq 0 ] && echo '짝수 = 운영, 심사 제출 가능' || echo '홀수 = dev, 심사 제출 금지')) (pbxproj 변경 — 커밋할 것)"
+echo "▶ 빌드 번호 올림 → $(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ") ($([ "$BUILD_PARITY" -eq 0 ] && echo '짝수 = 운영, 심사 제출 가능' || echo '홀수 = dev, 심사 제출 금지'))"
 
 ARCHIVE=build-ios/App.xcarchive
 EXPORT_DIR=build-ios/export
@@ -62,3 +62,13 @@ xcodebuild -exportArchive -archivePath "$ARCHIVE" \
   -exportPath "$EXPORT_DIR" -allowProvisioningUpdates
 
 echo "✅ ${EXPORT_DIR}/ 에 .ipa 생성 완료 — Transporter 앱으로 App Store Connect에 업로드하세요."
+
+# 빌드 번호를 올린 채 커밋하지 않으면 다음 아카이브가 같은 번호에서 다시 시작하고,
+# 그 사이 실제로 올라간 빌드가 있으면 레포의 카운터가 App Store Connect보다 뒤처진다.
+# (1.3.0/빌드 12에서 1.3.1(15)이 올라가 있던 실제 사고가 있었다.) 그래서 사람 손에 맡기지 않는다.
+# 태그는 올린 ipa와 커밋을 잇는 유일한 표식이라 dev/운영을 이름에서 가른다.
+BUILD_NUMBER=$(perl -ne 'print "$1\n" and last if /CURRENT_PROJECT_VERSION = (\d+)/' "$PBXPROJ")
+TAG="ios-v${MARKETING_VERSION}-b${BUILD_NUMBER}$([ "$BUILD_PARITY" -eq 0 ] || echo '-dev')"
+git commit -q -m "chore: iOS ${BUILD_KIND%% *} 아카이브 ${TAG}" -- "$PBXPROJ"
+git tag "$TAG"
+echo "✅ 커밋 + 태그 ${TAG} — 푸시: git push origin HEAD --follow-tags"
