@@ -7,6 +7,8 @@ import type { DOMAttributes } from 'react'
 export type SheetDragBind = () => DOMAttributes<EventTarget>
 
 type SheetDragOptions = {
+  /** 끄면 "끌 수 있다"는 신호(손잡이)가 있을 때만 켠다 — 꺼진 시트는 이전과 같은 정적 모달이다 */
+  enabled?: boolean
   /** 위로 끌 때 시트가 더 올라갈 자리가 있는지. 없으면 위 드래그는 안쪽 스크롤에 넘긴다 */
   canExpand?: boolean
   /** 끄는 동안 — dy는 시작점 기준 세로 이동(px, 아래가 양수). sheet는 props를 받은 시트 요소 */
@@ -32,6 +34,7 @@ type SheetDragOptions = {
  * 끌고 난 뒤의 click은 캡처 단계에서 막아 버튼이 눌리지 않는다.
  */
 export function useSheetDrag({
+  enabled = true,
   canExpand = false,
   onMove,
   onEnd,
@@ -64,6 +67,7 @@ export function useSheetDrag({
       onMove(dy, currentTarget)
     },
     {
+      enabled,
       axis: 'y',
       filterTaps: true,
       // filterTaps는 threshold를 3px로 올린다 — 그러면 첫 3px의 touchmove가 preventDefault 없이 지나가고,
