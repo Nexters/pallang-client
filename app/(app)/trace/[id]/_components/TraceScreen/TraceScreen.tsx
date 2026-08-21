@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 
+import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
+import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { cn } from '@/app/_global/_services/cn.service'
 import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
@@ -11,6 +13,7 @@ import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useTraceCreateNav } from '../../_hooks/useTraceCreateNav'
 import { useTraceSheet } from '../../_hooks/useTraceSheet'
 import { isSpoilerCovered } from '../../_services/spoiler.service'
+import { OpinionComposer } from '../OpinionComposer/OpinionComposer'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
 import { TraceCreateFab } from '../TraceCreateFab/TraceCreateFab'
 import { TraceListPanel } from '../TraceListPanel/TraceListPanel'
@@ -36,15 +39,25 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
   // 화면 하단을 차지하는 것(상세 오버레이·의견 시트·댓글 입력바)이 떠 있는 동안 남기기 FAB을 숨긴다.
   // 그것들은 목록 흐름 안에, FAB은 셸에 있어 형제로 공존하므로 열림 여부만 셸이 받아 든다
   const [isBottomBusy, setIsBottomBusy] = useState(false)
+  // '의견 남기기'는 작성 플로우로 떠나는 대신 그 자리의 입력바로 받는다(#368)
+  const [isOpinionComposerOpen, setIsOpinionComposerOpen] = useState(false)
+  const runWithLogin = useLoginGate()
 
   const createNav = useTraceCreateNav({
     bookId,
     bookTitle: stage.bookTitle,
     bookCoverImageUrl: stage.bookCoverImageUrl,
-    activePassage: stage.activePassage,
-    pageNumber: stage.highlight.page,
     groupId,
   })
+
+  const openOpinionComposer = () => {
+    // 대목이 도착해야 붙일 대상이 정해진다 — 없으면 여는 것 자체가 의미가 없다
+    if (!stage.activePassage) return
+    // 게이트는 입력바를 열기 전에 선다 — 비로그인이 다 쓴 뒤에 로그인으로 끌려가 입력을 잃지 않게
+    runWithLogin(() => {
+      setIsOpinionComposerOpen(true)
+    }, LOGIN_GATE_MESSAGE.traceCreate)
+  }
 
   // 스포일러는 대목 단위다(#49) — 스테이지 가림막과 같은 조건으로 목록도 가리고, 해제하면 함께 열린다
   const isTraceListMasked = isSpoilerCovered({
@@ -97,10 +110,22 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
             sheet={sheet}
           />
         </div>
+        {/* 의견 입력바 — 어두운 패널 위에 얹힌다. 등록되면 목록 갱신과 함께 접힌다 */}
+        {isOpinionComposerOpen && (
+          <OpinionComposer
+            bookId={bookId}
+            activePassage={stage.activePassage}
+            pageNumber={stage.highlight.page}
+            groupId={groupId}
+            onClose={() => {
+              setIsOpinionComposerOpen(false)
+            }}
+          />
+        )}
       </div>
       {/* 남기기 버튼은 하단을 차지하는 것들과 같은 자리를 다투므로 그것들이 없을 때만 뜬다 */}
-      {!isBottomBusy && (
-        <TraceCreateFab onAddOpinion={createNav.addOpinion} onAddRecord={createNav.addRecord} />
+      {!isBottomBusy && !isOpinionComposerOpen && (
+        <TraceCreateFab onAddOpinion={openOpinionComposer} onAddRecord={createNav.addRecord} />
       )}
     </TraceMessageHost>
   )
