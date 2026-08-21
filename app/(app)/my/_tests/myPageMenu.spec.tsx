@@ -46,7 +46,6 @@ describe('마이페이지 항목 구성', () => {
 
     expect(itemsOf('설정')).toEqual([
       '공지사항',
-      '배경색 관리',
       '스포일러 관리',
       '좋아요 관리',
       '알림 설정',
@@ -67,8 +66,6 @@ describe('마이페이지 항목 구성', () => {
   it('화면이 없는 항목은 눌리지 않게 잠근다', () => {
     renderLoggedIn()
 
-    expect(screen.queryByRole('link', { name: '배경색 관리' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '배경색 관리' })).toBeDisabled()
     expect(screen.queryByRole('link', { name: '알림 설정' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '알림 설정' })).toBeDisabled()
   })
@@ -76,7 +73,7 @@ describe('마이페이지 항목 구성', () => {
   it('갈 곳이 없는 항목에는 이동을 뜻하는 chevron을 두지 않는다', () => {
     renderLoggedIn()
 
-    const dead = screen.getByRole('button', { name: '배경색 관리' })
+    const dead = screen.getByRole('button', { name: '알림 설정' })
     const alive = screen.getByRole('link', { name: '공지사항' })
 
     // vitest는 svg import를 data URI 문자열로 넘겨 태그가 <svg>로 서지 않는다 —
