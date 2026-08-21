@@ -225,9 +225,33 @@ async function renderPage(
   target?: DeepLinkTarget,
 ) {
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+  // 입력바에서 그 자리에 등록한 의견 — 목록 갱신(invalidate) 후의 재조회에 실려 화면에 나타난다
+  const createdOpinions: (typeof manyOpinionSeed)[number][] = []
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockImplementation((url: string) => {
+    vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      // 의견 생성(POST /opinions) — 등록된 내용을 그 대목의 목록 앞에 붙인다
+      if (init?.method === 'POST' && (url.split('?')[0] ?? '').endsWith('/opinions')) {
+        // customFetch는 body를 JSON 문자열로 만든다 — BodyInit의 다른 갈래는 이 앱 경로에 없다
+        const body = JSON.parse(init.body as string) as { passageId: number; content: string }
+        createdOpinions.unshift({
+          opinionId: 900 + createdOpinions.length,
+          userId: 9,
+          nickname: '나',
+          content: body.content,
+          likeCount: 0,
+          commentCount: 0,
+          createdAt: '2026-08-21T09:00:00.000Z',
+        })
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: { opinionId: 901, passageId: body.passageId, merged: true },
+            }),
+          ),
+        )
+      }
+
       const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
       if (pageMatch) {
         if (failing === 'passages') return Promise.resolve(new Response('{}', { status: 500 }))
@@ -242,7 +266,7 @@ async function renderPage(
       const opinionMatch = /\/passages\/(\d+)\/opinions/.exec(url)
       if (opinionMatch) {
         if (failing === 'opinions') return Promise.resolve(new Response('{}', { status: 500 }))
-        const seed = opinionSeedByPassage[Number(opinionMatch[1])] ?? []
+        const seed = [...createdOpinions, ...(opinionSeedByPassage[Number(opinionMatch[1])] ?? [])]
         const query = new URLSearchParams(url.split('?')[1] ?? '')
         const size = Number(query.get('size') ?? '20')
         const page = Number(query.get('page') ?? '0')
@@ -652,42 +676,56 @@ describe('ReaderHighlightsPage', () => {
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
-  it('로그인 상태에서 의견 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
+  it('로그인 상태에서 의견 남기기를 누르면 화면을 떠나지 않고 그 자리에 의견 입력바가 열린다', async () => {
     await renderPage()
     // 대목이 도착해야 붙일 대상이 정해진다
     await screen.findByText('첫 번째 대목 인용문')
 
     clickFabAction('의견 남기기')
 
-    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
-    expect(url.pathname).toBe('/trace/new')
-    // 이 대목에 병합되도록 대목 정보가 함께 실린다
-    expect(url.searchParams.get('passageId')).toBe('71')
-    expect(url.searchParams.get('page')).toBe('7')
-    expect(url.searchParams.get('quote')).toBe('첫 번째 대목 인용문')
-    expect(url.searchParams.get('bookTitle')).toBe('모순')
+    expect(screen.getByPlaceholderText('의견을 입력해주세요')).toBeInTheDocument()
+    expect(pushMock).not.toHaveBeenCalled()
+    // 남기기 버튼은 입력바와 같은 자리를 다투므로 입력바가 떠 있는 동안 사라진다
+    expect(screen.queryByRole('button', { name: '남기기' })).not.toBeInTheDocument()
   })
 
-  it('의견 남기기는 대목의 꾸밈까지 함께 넘긴다 — 받는 쪽이 꾸미기를 건너뛰고 의견 작성부터 연다', async () => {
+  it('입력바에서 등록하면 보고 있는 대목과 꾸밈이 실려 그 자리에서 의견이 생성된다', async () => {
     await renderPage([8])
     await screen.findByText('꾸며진 대목 인용문')
 
     clickFabAction('의견 남기기')
+    fireEvent.change(screen.getByPlaceholderText('의견을 입력해주세요'), {
+      target: { value: '그 자리에서 남긴 의견' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '의견 등록' }))
 
-    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
-    expect(url.searchParams.get('passageId')).toBe('81')
-    expect(url.searchParams.get('deco')).toBe('0.10.WAVY.06D6A0')
+    // 새 의견이 목록 갱신에 실려 나타난다 — 입력바는 등록이 끝나면 접힌다
+    expect(await screen.findByText('그 자리에서 남긴 의견')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('의견을 입력해주세요')).not.toBeInTheDocument()
+    expect(pushMock).not.toHaveBeenCalled()
+
+    // 서버가 받은 내용이 씨앗을 물고 가던 때와 같다 — 보고 있는 대목에 병합, 꾸밈 유지
+    const fetchMock = vi.mocked(globalThis.fetch)
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')
+    if (!postCall) throw new Error('의견 생성 요청이 없다')
+    const body = JSON.parse(postCall[1]?.body as string) as Record<string, unknown>
+    expect(body['passageId']).toBe(81)
+    expect(body['quotedText']).toBe('꾸며진 대목 인용문')
+    expect(body['decorations']).toEqual([
+      { startOffset: 0, endOffset: 10, effectType: 'WAVY', color: '#06D6A0' },
+    ])
   })
 
-  it('꾸밈이 없는 대목에서는 꾸밈을 싣지 않는다 — 받는 쪽이 꾸미기부터 시작한다', async () => {
+  it('입력바 바깥을 탭하면 등록 없이 입력바만 접힌다', async () => {
     await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
 
     clickFabAction('의견 남기기')
+    fireEvent.click(screen.getByRole('button', { name: '의견 입력 닫기' }))
 
-    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
-    expect(url.searchParams.get('passageId')).toBe('71')
-    expect(url.searchParams.has('deco')).toBe(false)
+    expect(screen.queryByPlaceholderText('의견을 입력해주세요')).not.toBeInTheDocument()
+    // 남기기 버튼이 다시 선다
+    expect(screen.getByRole('button', { name: '남기기' })).toBeInTheDocument()
   })
 
   it('기록 남기기는 대목을 물지 않고 새 대목으로 보낸다 — 의견 남기기와 갈리는 지점이다', async () => {
