@@ -8,7 +8,7 @@ import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvi
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { commentQueries, REPLY_PREVIEW_SIZE } from '@/app/_global/_queries/comment.queries'
 
-import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
+import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 
 const { authState } = vi.hoisted(() => ({ authState: { isAuthenticated: true } }))
 
@@ -314,7 +314,7 @@ async function renderView() {
     <QueryClientProvider client={client}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <TraceCollapseView bookId={BOOK_ID} />
+          <TraceScreen bookId={BOOK_ID} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,
@@ -323,16 +323,16 @@ async function renderView() {
   return client
 }
 
-/** index번째 흔적의 댓글 아이콘 — 시트가 열려 있으면 시트 안의 버튼을 잡는다 */
+/** index번째 흔적의 댓글 아이콘.
+    답글 시트가 떠 있는 동안 뒤의 목록은 보조기기 트리에서 빠지므로 hidden까지 훑어 잡는다 —
+    시트를 띄운 채로 뒤 카드의 댓글 수가 갱신되는지 보는 테스트가 있다 */
 function commentToggle(index: number) {
-  const sheet = screen.queryByRole('dialog')
-  const scope = sheet ? within(sheet) : screen
-  const toggle = scope.getAllByRole('button', { name: '댓글 보기' })[index]
+  const toggle = screen.getAllByRole('button', { name: '댓글 보기', hidden: true })[index]
   if (!toggle) throw new Error(`댓글 보기 버튼 ${String(index)}번을 찾지 못했다`)
   return toggle
 }
 
-/** 흔적 목록에서 첫 흔적의 댓글을 그 자리에 펼친다 */
+/** 첫 흔적의 댓글 아이콘을 눌러 답글 시트를 올린다 */
 async function openFirstTraceComments() {
   const client = await renderView()
   fireEvent.click(commentToggle(0))
@@ -340,29 +340,11 @@ async function openFirstTraceComments() {
   return client
 }
 
-/** 펼쳐 둔 댓글을 다시 접는다 */
+/** 답글 시트를 내린다 */
 async function collapseComments() {
-  fireEvent.click(commentToggle(0))
-  await waitFor(() => {
-    expect(screen.queryByLabelText('댓글 목록')).not.toBeInTheDocument()
-  })
-}
-
-/** "N개의 의견" → 시트 → 첫 의견의 답글 화면까지 들어간다 */
-async function openReplySheet() {
-  const client = await renderView()
-  fireEvent.click(screen.getByRole('button', { name: /개의 의견/ }))
-  await screen.findByRole('dialog', { name: '의견 (2)' })
-  fireEvent.click(commentToggle(0))
-  await screen.findByText('내가 쓴 댓글')
-  return client
-}
-
-/** 시트를 닫는다 — 답글 화면의 퇴장 전환을 기다리지 않고 바로 내용이 내려간다 */
-async function closeSheet() {
   await userEvent.click(screen.getByRole('button', { name: '닫기' }))
   await waitFor(() => {
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('댓글 목록')).not.toBeInTheDocument()
   })
 }
 
@@ -374,7 +356,7 @@ async function revealAllReplies() {
   await screen.findByText('6번째 답글')
 }
 
-describe('의견 바텀시트와 답글 흐름', () => {
+describe('의견 목록 시트와 답글 시트 흐름', () => {
   beforeEach(() => {
     authState.isAuthenticated = true
     apiFailures.commentList = 0
@@ -390,41 +372,43 @@ describe('의견 바텀시트와 답글 흐름', () => {
     vi.unstubAllGlobals()
   })
 
-  it('"N개의 의견"을 누르면 의견 목록 바텀시트가 열린다', async () => {
+  it('"N개의 의견"을 누르면 목록 시트가 화면을 채우도록 올라온다', async () => {
     await renderView()
+    const handle = screen.getByRole('button', { name: '의견 목록 펼치기' })
+    expect(handle).toHaveAttribute('aria-expanded', 'false')
 
     fireEvent.click(screen.getByRole('button', { name: /개의 의견/ }))
 
-    const sheet = await screen.findByRole('dialog', { name: '의견 (2)' })
-    expect(within(sheet).getByText('첫 번째 흔적')).toBeInTheDocument()
-    expect(within(sheet).getByText('두 번째 흔적')).toBeInTheDocument()
-    // 뒤로가기는 자리만 지킨다(제목이 좌우로 튀지 않게) — 목록 화면에서는 눌리는 대상이 아니다
-    expect(within(sheet).queryByRole('button', { name: '뒤로' })).not.toBeInTheDocument()
+    // 별도 모달이 아니라 원래 있던 시트가 올라온다 — 목록은 그 자리에 그대로다
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '의견 목록 접기' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+    expect(screen.getByText('첫 번째 흔적')).toBeInTheDocument()
+    expect(screen.getByText('두 번째 흔적')).toBeInTheDocument()
   })
 
-  it('시트의 의견 카드에서 답글 버튼을 누르면 답글 화면으로 전환된다', async () => {
+  it('손잡이를 누르면 시트가 두 높이를 오간다', async () => {
     await renderView()
-    fireEvent.click(screen.getByRole('button', { name: /개의 의견/ }))
-    await screen.findByRole('dialog', { name: '의견 (2)' })
 
-    fireEvent.click(commentToggle(0))
+    fireEvent.click(screen.getByRole('button', { name: '의견 목록 펼치기' }))
+    expect(screen.getByRole('button', { name: '의견 목록 접기' })).toBeInTheDocument()
 
-    expect(await screen.findByRole('dialog', { name: '답글 (7)' })).toBeInTheDocument()
-    expect(await screen.findByText('내가 쓴 댓글')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '의견 목록 접기' }))
+    expect(screen.getByRole('button', { name: '의견 목록 펼치기' })).toBeInTheDocument()
   })
 
-  it('흔적의 댓글 아이콘을 누르면 다른 화면으로 넘어가지 않고 그 자리에 펼쳐진다', async () => {
+  it('흔적의 댓글 아이콘을 누르면 답글 시트가 목록 위로 겹쳐 올라온다', async () => {
     await openFirstTraceComments()
 
-    // 페이지에서는 상세로도, 시트로도 넘어가지 않는다 — 흔적 바로 아래로 열린다
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('댓글 목록')).toBeInTheDocument()
-    expect(commentToggle(0)).toHaveAttribute('aria-expanded', 'true')
-    // 다른 흔적의 댓글까지 함께 열리지는 않는다
-    expect(commentToggle(1)).toHaveAttribute('aria-expanded', 'false')
+    const sheet = await screen.findByRole('dialog', { name: '답글 (7)' })
+    // 원본 의견이 답글의 머리로 함께 실려 온다
+    expect(within(sheet).getByText('첫 번째 흔적')).toBeInTheDocument()
+    expect(within(sheet).getByLabelText('댓글 목록')).toBeInTheDocument()
   })
 
-  it('펼친 댓글에는 입력바가 딸려 오고, 다시 누르면 함께 접힌다', async () => {
+  it('답글 시트에는 입력바가 딸려 오고, 내리면 함께 사라진다', async () => {
     await openFirstTraceComments()
     expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
     // 입력바와 남기기 FAB은 화면 하단 같은 자리를 다툰다 — 겹치지 않게 FAB이 물러난다
@@ -436,27 +420,14 @@ describe('의견 바텀시트와 답글 흐름', () => {
     expect(screen.getByRole('button', { name: '남기기' })).toBeInTheDocument()
   })
 
-  it('답글 화면에서 뒤로가기를 누르면 의견 목록 화면으로 돌아간다', async () => {
-    await openReplySheet()
+  it('답글 시트를 내리면 뒤에 있던 흔적 목록이 그대로 남아 있다', async () => {
+    await openFirstTraceComments()
 
-    fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
+    await collapseComments()
 
-    expect(await screen.findByRole('dialog', { name: '의견 (2)' })).toBeInTheDocument()
-    // 답글 화면은 퇴장 전환이 끝나면 내려간다
-    await waitFor(() => {
-      expect(screen.queryByText('내가 쓴 댓글')).not.toBeInTheDocument()
-    })
-    const sheet = screen.getByRole('dialog')
-    expect(within(sheet).getByText('두 번째 흔적')).toBeInTheDocument()
-  })
-
-  it('답글 화면에서 시트를 닫으면 입력바도 함께 사라진다', async () => {
-    await openReplySheet()
-    expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
-
-    await closeSheet()
-    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
-    expect(screen.queryByText('내가 쓴 댓글')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByText('첫 번째 흔적')).toBeInTheDocument()
+    expect(screen.getByText('두 번째 흔적')).toBeInTheDocument()
   })
 
   it('댓글이 하나도 없으면 첫 댓글을 권하는 안내가 자리를 지킨다', async () => {
@@ -593,7 +564,7 @@ describe('의견 바텀시트와 답글 흐름', () => {
     expect(postCalls).toHaveLength(0)
   })
 
-  it('대목이 바뀌면 펼쳐 둔 댓글과 입력바가 함께 닫힌다', async () => {
+  it('대목이 바뀌면 답글 시트가 입력바째 닫힌다', async () => {
     await renderView()
     const card = screen.getByText('첫 번째 대목 인용문')
     fireEvent.click(commentToggle(0))
@@ -714,13 +685,12 @@ describe('의견 바텀시트와 답글 흐름', () => {
     expect(client.getQueryState(otherKey)?.isInvalidated).toBe(false)
   })
 
-  it('답글 화면이 덮고 있는 동안 뒤의 의견 목록은 포커스 대상에서 빠진다', async () => {
-    await openReplySheet()
+  it('답글 시트가 덮고 있는 동안 뒤의 흔적 목록은 포커스 대상에서 빠진다', async () => {
+    await openFirstTraceComments()
 
-    const sheet = screen.getByRole('dialog')
-    const listArea = within(sheet).getByText('두 번째 흔적').closest('[inert]')
-    // 목록이 답글 화면 아래에 남아 있어도 포커스·보조기기로는 닿지 않아야 한다
-    expect(listArea).not.toBeNull()
+    // 목록이 시트 아래에 남아 있어도 포커스·보조기기로는 닿지 않아야 한다
+    expect(screen.queryByRole('button', { name: '댓글 보기' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: '댓글 보기', hidden: true })).toHaveLength(2)
   })
 
   it('댓글 더보기가 실패해도 이미 보이던 댓글은 남는다', async () => {
@@ -846,7 +816,7 @@ describe('의견 바텀시트와 답글 흐름', () => {
     expect(countRepliesCalls()).toBe(repliesCallsBeforeRemove)
   })
 
-  it('가림막이 다시 씌워지면 펼쳐 둔 댓글과 입력바가 함께 닫힌다', async () => {
+  it('가림막이 다시 씌워지면 답글 시트가 입력바째 닫힌다', async () => {
     stageState.isSpoiler = true
     await renderView()
 

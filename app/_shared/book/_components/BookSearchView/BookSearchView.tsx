@@ -24,17 +24,21 @@ type BookSearchViewProps = {
   /** 알라딘 결과의 '직접 추가하기'가 부른다 — 검색바 옆 버튼이 사라진 뒤로는 이 자리뿐이다. */
   onAddManually: () => void
   onPick: (book: SelectedBook) => void
-  onSelectExternal: (book: ExternalBook) => void
-  /** 시트에서 지금 후보로 고른 책. 목록·캐러셀에 선택 테두리를 그리는 데만 쓴다. */
+  /** 외부(알라딘) 책도 탭은 후보 선택이다(#343) — 확정은 시트 footer의 '등록하기'가 맡는다. */
+  onPickExternal: (book: ExternalBook) => void
+  /** 시트에서 지금 후보로 고른 책. 목록·캐러셀에 '선택' 리본을 그리는 데만 쓴다. */
   selectedBookId: number | null
+  /** 지금 후보로 고른 외부 책 — 알라딘 결과에는 bookId가 없어 객체로 넘긴다. */
+  selectedExternalBook: ExternalBook | null
 }
 
 export function BookSearchView({
   hidden,
   onAddManually,
   onPick,
-  onSelectExternal,
+  onPickExternal,
   selectedBookId,
+  selectedExternalBook,
 }: BookSearchViewProps) {
   const [keyword, setKeyword] = useState('')
   // 스크롤은 이제 시트(BookSearchSheet가 contentClassName으로 잡는 본문)가 갖는다. 무한스크롤 관찰자가
@@ -153,8 +157,9 @@ export function BookSearchView({
               <ExternalBookList
                 books={externalBooks}
                 isPending={external.isPending}
+                selectedBook={selectedExternalBook}
                 onAddManually={onAddManually}
-                onSelect={onSelectExternal}
+                onSelect={onPickExternal}
               />
             ) : (
               <BookPickList

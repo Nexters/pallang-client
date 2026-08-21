@@ -27,6 +27,7 @@ import ReplyIcon from './assets/reply.svg'
 import ResetIcon from './assets/reset.svg'
 import SearchIcon from './assets/search.svg'
 import SettingIcon from './assets/setting.svg'
+import SlashIcon from './assets/slash.svg'
 import TrashIcon from './assets/trash.svg'
 
 const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
@@ -41,6 +42,8 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'BackIcon', Component: BackIcon },
   { name: 'NextIcon', Component: NextIcon },
   { name: 'ChevronDownIcon', Component: ChevronDownIcon },
+  // 대목 페이저의 "01 / 05"를 가르는 빗금(16x16으로 줄여 쓴다)
+  { name: 'SlashIcon', Component: SlashIcon },
   { name: 'CautionIcon', Component: CautionIcon },
   { name: 'LikeIcon', Component: LikeIcon },
   { name: 'CommentIcon', Component: CommentIcon },
