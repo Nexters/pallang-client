@@ -44,6 +44,8 @@ export function OpinionComposer({
       />
       <div className="absolute inset-x-0 bottom-0">
         <CommentBar
+          // 남기려고 연 자리다 — 열리는 즉시 키보드가 서야 한 번 더 누르지 않는다(#374)
+          autoFocus
           placeholder="의견을 입력해주세요"
           submitLabel="의견 등록"
           onSubmit={async (content) => {
