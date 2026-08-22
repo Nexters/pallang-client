@@ -31,6 +31,7 @@ export function QuoteStage({
   pageNav,
   highlight,
   quoteIndex,
+  pagePosition,
   isRevealed,
   stageError,
   emptyState,
@@ -95,9 +96,8 @@ export function QuoteStage({
         {isCovered && <QuoteSpoilerCover onReveal={onClickQuote} />}
       </div>
       <QuotePager
-        index={quoteIndex}
-        // 대목이 0개여도 "01 / 00"이 아니라 시안(3556:29129)의 "01 / 01"로 선다
-        total={Math.max(highlight.quotes.length, 1)}
+        index={pagePosition.index}
+        total={pagePosition.total}
         canSwipe={canSwipe}
         onMove={onSwipeQuote}
         className="absolute left-1/2 -translate-x-1/2"

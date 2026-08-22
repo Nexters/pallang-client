@@ -153,7 +153,13 @@ function stubApi() {
         })
       }
 
-      return json({ data: { pageNumbers: [7] } })
+      // 페이저가 전체 쪽 수를 pageInfo에서 읽는다 — 서버 응답 모양 그대로 실어 준다
+      return json({
+        data: {
+          pageNumbers: [7],
+          pageInfo: { page: 0, size: 100, totalElements: 1, totalPages: 1, hasNext: false },
+        },
+      })
     }),
   )
 

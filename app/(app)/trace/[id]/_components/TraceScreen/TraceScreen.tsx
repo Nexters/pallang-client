@@ -79,6 +79,7 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
           pageNav={stage.pageNav}
           highlight={stage.highlight}
           quoteIndex={stage.quoteIndex}
+          pagePosition={stage.pagePosition}
           isRevealed={stage.isRevealed}
           stageError={{ isError: stage.isError, retry: stage.retry }}
           // 모임에 남긴 대목이 아직 없으면 카드가 남기러 가기 안내로 바뀐다(시안 3556:29129).

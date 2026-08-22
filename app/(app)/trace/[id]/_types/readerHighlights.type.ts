@@ -42,6 +42,8 @@ export type QuoteStageProps = {
   pageNav?: PageNav
   highlight: Highlight
   quoteIndex: number
+  /** 페이저가 적는 자리 — 대목이 아니라 '대목이 있는 쪽' 중 몇 번째 쪽인지다(0부터 센다) */
+  pagePosition: { index: number; total: number }
   isRevealed: boolean
   /** 대목 조회가 깨졌으면 카드 안이 재시도 화면으로 바뀐다(시안 229:24303) */
   stageError?: { isError: boolean; retry: () => void }

@@ -374,7 +374,7 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText(/아직 모임에서 남긴 문장과/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '바로 남기러 가기' })).toBeInTheDocument()
     // 페이저는 "01 / 00"이 아니라 시안의 "01 / 01"로 선다
-    expect(screen.getByLabelText('전체 1개 대목 중 1번째')).toBeInTheDocument()
+    expect(screen.getByLabelText('대목이 있는 전체 1쪽 중 1번째 쪽')).toBeInTheDocument()
   })
 
   it('바로 남기러 가기는 모임을 실은 기록 남기기 플로우로 보낸다', async () => {
@@ -426,6 +426,23 @@ describe('ReaderHighlightsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '이전 대목' }))
     expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
+  })
+
+  it('페이저 숫자는 대목이 아니라 쪽을 센다 — 같은 쪽 안에서 넘겨도 그대로고 쪽을 넘으면 바뀐다', async () => {
+    // 기본 시드는 쪽이 7개다. 총 쪽 수는 불러온 묶음이 아니라 목록 응답의 pageInfo에서 온다
+    await renderPage()
+
+    await screen.findByText('첫 번째 대목 인용문')
+    expect(screen.getByLabelText('대목이 있는 전체 7쪽 중 1번째 쪽')).toBeInTheDocument()
+
+    // 같은 7p 안의 둘째 대목으로 — 쪽이 그대로니 숫자도 그대로다
+    swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByLabelText('대목이 있는 전체 7쪽 중 1번째 쪽')).toBeInTheDocument()
+
+    // 쪽 경계를 넘으면 그제야 올라간다(7p → 9p)
+    swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
+    expect(await screen.findByLabelText('대목이 있는 전체 7쪽 중 2번째 쪽')).toBeInTheDocument()
   })
 
   it('페이지의 마지막 대목에서 넘기면 다음 페이지의 첫 대목으로 이어진다', async () => {
@@ -909,8 +926,8 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
 
     // 9쪽은 대목이 하나뿐인데도 양쪽 화살표가 살아 있다 — 대목은 쪽을 가로질러 한 줄로 이어진다.
-    // 세는 것만 쪽 안에서 다시 시작한다(01 / 01)
-    expect(screen.getByLabelText('전체 1개 대목 중 1번째')).toBeInTheDocument()
+    // 세는 것은 쪽이므로 7p에서 한 칸 올라간 자리다(02 / 07)
+    expect(screen.getByLabelText('대목이 있는 전체 7쪽 중 2번째 쪽')).toBeInTheDocument()
     expect(screen.getByLabelText('다음 대목')).toBeEnabled()
 
     // 되돌아가면 스와이프와 같은 자리 — 앞 쪽의 마지막 대목에 내려앉는다

@@ -86,6 +86,16 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null, gr
     void fetchNextPage()
   }, [canLoadMorePages, isActivePageMissing, pageIndex, pages.length, fetchNextPage])
 
+  // 페이저가 세는 자리 — 대목이 아니라 '대목이 있는 쪽' 중 몇 번째 쪽인가.
+  // 총 쪽 수는 쪽 목록 응답의 pageInfo가 이미 들고 와서(불러온 묶음 수와 무관하다) 따로 더 받지 않는다.
+  // 아직 목록에 없는 쪽으로 딥링크해 들어온 순간(pageIndex < 0)에는 0으로 눌러 첫 쪽처럼 세운다 —
+  // 그 쪽이 도착하면 곧바로 제자리를 찾는다
+  const pagePosition = {
+    index: Math.max(pageIndex, 0),
+    // 쪽이 하나도 없어도 "01 / 00"이 아니라 "01 / 01"로 선다
+    total: Math.max(bookInfo?.pageInfo.totalElements ?? pages.length, 1),
+  }
+
   // 대목 이동의 판정은 한 곳뿐이다 — 화살표(QuotePager)의 활성 여부와 스와이프의 실제 이동이
   // 같은 함수를 보므로, 눌러도 아무 일 없는 화살표나 막힌 척하는 화살표가 생기지 않는다
   const resolveTarget = (direction: SwipeDirection) =>
@@ -109,6 +119,7 @@ export function usePassageViewer(bookId: number, target?: TraceTarget | null, gr
     bookCoverImageUrl,
     highlight,
     quoteIndex,
+    pagePosition,
     isRevealed,
     // 쪽 선택기는 고를 쪽이 도착한 뒤에 선다 — 빈 목록으로 세우면 아직 없는 쪽이 표시된다
     pageNav:
