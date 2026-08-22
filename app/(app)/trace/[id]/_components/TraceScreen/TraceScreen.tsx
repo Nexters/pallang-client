@@ -71,7 +71,7 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
     <TraceMessageHost>
       {/* 레이아웃 셸의 safe-area 패딩을 되돌려 주황 밴드가 노치 뒤까지 깔리게 한다.
           인셋(--safe-top)은 무대·시트 좌표에서 상수 오프셋으로 다시 더해진다 */}
-      <div className="relative -mt-(--safe-top) min-h-0 flex-1 overflow-hidden">
+      <div className="relative -mt-(--safe-top) min-h-0 flex-1 overflow-hidden bg-bg-default">
         <QuoteStage
           title={stage.bookTitle}
           // 모임 안에서 연 흔적임을 헤더에서 바로 알린다 — 남기는 흔적도 이 모임에 붙는다
