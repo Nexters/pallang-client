@@ -97,7 +97,7 @@ export function OnboardingView() {
         ))}
       </div>
 
-      <div className="flex shrink-0 flex-col items-center gap-4 p-4">
+      <div className="flex shrink-0 flex-col items-center gap-4 px-4 pt-4 pb-safe">
         {/* 마지막 단계에서도 자리를 유지한 채 페이드아웃한다 — 이미지·버튼 위치가 튀지 않는다.
             press가 opacity를 duration-instant로 전환하므로 페이드는 래퍼가 맡는다. */}
         <div

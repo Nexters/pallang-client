@@ -334,7 +334,19 @@ body {
   padding-bottom: max(1rem, var(--safe-bottom));
 }
 
+@utility pb-safe-6 {
+  padding-bottom: max(1.5rem, var(--safe-bottom));
+}
+
 /* 여백이 더 넓은 화면용(CameraCheck) — 기준값만 다르고 규칙은 같다 */
 @utility pb-safe-8 {
   padding-bottom: max(2rem, var(--safe-bottom));
+}
+
+@utility bottom-safe-6 {
+  bottom: calc(1.5rem + var(--safe-bottom));
+}
+
+@utility bottom-safe-24 {
+  bottom: calc(6rem + var(--safe-bottom));
 }

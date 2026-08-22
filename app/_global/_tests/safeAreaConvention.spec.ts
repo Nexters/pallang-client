@@ -62,12 +62,28 @@ describe('safe area 컨벤션', () => {
     ).toEqual([])
   })
 
-  it('pb-safe 유틸리티가 --safe-bottom 토큰을 거친다', () => {
+  it('하단 padding 유틸리티가 --safe-bottom 토큰을 거친다', () => {
     // 위 검사가 "이름만 봐주는 것"으로 굳지 않게 근거를 여기서 강제한다.
     const globalsCss = readFileSync(join(APP_DIR, 'globals.css'), 'utf8')
-    const utility = /@utility pb-safe \{[^}]*\}/.exec(globalsCss)?.[0]
+    const utilityNames = ['pb-safe', 'pb-safe-6', 'pb-safe-8']
 
-    expect(utility, 'globals.css에 @utility pb-safe를 정의해야 한다').toBeDefined()
-    expect(utility).toContain('var(--safe-bottom)')
+    for (const utilityName of utilityNames) {
+      const utility = new RegExp(`@utility ${utilityName} \\{[^}]*\\}`).exec(globalsCss)?.[0]
+
+      expect(utility, `globals.css에 @utility ${utilityName}를 정의해야 한다`).toBeDefined()
+      expect(utility).toContain('var(--safe-bottom)')
+    }
+  })
+
+  it('하단 floating 위치 유틸리티가 --safe-bottom 토큰을 거친다', () => {
+    const globalsCss = readFileSync(join(APP_DIR, 'globals.css'), 'utf8')
+    const utilityNames = ['bottom-safe-6', 'bottom-safe-24']
+
+    for (const utilityName of utilityNames) {
+      const utility = new RegExp(`@utility ${utilityName} \\{[^}]*\\}`).exec(globalsCss)?.[0]
+
+      expect(utility, `globals.css에 @utility ${utilityName}를 정의해야 한다`).toBeDefined()
+      expect(utility).toContain('var(--safe-bottom)')
+    }
   })
 })
