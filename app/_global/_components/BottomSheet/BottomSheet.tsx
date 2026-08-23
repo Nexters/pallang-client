@@ -1,8 +1,9 @@
 'use client'
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
-import { type CSSProperties, type ReactNode, useRef } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useRef } from 'react'
 
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useSheetDragDismiss } from '@/app/_global/_hooks/useSheetDragDismiss'
 import { cn } from '@/app/_global/_services/cn.service'
 
@@ -58,7 +59,34 @@ export function BottomSheet({
   const isDark = tone === 'dark'
   // initialFocus를 팝업 자신으로 — 기본값은 첫 tabbable(닫기 버튼)에 포커스 링을 띄운다
   const popupRef = useRef<HTMLDivElement>(null)
+  const actionsRef = useRef<BaseDialog.Root.Actions>(null)
   const bindSheetDrag = useSheetDragDismiss(onClose, { enabled: showHandle })
+
+  // 닫힘 안전망(#406). 퇴장은 CSS 전환이 끝나야 base-ui가 시트를 언마운트하는 구조인데,
+  // 전환이 시작되지 못하거나(드래그가 남긴 인라인 transition이 덮는 경우) 완료를 알리지
+  // 못하면 투명 백드롭(fixed inset-0)이 화면 전체 입력을 삼킨 채 영구히 남는다 — 실기기
+  // 터치에서 시트를 닫은 뒤 화면 전체가 안 눌리는 형태로 나타난다. 닫힘이 시작되면 인라인
+  // 잔재를 걷어 전환을 살리고, 퇴장이 끝났어야 할 시점에도 남아 있으면 강제로 걷는다.
+  useEffect(() => {
+    if (open) return undefined
+    const popup = popupRef.current
+    if (popup) {
+      popup.style.transition = ''
+      // 백드롭은 포털 노드 아래 Viewport(→Popup)의 형제다(useSheetDragDismiss와 같은 경로)
+      const backdrop = popup.parentElement?.parentElement?.querySelector<HTMLElement>(
+        ':scope > [data-slot="bottom-sheet-backdrop"]',
+      )
+      if (backdrop) backdrop.style.transition = ''
+    }
+    // rise(가장 긴 시트 전환이 진행 중이었을 때) + fast(퇴장) 뒤에는 반드시 끝나 있어야 한다.
+    // 이미 언마운트됐으면 unmount()는 아무 일도 하지 않는다.
+    const timer = setTimeout(() => {
+      actionsRef.current?.unmount()
+    }, MOTION_DURATION.rise + MOTION_DURATION.fast)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [open])
 
   // 등장 시작값은 base-ui의 data-starting-style과 CSS @starting-style(starting:) 둘 다에 건다 —
   // 열린 채로 마운트되는 경로(TraceSourceView)에서는 base-ui가 'starting'을 건너뛴다.
@@ -68,6 +96,7 @@ export function BottomSheet({
   return (
     <BaseDialog.Root
       open={open}
+      actionsRef={actionsRef}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose()
       }}
