@@ -1,7 +1,7 @@
 'use client'
 
 import { useDrag } from '@use-gesture/react'
-import type { DOMAttributes } from 'react'
+import { type DOMAttributes, useRef } from 'react'
 
 /** 시트 요소에 스프레드하는 제스처 props */
 export type SheetDragBind = () => DOMAttributes<EventTarget>
@@ -29,6 +29,12 @@ export function useSheetDrag({
   onMove,
   onEnd,
 }: SheetDragOptions): SheetDragBind {
+  // onMove가 시트에 인라인 스타일을 남긴 채 끝났는지. 브라우저가 제스처를 가져가면
+  // (스크롤 개입·touchcancel) last 대신 canceled로 끝나 onEnd가 건너뛰어지는데, 그러면
+  // onMove가 남긴 인라인(transition 등)이 복구되지 않는다. 그 잔재는 이후 닫힘 전환을
+  // 통째로 죽여 base-ui가 시트를 언마운트하지 못하게 만든다(#406) — 취소로 끝나도
+  // onEnd를 불러 복구를 보장한다.
+  const isMovedRef = useRef(false)
   return useDrag(
     ({
       first,
@@ -43,16 +49,25 @@ export function useSheetDrag({
       currentTarget,
       cancel,
     }) => {
-      if (canceled || !(currentTarget instanceof HTMLElement)) return
+      if (!(currentTarget instanceof HTMLElement)) return
+      if (canceled) {
+        if (isMovedRef.current) {
+          isMovedRef.current = false
+          onEnd({ dy: 0, velocity: 0 }, currentTarget)
+        }
+        return
+      }
       if (first && !claimsSheet(currentTarget, origin, dy > 0, canExpand)) {
         cancel()
         return
       }
       if (last) {
+        isMovedRef.current = false
         onEnd(tap ? { dy: 0, velocity: 0 } : { dy, velocity: speed * dir }, currentTarget)
         return
       }
       if (event.cancelable) event.preventDefault()
+      isMovedRef.current = true
       onMove(dy, currentTarget)
     },
     {
