@@ -6,6 +6,7 @@ import { type CSSProperties, type ReactNode, useEffect, useRef } from 'react'
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useSheetDragDismiss } from '@/app/_global/_hooks/useSheetDragDismiss'
 import { cn } from '@/app/_global/_services/cn.service'
+import { sheetPanelClassName } from '@/app/_global/_services/sheetPanel.service'
 
 import BackIcon from '../Icon/assets/back.svg'
 import CloseIcon from '../Icon/assets/close.svg'
@@ -119,11 +120,8 @@ export function BottomSheet({
             initialFocus={popupRef}
             {...bindSheetDrag()}
             className={cn(
-              // 모서리 32px — v2 시트 시안 공통값(3321:30402)
-              'relative flex flex-col rounded-t-4xl pb-safe',
-              showHandle ? 'pt-0' : 'pt-6',
-              isDark ? 'bg-bg-dark' : 'bg-bg-default',
-              'outline-none',
+              sheetPanelClassName({ tone, withHandle: showHandle }),
+              'pb-safe',
               // 먼 거리 등장 토큰 — ease-enter는 2프레임 만에 62%가 끝나 번쩍인다
               'transition-transform duration-rise ease-rise',
               'starting:[translate:0_100%] data-starting-style:[translate:0_100%]',

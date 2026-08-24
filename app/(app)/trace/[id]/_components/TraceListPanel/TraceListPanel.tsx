@@ -1,12 +1,12 @@
 'use client'
 
-import { type RefObject, useRef } from 'react'
+import { useRef } from 'react'
 
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
+import { usePeekSheet } from '@/app/_global/_hooks/usePeekSheet'
 
 import { useCommentSheet } from '../../_hooks/useCommentSheet'
 import { useTraceList } from '../../_hooks/useTraceList'
-import type { TraceSheet } from '../../_hooks/useTraceSheet'
 import { TraceCommentSheet } from '../TraceCommentSheet/TraceCommentSheet'
 import { TraceListError } from '../TraceListError/TraceListError'
 import { TraceListSection } from '../TraceListSection/TraceListSection'
@@ -15,8 +15,6 @@ type TraceListPanelProps = {
   passageId: number | undefined
   /** 스포일러 대목이 가림막 해제 전이면 목록도 함께 가린다(#49) */
   isMasked: boolean
-  /** 무한스크롤 루트 — 화면에서 유일하게 스크롤하는 어두운 패널 */
-  scrollerRef: RefObject<HTMLDivElement | null>
   /** 대목 조회가 깨지면 흔적도 조회할 수 없으므로(passageId가 없어 skipToken) 같은 에러 화면으로 묶는다 */
   stageError: { isError: boolean; retry: () => void }
   /**
@@ -26,20 +24,17 @@ type TraceListPanelProps = {
   onBottomBusyChange: (isBusy: boolean) => void
   /** 딥링크로 지목된 흔적 — 목록이 도착하면 그 의견의 댓글 시트가 올라온 채 시작한다 */
   initialTraceId?: number
-  /** 이 목록을 담고 있는 바텀시트 — 손잡이 탭과 "N개의 의견 ›"이 높이를 바꾼다 */
-  sheet: TraceSheet
 }
 
 /** 흔적 목록 흐름의 컴포넌트 경계 — 목록·무한스크롤·에러·댓글 시트를 소유한다 */
 export function TraceListPanel({
   passageId,
   isMasked,
-  scrollerRef,
   stageError,
   onBottomBusyChange,
   initialTraceId,
-  sheet,
 }: TraceListPanelProps) {
+  const { scrollerRef } = usePeekSheet()
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const list = useTraceList({ passageId, initialTraceId, stageError })
   const opinions = useCommentSheet({
@@ -69,9 +64,6 @@ export function TraceListPanel({
             isMasked={isMasked}
             sortType={list.sortType}
             onChangeSort={list.changeSort}
-            isSheetExpanded={sheet.isExpanded}
-            onToggleSheet={sheet.toggle}
-            onExpandSheet={sheet.expand}
             onOpenComments={(trace) => {
               opinions.openComments(trace.opinionId)
             }}
