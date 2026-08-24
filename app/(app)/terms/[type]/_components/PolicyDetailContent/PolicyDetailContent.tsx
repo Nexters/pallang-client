@@ -41,7 +41,7 @@ export function PolicyDetailContent({ policy }: PolicyDetailContentProps) {
           {content}
         </ReactMarkdown>
       </div>
-      <div className="shrink-0 bg-bg-default p-4">
+      <div className="shrink-0 bg-bg-default px-4 pt-4 pb-safe">
         <Button
           className="h-[54px] w-full bg-interactive-btn-secondary"
           onClick={() => {

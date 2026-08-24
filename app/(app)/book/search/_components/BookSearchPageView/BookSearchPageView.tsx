@@ -215,7 +215,7 @@ export function BookSearchPageView() {
         )}
       </div>
       {showExternalFallback && (
-        <div className="mt-auto flex shrink-0 items-center justify-center gap-1.5 bg-bg-default px-4 py-6 text-body-14md text-text-tertiary">
+        <div className="mt-auto flex shrink-0 items-center justify-center gap-1.5 bg-bg-default px-4 pt-6 pb-safe-6 text-body-14md text-text-tertiary">
           찾는 책이 없나요?
           <button
             type="button"

@@ -63,7 +63,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
   const [statusError, setStatusError] = useState('')
 
   /**
-   * 세 안내가 화면 아래 같은 자리(`absolute inset-x-4 bottom-24`)에 선다.
+   * 세 안내가 화면 아래 같은 자리(Snackbar의 bottom-safe-24)에 선다.
    * 겹치면 아래에 깔린 쪽은 남은 수명 동안 누를 수 없다 — 새 안내를 띄우기 전에 이전 것을 걷는다.
    */
   const clearNotices = () => {

@@ -98,7 +98,7 @@ export function Snackbar({
       role="status"
       data-state={state}
       className={cn(
-        'absolute inset-x-4 bottom-24 z-30 flex items-center justify-between gap-4 rounded-2xl px-4 py-3',
+        'absolute inset-x-4 bottom-safe-24 z-30 flex items-center justify-between gap-4 rounded-2xl px-4 py-3',
         TONE_CLASS[tone],
         'transition-[opacity,translate] duration-fast ease-enter',
         'data-[state=entering]:translate-y-2 data-[state=entering]:opacity-0',

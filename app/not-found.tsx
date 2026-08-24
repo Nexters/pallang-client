@@ -34,7 +34,7 @@ export default function NotFound() {
         </div>
       </div>
 
-      <div className="flex h-21.5 shrink-0 items-center justify-center p-4">
+      <div className="flex min-h-21.5 shrink-0 items-center justify-center px-4 pt-4 pb-safe">
         <Button
           className="h-13.5 w-full"
           onClick={() => {

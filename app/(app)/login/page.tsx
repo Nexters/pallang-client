@@ -121,7 +121,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col gap-3 p-4">
+      <div className="flex shrink-0 flex-col gap-3 px-4 pt-4 pb-safe">
         {/* Apple HIG 블랙 버튼 — iOS 앱에서만 노출(심사 가이드라인 4.8은 앱에만 적용, 웹은 미제공 결정).
             카카오 위 배치로 동등 이상 노출을 지킨다. */}
         {showAppleLogin && (
