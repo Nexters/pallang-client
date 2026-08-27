@@ -8,6 +8,7 @@ import { TraceDraftProvider } from '../_components/TraceDraftProvider/TraceDraft
 import { TraceNavProvider } from '../_components/TraceNavProvider/TraceNavProvider'
 import { TraceOverlayProvider } from '../_components/TraceOverlayProvider/TraceOverlayProvider'
 import { TraceStepGuard } from '../_components/TraceStepGuard/TraceStepGuard'
+import { initialTraceDraft } from '../_data/traceDraft.store'
 import { useTraceDraft } from '../_hooks/useTraceDraft'
 
 const { navState } = vi.hoisted(() => ({ navState: { pathname: '/trace/new/done' } }))
@@ -23,10 +24,11 @@ const BOOK_ID = 11
 const PAGE_NUMBER = 42
 const PASSAGE_ID = 71
 const OPINION_ID = 5
+const EMPTY_DRAFT_TEXT = JSON.stringify(initialTraceDraft)
 
 /** 흔적을 저장하고 완료 화면에 도착한 상태를 만든다. 가드 바깥에 둬야 초안을 채울 수 있다. */
 function DoneProbe({ withPage = true }: { withPage?: boolean }) {
-  const { dispatch } = useTraceDraft()
+  const { dispatch, draft } = useTraceDraft()
 
   return (
     <>
@@ -57,6 +59,7 @@ function DoneProbe({ withPage = true }: { withPage?: boolean }) {
       <TraceStepGuard>
         <TraceDoneView />
       </TraceStepGuard>
+      <output aria-label="초안">{JSON.stringify(draft)}</output>
     </>
   )
 }
@@ -96,6 +99,7 @@ describe('완료 화면에서 나가기', () => {
     expect(replaceMock.mock.calls.map(([path]) => path)).toEqual([
       `/trace/${String(BOOK_ID)}?page=${String(PAGE_NUMBER)}&passageId=${String(PASSAGE_ID)}&opinionId=${String(OPINION_ID)}`,
     ])
+    expect(screen.getByLabelText('초안').textContent).toBe(EMPTY_DRAFT_TEXT)
   })
 
   it('쪽 번호 없이 남긴 흔적은 좌표가 성립하지 않아 책 화면으로만 보낸다', () => {
@@ -104,6 +108,7 @@ describe('완료 화면에서 나가기', () => {
     fireEvent.click(screen.getByRole('button', { name: '흔적 확인하러 가기' }))
 
     expect(replaceMock.mock.calls.map(([path]) => path)).toEqual([`/trace/${String(BOOK_ID)}`])
+    expect(screen.getByLabelText('초안').textContent).toBe(EMPTY_DRAFT_TEXT)
   })
 
   // 이 판은 다이얼로그가 아니라 화면의 일부라 base-ui가 등장을 봐주지 않는다 — 시작값을
@@ -127,5 +132,6 @@ describe('완료 화면에서 나가기', () => {
     fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
 
     expect(replaceMock.mock.calls.map(([path]) => path)).toEqual(['/'])
+    expect(screen.getByLabelText('초안').textContent).toBe(EMPTY_DRAFT_TEXT)
   })
 })

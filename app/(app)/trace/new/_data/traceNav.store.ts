@@ -18,6 +18,8 @@ export type TraceNav = {
    * 표시가 있으면 나갈 때 홈이 아니라 그 자리로 되돌린다.
    */
   markReturnable: () => void
+  /** 완료 화면처럼 목적지가 이미 정해진 이탈. 초안을 비우고 가드를 물린 채 이동한다. */
+  leaveTo: (path: string) => void
   /** 플로우를 벗어나려는 시도. 오버레이 닫기·즉시 이탈·확인 다이얼로그 중 하나가 된다. */
   requestExit: () => void
   step: TraceStep | null

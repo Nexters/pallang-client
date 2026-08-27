@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { cn } from '@/app/_global/_services/cn.service'
@@ -9,10 +8,11 @@ import { toLargeCoverUrl } from '@/app/_shared/book/_services/coverVariant.servi
 import { buildTraceHref, buildTraceTargetHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { useTraceDraft } from '../../_hooks/useTraceDraft'
+import { useTraceNav } from '../../_hooks/useTraceNav'
 
 export function TraceDoneView() {
-  const router = useRouter()
   const { draft } = useTraceDraft()
+  const { leaveTo } = useTraceNav()
   const bookId = draft.book?.bookId
 
   /**
@@ -79,7 +79,7 @@ export function TraceDoneView() {
             variant="back"
             className="flex-1"
             onClick={() => {
-              router.replace('/')
+              leaveTo('/')
             }}
           >
             뒤로
@@ -88,7 +88,7 @@ export function TraceDoneView() {
             variant="activated"
             className="flex-1"
             onClick={() => {
-              router.replace(traceHref())
+              leaveTo(traceHref())
             }}
           >
             흔적 확인하러 가기
