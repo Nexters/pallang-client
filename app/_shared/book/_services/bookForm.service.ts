@@ -8,6 +8,7 @@ type ExternalBookFormSource = {
   author: string
   coverImageUrl: null | string
   isbn: string
+  pageCount?: number
   publisher: string
   title: string
 }
@@ -69,7 +70,7 @@ export function toExternalBookFormState(book: ExternalBookFormSource): ExternalB
     values: {
       author: normalizeExternalAuthor(book.author),
       isbn: book.isbn,
-      pageCount: '',
+      pageCount: book.pageCount === undefined ? '' : String(book.pageCount),
       publisher: book.publisher,
       title: book.title,
     },

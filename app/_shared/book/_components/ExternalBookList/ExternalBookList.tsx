@@ -13,6 +13,7 @@ export type ExternalBook = {
   author: string
   coverImageUrl: null | string
   isbn: string
+  pageCount?: number
   publisher: string
   title: string
 }

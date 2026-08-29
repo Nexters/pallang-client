@@ -70,6 +70,7 @@ export function BookSearchPageView() {
     author: book.author,
     coverImageUrl: book.coverImageUrl ?? null,
     isbn: book.isbn ?? '',
+    pageCount: book.pageCount,
     publisher: book.publisher,
     title: book.title,
   }))
