@@ -35,6 +35,7 @@ const { searchBooksMock, searchInternalBooksMock } = vi.hoisted(() => ({
           publisher: string
           coverImageUrl: string | null
           isbn: string | null
+          pageCount?: number
         }[]
       }
     }> => Promise.resolve({ data: { books: [] } }),
@@ -321,6 +322,7 @@ describe('책 등록 시트', () => {
             publisher: '문학동네',
             coverImageUrl: null,
             isbn: '9788954618373',
+            pageCount: 456,
           },
         ],
       },
@@ -337,6 +339,7 @@ describe('책 등록 시트', () => {
     expect(screen.getByRole('textbox', { name: '제목' })).toHaveValue('프랑켄슈타인')
     expect(screen.getByRole('textbox', { name: '지은이' })).toHaveValue('메리 셸리')
     expect(screen.getByRole('textbox', { name: '출판사' })).toHaveValue('문학동네')
+    expect(screen.getByRole('textbox', { name: '페이지 수' })).toHaveValue('456')
   })
 
   it('폼이 열린 채로 하드웨어 뒤로가기를 누르면 폼만 닫히고 시트는 유지된다', async () => {

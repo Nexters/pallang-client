@@ -5,6 +5,7 @@ import {
   isValidBookForm,
   normalizeExternalAuthor,
   toCreateBookInput,
+  toExternalBookFormState,
   validateBookForm,
 } from '../_services/bookForm.service'
 
@@ -78,6 +79,39 @@ describe('normalizeExternalAuthor', () => {
   it('역할 표기가 없으면 그대로 둔다', () => {
     expect(normalizeExternalAuthor('한강')).toBe('한강')
     expect(normalizeExternalAuthor('')).toBe('')
+  })
+})
+
+describe('toExternalBookFormState', () => {
+  it('외부 검색 결과의 페이지 수를 등록 폼 초기값으로 옮긴다', () => {
+    expect(
+      toExternalBookFormState({
+        author: '한강 (지은이)',
+        coverImageUrl: null,
+        isbn: '9788936434120',
+        pageCount: 268,
+        publisher: '창비',
+        title: '채식주의자',
+      }).values,
+    ).toEqual({
+      author: '한강',
+      isbn: '9788936434120',
+      pageCount: '268',
+      publisher: '창비',
+      title: '채식주의자',
+    })
+  })
+
+  it('외부 검색 결과에 페이지 수가 없으면 빈 값으로 둔다', () => {
+    expect(
+      toExternalBookFormState({
+        author: '한강',
+        coverImageUrl: null,
+        isbn: '9788936434120',
+        publisher: '창비',
+        title: '채식주의자',
+      }).values.pageCount,
+    ).toBe('')
   })
 })
 
