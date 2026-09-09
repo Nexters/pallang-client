@@ -22,8 +22,17 @@ const faqItems = [
   },
   {
     question: '혼자서도 팔랑을 사용할 수 있나요?',
-    answer:
-      '네. 혼자 책을 읽으며 문장과 생각을 기록할 수도 있고, 다른 독자의 흔적을 보거나 모임을 만들어 함께 읽을 수도 있어요.',
+    answer: (
+      <>
+        <span className="whitespace-nowrap">
+          네. 혼자 책을 읽으며 문장과 생각을 기록할 수도 있고,
+        </span>
+        <br />
+        <span className="whitespace-nowrap">
+          다른 독자의 흔적을 보거나 모임을 만들어 함께 읽을 수도 있어요.
+        </span>
+      </>
+    ),
   },
 ] as const
 
@@ -71,7 +80,7 @@ export function LandingFaqSection() {
                 </button>
 
                 {isOpen && (
-                  <p className="px-6 pb-6 text-[12px] leading-[1.4] font-medium tracking-[-0.02em] text-[#505050] md:text-[18px]">
+                  <p className="break-keep px-6 pb-6 text-[12px] leading-[1.4] font-medium tracking-[-0.02em] text-[#505050] md:text-[18px]">
                     {item.answer}
                   </p>
                 )}
