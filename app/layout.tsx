@@ -23,6 +23,13 @@ const galmuri = localFont({
   variable: '--font-galmuri11',
 })
 
+const pretendard = localFont({
+  src: './_global/_styles/fonts/PretendardVariable.woff2',
+  weight: '45 920',
+  display: 'swap',
+  variable: '--font-pretendard',
+})
+
 const googleAnalyticsMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 const shouldEnableGoogleAnalytics =
   process.env.VERCEL_ENV === 'production' && Boolean(googleAnalyticsMeasurementId)
@@ -86,7 +93,7 @@ export default function RootLayout({
     ) : null
 
   return (
-    <html lang="ko" className={`${galmuri.variable} h-full antialiased`}>
+    <html lang="ko" className={`${galmuri.variable} ${pretendard.variable} h-full antialiased`}>
       <body className="min-h-dvh">
         <IllustrationPreload />
         {children}
