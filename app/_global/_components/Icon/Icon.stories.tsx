@@ -14,6 +14,7 @@ import CommentIcon from './assets/comment.svg'
 import ContentIcon from './assets/content.svg'
 import EffectDotsIcon from './assets/effect-dots.svg'
 import EffectHighlightIcon from './assets/effect-highlight.svg'
+import GoogleIcon from './assets/google.svg'
 import HomeIcon from './assets/home.svg'
 import KakaoIcon from './assets/kakao.svg'
 import LikeIcon from './assets/like.svg'
@@ -59,6 +60,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'SettingIcon', Component: SettingIcon },
   { name: 'KakaoIcon', Component: KakaoIcon },
   { name: 'AppleIcon', Component: AppleIcon },
+  { name: 'GoogleIcon', Component: GoogleIcon },
   // 흔적 꾸미기 효과 썸네일. 글자(#717171)와 효과 자국(브랜드 오렌지)이 고정된 2색 아이콘이라
   // currentColor로 치환하지 않는다 — 색을 바꿀 수 있게 만들면 두 색 중 하나만 따라간다.
   // 물결줄·동그라미·색연필·겹줄은 스탬프 반복 벡터가 과대해 래스터(public/images/effects/)로
