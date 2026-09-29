@@ -60,7 +60,7 @@ export function QuoteStage({
       <DecoratedQuote
         quotedText={activeQuote?.text ?? ''}
         decorations={activeQuote?.decorations ?? []}
-        className="-mx-4 -mt-4 min-h-0 flex-1 overflow-hidden px-4 pt-4 text-body-20md text-text-secondary"
+        className="scrollbar-none -mx-4 -mt-4 min-h-0 flex-1 overflow-y-auto px-4 pt-4 text-body-20md text-text-secondary"
       />
     )
   }
