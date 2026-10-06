@@ -10,7 +10,7 @@ import type { SwipeDirection } from '../_types/readerHighlights.type'
 
 /** 인용문 카드의 좌우 스와이프.
     첫 이동에서 축을 잠가 대각선 드래그가 대목 이동으로 새지 않게 한다 —
-    카드는 스크롤하지 않는 무대 위에 있어 세로로 잠긴 제스처는 아무 일도 하지 않는다. */
+    세로로 잠긴 제스처는 건드리지 않는다 — 긴 인용문은 카드 안에서 세로로 스크롤된다(#418). */
 export function useQuoteSwipe(
   cardRef: RefObject<HTMLElement | null>,
   onSwipe: (direction: SwipeDirection) => void,

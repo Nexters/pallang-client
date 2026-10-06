@@ -17,6 +17,7 @@ import type { QuoteStageProps } from '../../_types/readerHighlights.type'
 import { GroupTraceEmpty } from '../GroupTraceEmpty/GroupTraceEmpty'
 import { QuoteLoadError } from '../QuoteLoadError/QuoteLoadError'
 import { QuotePager } from '../QuotePager/QuotePager'
+import { QuoteScroller } from '../QuoteScroller/QuoteScroller'
 import { QuoteSpoilerCover } from '../QuoteSpoilerCover/QuoteSpoilerCover'
 import { TraceHeader } from '../TraceHeader/TraceHeader'
 
@@ -51,17 +52,14 @@ export function QuoteStage({
     if (stageError?.isError) return <QuoteLoadError onRetry={stageError.retry} />
     if (emptyState) return <GroupTraceEmpty onCreate={emptyState.onCreate} />
     return (
-      /* 동그라미 효과는 글자 사방으로 삐져나온다(가로 marginInline -0.7em=14px, 세로 paddingBlock
-         0.3em=6px인데 line-height 1.5의 반각 여백은 5px뿐이라 첫 줄이 잘린다). 음수 마진과 같은
-         크기의 패딩으로 글자 위치와 차지하는 자리는 그대로 두고 잘리는 경계만 넓힌다.
-         아래쪽만 빼는 이유: overflow가 자르는 경계는 패딩 박스라, 아래로 넓히면 넘치는 인용문의
-         다음 줄이 딱 잘리지 않고 카드 여백으로 새어 나온다(#148). 아래는 넓힐 이유도 없다 —
-         마지막 줄의 자국이 닿는 자리는 넘칠 때만 생기고, 그때는 어차피 잘라야 하는 자리다 */
-      <DecoratedQuote
-        quotedText={activeQuote?.text ?? ''}
-        decorations={activeQuote?.decorations ?? []}
-        className="scrollbar-none -mx-4 -mt-4 min-h-0 flex-1 overflow-y-auto px-4 pt-4 text-body-20md text-text-secondary"
-      />
+      // 대목이 바뀌면 새로 마운트해 스크롤을 맨 위로 돌린다 — 이전 대목에서 내린 위치가 이어지면 안 된다
+      <QuoteScroller key={`${String(highlight.page)}-${String(quoteIndex)}`}>
+        <DecoratedQuote
+          quotedText={activeQuote?.text ?? ''}
+          decorations={activeQuote?.decorations ?? []}
+          className="text-body-20md text-text-secondary"
+        />
+      </QuoteScroller>
     )
   }
 
