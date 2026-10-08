@@ -16,8 +16,12 @@ type SheetDragOptions = {
   onEnd: (end: { dy: number; velocity: number }, sheet: HTMLElement) => void
 }
 
+/** 이보다 작은 세로 이동은 탭으로 본다 — pointerdown(dy=0)에서 시트를 선점하면
+    preventDefault가 안쪽 버튼 클릭을 죽인다. */
+const CLAIM_SLOP_PX = 3
+
 /**
- * 시트를 끄는 제스처. 첫 이동에서 누가 가져갈지 한 번만 정한다 —
+ * 시트를 끄는 제스처. 실제 이동이 생긴 뒤에 누가 가져갈지 한 번만 정한다 —
  * 손잡이에서 시작 / 맨 위(scrollTop 0)에서 아래로 / 더 올라갈 수 있을 때 위로 → 시트, 그 외 → 스크롤.
  * 시트가 가져간 제스처만 preventDefault하므로 안쪽 스크롤·버튼 탭은 그대로다.
  *
@@ -35,9 +39,9 @@ export function useSheetDrag({
   // 통째로 죽여 base-ui가 시트를 언마운트하지 못하게 만든다(#406) — 취소로 끝나도
   // onEnd를 불러 복구를 보장한다.
   const isMovedRef = useRef(false)
+  const hasClaimedRef = useRef(false)
   return useDrag(
     ({
-      first,
       last,
       tap,
       canceled,
@@ -51,20 +55,30 @@ export function useSheetDrag({
     }) => {
       if (!(currentTarget instanceof HTMLElement)) return
       if (canceled) {
+        hasClaimedRef.current = false
         if (isMovedRef.current) {
           isMovedRef.current = false
           onEnd({ dy: 0, velocity: 0 }, currentTarget)
         }
         return
       }
-      if (first && !claimsSheet(currentTarget, origin, dy > 0, canExpand)) {
-        cancel()
+      if (last) {
+        const moved = isMovedRef.current
+        isMovedRef.current = false
+        hasClaimedRef.current = false
+        // 탭은 클릭에게 맡긴다. onEnd로 높이를 스냅하면 손잡이 클릭과 겹친다
+        if (moved) {
+          onEnd(tap ? { dy: 0, velocity: 0 } : { dy, velocity: speed * dir }, currentTarget)
+        }
         return
       }
-      if (last) {
-        isMovedRef.current = false
-        onEnd(tap ? { dy: 0, velocity: 0 } : { dy, velocity: speed * dir }, currentTarget)
-        return
+      if (!hasClaimedRef.current) {
+        if (Math.abs(dy) < CLAIM_SLOP_PX) return
+        if (!claimsSheet(currentTarget, origin, dy > 0, canExpand)) {
+          cancel()
+          return
+        }
+        hasClaimedRef.current = true
       }
       if (event.cancelable) event.preventDefault()
       isMovedRef.current = true
@@ -77,7 +91,7 @@ export function useSheetDrag({
       // iOS는 한 번 막지 않은 touchmove 뒤로는 preventDefault를 무시한다 — 첫 이동부터 잡는다
       threshold: 0,
       // touch 이벤트여야 스크롤을 막을 수 있다. 키보드 드래그는 입력창 커서 이동과 겹친다
-      pointer: { touch: true, mouse: true, keys: false },
+      pointer: { touch: true, mouse: true, keys: false, capture: false },
       eventOptions: { passive: false },
     },
   )

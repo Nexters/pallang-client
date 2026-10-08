@@ -1,17 +1,16 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
+import { PeekSheet } from '@/app/_global/_components/PeekSheet/PeekSheet'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
-import { cn } from '@/app/_global/_services/cn.service'
 import type { TraceTarget } from '@/app/_shared/trace/_data/traceTarget.model'
 
-import { px } from '../../_data/quoteStage.constant'
+import { SHEET_TOP_DEFAULT, SHEET_TOP_EXPANDED } from '../../_data/quoteStage.constant'
 import { usePassageViewer } from '../../_hooks/usePassageViewer'
 import { useTraceCreateNav } from '../../_hooks/useTraceCreateNav'
-import { useTraceSheet } from '../../_hooks/useTraceSheet'
 import { isSpoilerCovered } from '../../_services/spoiler.service'
 import { OpinionComposer } from '../OpinionComposer/OpinionComposer'
 import { QuoteStage } from '../QuoteStage/QuoteStage'
@@ -28,12 +27,10 @@ type TraceScreenProps = {
 }
 
 /** 셸 — 인용문 무대 흐름(usePassageViewer)과 흔적 목록 흐름(TraceListPanel)을 연결한다.
-    무대는 고정이고, 그 위에 어두운 시트가 덮여 높이를 오르내린다(useTraceSheet — 시트 어디서나 끌 수 있다). */
+    무대는 고정이고, 그 위에 어두운 PeekSheet가 덮여 높이를 오르내린다. */
 export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
   // bookId는 서버 컴포넌트(TracePrefetchBoundary)가 검증해 내려준다 — 여기서 params를 언래핑하지 않는다
   const router = useRouter()
-  const panelRef = useRef<HTMLDivElement>(null)
-  const sheet = useTraceSheet()
   const stage = usePassageViewer(bookId, target, groupId)
   const activePassageId = stage.activePassage?.passageId
   // 화면 하단을 차지하는 것(상세 오버레이·의견 시트·댓글 입력바)이 떠 있는 동안 남기기 FAB을 숨긴다.
@@ -94,26 +91,21 @@ export function TraceScreen({ bookId, target, groupId }: TraceScreenProps) {
           onClickQuote={stage.clickQuote}
           onSwipeQuote={stage.swipeQuote}
         />
-        {/* 어두운 시트 — 높이를 top으로 정해야 접힌 상태에서도 목록 끝까지 스크롤로 닿는다 */}
-        <div
-          ref={panelRef}
-          {...sheet.bind()}
-          style={{ top: `calc(var(--safe-top) + ${px(sheet.top)})` }}
-          className={cn(
-            'absolute inset-x-0 bottom-0 overflow-y-auto rounded-t-[32px] bg-bg-dark overscroll-y-contain',
-            !sheet.isDragging && 'transition-[top] duration-rise ease-rise',
-          )}
+        {/* 높이를 top으로 정해야 접힌 상태에서도 목록 끝까지 스크롤로 닿는다 */}
+        <PeekSheet
+          peekTop={SHEET_TOP_DEFAULT}
+          expandedTop={SHEET_TOP_EXPANDED}
+          expandLabel="의견 목록 펼치기"
+          collapseLabel="의견 목록 접기"
         >
           <TraceListPanel
             passageId={activePassageId}
             isMasked={isTraceListMasked}
-            scrollerRef={panelRef}
             stageError={{ isError: stage.isError, retry: stage.retry }}
             onBottomBusyChange={setIsBottomBusy}
             initialTraceId={target?.opinionId}
-            sheet={sheet}
           />
-        </div>
+        </PeekSheet>
         {/* 의견 입력바 — 어두운 패널 위에 얹힌다. 등록되면 목록 갱신과 함께 접힌다 */}
         {isOpinionComposerOpen && (
           <OpinionComposer
