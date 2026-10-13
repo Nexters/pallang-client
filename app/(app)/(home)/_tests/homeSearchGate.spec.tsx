@@ -85,6 +85,22 @@ describe('홈 검색 게이트', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
+  it('비로그인 사용자에게는 알림함 버튼이 보이지 않는다', async () => {
+    renderHome()
+
+    await screen.findByRole('button', { name: '검색' })
+    expect(screen.queryByRole('button', { name: '알림함' })).not.toBeInTheDocument()
+  })
+
+  it('로그인 사용자가 알림함 버튼을 누르면 알림함 화면으로 이동한다', async () => {
+    authState.isAuthenticated = true
+    renderHome()
+
+    await userEvent.click(await screen.findByRole('button', { name: '알림함' }))
+
+    expect(pushMock).toHaveBeenCalledWith('/notifications')
+  })
+
   it('온보딩 직후 홈 코치마크를 3단계로 보여주고 완료하면 닫는다', async () => {
     markHomeCoachMarkPending()
     renderHome()
