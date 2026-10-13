@@ -8,6 +8,14 @@ export type GetLikedOpinionsParams = {
    */
   bookId?: number
   /**
+   * 모임 ID. 지정하면 그 모임 전용 대목의 것만 조회 (모임원만 가능, globalOnly와 함께 지정 불가)
+   */
+  groupId?: number
+  /**
+   * true면 전역 공개 대목의 것만 조회 (기본값 false, groupId와 함께 지정 불가)
+   */
+  globalOnly?: boolean
+  /**
    * 페이지 번호 (0부터 시작, 기본값 0)
    */
   page?: number
