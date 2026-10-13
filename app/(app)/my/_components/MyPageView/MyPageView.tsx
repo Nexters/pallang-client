@@ -22,8 +22,7 @@ const loggedInSettings: SettingItem[] = [
   { label: '배경색 관리' },
   { label: '스포일러 관리', path: '/my/spoilers' },
   { label: '좋아요 관리', path: '/my/likes' },
-  // 알림 켜기/끄기 토글 API가 아직 없다 — 알림 수신 내역은 /notifications(홈 진입)에서 본다
-  { label: '알림 설정' },
+  { label: '알림 설정', path: '/my/notification-settings' },
   // 시안에는 없지만 남긴다 — 차단 유저 관리 화면이 확정 디자인으로 살아 있어
   // 여기서 빼면 /my/blocks에 접근할 통로가 사라진다. 고객지원도 같은 이유다.
   { label: '차단 관리', path: '/my/blocks' },

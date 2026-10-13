@@ -68,9 +68,14 @@ describe('마이페이지 항목 구성', () => {
 
     expect(screen.queryByRole('link', { name: '배경색 관리' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '배경색 관리' })).toBeInTheDocument()
+  })
 
-    // 알림 켜기/끄기 토글 API가 아직 없어 같은 패턴으로 버튼만 둔다
-    expect(screen.queryByRole('link', { name: '알림 설정' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '알림 설정' })).toBeInTheDocument()
+  it('알림 설정은 알림 설정 화면으로 이동한다', () => {
+    renderLoggedIn()
+
+    expect(screen.getByRole('link', { name: '알림 설정' })).toHaveAttribute(
+      'href',
+      '/my/notification-settings',
+    )
   })
 })

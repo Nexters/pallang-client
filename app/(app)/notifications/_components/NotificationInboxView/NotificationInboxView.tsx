@@ -71,10 +71,9 @@ export function NotificationInboxView() {
     <ScreenLayout
       title="알림"
       action={
-        // 알림 설정 화면이 아직 없다 — 화면이 생기면 여기서 연결한다
-        <TopBar.Action aria-label="알림 설정">
+        <TopBar.LinkAction href="/my/notification-settings" aria-label="알림 설정">
           <SettingIcon />
-        </TopBar.Action>
+        </TopBar.LinkAction>
       }
     >
       <NotificationTabs tabs={VISIBLE_NOTIFICATION_TABS} value={tab} onChange={setTab} />

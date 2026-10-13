@@ -117,6 +117,15 @@ describe('알림함', () => {
     expect(screen.getAllByText('읽지 않음')).toHaveLength(1)
   })
 
+  it('톱니 아이콘은 알림 설정 화면으로 이동한다', () => {
+    renderView()
+
+    expect(screen.getByRole('link', { name: '알림 설정' })).toHaveAttribute(
+      'href',
+      '/my/notification-settings',
+    )
+  })
+
   it('분류 필터 API가 생기기 전까지 전체 탭만 노출한다', () => {
     renderView()
 
