@@ -2,133 +2,143 @@
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
-import { Button } from '@/app/_global/_components/Button/Button'
+import { ApiErrorFeedbackState } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import SettingIcon from '@/app/_global/_components/Icon/assets/setting.svg'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
+import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
+import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
+import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import {
   notificationMutations,
   notificationQueries,
   type NotificationResponse,
 } from '@/app/_global/_queries/notification.queries'
+import { cn } from '@/app/_global/_services/cn.service'
 import { buildNotificationHref } from '@/app/_global/_services/notificationNavigation.service'
 
-function formatNotificationDate(createdAt: string): string {
-  return createdAt.slice(0, 16).replace('T', ' ')
-}
+import {
+  type NotificationTabValue,
+  VISIBLE_NOTIFICATION_TABS,
+} from '../../_data/notificationTab.constant'
+import { NotificationEmptyState } from '../NotificationEmptyState/NotificationEmptyState'
+import { NotificationItem } from '../NotificationItem/NotificationItem'
+import { NotificationListSkeleton } from '../NotificationListSkeleton/NotificationListSkeleton'
+import { NotificationTabs } from '../NotificationTabs/NotificationTabs'
 
 export function NotificationInboxView() {
   const queryClient = useQueryClient()
   const router = useRouter()
+  // 분류 필터 API가 없어 지금은 '전체'만 노출된다 — 탭 값은 필터가 생기면 쿼리에 넘긴다
+  const [tab, setTab] = useState<NotificationTabValue>('all')
   const listQuery = useInfiniteQuery(notificationQueries.list())
-  const readMutation = useMutation({
-    ...notificationMutations.read(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: notificationQueries.listAll() })
-    },
-  })
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  const invalidateList = () => {
+    void queryClient.invalidateQueries({ queryKey: notificationQueries.listAll() })
+  }
+  const readMutation = useMutation({ ...notificationMutations.read(), onSuccess: invalidateList })
   const readAllMutation = useMutation({
     ...notificationMutations.readAll(),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: notificationQueries.listAll() })
-    },
+    onSuccess: invalidateList,
   })
 
   const notifications = useMemo<NotificationResponse[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.notifications ?? []) ?? [],
     [listQuery.data],
   )
+  // 안 읽은 알림 수 API가 없어 전체 개수로 대신한다
+  const totalCount = listQuery.data?.pages[0]?.data?.pageInfo.totalElements
+
+  useLoadMoreOnVisible({
+    targetRef: loadMoreRef,
+    enabled: listQuery.hasNextPage && !listQuery.isError && !listQuery.isFetchingNextPage,
+    onLoadMore: () => {
+      void listQuery.fetchNextPage()
+    },
+  })
+
+  const openNotification = (notification: NotificationResponse) => {
+    if (!notification.isRead) readMutation.mutate(notification.notificationId)
+    router.push(buildNotificationHref(notification))
+  }
+
+  // 다음 페이지만 실패했으면 이미 받은 목록을 지우지 않는다
+  const showError = listQuery.isError && !listQuery.data
 
   return (
     <ScreenLayout
-      title="알림함"
-      bodyClassName="gap-4 px-4 py-4"
+      title="알림"
       action={
-        <button
-          type="button"
-          disabled={readAllMutation.isPending}
-          onClick={() => {
-            readAllMutation.mutate()
-          }}
-          className="px-4 text-body-14sb text-text-secondary disabled:opacity-40"
-        >
-          전체 읽음
-        </button>
+        // 알림 설정 화면이 아직 없다 — 화면이 생기면 여기서 연결한다
+        <TopBar.Action aria-label="알림 설정">
+          <SettingIcon />
+        </TopBar.Action>
       }
     >
-      <ul className="flex flex-col gap-3">
-        {notifications.map((notification) => (
-          <NotificationItem
-            key={notification.notificationId}
-            notification={notification}
-            isReading={
-              readMutation.isPending && readMutation.variables === notification.notificationId
-            }
-            onRead={() => {
-              readMutation.mutate(notification.notificationId)
-            }}
-            onOpen={() => {
-              router.push(buildNotificationHref(notification))
-            }}
-          />
-        ))}
-      </ul>
+      <NotificationTabs tabs={VISIBLE_NOTIFICATION_TABS} value={tab} onChange={setTab} />
 
-      {notifications.length === 0 && !listQuery.isPending && (
-        <p className="py-10 text-center text-body-14rg text-text-tertiary">알림이 없어요</p>
-      )}
-
-      {listQuery.hasNextPage && (
-        <Button
-          variant="back"
-          loading={listQuery.isFetchingNextPage}
-          onClick={() => {
-            void listQuery.fetchNextPage()
+      {showError ? (
+        <ApiErrorFeedbackState
+          onRetry={() => {
+            void listQuery.refetch()
           }}
-        >
-          더 보기
-        </Button>
+        />
+      ) : (
+        <>
+          <div className="flex shrink-0 items-center justify-between border-b border-border-default p-4 text-body-14rg font-medium">
+            {totalCount === undefined ? (
+              <Skeleton className="h-4.5 w-16" />
+            ) : (
+              <p className="text-text-secondary">
+                <span
+                  className={cn(
+                    'font-bold',
+                    totalCount > 0 ? 'text-text-accent' : 'text-icon-muted',
+                  )}
+                >
+                  {totalCount}
+                </span>
+                개의 알림
+              </p>
+            )}
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                disabled={readAllMutation.isPending}
+                onClick={() => {
+                  readAllMutation.mutate()
+                }}
+                className="press text-text-placeholder-a50 disabled:opacity-40"
+              >
+                모두 읽음
+              </button>
+            )}
+          </div>
+
+          {listQuery.isPending ? (
+            <NotificationListSkeleton />
+          ) : notifications.length === 0 ? (
+            <NotificationEmptyState />
+          ) : (
+            <>
+              <ul className="flex flex-col">
+                {notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.notificationId}
+                    notification={notification}
+                    onOpen={() => {
+                      openNotification(notification)
+                    }}
+                  />
+                ))}
+              </ul>
+              <div ref={loadMoreRef} aria-hidden="true" />
+            </>
+          )}
+        </>
       )}
     </ScreenLayout>
-  )
-}
-
-function NotificationItem({
-  notification,
-  isReading,
-  onRead,
-  onOpen,
-}: {
-  notification: NotificationResponse
-  isReading: boolean
-  onRead: () => void
-  onOpen: () => void
-}) {
-  return (
-    <li className="flex flex-col gap-2 border-b border-border-default py-4">
-      <div className="flex items-start justify-between gap-3">
-        <button
-          type="button"
-          onClick={onOpen}
-          className="flex min-w-0 flex-1 flex-col gap-1 text-left"
-        >
-          <div className="flex items-center">
-            <strong className="text-body-16bd text-text-primary">{notification.title}</strong>
-          </div>
-          <p className="text-body-14rg text-text-secondary">{notification.body}</p>
-          <time dateTime={notification.createdAt} className="text-body-14rg text-text-tertiary">
-            {formatNotificationDate(notification.createdAt)}
-          </time>
-        </button>
-        <button
-          type="button"
-          disabled={notification.isRead || isReading}
-          onClick={onRead}
-          className="shrink-0 rounded-full border border-border-default px-3 py-1 text-body-14sb text-text-secondary disabled:opacity-40"
-        >
-          읽음
-        </button>
-      </div>
-    </li>
   )
 }
