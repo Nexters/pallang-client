@@ -62,8 +62,20 @@ const SPOILER_PASSAGE = {
 
 const PAGE_INFO = { page: 0, size: 20, totalElements: 1, totalPages: 1, hasNext: false }
 
+const GROUP_ID = 4
+
+const GROUP = {
+  groupId: GROUP_ID,
+  name: '모순 같이 읽기',
+  bookId: BOOK_ID,
+  hostNickname: '밤샘낭독가',
+}
+
+/** 모임 대목에 남긴 흔적은 서버가 groupId·groupName을 채워 보낸다 — 전역이면 null */
+type GroupFields = { groupId?: number | null; groupName?: string | null }
+
 type Records = {
-  opinions?: (typeof MY_OPINION)[]
+  opinions?: (typeof MY_OPINION & GroupFields)[]
   liked?: (typeof LIKED_OPINION)[]
   passages?: (typeof SPOILER_PASSAGE)[]
 }
@@ -127,6 +139,9 @@ function stubApi({ opinions = [], liked = [], passages = [] }: Records) {
           new Response(JSON.stringify({ data: { passageId: released, isSpoiler: false } })),
         )
       }
+      if (url.includes('/api/groups/')) {
+        return Promise.resolve(new Response(JSON.stringify({ data: GROUP })))
+      }
       if (url.includes('/me/opinions')) return listResponse({ opinions })
       if (url.includes('/me/likes')) return listResponse({ opinions: liked })
       if (url.includes('/me/passages')) return listResponse({ passages: spoilers })
@@ -149,7 +164,8 @@ function listResponse(payload: Record<string, unknown>) {
   )
 }
 
-function renderView(records: Records = {}) {
+/** groupId는 들어온 내 서재 항목의 모임 — 기본은 전역 항목(null)이다 */
+function renderView(records: Records = {}, groupId: number | null = null) {
   stubLayout()
   const requests = stubApi(records)
   const client = new QueryClient({
@@ -157,10 +173,23 @@ function renderView(records: Records = {}) {
   })
   render(
     <QueryClientProvider client={client}>
-      <BookDetailView bookId={BOOK_ID} />
+      <BookDetailView bookId={BOOK_ID} groupId={groupId} />
     </QueryClientProvider>,
   )
   return requests
+}
+
+/** 세 탭을 차례로 열어 각 탭이 처음 보낸 목록 요청을 모은다 */
+async function collectTabListUrls(requests: { url: string }[]) {
+  await screen.findByText('등록한 의견이 없습니다')
+  await userEvent.click(screen.getByRole('tab', { name: '좋아요' }))
+  await screen.findByText('등록한 좋아요가 없습니다')
+  await userEvent.click(screen.getByRole('tab', { name: '스포일러' }))
+  await screen.findByText('등록한 스포일러가 없습니다')
+
+  return ['/me/opinions', '/me/likes', '/me/passages'].map(
+    (fragment) => urlsFor(requests, fragment)[0] ?? '',
+  )
 }
 
 function urlsFor(requests: { url: string }[], fragment: string) {
@@ -324,5 +353,61 @@ describe('내 서재 책 상세', () => {
     await waitFor(() => {
       expect(screen.queryByText('밤샘낭독가님의 좋아요를 해제했어요')).not.toBeInTheDocument()
     })
+  })
+})
+
+// 내 서재가 (책, 모임) 단위로 나뉘어, 책 상세는 들어온 항목의 범위만 보여야 한다.
+// 범위 없이 bookId로만 부르면 전역·모임 A·모임 B 흔적이 한 목록에 섞인다(서버 기본값이 '전체'다).
+describe('내 서재 책 상세 — 항목 범위', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
+  })
+
+  it('전역 항목에서 들어오면 세 탭 모두 전역 대목의 것만 요청한다', async () => {
+    const requests = renderView({}, null)
+
+    const tabUrls = await collectTabListUrls(requests)
+
+    tabUrls.forEach((url) => {
+      expect(url).toContain('globalOnly=true')
+      expect(url).not.toContain('groupId=')
+    })
+  })
+
+  it('모임 항목에서 들어오면 세 탭 모두 그 모임 대목의 것만 요청한다', async () => {
+    const requests = renderView({}, GROUP_ID)
+
+    const tabUrls = await collectTabListUrls(requests)
+
+    tabUrls.forEach((url) => {
+      expect(url).toContain(`groupId=${String(GROUP_ID)}`)
+      expect(url).not.toContain('globalOnly')
+    })
+  })
+
+  it('모임 항목이면 책 머리에 모임 이름을 붙인다', async () => {
+    renderView({}, GROUP_ID)
+
+    expect(await screen.findByText(GROUP.name)).toBeInTheDocument()
+    expect(screen.getByText('모임')).toBeInTheDocument()
+  })
+
+  it('전역 항목이면 모임 표시도, 모임 조회도 없다', async () => {
+    const requests = renderView({}, null)
+
+    expect(await screen.findByText('모순')).toBeInTheDocument()
+    expect(screen.queryByText('모임')).not.toBeInTheDocument()
+    expect(urlsFor(requests, '/api/groups/')).toHaveLength(0)
+  })
+
+  it('모임 대목에 남긴 흔적 카드는 groupId를 실어 흔적 보기로 간다', async () => {
+    renderView(
+      { opinions: [{ ...MY_OPINION, groupId: GROUP_ID, groupName: GROUP.name }] },
+      GROUP_ID,
+    )
+
+    const link = await screen.findByRole('link', { name: '128쪽 흔적 보기' })
+    expect(link).toHaveAttribute('href', expect.stringContaining(`groupId=${String(GROUP_ID)}`))
   })
 })

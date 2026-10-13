@@ -11,8 +11,13 @@ import {
 import { RetryMessage } from '@/app/_global/_components/RetryMessage/RetryMessage'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
-import { type BookActivity, bookQueries } from '@/app/_global/_queries/book.queries'
+import { bookQueries, type MyLibraryBook } from '@/app/_global/_queries/book.queries'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
+import { GroupScopeLabel } from '@/app/_shared/book/_components/GroupScopeLabel/GroupScopeLabel'
+import {
+  buildLibraryBookHref,
+  getLibraryEntryKey,
+} from '@/app/_shared/book/_data/libraryEntry.model'
 
 import { MyLibrarySkeleton } from '../MyLibrarySkeleton/MyLibrarySkeleton'
 
@@ -22,7 +27,7 @@ export function MyLibraryView() {
   // 홈 캐러셀 노출용) 여기는 마이페이지 > 내 서재라 "내가 이 책에 몇 개 남겼나"가 읽혀야 한다.
   // 서버 설명도 MINE을 마이페이지 노출용으로 못 박아 두었다.
   const listQuery = useInfiniteQuery(bookQueries.myLibrary({ opinionCountScope: 'MINE' }))
-  const books = useMemo<BookActivity[]>(
+  const books = useMemo<MyLibraryBook[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.books ?? []) ?? [],
     [listQuery.data],
   )
@@ -65,14 +70,18 @@ export function MyLibraryView() {
         {books.length === 0 && <MyLibrarySkeleton />}
         <ul className="flex flex-col gap-3">
           {books.map((book, index) => (
-            <li key={book.bookId} className="flex flex-col gap-3">
-              <Link href={`/my/library/${String(book.bookId)}`} className="press block">
+            // 같은 책이 개인·모임 두 항목으로 올 수 있어 bookId만으로는 key가 겹친다
+            <li key={getLibraryEntryKey(book)} className="flex flex-col gap-3">
+              <Link href={buildLibraryBookHref(book)} className="press block">
                 <BookItem
                   author={book.author}
                   coverImageUrl={book.coverImageUrl}
                   opinionCount={book.opinionCount}
                   passageCount={book.passageCount}
                   publisher={book.publisher}
+                  scopeLabel={
+                    book.groupId != null && <GroupScopeLabel groupName={book.groupName ?? ''} />
+                  }
                   title={book.title}
                 />
               </Link>

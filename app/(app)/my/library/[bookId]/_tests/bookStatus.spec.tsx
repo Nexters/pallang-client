@@ -85,7 +85,7 @@ function renderView(initialStatus: string | null = null, saveStatusCode?: number
   })
   render(
     <QueryClientProvider client={client}>
-      <BookDetailView bookId={BOOK_ID} />
+      <BookDetailView bookId={BOOK_ID} groupId={null} />
     </QueryClientProvider>,
   )
   return requests

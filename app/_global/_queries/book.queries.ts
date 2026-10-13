@@ -8,13 +8,13 @@ import {
   searchBooks,
   searchInternalBooks,
 } from '../_apis/_generated/book/book'
-import type { BookActivityResponse } from '../_apis/_generated/models/bookActivityResponse'
 import type { BookDetailResponse } from '../_apis/_generated/models/bookDetailResponse'
 import { BookDetailResponseMyStatus } from '../_apis/_generated/models/bookDetailResponseMyStatus'
 import type { CreateBookRequest } from '../_apis/_generated/models/createBookRequest'
 import type { GetMyLibraryBooksParams } from '../_apis/_generated/models/getMyLibraryBooksParams'
 import type { GetPopularBooksParams } from '../_apis/_generated/models/getPopularBooksParams'
 import type { GetRecentBooksParams } from '../_apis/_generated/models/getRecentBooksParams'
+import type { MyLibraryBookResponse } from '../_apis/_generated/models/myLibraryBookResponse'
 import type { SearchBooksParams } from '../_apis/_generated/models/searchBooksParams'
 import type { SearchInternalBooksParams } from '../_apis/_generated/models/searchInternalBooksParams'
 import { SearchInternalBooksSort } from '../_apis/_generated/models/searchInternalBooksSort'
@@ -27,7 +27,11 @@ import { createBook } from '../_apis/book.api'
 export const BOOK_SEARCH_SORT = SearchInternalBooksSort
 export type BookSearchSort = NonNullable<SearchInternalBooksParams['sort']>
 
-export type BookActivity = BookActivityResponse
+/**
+ * 내 서재 항목 하나. 책 단위가 아니라 (책, 모임) 단위라 같은 `bookId`가 두 번 올 수 있다 —
+ * 모임에서 남긴 흔적은 `groupId`·`groupName`이 찬 별도 항목이고, 전역 항목은 둘 다 null이다.
+ */
+export type MyLibraryBook = MyLibraryBookResponse
 
 /** 내가 이 책에 매긴 독서 상태. 아직 정하지 않았으면 null이다. */
 export type BookStatus = BookDetailResponseMyStatus

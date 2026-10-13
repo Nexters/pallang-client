@@ -13,7 +13,10 @@ import {
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
+import { GroupScopeLabel } from '@/app/_shared/book/_components/GroupScopeLabel/GroupScopeLabel'
+import { getLibraryEntryKey } from '@/app/_shared/book/_data/libraryEntry.model'
 import { toLargeCoverUrl } from '@/app/_shared/book/_services/coverVariant.service'
+import { buildTraceHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { HomeBookCarouselSkeleton } from './HomeBookCarouselSkeleton'
 
@@ -21,6 +24,11 @@ type Book = {
   author: string
   bookId: number
   coverImageUrl?: null | string
+  /** 내 서재가 (책, 모임) 단위라 같은 bookId가 두 장 올 수 있다 — key·복원은 이 값으로 가른다 */
+  entryKey: string
+  /** 모임 항목이면 그 모임, 전역 항목이면 null */
+  groupId: null | number
+  groupName: null | string
   opinionCount: number
   passageCount: number
   title: string
@@ -31,12 +39,18 @@ type OpinionCountBadgeProps = {
   href: string
 }
 
-type SampleBookLabelProps = {
-  show: boolean
+type CoverLabel = {
+  text: string
+  /** 표지 링크가 이름을 따로 가져 스크린리더는 읽지 않는다 — 테스트·조회용 이름표 */
+  ariaLabel: string
 }
 
 const PAGE_SIZE = 10
-const RESTORE_HOME_BOOK_ID_STORAGE_KEY = 'pallang:home-carousel:restore-book-id'
+// 담는 값이 bookId에서 항목 키(getLibraryEntryKey)로 바뀌었지만 키 이름은 그대로 둔다 —
+// 전역 항목의 키가 bookId 문자열 그대로라, 배포 전에 저장된 값도 같은 책으로 복원된다
+const RESTORE_HOME_ENTRY_STORAGE_KEY = 'pallang:home-carousel:restore-book-id'
+const SAMPLE_COVER_LABEL: CoverLabel = { text: 'SAMPLE', ariaLabel: '샘플 도서' }
+const GROUP_COVER_LABEL: CoverLabel = { text: '모임', ariaLabel: '모임 도서' }
 const FIRST_BOOK_CENTER_X = 110
 const BOOK_GAP = 214
 const BOOK_TRACK_START_PADDING = `calc(50% - ${String(FIRST_BOOK_CENTER_X)}px)`
@@ -58,24 +72,15 @@ function getInitialBookIndex(bookCount: number): number {
   return bookCount >= 3 ? 1 : 0
 }
 
-function getRestoreHomeBookId(): null | number {
-  const value = getSessionStorageItem(RESTORE_HOME_BOOK_ID_STORAGE_KEY)
-  if (value === null) return null
-
-  const bookId = Number(value)
-
-  return Number.isFinite(bookId) ? bookId : null
-}
-
-function setRestoreHomeBookId(bookId: number): void {
-  setSessionStorageItem(RESTORE_HOME_BOOK_ID_STORAGE_KEY, String(bookId))
+function setRestoreHomeEntryKey(entryKey: string): void {
+  setSessionStorageItem(RESTORE_HOME_ENTRY_STORAGE_KEY, entryKey)
 }
 
 function getRestoredBookIndex(books: Book[]): number {
-  const restoreHomeBookId = getRestoreHomeBookId()
-  if (restoreHomeBookId === null) return getInitialBookIndex(books.length)
+  const restoreEntryKey = getSessionStorageItem(RESTORE_HOME_ENTRY_STORAGE_KEY)
+  if (restoreEntryKey === null) return getInitialBookIndex(books.length)
 
-  const restoredBookIndex = books.findIndex((book) => book.bookId === restoreHomeBookId)
+  const restoredBookIndex = books.findIndex((book) => book.entryKey === restoreEntryKey)
 
   return restoredBookIndex >= 0 ? restoredBookIndex : getInitialBookIndex(books.length)
 }
@@ -122,15 +127,35 @@ function OpinionCountBadge({ count, href }: OpinionCountBadgeProps) {
   )
 }
 
-function SampleBookLabel({ show }: SampleBookLabelProps) {
-  if (!show) return null
+/** 표지 왼쪽 위 라벨. 비로그인 샘플은 SAMPLE, 모임 항목은 모임 — 둘은 함께 오지 않는다(비로그인엔 모임이 없다). */
+function getCoverLabel(book: Book, showSampleLabel: boolean): CoverLabel | null {
+  if (showSampleLabel) return SAMPLE_COVER_LABEL
+  if (book.groupId !== null) return GROUP_COVER_LABEL
+  return null
+}
+
+/**
+ * 같은 책이 개인·모임 두 장으로 나란히 오면 제목만으로는 링크를 가를 수 없다 — 모임 이름을 붙인다.
+ * 괄호로 떼는 이유: 모임 이름이 '…모임'으로 끝나는 경우가 많아 '이름 모임의'로 이으면 '모임 모임의'가 된다.
+ */
+function getTraceLinkLabel(book: Book): string {
+  if (book.groupId === null) return `${book.title} 흔적 보기`
+  return `${book.title} 흔적 보기 (모임: ${book.groupName ?? ''})`
+}
+
+function getTraceHref(book: Book): string {
+  return buildTraceHref(book.bookId, { groupId: book.groupId })
+}
+
+function BookCoverLabel({ label }: { label: CoverLabel | null }) {
+  if (!label) return null
 
   return (
     <span
-      aria-label="샘플 도서"
+      aria-label={label.ariaLabel}
       className="absolute top-[-20px] -left-px z-10 bg-bg-dark px-3 py-2 font-pretendard text-[14px] leading-[1.2] font-semibold text-text-inverse"
     >
-      SAMPLE
+      {label.text}
     </span>
   )
 }
@@ -145,17 +170,21 @@ function BookCarouselTrack({
 }: {
   bookListRef: RefObject<HTMLDivElement | null>
   books: Book[]
-  onTraceClick: (bookId: number) => void
+  onTraceClick: (entryKey: string) => void
   onScroll: (event: UIEvent<HTMLDivElement>) => void
   showSampleLabel: boolean
   selectedBookIndex: number
 }) {
+  // 라벨은 표지 위로 20px 튀어나온다. 스크롤 컨테이너가 세로를 자르므로 라벨이 하나라도 있으면
+  // 그만큼 위로 늘려 둔다 — top을 올린 만큼 padding으로 되돌려 표지 자리는 그대로다
+  const hasCoverLabel = books.some((book) => getCoverLabel(book, showSampleLabel) !== null)
+
   return (
     <div className="relative h-[340px] w-full overflow-visible">
       <div
         ref={bookListRef}
         onScroll={onScroll}
-        className={`absolute left-0 w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pb-14 scrollbar-none [&::-webkit-scrollbar]:hidden ${showSampleLabel ? '-top-5 h-[416px] pt-5' : 'h-[396px]'}`}
+        className={`absolute left-0 w-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden pb-14 scrollbar-none [&::-webkit-scrollbar]:hidden ${hasCoverLabel ? '-top-5 h-[416px] pt-5' : 'h-[396px]'}`}
       >
         <div
           className="relative h-[340px] w-max"
@@ -167,7 +196,7 @@ function BookCarouselTrack({
           <div className="relative h-[340px]" style={{ width: getTrackWidth(books.length) }}>
             {books.map((book, index) => (
               <div
-                key={book.bookId}
+                key={book.entryKey}
                 className="absolute top-0 flex h-[340px] w-[220px] -translate-x-1/2 snap-center items-center justify-center"
                 style={{
                   left: `${String(getBookCenterX(index))}px`,
@@ -175,14 +204,14 @@ function BookCarouselTrack({
                 }}
               >
                 <Link
-                  href={`/trace/${String(book.bookId)}`}
-                  aria-label={`${book.title} 흔적 보기`}
+                  href={getTraceHref(book)}
+                  aria-label={getTraceLinkLabel(book)}
                   data-home-coachmark-target={
                     index === selectedBookIndex ? 'library-book-cover' : undefined
                   }
                   className="relative h-[340px] w-[220px] overflow-visible rounded-sm border border-border-book bg-interactive-accent shadow-[4px_10px_35px_rgba(0,0,0,0.2)]"
                   onClick={() => {
-                    onTraceClick(book.bookId)
+                    onTraceClick(book.entryKey)
                   }}
                   style={{ scale: getBookScale(index) }}
                 >
@@ -203,7 +232,7 @@ function BookCarouselTrack({
                       className="rounded-sm object-cover"
                     />
                   )}
-                  <SampleBookLabel show={showSampleLabel} />
+                  <BookCoverLabel label={getCoverLabel(book, showSampleLabel)} />
                   <span className="sr-only">{book.title} 표지</span>
                 </Link>
               </div>
@@ -230,22 +259,22 @@ function ActiveBookInfo({ activeBook }: { activeBook: Book }) {
           <p className="min-w-0 flex-1 truncate font-pretendard text-[16px] leading-[1.2] font-normal tracking-[-0.32px] text-text-tertiary">
             {activeBook.author}
           </p>
-          <OpinionCountBadge
-            count={activeBook.opinionCount}
-            href={`/trace/${String(activeBook.bookId)}`}
-          />
+          <OpinionCountBadge count={activeBook.opinionCount} href={getTraceHref(activeBook)} />
         </div>
+        {activeBook.groupId !== null && (
+          <GroupScopeLabel groupName={activeBook.groupName ?? ''} className="mt-1 px-0.5" />
+        )}
       </div>
     </div>
   )
 }
 
 function dedupeBooks(books: Book[]): Book[] {
-  const seen = new Set<number>()
+  const seen = new Set<string>()
 
   return books.filter((book) => {
-    if (seen.has(book.bookId)) return false
-    seen.add(book.bookId)
+    if (seen.has(book.entryKey)) return false
+    seen.add(book.entryKey)
     return true
   })
 }
@@ -261,7 +290,7 @@ function arrangeBooksForInitialCarousel(books: Book[]): Book[] {
 
 export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean }) {
   const bookListRef = useRef<HTMLDivElement>(null)
-  const [activeBookId, setActiveBookId] = useState<null | number>(null)
+  const [activeEntryKey, setActiveEntryKey] = useState<null | string>(null)
   const [readyBooksKey, setReadyBooksKey] = useState('')
   const libraryOptions = bookQueries.myLibrary({ opinionCountScope: 'ALL', size: PAGE_SIZE })
   const booksQuery = useInfiniteQuery(libraryOptions)
@@ -278,6 +307,9 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
               // 220px 슬롯은 DPR 2에서 440px 원본이 필요한데 저장된 알라딘 cover200은 폭 200px이라
               // 2배 이상 업스케일된다. 큰 슬롯용 cover500으로 치환해 원본 해상도를 확보한다.
               coverImageUrl: book.coverImageUrl ? toLargeCoverUrl(book.coverImageUrl) : null,
+              entryKey: getLibraryEntryKey(book),
+              groupId: book.groupId ?? null,
+              groupName: book.groupName ?? null,
               opinionCount: book.opinionCount,
               passageCount: book.passageCount,
               title: book.title,
@@ -288,11 +320,13 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
   )
   const arrangedBooks = useMemo(() => arrangeBooksForInitialCarousel(books), [books])
   const booksKey = useMemo(
-    () => arrangedBooks.map((book) => String(book.bookId)).join('|'),
+    () => arrangedBooks.map((book) => book.entryKey).join('|'),
     [arrangedBooks],
   )
   const activeBookIndex =
-    activeBookId === null ? -1 : arrangedBooks.findIndex((book) => book.bookId === activeBookId)
+    activeEntryKey === null
+      ? -1
+      : arrangedBooks.findIndex((book) => book.entryKey === activeEntryKey)
   const selectedBookIndex =
     activeBookIndex >= 0 ? activeBookIndex : getInitialBookIndex(arrangedBooks.length)
   const activeBook = arrangedBooks[selectedBookIndex] ?? arrangedBooks[0]
@@ -304,15 +338,15 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
     if (!scrollContainer || arrangedBooks.length === 0) return
 
     const nextBookIndex = getRestoredBookIndex(arrangedBooks)
-    const nextBookId = arrangedBooks[nextBookIndex]?.bookId ?? null
+    const nextEntryKey = arrangedBooks[nextBookIndex]?.entryKey ?? null
 
     syncScrollToBookIndex(scrollContainer, nextBookIndex)
-    setActiveBookId(nextBookId)
+    setActiveEntryKey(nextEntryKey)
     setReadyBooksKey(booksKey)
   }, [arrangedBooks, booksKey])
 
-  const handleTraceClick = (bookId: number) => {
-    setRestoreHomeBookId(bookId)
+  const handleTraceClick = (entryKey: string) => {
+    setRestoreHomeEntryKey(entryKey)
   }
 
   const handleBookListScroll = (event: UIEvent<HTMLDivElement>) => {
@@ -320,9 +354,9 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
     syncScrollIndex(scrollContainer)
 
     const nextActiveIndex = getNearestBookIndex(scrollContainer.scrollLeft, arrangedBooks.length)
-    const nextActiveBookId = arrangedBooks[nextActiveIndex]?.bookId ?? null
+    const nextActiveEntryKey = arrangedBooks[nextActiveIndex]?.entryKey ?? null
 
-    setActiveBookId(nextActiveBookId)
+    setActiveEntryKey(nextActiveEntryKey)
 
     if (nextActiveIndex >= arrangedBooks.length - 2 && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage()

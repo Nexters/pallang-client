@@ -11,6 +11,8 @@ type BookItemProps = ComponentPropsWithoutRef<'article'> & {
   opinionCount?: number
   passageCount?: number
   publisher?: string
+  /** 출판사·지은이 줄 아래 자리. 내 서재의 모임 항목이 `모임 · 이름`을 여기에 단다. */
+  scopeLabel?: ReactNode
   /** 대목·흔적 수 오른쪽에 붙는 자리. 책 상세의 독서 상태 뱃지가 여기로 들어온다. */
   statusBadge?: ReactNode
   title: string
@@ -52,6 +54,7 @@ export function BookItem({
   opinionCount,
   passageCount,
   publisher,
+  scopeLabel,
   statusBadge,
   title,
   titleBehavior = 'truncate',
@@ -85,6 +88,7 @@ export function BookItem({
             {title}
           </h2>
           <p className="w-full truncate text-body-14md text-text-secondary/50">{description}</p>
+          {scopeLabel}
         </div>
         {passageCount !== undefined && opinionCount !== undefined && (
           <div className="flex items-center gap-1">

@@ -17,6 +17,7 @@ import { useSpoilerRelease } from '@/app/_shared/user/_hooks/useSpoilerRelease'
 
 import type { BookRecordTab } from '../../_data/bookRecordTab.constant'
 import { BookEditAction } from '../BookEditAction/BookEditAction'
+import { BookGroupLabel } from '../BookGroupLabel/BookGroupLabel'
 import { BookHeaderSkeleton } from '../BookHeaderSkeleton/BookHeaderSkeleton'
 import { BookRecordTabs } from '../BookRecordTabs/BookRecordTabs'
 import { BookStatusChip } from '../BookStatusChip/BookStatusChip'
@@ -48,7 +49,17 @@ type Notice = {
 /** 패널 세 장이 같은 회색 면을 쓴다 — 한곳에 두어 서로 어긋나지 않게 한다 */
 const PANEL_CLASS = 'flex flex-1 flex-col gap-2 bg-bg-surface p-4'
 
-export function BookDetailView({ bookId }: { bookId: number }) {
+type BookDetailViewProps = {
+  bookId: number
+  /**
+   * 들어온 내 서재 항목의 모임. null이면 전역 항목이다.
+   * 내 서재가 (책, 모임) 단위로 나뉘어 있어 세 탭 목록도 그 항목 범위만 보여야 한다 —
+   * 범위 없이 bookId로만 부르면 전역·모임 A·모임 B 흔적이 한 목록에 섞인다.
+   */
+  groupId: number | null
+}
+
+export function BookDetailView({ bookId, groupId }: BookDetailViewProps) {
   const [tab, setTab] = useState<BookRecordTab>('opinion')
   const [unliked, setUnliked] = useState<UnlikedTarget | null>(null)
   const release = useSpoilerRelease()
@@ -132,6 +143,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
           opinionCount={book.opinionCount}
           passageCount={book.passageCount}
           publisher={book.publisher}
+          scopeLabel={groupId !== null && <BookGroupLabel groupId={groupId} />}
           statusBadge={
             <BookStatusChip
               status={savedStatus}
@@ -212,11 +224,12 @@ export function BookDetailView({ bookId }: { bookId: number }) {
           {/* 카드가 흰색이라 목록 면은 회색이어야 카드가 떠 보인다.
             Tabs.Panel은 고르지 않은 쪽을 떼어 두므로(keepMounted 기본값) 활성 탭의 쿼리만 나간다. */}
           <Tabs.Panel value="opinion" className={PANEL_CLASS}>
-            <OpinionPanel bookId={bookId} />
+            <OpinionPanel bookId={bookId} groupId={groupId} />
           </Tabs.Panel>
           <Tabs.Panel value="like" className={PANEL_CLASS}>
             <LikedPanel
               bookId={bookId}
+              groupId={groupId}
               onUnlike={(target) => {
                 clearNotices()
                 setUnliked(target)
@@ -230,6 +243,7 @@ export function BookDetailView({ bookId }: { bookId: number }) {
           <Tabs.Panel value="spoiler" className={PANEL_CLASS}>
             <SpoilerPanel
               bookId={bookId}
+              groupId={groupId}
               onRelease={(passage) => {
                 clearNotices()
                 release.start(passage)

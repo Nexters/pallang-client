@@ -48,11 +48,16 @@ export function HomeOpinionCard({
 }: HomeOpinionCardProps) {
   return (
     <Link
-      href={buildTraceTargetHref(opinion.bookId, {
-        pageNumber: opinion.pageNumber,
-        passageId: opinion.passageId,
-        opinionId: opinion.opinionId,
-      })}
+      href={buildTraceTargetHref(
+        opinion.bookId,
+        {
+          pageNumber: opinion.pageNumber,
+          passageId: opinion.passageId,
+          opinionId: opinion.opinionId,
+        },
+        // 모임 전용 대목은 groupId를 실어야 흔적 보기가 그 대목을 조회한다(전역이면 null — 붙지 않는다)
+        { groupId: opinion.groupId },
+      )}
       aria-label={`${opinion.bookTitle} ${String(opinion.pageNumber)}쪽 의견 보기`}
       className={cn(
         'press relative flex h-[260px] w-[200px] shrink-0 flex-col overflow-visible border border-border-book drop-shadow-[4px_10px_17.5px_rgba(0,0,0,0.2)]',

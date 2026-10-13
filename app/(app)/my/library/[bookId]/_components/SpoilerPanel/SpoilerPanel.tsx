@@ -10,14 +10,16 @@ import { SpoilerPassageCard } from '@/app/_shared/user/_components/SpoilerPassag
 
 type SpoilerPanelProps = {
   bookId: number
+  /** 들어온 내 서재 항목의 모임 — null이면 전역 대목만 */
+  groupId: number | null
   /** `해제`를 눌렀을 때. 확인 다이얼로그는 화면이 하나만 들고 있는다. */
   onRelease: (passage: MyPassage) => void
 }
 
-/** 이 책에서 내가 스포일러로 가려 둔 대목 목록. */
-export function SpoilerPanel({ bookId, onRelease }: SpoilerPanelProps) {
+/** 이 책(그 항목 범위)에서 내가 스포일러로 가려 둔 대목 목록. */
+export function SpoilerPanel({ bookId, groupId, onRelease }: SpoilerPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const listQuery = useInfiniteQuery(userQueries.spoilerPassageList(bookId))
+  const listQuery = useInfiniteQuery(userQueries.spoilerPassageList(bookId, { groupId }))
   const passages = useMemo<MyPassage[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.passages ?? []) ?? [],
     [listQuery.data],

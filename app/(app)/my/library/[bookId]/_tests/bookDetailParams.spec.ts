@@ -13,8 +13,11 @@ vi.mock('next/navigation', () => ({ notFound: notFoundMock }))
 // 이 스펙이 보는 건 params 검증뿐이라 클라이언트 화면은 자리표시자로 둔다
 vi.mock('../_components/BookDetailView/BookDetailView', () => ({ BookDetailView: () => null }))
 
-function open(bookId: string) {
-  return BookDetailBoundary({ params: Promise.resolve({ bookId }) })
+function open(bookId: string, searchParams: Record<string, string> = {}) {
+  return BookDetailBoundary({
+    params: Promise.resolve({ bookId }),
+    searchParams: Promise.resolve(searchParams),
+  })
 }
 
 describe('책 상세 params 경계', () => {
@@ -37,5 +40,19 @@ describe('책 상세 params 경계', () => {
 
     expect(notFoundMock).not.toHaveBeenCalled()
     expect(element).toMatchObject({ props: { bookId: 12 } })
+  })
+
+  // 내 서재가 (책, 모임) 단위라 어느 항목에서 들어왔는지가 탭 목록의 범위다
+  it('모임 항목에서 들어오면 groupId를 화면에 넘긴다', async () => {
+    const element = await open('12', { groupId: '4' })
+
+    expect(element).toMatchObject({ props: { bookId: 12, groupId: 4 } })
+  })
+
+  it('groupId가 없거나 양의 정수가 아니면 전역 항목(null)으로 연다 — 책은 그대로 열린다', async () => {
+    expect(await open('12')).toMatchObject({ props: { groupId: null } })
+    expect(await open('12', { groupId: 'abc' })).toMatchObject({ props: { groupId: null } })
+    expect(await open('12', { groupId: '0' })).toMatchObject({ props: { groupId: null } })
+    expect(notFoundMock).not.toHaveBeenCalled()
   })
 })

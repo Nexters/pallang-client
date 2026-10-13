@@ -23,14 +23,17 @@ export type TraceTarget = {
 }
 
 export type TraceScopeOptions = {
-  /** 모임 안에서 연 흔적 화면 — 대목 조회가 이 모임 전용 대목만 보고, 헤더에 '모임' 배지가 붙는다 */
-  groupId?: number
+  /**
+   * 모임 안에서 연 흔적 화면 — 대목 조회가 이 모임 전용 대목만 보고, 헤더에 '모임' 배지가 붙는다.
+   * null은 전역이다. 내 서재·내 흔적 응답이 전역 항목에 null을 실어 보내 그대로 넘길 수 있게 받는다.
+   */
+  groupId?: number | null
 }
 
-/** 책 화면(첫 쪽)으로 가는 링크. 모임에서 '보러가기'가 쓴다. */
+/** 책 화면(첫 쪽)으로 가는 링크. 모임에서 '보러가기'·홈 내 서재가 쓴다. */
 export function buildTraceHref(bookId: number, options: TraceScopeOptions = {}): string {
   const params = new URLSearchParams()
-  if (options.groupId !== undefined) params.set(PARAM.groupId, String(options.groupId))
+  if (options.groupId != null) params.set(PARAM.groupId, String(options.groupId))
   const query = params.toString()
   return query ? `/trace/${String(bookId)}?${query}` : `/trace/${String(bookId)}`
 }
@@ -46,7 +49,7 @@ export function buildTraceTargetHref(
     [PARAM.passageId]: String(target.passageId),
     [PARAM.opinionId]: String(target.opinionId),
   })
-  if (options.groupId !== undefined) params.set(PARAM.groupId, String(options.groupId))
+  if (options.groupId != null) params.set(PARAM.groupId, String(options.groupId))
   return `/trace/${String(bookId)}?${params.toString()}`
 }
 

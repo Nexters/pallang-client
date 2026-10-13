@@ -23,11 +23,16 @@ export function SpoilerPassageCard({ passage, onRelease }: SpoilerPassageCardPro
       // 대목 응답에는 흔적 본문이 없다 — 스포일러로 가려 둔 인용문 자체가 이 화면의 본문이다
       body={passage.quotedText}
       link={{
-        href: buildTraceTargetHref(passage.bookId, {
-          pageNumber: passage.pageNumber,
-          passageId: passage.passageId,
-          opinionId: passage.opinionId,
-        }),
+        href: buildTraceTargetHref(
+          passage.bookId,
+          {
+            pageNumber: passage.pageNumber,
+            passageId: passage.passageId,
+            opinionId: passage.opinionId,
+          },
+          // 모임 전용 대목은 groupId를 실어야 흔적 보기가 그 대목을 조회한다(전역이면 null — 붙지 않는다)
+          { groupId: passage.groupId },
+        ),
         label: `${String(passage.pageNumber)}쪽 흔적 보기`,
       }}
       action={
