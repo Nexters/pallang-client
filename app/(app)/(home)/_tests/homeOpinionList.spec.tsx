@@ -77,7 +77,13 @@ function createOpinion(index: number) {
   }
 }
 
-function stubApi(opinions = OPINIONS) {
+/** 모임 대목에 남긴 의견은 서버가 groupId·groupName을 채워 보낸다 — 전역이면 null */
+type OpinionFixture = (typeof OPINIONS)[number] & {
+  groupId?: number | null
+  groupName?: string | null
+}
+
+function stubApi(opinions: OpinionFixture[] = OPINIONS) {
   const calls: string[] = []
 
   vi.stubGlobal(
@@ -125,6 +131,18 @@ describe('홈 내 의견 목록', () => {
     const link = await screen.findByRole('link', { name: '모순 12쪽 의견 보기' })
 
     expect(link).toHaveAttribute('href', '/trace/11?page=12&passageId=101&opinionId=1')
+  })
+
+  // 모임 전용 대목은 groupId 없이 열면 조회되지 않아 빈 화면이 된다(#420)
+  it('모임 대목에 남긴 의견 카드는 groupId를 실어 그 모임의 흔적 화면으로 간다', async () => {
+    const [first, ...rest] = OPINIONS
+    if (!first) throw new Error('테스트 의견 기본값이 없습니다.')
+    stubApi([{ ...first, groupId: 13, groupName: '모순 뽀개기' }, ...rest])
+    renderList()
+
+    const link = await screen.findByRole('link', { name: '모순 12쪽 의견 보기' })
+
+    expect(link).toHaveAttribute('href', '/trace/11?page=12&passageId=101&opinionId=1&groupId=13')
   })
 
   it('비로그인 샘플 의견 목록은 앞의 두 카드에 SAMPLE 배지를 보여준다', async () => {

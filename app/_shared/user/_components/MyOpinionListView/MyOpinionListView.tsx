@@ -101,11 +101,16 @@ export function MyOpinionListView() {
 function OpinionItem({ opinion }: { opinion: UserOpinion }) {
   return (
     <Link
-      href={buildTraceTargetHref(opinion.bookId, {
-        pageNumber: opinion.pageNumber,
-        passageId: opinion.passageId,
-        opinionId: opinion.opinionId,
-      })}
+      href={buildTraceTargetHref(
+        opinion.bookId,
+        {
+          pageNumber: opinion.pageNumber,
+          passageId: opinion.passageId,
+          opinionId: opinion.opinionId,
+        },
+        // 모임 전용 대목은 groupId를 실어야 흔적 보기가 그 대목을 조회한다(전역이면 null — 붙지 않는다)
+        { groupId: opinion.groupId },
+      )}
       className="press flex w-full items-start gap-4"
     >
       <div

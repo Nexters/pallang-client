@@ -46,11 +46,16 @@ export function LikedOpinionCard({ opinion, onUnlike, onRelike }: LikedOpinionCa
       meta={opinion.nickname}
       body={opinion.content}
       link={{
-        href: buildTraceTargetHref(opinion.bookId, {
-          pageNumber: opinion.pageNumber,
-          passageId: opinion.passageId,
-          opinionId: opinion.opinionId,
-        }),
+        href: buildTraceTargetHref(
+          opinion.bookId,
+          {
+            pageNumber: opinion.pageNumber,
+            passageId: opinion.passageId,
+            opinionId: opinion.opinionId,
+          },
+          // 모임 전용 대목은 groupId를 실어야 흔적 보기가 그 대목을 조회한다(전역이면 null — 붙지 않는다)
+          { groupId: opinion.groupId },
+        ),
         label: `${opinion.nickname}님의 흔적 보기`,
       }}
       action={
