@@ -105,7 +105,7 @@ function renderView(options: Options = {}) {
   })
   render(
     <QueryClientProvider client={client}>
-      <BookDetailView bookId={BOOK_ID} />
+      <BookDetailView bookId={BOOK_ID} groupId={null} />
     </QueryClientProvider>,
   )
   return requests

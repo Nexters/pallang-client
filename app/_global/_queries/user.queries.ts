@@ -32,6 +32,18 @@ export type MyPassage = MyPassageResponse
 /** 도서 필터 드롭다운의 옵션 하나. */
 export type FilterBook = BookOptionResponse
 
+/**
+ * 목록을 좁힐 대목 범위 — 내 서재 항목이 (책, 모임) 단위라 그 항목의 책 상세 탭도 같은 범위만 본다.
+ * `groupId`가 null이면 전역 공개 대목만이다. 범위를 아예 넘기지 않으면(생략) 전역·모임을 가리지 않고
+ * 전부라, null과 생략은 다른 뜻이다 — 서버도 둘 다 생략하면 전체를 준다.
+ */
+export type PassageScope = { groupId: number | null }
+
+function toScopeParams(scope?: PassageScope): { groupId?: number; globalOnly?: boolean } {
+  if (!scope) return {}
+  return scope.groupId === null ? { globalOnly: true } : { groupId: scope.groupId }
+}
+
 /** 필터를 거는 관리 화면 종류(LIKE: 좋아요 관리, SPOILER: 스포일러 대목 관리). */
 export type FilterBooksType = GetFilterBooksType
 
@@ -52,14 +64,19 @@ export const userQueries = {
       retry: false,
     }),
   /**
-   * 내가 남긴 흔적 목록. `bookId`를 주면 그 책만 추린다(책 상세 의견 탭).
-   * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
+   * 내가 남긴 흔적 목록. `bookId`를 주면 그 책만, `scope`를 주면 그 범위만 추린다(책 상세 의견 탭).
+   * 필터는 서버가 걸므로 queryKey에 넣어 책·범위마다 따로 캐시한다.
    */
-  opinionList: (bookId?: number) =>
+  opinionList: (bookId?: number, scope?: PassageScope) =>
     infiniteQueryOptions({
-      queryKey: [...userQueries.all(), 'opinion-list', bookId ?? 'all'],
+      queryKey: [...userQueries.all(), 'opinion-list', bookId ?? 'all', toScopeParams(scope)],
       queryFn: ({ pageParam }) =>
-        getMyOpinions({ bookId, page: pageParam, size: USER_OPINION_PAGE_SIZE }),
+        getMyOpinions({
+          bookId,
+          ...toScopeParams(scope),
+          page: pageParam,
+          size: USER_OPINION_PAGE_SIZE,
+        }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
@@ -69,14 +86,19 @@ export const userQueries = {
   /** 좋아요 관리 화면의 목록 전체 — 도서 필터를 가리지 않고 함께 무효화할 때 쓴다 */
   likedOpinionListAll: () => [...userQueries.all(), 'liked-opinion-list'] as const,
   /**
-   * 내가 좋아요를 누른 흔적 목록. `bookId`를 주면 그 책만 추린다.
-   * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
+   * 내가 좋아요를 누른 흔적 목록. `bookId`를 주면 그 책만, `scope`를 주면 그 범위만 추린다.
+   * 필터는 서버가 걸므로 queryKey에 넣어 책·범위마다 따로 캐시한다.
    */
-  likedOpinionList: (bookId?: number) =>
+  likedOpinionList: (bookId?: number, scope?: PassageScope) =>
     infiniteQueryOptions({
-      queryKey: [...userQueries.likedOpinionListAll(), bookId ?? 'all'],
+      queryKey: [...userQueries.likedOpinionListAll(), bookId ?? 'all', toScopeParams(scope)],
       queryFn: ({ pageParam }) =>
-        getLikedOpinions({ bookId, page: pageParam, size: USER_OPINION_PAGE_SIZE }),
+        getLikedOpinions({
+          bookId,
+          ...toScopeParams(scope),
+          page: pageParam,
+          size: USER_OPINION_PAGE_SIZE,
+        }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
@@ -86,15 +108,16 @@ export const userQueries = {
   /** 스포일러 관리 화면의 목록 전체 — 도서 필터를 가리지 않고 함께 무효화할 때 쓴다 */
   spoilerPassageListAll: () => [...userQueries.all(), 'spoiler-passage-list'] as const,
   /**
-   * 내가 스포일러로 표시한 대목 목록. `bookId`를 주면 그 책만 추린다.
-   * 필터는 서버가 걸므로 queryKey에 넣어 책마다 따로 캐시한다.
+   * 내가 스포일러로 표시한 대목 목록. `bookId`를 주면 그 책만, `scope`를 주면 그 범위만 추린다.
+   * 필터는 서버가 걸므로 queryKey에 넣어 책·범위마다 따로 캐시한다.
    */
-  spoilerPassageList: (bookId?: number) =>
+  spoilerPassageList: (bookId?: number, scope?: PassageScope) =>
     infiniteQueryOptions({
-      queryKey: [...userQueries.spoilerPassageListAll(), bookId ?? 'all'],
+      queryKey: [...userQueries.spoilerPassageListAll(), bookId ?? 'all', toScopeParams(scope)],
       queryFn: ({ pageParam }) =>
         getMyPassages({
           bookId,
+          ...toScopeParams(scope),
           spoilerOnly: true,
           page: pageParam,
           size: USER_OPINION_PAGE_SIZE,

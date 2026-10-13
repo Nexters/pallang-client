@@ -10,6 +10,8 @@ import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPa
 
 type LikedPanelProps = {
   bookId: number
+  /** 들어온 내 서재 항목의 모임 — null이면 전역 대목의 흔적만 */
+  groupId: number | null
   /**
    * 하트를 꺼서 좋아요가 풀렸을 때. 안내 스낵바는 화면 바깥(고정 위치)에 서야 해서
    * 여기서 띄우지 않고 상위로 올린다 — 스크롤 컨테이너 안에 두면 목록과 함께 밀린다.
@@ -19,10 +21,10 @@ type LikedPanelProps = {
   onRelike: (opinionId: number) => void
 }
 
-/** 이 책에서 내가 좋아요를 누른 흔적 목록. */
-export function LikedPanel({ bookId, onUnlike, onRelike }: LikedPanelProps) {
+/** 이 책(그 항목 범위)에서 내가 좋아요를 누른 흔적 목록. */
+export function LikedPanel({ bookId, groupId, onUnlike, onRelike }: LikedPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const listQuery = useInfiniteQuery(userQueries.likedOpinionList(bookId))
+  const listQuery = useInfiniteQuery(userQueries.likedOpinionList(bookId, { groupId }))
   const opinions = useMemo<LikedOpinion[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
     [listQuery.data],

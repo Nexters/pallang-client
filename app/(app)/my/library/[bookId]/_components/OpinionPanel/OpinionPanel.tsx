@@ -10,10 +10,16 @@ import { RecordCard } from '@/app/_shared/user/_components/RecordCard/RecordCard
 import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 import { formatRecordedDate } from '@/app/_shared/user/_services/recordDate.service'
 
-/** 이 책에 내가 남긴 흔적 목록. */
-export function OpinionPanel({ bookId }: { bookId: number }) {
+type OpinionPanelProps = {
+  bookId: number
+  /** 들어온 내 서재 항목의 모임 — null이면 전역 대목에 남긴 흔적만 */
+  groupId: number | null
+}
+
+/** 이 책(그 항목 범위)에 내가 남긴 흔적 목록. */
+export function OpinionPanel({ bookId, groupId }: OpinionPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const listQuery = useInfiniteQuery(userQueries.opinionList(bookId))
+  const listQuery = useInfiniteQuery(userQueries.opinionList(bookId, { groupId }))
   const opinions = useMemo<UserOpinion[]>(
     () => listQuery.data?.pages.flatMap((page) => page.data?.opinions ?? []) ?? [],
     [listQuery.data],
@@ -74,11 +80,16 @@ function OpinionRecordCard({ opinion }: { opinion: UserOpinion }) {
         </span>
       }
       link={{
-        href: buildTraceTargetHref(opinion.bookId, {
-          pageNumber: opinion.pageNumber,
-          passageId: opinion.passageId,
-          opinionId: opinion.opinionId,
-        }),
+        href: buildTraceTargetHref(
+          opinion.bookId,
+          {
+            pageNumber: opinion.pageNumber,
+            passageId: opinion.passageId,
+            opinionId: opinion.opinionId,
+          },
+          // 모임 전용 대목은 groupId를 실어야 흔적 보기가 그 대목을 조회한다
+          { groupId: opinion.groupId },
+        ),
         label: `${String(opinion.pageNumber)}쪽 흔적 보기`,
       }}
     />

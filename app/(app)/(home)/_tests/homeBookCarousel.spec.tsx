@@ -37,6 +37,32 @@ function stubBookApiWithCovers(count: number) {
   )
 }
 
+/** 같은 책을 모임과 개인 양쪽에서 남긴 서재 — 서버가 (책, 모임) 단위로 두 항목을 내려준다 */
+const GROUP_ENTRY = { ...SAMPLE_BOOK, groupId: 13, groupName: '헤일메리 뽀개기', opinionCount: 3 }
+const GLOBAL_ENTRY = { ...SAMPLE_BOOK, groupId: null, groupName: null }
+
+function stubBookApiWithBooks(books: unknown[]) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            books,
+            pageInfo: {
+              page: 0,
+              size: 10,
+              totalElements: books.length,
+              totalPages: 1,
+              hasNext: false,
+            },
+          },
+        }),
+      ),
+    ),
+  )
+}
+
 function stubBookApi() {
   vi.stubGlobal(
     'fetch',
@@ -95,5 +121,40 @@ describe('홈 내 서재 캐러셀', () => {
 
     expect(await screen.findByText('프로젝트 헤일메리')).toBeInTheDocument()
     expect(screen.queryByText('SAMPLE')).not.toBeInTheDocument()
+  })
+
+  // 같은 bookId 두 장을 한 장으로 합치면(옛 dedupe) 모임 항목이 사라지고, 링크에 groupId가 없으면
+  // 모임 전용 대목이 조회되지 않아 빈 흔적 화면이 된다(#420)
+  it('같은 책의 모임 항목과 개인 항목을 따로 세우고, 모임 항목은 그 모임 흔적 화면으로 보낸다', async () => {
+    stubBookApiWithBooks([GROUP_ENTRY, GLOBAL_ENTRY])
+    renderCarousel(false)
+
+    const groupLink = await screen.findByRole('link', {
+      name: '프로젝트 헤일메리 흔적 보기 (모임: 헤일메리 뽀개기)',
+    })
+    expect(groupLink).toHaveAttribute('href', '/trace/226?groupId=13')
+    expect(screen.getByRole('link', { name: '프로젝트 헤일메리 흔적 보기' })).toHaveAttribute(
+      'href',
+      '/trace/226',
+    )
+  })
+
+  it('모임 항목 표지에만 모임 라벨을 단다', async () => {
+    stubBookApiWithBooks([GROUP_ENTRY, GLOBAL_ENTRY])
+    renderCarousel(false)
+
+    expect(await screen.findAllByLabelText('모임 도서')).toHaveLength(1)
+    expect(screen.queryByText('SAMPLE')).not.toBeInTheDocument()
+  })
+
+  it('가운데 선 책이 모임 항목이면 정보줄에 모임 이름을 보이고, 흔적 수 배지도 그 모임으로 보낸다', async () => {
+    stubBookApiWithBooks([GROUP_ENTRY, GLOBAL_ENTRY])
+    renderCarousel(false)
+
+    expect(await screen.findByText('헤일메리 뽀개기')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '3개의 흔적 보기' })).toHaveAttribute(
+      'href',
+      '/trace/226?groupId=13',
+    )
   })
 })

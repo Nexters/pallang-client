@@ -53,4 +53,12 @@ describe('모임 스코프', () => {
     expect(parseTraceGroupId({})).toBeUndefined()
     expect(parseTraceGroupId({ groupId: '0' })).toBeUndefined()
   })
+
+  // 내 서재·내 흔적 응답은 전역 항목에 groupId: null을 실어 보낸다 — 그대로 넘겨도 전역 링크여야 한다
+  it('groupId가 null이면 전역 링크다', () => {
+    expect(buildTraceHref(7, { groupId: null })).toBe('/trace/7')
+    expect(
+      buildTraceTargetHref(7, { pageNumber: 5, passageId: 11, opinionId: 13 }, { groupId: null }),
+    ).toBe('/trace/7?page=5&passageId=11&opinionId=13')
+  })
 })

@@ -226,6 +226,43 @@ describe('내 서재 도서 목록', () => {
     expect(screen.getByRole('link')).toHaveAttribute('href', '/my/library/12')
   })
 
+  // 서버가 내 서재를 (책, 모임) 단위로 내려준다 — 같은 책을 개인·모임 양쪽에서 남기면 항목이 둘이다
+  it('같은 책이라도 개인 항목과 모임 항목을 따로 보여주고, 모임 항목에만 모임 이름을 단다', async () => {
+    const groupEntry = { ...BOOK, groupId: 4, groupName: '만조 읽기 모임', opinionCount: 3 }
+    stubApi({
+      body: {
+        data: {
+          books: [{ ...BOOK, groupId: null, groupName: null }, groupEntry],
+          pageInfo: PAGE_INFO,
+        },
+      },
+    })
+    renderView()
+
+    await screen.findByText('만조 읽기 모임')
+    expect(screen.getAllByText('만조를 기다리며')).toHaveLength(2)
+    expect(screen.getAllByText('모임')).toHaveLength(1)
+  })
+
+  it('모임 항목을 누르면 그 모임 범위로 책 상세를 연다', async () => {
+    const groupEntry = { ...BOOK, groupId: 4, groupName: '만조 읽기 모임' }
+    stubApi({
+      body: {
+        data: {
+          books: [{ ...BOOK, groupId: null, groupName: null }, groupEntry],
+          pageInfo: PAGE_INFO,
+        },
+      },
+    })
+    renderView()
+
+    await screen.findByText('만조 읽기 모임')
+    expect(screen.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
+      '/my/library/12',
+      '/my/library/12?groupId=4',
+    ])
+  })
+
   // 목록이 남아 있으면 전체 오류 화면으로 넘어가지 않는다. 하단만 재시도 줄로 바꿔
   // 끊긴 무한 스크롤을 사용자가 되살릴 수 있게 한다.
   it('다음 페이지를 못 불러오면 목록을 지우지 않고 하단에 재시도 줄을 세운다', async () => {
