@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { MyLibraryView } from '../_components/MyLibraryView/MyLibraryView'
@@ -90,21 +90,36 @@ function stubApi(response: { body?: unknown; status?: number }) {
   return calls
 }
 
+type PagedApiOptions = {
+  /** 0페이지에 실을 도서 — 빈 배열로 두면 "0페이지만 통째로 걸러진" 응답이 된다 */
+  firstPageBooks?: (typeof BOOK)[]
+  /** 그 페이지의 첫 요청만 500으로 떨어뜨린다. 재시도는 정상 응답을 받는다 */
+  failFirstAttemptOnPage?: number
+}
+
 /** 페이지마다 다른 도서를 돌려준다 — 두 번째 페이지가 실제로 붙는지 보려고 쓴다 */
-function stubPagedApi() {
+function stubPagedApi({ firstPageBooks = [BOOK], failFirstAttemptOnPage }: PagedApiOptions = {}) {
   const calls: string[] = []
+  const alreadyFailed = new Set<number>()
 
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
   vi.stubGlobal(
     'fetch',
     vi.fn().mockImplementation((url: string) => {
-      const isFirstPage = !url.includes('page=1')
       calls.push(url)
+      const isFirstPage = !url.includes('page=1')
+      const page = isFirstPage ? 0 : 1
+      if (page === failFirstAttemptOnPage && !alreadyFailed.has(page)) {
+        alreadyFailed.add(page)
+        return Promise.resolve(
+          new Response(JSON.stringify({ title: 'SERVER_500' }), { status: 500 }),
+        )
+      }
       return Promise.resolve(
         new Response(
           JSON.stringify({
             data: {
-              books: [isFirstPage ? BOOK : NEXT_BOOK],
+              books: isFirstPage ? firstPageBooks : [NEXT_BOOK],
               pageInfo: { ...PAGE_INFO, hasNext: isFirstPage },
             },
           }),
@@ -201,5 +216,103 @@ describe('내 서재 도서 목록', () => {
     await scrollToListEnd()
 
     expect(calls).toHaveLength(1)
+  })
+
+  it('도서를 누르면 그 책의 상세로 간다', async () => {
+    stubApi({ body: { data: { books: [BOOK], pageInfo: PAGE_INFO } } })
+    renderView()
+
+    await screen.findByText('만조를 기다리며')
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/my/library/12')
+  })
+
+  // 목록이 남아 있으면 전체 오류 화면으로 넘어가지 않는다. 하단만 재시도 줄로 바꿔
+  // 끊긴 무한 스크롤을 사용자가 되살릴 수 있게 한다.
+  it('다음 페이지를 못 불러오면 목록을 지우지 않고 하단에 재시도 줄을 세운다', async () => {
+    const calls = stubPagedApi({ failFirstAttemptOnPage: 1 })
+    renderView()
+    await screen.findByText('만조를 기다리며')
+
+    await scrollToListEnd()
+
+    expect(await screen.findByText('더 불러오지 못했어요.')).toBeInTheDocument()
+    expect(screen.getByText('만조를 기다리며')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '다시 시도하기' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '다시 불러오기' }))
+
+    expect(await screen.findByText('모순')).toBeInTheDocument()
+    expect(calls).toEqual([
+      '/api/books/my-library?opinionCountScope=MINE&page=0',
+      '/api/books/my-library?opinionCountScope=MINE&page=1',
+      '/api/books/my-library?opinionCountScope=MINE&page=1',
+    ])
+  })
+
+  // 서버가 0페이지를 통째로 걸러내면(차단·스포일러) 목록은 비지만 다음 페이지는 남아 있다.
+  // 여기서 빈 상태로 끝내면 sentinel이 사라져 남은 기록에 영영 닿지 못한다.
+  it('첫 페이지가 비어도 다음 페이지가 남았으면 빈 상태로 끝내지 않는다', async () => {
+    stubPagedApi({ firstPageBooks: [] })
+    renderView()
+
+    // sentinel이 붙어야 observer가 생긴다 — 첫 페이지가 도착했다는 신호로 쓴다
+    await waitFor(() => {
+      expect(mountedObservers.size).toBeGreaterThan(0)
+    })
+    expect(screen.queryByText('아직 흔적을 남긴 책이 없어요')).not.toBeInTheDocument()
+
+    await scrollToListEnd()
+
+    expect(await screen.findByText('모순')).toBeInTheDocument()
+  })
+
+  // 이미 받아 둔 페이지가 있으면 재시도해도 status는 error 그대로다 — 화면이 바뀌지 않으니
+  // 버튼이 직접 진행을 알려야 한다. 느린 회선에서 연타를 막는 유일한 신호다.
+  it('오류 화면에서 재시도하는 동안 버튼에 진행 표시를 남긴다', async () => {
+    let finishRetry: ((response: Response) => void) | undefined
+    let firstPageCalls = 0
+    const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status })
+
+    vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('page=1')) return Promise.resolve(json({ title: 'SERVER_500' }, 500))
+        firstPageCalls += 1
+        // 재시도가 부르는 두 번째 0페이지 요청은 매달아 둔다 — 진행 표시가 켜진 순간을 붙잡는다
+        if (firstPageCalls > 1) {
+          return new Promise<Response>((resolve) => {
+            finishRetry = resolve
+          })
+        }
+        return Promise.resolve(
+          json({ data: { books: [], pageInfo: { ...PAGE_INFO, hasNext: true } } }),
+        )
+      }),
+    )
+    renderView()
+
+    await waitFor(() => {
+      expect(mountedObservers.size).toBeGreaterThan(0)
+    })
+    await scrollToListEnd()
+
+    const retryButton = await screen.findByRole('button', { name: '다시 시도하기' })
+    expect(retryButton).not.toHaveAttribute('aria-busy')
+
+    fireEvent.click(retryButton)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '다시 시도하기' })).toHaveAttribute(
+        'aria-busy',
+        'true',
+      )
+    })
+
+    await act(async () => {
+      finishRetry?.(json({ data: { books: [BOOK], pageInfo: PAGE_INFO } }))
+      await Promise.resolve()
+    })
+    expect(await screen.findByText('만조를 기다리며')).toBeInTheDocument()
   })
 })

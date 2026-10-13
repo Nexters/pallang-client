@@ -10,12 +10,12 @@ import {
 } from '@/app/_shared/book/_components/BookNewForm/BookNewForm'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 import {
-  type BookFormValues,
   emptyBookForm,
-  normalizeExternalAuthor,
+  type ExternalBookFormState,
+  toExternalBookFormState,
 } from '@/app/_shared/book/_services/bookForm.service'
 
-import { BookSearchView } from '../BookSearchView/BookSearchView'
+import { BookSearchSheetView } from '../BookSearchSheetView/BookSearchSheetView'
 import type { ExternalBook } from '../ExternalBookList/ExternalBookList'
 
 type BookSearchSheetProps = {
@@ -32,7 +32,11 @@ type BookSearchSheetProps = {
   onRegisterBack?: (close: () => void) => () => void
 }
 
-type AddFormState = { coverImageUrl: null | string; values: BookFormValues }
+type AddFormState = ExternalBookFormState
+
+// 어느 목록에서 골랐든 탭은 후보 선택일 뿐이다(#343). 팔랑에 있는 책은 '등록하기'가 그대로
+// 확정(onSelect)하고, 외부(알라딘) 책은 쪽수가 없어 '등록하기'가 도서 추가 폼으로 잇는다.
+type PickedBook = { kind: 'external'; book: ExternalBook } | { kind: 'pallang'; book: SelectedBook }
 
 // 저장하기 버튼은 폼 본문이 아니라 시트의 footer 슬롯(스크롤에 딸려 올라가지 않는 고정 영역)에
 // 산다 — HTML의 form 속성으로 이 id의 <form>을 가리켜, 밖에 있어도 제출은 그대로 이어진다.
@@ -47,8 +51,8 @@ export function BookSearchSheet({
   onSelect,
   onRegisterBack,
 }: BookSearchSheetProps) {
-  // 목록·캐러셀에서 고른 책은 후보일 뿐이다 — 하단 '등록하기'를 눌러야 onSelect로 확정된다.
-  const [picked, setPicked] = useState<SelectedBook | null>(null)
+  // 목록·캐러셀·외부 결과에서 고른 책은 후보일 뿐이다 — 하단 '등록하기'를 눌러야 확정된다.
+  const [picked, setPicked] = useState<PickedBook | null>(null)
   // 직접 등록 폼은 시트를 닫지 않고 같은 시트의 본문을 갈아끼운다(헤더·풀하이트·백드롭을 그대로 쓴다).
   // 도서 등록 지면(/book/new)으로 라우팅하지 않는 이유는 TraceDraftContext가 /trace/new 레이아웃
   // 안에 살기 때문이다 — 화면을 떠나면 대목·페이지·꾸밈·의견이 통째로 사라진다.
@@ -60,6 +64,19 @@ export function BookSearchSheet({
 
   const openBlankForm = () => {
     setForm({ coverImageUrl: null, values: emptyBookForm })
+  }
+
+  const openExternalForm = (book: ExternalBook) => {
+    setForm(toExternalBookFormState(book))
+  }
+
+  const confirmPicked = () => {
+    if (!picked) return
+    if (picked.kind === 'pallang') {
+      onSelect(picked.book)
+      return
+    }
+    openExternalForm(picked.book)
   }
 
   const closeForm = () => {
@@ -97,6 +114,24 @@ export function BookSearchSheet({
     setForm(null)
     setFormStatus(IDLE_FORM_STATUS)
     onSelect(book)
+  }
+
+  const togglePickedBook = (book: SelectedBook) => {
+    setPicked((current) =>
+      current?.kind === 'pallang' && current.book.bookId === book.bookId
+        ? null
+        : { kind: 'pallang', book },
+    )
+  }
+
+  const togglePickedExternalBook = (book: ExternalBook) => {
+    setPicked((current) =>
+      current?.kind === 'external' &&
+      current.book.isbn === book.isbn &&
+      current.book.title === book.title
+        ? null
+        : { kind: 'external', book },
+    )
   }
 
   return (
@@ -139,9 +174,7 @@ export function BookSearchSheet({
               variant="activated"
               className="w-full disabled:bg-interactive-accent disabled:opacity-40"
               disabled={!picked}
-              onClick={() => {
-                if (picked) onSelect(picked)
-              }}
+              onClick={confirmPicked}
             >
               등록하기
             </Button>
@@ -151,24 +184,12 @@ export function BookSearchSheet({
     >
       {/* 폼을 여닫아도 검색 상태(검색어·목록·페이지네이션)가 사라지지 않도록 마운트는 유지하고
           hidden으로만 감춘다 — 언마운트하면 SearchTextfield의 비제어 입력값도 함께 날아간다. */}
-      <BookSearchView
+      <BookSearchSheetView
         hidden={form !== null}
-        selectedBookId={picked?.bookId ?? null}
-        onPick={setPicked}
-        onAddManually={openBlankForm}
-        onSelectExternal={(book: ExternalBook) => {
-          // 알라딘은 쪽수를 주지 않는다. 나머지만 채우고 페이지 수는 사용자가 입력한다.
-          setForm({
-            coverImageUrl: book.coverImageUrl,
-            values: {
-              author: normalizeExternalAuthor(book.author),
-              isbn: book.isbn,
-              pageCount: '',
-              publisher: book.publisher,
-              title: book.title,
-            },
-          })
-        }}
+        selectedBookId={picked?.kind === 'pallang' ? picked.book.bookId : null}
+        selectedExternalBook={picked?.kind === 'external' ? picked.book : null}
+        onPick={togglePickedBook}
+        onPickExternal={togglePickedExternalBook}
       />
       {form && (
         <BookNewForm

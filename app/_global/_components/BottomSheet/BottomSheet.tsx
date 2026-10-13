@@ -1,12 +1,15 @@
 'use client'
 
 import { Dialog as BaseDialog } from '@base-ui/react/dialog'
-import { type ReactNode, useRef } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useRef } from 'react'
 
+import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
+import { useSheetDragDismiss } from '@/app/_global/_hooks/useSheetDragDismiss'
 import { cn } from '@/app/_global/_services/cn.service'
 
 import BackIcon from '../Icon/assets/back.svg'
 import CloseIcon from '../Icon/assets/close.svg'
+import { SheetHandle } from '../SheetHandle/SheetHandle'
 
 type BottomSheetProps = {
   open: boolean
@@ -24,20 +27,19 @@ type BottomSheetProps = {
   contentClassName?: string
   /** 시트 패널 자체에 덧붙일 클래스 — 기본은 내용 높이만큼이고, 높이를 고정하고 싶을 때 쓴다 */
   popupClassName?: string
+  /** 높이 같은 계산값을 넘길 때 — 상수에서 만든 calc()는 클래스로 쓰면 Tailwind가 못 본다 */
+  popupStyle?: CSSProperties
+  /** 끄면 백드롭이 투명해지되 바깥 탭 닫힘·뒤쪽 조작 차단은 남는다 — 어두운 시트 위에 겹치는 시트용 */
+  dim?: boolean
+  /** 제목 위에 손잡이를 세우고 끌어 닫기를 켠다(없으면 끌리지 않는다). dim=false 시트의 내리는 길 */
+  showHandle?: boolean
   /** 본문 아래 고정 영역. 본문이 안에서 스크롤돼도 딸려 올라가지 않는다 */
   footer?: ReactNode
-  /**
-   * 값이 바뀌면 시트 패널만 새로 꽂혀 등장 전환을 다시 탄다. 백드롭은 그대로 남는다.
-   * 한 시트 안에서 화면이 갈릴 때, 시트를 통째로 닫았다 여는 대신 쓴다 — 시트 두 개를 쓰면
-   * 나가는 시트가 내려가는 동안 새 시트가 올라와 둘이 교차하고, 백드롭도 각자라 어두운 층이
-   * 꺼졌다 켜진다.
-   */
+  /** 바뀌면 패널만 다시 꽂혀 등장 전환을 탄다(백드롭 유지) — 시트 안 화면 전환용, 시트 두 개면 교차한다 */
   panelKey?: string
 }
 
-// Dialog와 같은 base-ui 프리미티브 위에 올린다 — 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘을
-// 직접 만들지 않기 위함이다. 바깥에 노출하는 props는 손수 구현하던 시절과 같게 유지한다.
-// 포털로 body 끝에 렌더되므로 z는 Dialog와 같은 z-50으로 맞춘다.
+// base-ui Dialog 위에 올린다 — 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘이 딸려 온다. z는 Dialog와 같은 z-50.
 export function BottomSheet({
   open,
   title,
@@ -48,41 +50,53 @@ export function BottomSheet({
   reserveBackSlot = false,
   contentClassName,
   popupClassName,
+  popupStyle,
   footer,
   panelKey,
+  dim = true,
+  showHandle = false,
 }: BottomSheetProps) {
   const isDark = tone === 'dark'
-  // base-ui의 기본 initialFocus는 터치로 열 때만 팝업 자신을, 그 외에는 첫 tabbable 요소를 잡는다
-  // — 시트가 열리자마자 닫기 버튼에 포커스 링이 뜬다. 항상 팝업 자신을 잡는다(Dialog.Popup과 같은 이유).
+  // initialFocus를 팝업 자신으로 — 기본값은 첫 tabbable(닫기 버튼)에 포커스 링을 띄운다
   const popupRef = useRef<HTMLDivElement>(null)
+  const actionsRef = useRef<BaseDialog.Root.Actions>(null)
+  const bindSheetDrag = useSheetDragDismiss(onClose, { enabled: showHandle })
 
-  // 시트가 "열린 채로" DOM에 꽂히는 경로가 있다 — 화면 자체가 시트인 첫 화면(TraceSourceView)이
-  // 그렇고, 탭바로 들어오면 특히 그렇다. base-ui는 mounted 초기값을 open으로 잡아
-  // (internals/useTransitionStatus) 그 경우 'starting'을 건너뛴다 = data-starting-style이 한 번도
-  // 붙지 않아 시작 위치를 거치지 않고 제자리에 그려진다. 올라오는 전환이 통째로 사라진다.
-  //
-  // React 쪽에서 한 렌더 유예를 만드는 방법은 전부 새는 길이 있었다. useDeferredValue(true, false)는
-  // URL 직접 로드에서만 유예가 걸리고 router.push 경로에서는 첫 렌더부터 true가 나온다. 렌더 중
-  // 상태 갱신은 마운트를 통째로 다시 돌려 base-ui가 또 열린 채로 초기화된다. effect+setState는
-  // lint가 막는다(react-hooks/set-state-in-effect).
-  //
-  // 그래서 유예를 없애고 CSS에 맡긴다. @starting-style(Tailwind의 starting: 변형)은 "이 요소가
-  // 처음 그려질 때의 시작값"을 브라우저가 직접 잡아주는 규칙이라 React가 언제 커밋하든 상관없다.
-  // base-ui의 data-starting-style은 열림이 런타임에 토글되는 경로에서 그대로 동작하고,
-  // starting:은 열린 채 꽂히는 경로를 받는다 — 둘은 같은 시작값이라 겹쳐도 무해하다.
-  //
-  // 단 시작값을 Tailwind의 translate 유틸로 쓰면 안 된다. translate-y-full은 값을 직접
-  // 내지 않고 --tw-translate-* 를 거쳐 translate:var(--tw-translate-x) var(--tw-translate-y)
-  // 로 조립하는데, iOS Safari(= iOS의 모든 브라우저)는 @starting-style 안에서 var()로 조립된
-  // translate를 시작값으로 잡지 못한다. 실기기 판정 결과 — 직접값+@starting-style은 전환 발생,
-  // var 조립+@starting-style은 전환 자체가 없음(2프레임 뒤에도 translate:none).
-  // 토글(data-starting-style) 경로는 당시 판정에선 var 조립도 정상이었지만, 이후 모임 더보기
-  // 시트(토글 경로)에서 등장이 안 보이는 사례가 나와(#309) 경계 프레임의 시작·종료값은
-  // 전부 직접 값으로 통일한다 — var 조립을 남겨 얻는 것이 없다.
+  // 닫힘 안전망(#406). 퇴장은 CSS 전환이 끝나야 base-ui가 시트를 언마운트하는 구조인데,
+  // 전환이 시작되지 못하거나(드래그가 남긴 인라인 transition이 덮는 경우) 완료를 알리지
+  // 못하면 투명 백드롭(fixed inset-0)이 화면 전체 입력을 삼킨 채 영구히 남는다 — 실기기
+  // 터치에서 시트를 닫은 뒤 화면 전체가 안 눌리는 형태로 나타난다. 닫힘이 시작되면 인라인
+  // 잔재를 걷어 전환을 살리고, 퇴장이 끝났어야 할 시점에도 남아 있으면 강제로 걷는다.
+  useEffect(() => {
+    if (open) return undefined
+    const popup = popupRef.current
+    if (popup) {
+      popup.style.transition = ''
+      // 백드롭은 포털 노드 아래 Viewport(→Popup)의 형제다(useSheetDragDismiss와 같은 경로)
+      const backdrop = popup.parentElement?.parentElement?.querySelector<HTMLElement>(
+        ':scope > [data-slot="bottom-sheet-backdrop"]',
+      )
+      if (backdrop) backdrop.style.transition = ''
+    }
+    // rise(가장 긴 시트 전환이 진행 중이었을 때) + fast(퇴장) 뒤에는 반드시 끝나 있어야 한다.
+    // 이미 언마운트됐으면 unmount()는 아무 일도 하지 않는다.
+    const timer = setTimeout(() => {
+      actionsRef.current?.unmount()
+    }, MOTION_DURATION.rise + MOTION_DURATION.fast)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [open])
+
+  // 등장 시작값은 base-ui의 data-starting-style과 CSS @starting-style(starting:) 둘 다에 건다 —
+  // 열린 채로 마운트되는 경로(TraceSourceView)에서는 base-ui가 'starting'을 건너뛴다.
+  // 시작·종료값은 translate 유틸 대신 직접 값([translate:0_100%])으로 쓴다: iOS Safari는
+  // @starting-style 안의 var() 조립 translate를 시작값으로 잡지 못한다(AGENTS.md 모션 참고, #309).
 
   return (
     <BaseDialog.Root
       open={open}
+      actionsRef={actionsRef}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) onClose()
       }}
@@ -91,7 +105,8 @@ export function BottomSheet({
         <BaseDialog.Backdrop
           data-slot="bottom-sheet-backdrop"
           className={cn(
-            'fixed inset-0 z-50 bg-bg-black/50 transition-opacity duration-fast ease-enter',
+            'fixed inset-0 z-50 transition-opacity duration-fast ease-enter',
+            dim && 'bg-bg-black/50',
             'starting:opacity-0 data-starting-style:opacity-0',
             'data-ending-style:opacity-0 data-ending-style:ease-exit',
           )}
@@ -102,33 +117,32 @@ export function BottomSheet({
             data-slot="bottom-sheet-popup"
             ref={popupRef}
             initialFocus={popupRef}
+            {...bindSheetDrag()}
             className={cn(
-              // 모서리 32px — v2 시트 시안들의 공통값이다(더보기 3321:30402 · 책 선택 3321:28335)
-              'relative flex flex-col rounded-t-4xl pt-6 pb-safe',
+              // 모서리 32px — v2 시트 시안 공통값(3321:30402)
+              'relative flex flex-col rounded-t-4xl pb-safe',
+              showHandle ? 'pt-0' : 'pt-6',
               isDark ? 'bg-bg-dark' : 'bg-bg-default',
-              // 포커스를 받는 요소가 되므로 키보드로 열었을 때 링이 그려지지 않게 막는다
               'outline-none',
-              // 시트는 화면 높이만큼 올라온다 — ease-enter로 그 거리를 옮기면 2프레임 만에 62%가
-              // 끝나 번쩍이는 것으로 읽힌다(실기기에서 확인). 먼 거리 등장 전용 토큰을 쓴다.
+              // 먼 거리 등장 토큰 — ease-enter는 2프레임 만에 62%가 끝나 번쩍인다
               'transition-transform duration-rise ease-rise',
               'starting:[translate:0_100%] data-starting-style:[translate:0_100%]',
               'data-ending-style:[translate:0_100%]',
               'data-ending-style:duration-fast data-ending-style:ease-exit',
               popupClassName,
             )}
-            // 홈 인디케이터에 시트 내용이 가리지 않게 한다
+            style={popupStyle}
           >
+            {showHandle && <SheetHandle label="시트 내리기" onSelect={onClose} />}
             <div className="flex items-center gap-2.5 px-4 py-2.5">
               {(onBack !== undefined || reserveBackSlot) && (
                 <button
                   type="button"
                   aria-label="뒤로"
-                  // 자리만 지키는 동안에는 보이지도, 포커스·보조기기에 잡히지도 않는다
                   aria-hidden={onBack ? undefined : true}
                   tabIndex={onBack ? undefined : -1}
                   onClick={onBack}
-                  // 나타나고 사라지는 opacity 전환은 press 유틸의 transition이 함께 다룬다
-                  // (transition-*을 덧붙이면 press의 transition-property를 덮어 눌림 스케일이 죽는다)
+                  // transition-*을 덧붙이지 않는다 — press의 transition-property를 덮어 눌림 스케일이 죽는다
                   className={cn(
                     'press flex size-6 shrink-0 items-center justify-center',
                     isDark ? 'text-icon-active' : 'text-icon-primary',
@@ -159,14 +173,12 @@ export function BottomSheet({
                 />
               </BaseDialog.Close>
             </div>
-            {/* 시안의 시트는 본문이 자기 여백을 가진다 — 패널은 가로 여백을 두지 않는다 */}
             <div
               data-slot="bottom-sheet-body"
               className={cn('flex flex-col gap-4 p-4', contentClassName)}
             >
               {children}
             </div>
-            {/* 스크롤 영역 바깥이라 본문이 밀려 올라가도 그대로 붙어 있다 */}
             {footer && <div className="shrink-0 px-4 pb-2">{footer}</div>}
           </BaseDialog.Popup>
         </BaseDialog.Viewport>

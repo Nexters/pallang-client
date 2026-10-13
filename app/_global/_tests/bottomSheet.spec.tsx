@@ -143,6 +143,65 @@ describe('BottomSheet', () => {
     })
   })
 
+  describe('닫힘 안전망 (#406)', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    // 퇴장은 CSS 전환이 끝나야 base-ui가 시트를 언마운트한다. 전환이 완료를 알리지 못하면
+    // 투명 백드롭(fixed inset-0)이 화면 전체 입력을 삼킨 채 영구히 남는다 — 실기기에서
+    // 시트를 닫은 뒤 화면 전체가 안 눌리는 버그. 그 조건을 끝나지 않는 애니메이션으로
+    // 재현해, 퇴장이 끝났어야 할 시점에 강제로 걷어내는지 확인한다.
+    it('퇴장 전환이 완료를 알리지 못해도 시트는 제때 DOM에서 걷힌다', async () => {
+      vi.useFakeTimers()
+      const sheet = (open: boolean) => (
+        <BottomSheet open={open} title="댓글" onClose={vi.fn()}>
+          <p>본문</p>
+        </BottomSheet>
+      )
+      const { rerender } = render(sheet(true))
+
+      const popup = screen.getByRole('dialog')
+      // 영영 끝나지 않는 전환 — base-ui의 완료 감지(getAnimations)가 여기서 멈춘다
+      Object.defineProperty(popup, 'getAnimations', {
+        configurable: true,
+        value: () => [{ finished: new Promise(() => undefined) } as unknown as Animation],
+      })
+      rerender(sheet(false))
+
+      // 전환 완료가 오지 않는 동안에는 base-ui가 시트를 붙잡고 있다(버그 조건 성립 확인)
+      await vi.advanceTimersByTimeAsync(50)
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+
+      // 퇴장이 끝났어야 할 시점(rise+fast)을 지나면 안전망이 강제로 걷는다
+      await vi.advanceTimersByTimeAsync(500)
+      expect(screen.queryByRole('dialog')).toBeNull()
+    })
+
+    // 드래그 도중 브라우저가 제스처를 가져가면(스크롤 개입·touchcancel) 시트에 인라인
+    // transition이 남을 수 있다 — 인라인은 퇴장 전환 클래스를 덮어 전환 자체를 죽인다.
+    // 닫힘이 시작되는 시점에 걷어서 전환이 항상 성립하게 한다.
+    it('드래그가 남긴 인라인 transition은 닫힘이 시작되면 걷힌다', () => {
+      const sheet = (open: boolean) => (
+        <BottomSheet open={open} title="댓글" showHandle onClose={vi.fn()}>
+          <p>본문</p>
+        </BottomSheet>
+      )
+      const { rerender } = render(sheet(true))
+
+      const popup = screen.getByRole('dialog')
+      const backdrop = document.querySelector<HTMLElement>('[data-slot="bottom-sheet-backdrop"]')
+      if (backdrop === null) throw new Error('바텀시트 백드롭을 찾지 못했다')
+      popup.style.transition = 'none'
+      backdrop.style.transition = 'none'
+
+      rerender(sheet(false))
+
+      expect(popup.style.transition).toBe('')
+      expect(backdrop.style.transition).toBe('')
+    })
+  })
+
   it('footer는 본문 스크롤 영역 바깥에 그린다', () => {
     render(
       <BottomSheet

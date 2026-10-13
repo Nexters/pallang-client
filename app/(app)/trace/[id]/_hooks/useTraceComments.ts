@@ -8,8 +8,13 @@ import { resolveCommentListView, resolveRetryAction } from '../_services/comment
 import { useCommentActions } from './useCommentActions'
 
 /** 댓글 읽기 흐름 — 목록 조회·내 식별·수정/삭제를 한 뷰모델로 묶는다 */
-export function useTraceComments(opinionId: number) {
-  const commentsQuery = useInfiniteQuery(commentQueries.listByOpinion(opinionId))
+export function useTraceComments(opinionId: number, options?: { enabled?: boolean }) {
+  // 시트 셸(TraceCommentSheet)이 이 훅을 소유하면서 아직 아무 의견도 보여준 적 없는
+  // 첫 렌더가 생겼다 — 그때는 조회를 걸지 않는다(#373)
+  const commentsQuery = useInfiniteQuery({
+    ...commentQueries.listByOpinion(opinionId),
+    enabled: options?.enabled ?? true,
+  })
   // 비로그인이면 me 조회가 실패해 myUserId가 없고, 수정·삭제 버튼이 숨겨진다
   const { data: meData } = useQuery(userQueries.me())
   const actions = useCommentActions(opinionId)

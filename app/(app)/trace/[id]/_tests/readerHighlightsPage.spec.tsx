@@ -6,9 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { userQueries } from '@/app/_global/_queries/user.queries'
 
-import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
-import { COLLAPSE_ANIMATION_MS } from '../_services/quoteCollapse.service'
+import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 
 const { pushMock, replaceMock, authState } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -197,13 +198,6 @@ class MockIntersectionObserver {
   }
 }
 
-/** 접힘/펼침 애니메이션(rAF 기반)이 끝날 때까지 act 안에서 기다린다 */
-async function waitForCollapseAnimation() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, COLLAPSE_ANIMATION_MS + 150))
-  })
-}
-
 /** 카드 위 좌우 스와이프 — 축이 가로로 잡히고 이동 임계를 넘길 만큼 끈다.
     리스너는 카드 버튼에 네이티브로 달려 있어 안쪽 인용문에서 시작해도 버블링으로 전달된다 */
 function swipeCard(element: Element, direction: 'next' | 'prev') {
@@ -227,15 +221,43 @@ function scrollSentinelsIntoView() {
 /** 상세 오버레이로 들어가는 유일한 길인 딥링크 좌표(쪽 → 대목 → 흔적) */
 type DeepLinkTarget = { pageNumber: number; passageId: number; opinionId: number }
 
+/** 마지막으로 렌더한 화면의 캐시 */
+let lastClient: QueryClient
+
 async function renderPage(
   pages = [7, 9, 12, 13, 23, 34, 123],
   failing?: 'passages' | 'opinions',
   target?: DeepLinkTarget,
+  groupId?: number,
 ) {
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+  // 입력바에서 그 자리에 등록한 의견 — 목록 갱신(invalidate) 후의 재조회에 실려 화면에 나타난다
+  const createdOpinions: (typeof manyOpinionSeed)[number][] = []
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockImplementation((url: string) => {
+    vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      // 의견 생성(POST /opinions) — 등록된 내용을 그 대목의 목록 앞에 붙인다
+      if (init?.method === 'POST' && (url.split('?')[0] ?? '').endsWith('/opinions')) {
+        // customFetch는 body를 JSON 문자열로 만든다 — BodyInit의 다른 갈래는 이 앱 경로에 없다
+        const body = JSON.parse(init.body as string) as { passageId: number; content: string }
+        createdOpinions.unshift({
+          opinionId: 900 + createdOpinions.length,
+          userId: 9,
+          nickname: '나',
+          content: body.content,
+          likeCount: 0,
+          commentCount: 0,
+          createdAt: '2026-08-21T09:00:00.000Z',
+        })
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: { opinionId: 901, passageId: body.passageId, merged: true },
+            }),
+          ),
+        )
+      }
+
       const pageMatch = /\/pages\/(\d+)\/passages/.exec(url)
       if (pageMatch) {
         if (failing === 'passages') return Promise.resolve(new Response('{}', { status: 500 }))
@@ -250,7 +272,7 @@ async function renderPage(
       const opinionMatch = /\/passages\/(\d+)\/opinions/.exec(url)
       if (opinionMatch) {
         if (failing === 'opinions') return Promise.resolve(new Response('{}', { status: 500 }))
-        const seed = opinionSeedByPassage[Number(opinionMatch[1])] ?? []
+        const seed = [...createdOpinions, ...(opinionSeedByPassage[Number(opinionMatch[1])] ?? [])]
         const query = new URLSearchParams(url.split('?')[1] ?? '')
         const size = Number(query.get('size') ?? '20')
         const page = Number(query.get('page') ?? '0')
@@ -299,16 +321,22 @@ async function renderPage(
     }),
   )
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  lastClient = client
   // 로그인 게이트는 루트 레이아웃이 제공하므로 화면만 렌더하는 테스트에서는 직접 감싼다
   const { container } = render(
     <QueryClientProvider client={client}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <TraceCollapseView bookId={BOOK_ID} target={target} />
+          <TraceScreen bookId={BOOK_ID} target={target} groupId={groupId} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,
   )
+  // 빈 모임은 쪽 표시가 서지 않는다 — 카드의 남기러 가기 안내가 곧 로드 완료 신호다
+  if (pages.length === 0) {
+    await screen.findByText(/아직 모임에서 남긴/)
+    return container.firstElementChild as HTMLElement
+  }
   // 쪽이 하나뿐이면 선택기 대신 라벨만 있는 알약이 서므로, 두 경우 모두 잡히는 현재 쪽 표시를
   // 기다린다. 딥링크로 들어오면 첫 쪽이 아니라 지목된 쪽에서 시작한다.
   await screen.findByText(`${String(target?.pageNumber ?? pages[0])}p`)
@@ -338,6 +366,26 @@ describe('ReaderHighlightsPage', () => {
   afterEach(() => {
     mountedObservers.clear()
     vi.unstubAllGlobals()
+  })
+
+  it('모임에 대목이 없으면 카드가 남기러 가기 안내로 바뀐다', async () => {
+    await renderPage([], undefined, undefined, 55)
+
+    expect(screen.getByText(/아직 모임에서 남긴 문장과/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '바로 남기러 가기' })).toBeInTheDocument()
+    // 페이저는 "01 / 00"이 아니라 시안의 "01 / 01"로 선다
+    expect(screen.getByLabelText('대목이 있는 전체 1쪽 중 1번째 쪽')).toBeInTheDocument()
+  })
+
+  it('바로 남기러 가기는 모임을 실은 기록 남기기 플로우로 보낸다', async () => {
+    await renderPage([], undefined, undefined, 55)
+
+    fireEvent.click(screen.getByRole('button', { name: '바로 남기러 가기' }))
+
+    expect(pushMock).toHaveBeenCalledTimes(1)
+    const href = pushMock.mock.calls[0]?.[0] as string
+    expect(href).toContain('/trace/new')
+    expect(href).toContain('groupId=55')
   })
 
   it('헤더 쪽 선택기는 API의 대목 페이지 목록으로 채운다', async () => {
@@ -380,6 +428,23 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.getByText('첫 번째 대목 인용문')).toBeInTheDocument()
   })
 
+  it('페이저 숫자는 대목이 아니라 쪽을 센다 — 같은 쪽 안에서 넘겨도 그대로고 쪽을 넘으면 바뀐다', async () => {
+    // 기본 시드는 쪽이 7개다. 총 쪽 수는 불러온 묶음이 아니라 목록 응답의 pageInfo에서 온다
+    await renderPage()
+
+    await screen.findByText('첫 번째 대목 인용문')
+    expect(screen.getByLabelText('대목이 있는 전체 7쪽 중 1번째 쪽')).toBeInTheDocument()
+
+    // 같은 7p 안의 둘째 대목으로 — 쪽이 그대로니 숫자도 그대로다
+    swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByLabelText('대목이 있는 전체 7쪽 중 1번째 쪽')).toBeInTheDocument()
+
+    // 쪽 경계를 넘으면 그제야 올라간다(7p → 9p)
+    swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
+    expect(await screen.findByLabelText('대목이 있는 전체 7쪽 중 2번째 쪽')).toBeInTheDocument()
+  })
+
   it('페이지의 마지막 대목에서 넘기면 다음 페이지의 첫 대목으로 이어진다', async () => {
     await renderPage()
 
@@ -411,12 +476,12 @@ describe('ReaderHighlightsPage', () => {
     const toggle = screen.getAllByRole('button', { name: '댓글 보기' })[0]
     if (!toggle) throw new Error('댓글 보기 버튼을 찾지 못했다')
     fireEvent.click(toggle)
-    expect(screen.getByPlaceholderText('답글을 입력해주세요')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('댓글을 입력해주세요')).toBeInTheDocument()
 
     swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
 
     // 입력바는 blur 바깥의 fixed라, 남으면 목록에 없는 흔적에 댓글을 달 수 있다
-    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('가림막이 걸린 대목에서는 댓글을 펼칠 수 없다', async () => {
@@ -431,7 +496,7 @@ describe('ReaderHighlightsPage', () => {
     fireEvent.click(toggle)
 
     // inert는 브라우저에만 있는 방어라 동작으로도 막혀 있어야 한다
-    expect(screen.queryByPlaceholderText('답글을 입력해주세요')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('댓글을 입력해주세요')).not.toBeInTheDocument()
   })
 
   it('딥링크가 아직 안 받은 묶음의 쪽을 가리키면 그 쪽이 나올 때까지 쪽 목록을 이어 받는다', async () => {
@@ -510,13 +575,17 @@ describe('ReaderHighlightsPage', () => {
     expect(screen.queryByText('0개의 의견')).not.toBeInTheDocument()
   })
 
-  it('대목 조회에 실패해도 같은 에러 상태를 보여주고, 다시 시도하면 재조회한다', async () => {
+  it('대목 조회에 실패하면 카드 안과 목록 자리에 함께 에러를 세우고, 다시 시도하면 재조회한다', async () => {
     await renderPage([7, 9], 'passages')
 
+    // 대목이 깨지면 passageId가 없어 흔적도 부를 수 없다 — 두 자리가 함께 실패한다
     expect(await screen.findByLabelText('흔적 목록 오류')).toBeInTheDocument()
+    expect(screen.getByText(/문장을 불러오지 못했어요\./)).toBeInTheDocument()
 
+    // 두 재시도 버튼은 같은 핸들러를 쓴다 — 카드 안쪽을 눌러도 목록까지 다시 부른다
     const callsBeforeRetry = vi.mocked(fetch).mock.calls.length
-    fireEvent.click(screen.getByRole('button', { name: '다시 시도하기' }))
+    const [cardRetry] = screen.getAllByRole('button', { name: '다시 시도하기' })
+    if (cardRetry) fireEvent.click(cardRetry)
     expect(vi.mocked(fetch).mock.calls.length).toBeGreaterThan(callsBeforeRetry)
   })
 
@@ -591,15 +660,15 @@ describe('ReaderHighlightsPage', () => {
   })
 
   // 가림막을 우회해 스포일러 원문을 보던 경로 — 딥링크로 지목돼도 상세가 열려선 안 된다
-  it('가림막 해제 전에는 딥링크로 지목된 흔적도 상세로 열리지 않는다', async () => {
+  it('가림막 해제 전에는 딥링크로 지목된 흔적도 댓글 시트로 열리지 않는다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 9, passageId: 91, opinionId: 4 })
 
     await screen.findByText('스포일러가 포함되어있어요!')
-    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
-    // 해제하면 지목된 흔적이 그제야 상세로 올라온다
+    // 해제하면 지목된 흔적이 그제야 시트로 올라온다
     fireEvent.click(screen.getByText('스포일러가 포함되어있어요!'))
-    expect(await screen.findByRole('dialog', { name: '의견 상세' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /^댓글 \(/ })).toBeInTheDocument()
   })
 
   it('스포일러 대목이 섞인 페이지에서도 일반 대목을 보는 동안에는 가림막이 없다', async () => {
@@ -656,42 +725,65 @@ describe('ReaderHighlightsPage', () => {
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
   })
 
-  it('로그인 상태에서 의견 남기기를 누르면 보고 있는 대목을 물고 작성 화면으로 간다', async () => {
+  it('로그인 상태에서 의견 남기기를 누르면 화면을 떠나지 않고 그 자리에 의견 입력바가 열린다', async () => {
     await renderPage()
     // 대목이 도착해야 붙일 대상이 정해진다
     await screen.findByText('첫 번째 대목 인용문')
 
     clickFabAction('의견 남기기')
 
-    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
-    expect(url.pathname).toBe('/trace/new')
-    // 이 대목에 병합되도록 대목 정보가 함께 실린다
-    expect(url.searchParams.get('passageId')).toBe('71')
-    expect(url.searchParams.get('page')).toBe('7')
-    expect(url.searchParams.get('quote')).toBe('첫 번째 대목 인용문')
-    expect(url.searchParams.get('bookTitle')).toBe('모순')
+    expect(screen.getByPlaceholderText('의견을 입력해주세요')).toBeInTheDocument()
+    // 남기려고 연 자리다 — 열리는 즉시 입력할 수 있어야 한 번 더 누르지 않는다(#374)
+    expect(screen.getByPlaceholderText('의견을 입력해주세요')).toHaveFocus()
+    expect(pushMock).not.toHaveBeenCalled()
+    // 남기기 버튼은 입력바와 같은 자리를 다투므로 입력바가 떠 있는 동안 사라진다
+    expect(screen.queryByRole('button', { name: '남기기' })).not.toBeInTheDocument()
   })
 
-  it('의견 남기기는 대목의 꾸밈까지 함께 넘긴다 — 받는 쪽이 꾸미기를 건너뛰고 의견 작성부터 연다', async () => {
+  it('입력바에서 등록하면 보고 있는 대목과 꾸밈이 실려 그 자리에서 의견이 생성된다', async () => {
     await renderPage([8])
     await screen.findByText('꾸며진 대목 인용문')
+    // 내 흔적 관리·서재를 먼저 보고 온 상황
+    const myOpinionsKey = userQueries.opinionList().queryKey
+    const libraryKey = bookQueries.myLibrary().queryKey
+    lastClient.setQueryData(myOpinionsKey, { pages: [], pageParams: [] })
+    lastClient.setQueryData(libraryKey, { pages: [], pageParams: [] })
 
     clickFabAction('의견 남기기')
+    fireEvent.change(screen.getByPlaceholderText('의견을 입력해주세요'), {
+      target: { value: '그 자리에서 남긴 의견' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '의견 등록' }))
 
-    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
-    expect(url.searchParams.get('passageId')).toBe('81')
-    expect(url.searchParams.get('deco')).toBe('0.10.WAVY.06D6A0')
+    // 새 의견이 목록 갱신에 실려 나타난다 — 입력바는 등록이 끝나면 접힌다
+    expect(await screen.findByText('그 자리에서 남긴 의견')).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('의견을 입력해주세요')).not.toBeInTheDocument()
+    expect(pushMock).not.toHaveBeenCalled()
+
+    // 서버가 받은 내용이 씨앗을 물고 가던 때와 같다 — 보고 있는 대목에 병합, 꾸밈 유지
+    const fetchMock = vi.mocked(globalThis.fetch)
+    const postCall = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')
+    if (!postCall) throw new Error('의견 생성 요청이 없다')
+    const body = JSON.parse(postCall[1]?.body as string) as Record<string, unknown>
+    expect(body['passageId']).toBe(81)
+    expect(body['quotedText']).toBe('꾸며진 대목 인용문')
+    expect(body['decorations']).toEqual([
+      { startOffset: 0, endOffset: 10, effectType: 'WAVY', color: '#06D6A0' },
+    ])
+    expect(lastClient.getQueryState(myOpinionsKey)?.isInvalidated).toBe(true)
+    expect(lastClient.getQueryState(libraryKey)?.isInvalidated).toBe(true)
   })
 
-  it('꾸밈이 없는 대목에서는 꾸밈을 싣지 않는다 — 받는 쪽이 꾸미기부터 시작한다', async () => {
+  it('입력바 바깥을 탭하면 등록 없이 입력바만 접힌다', async () => {
     await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
 
     clickFabAction('의견 남기기')
+    fireEvent.click(screen.getByRole('button', { name: '의견 입력 닫기' }))
 
-    const url = new URL(String(pushMock.mock.calls[0]?.[0]), 'http://localhost')
-    expect(url.searchParams.get('passageId')).toBe('71')
-    expect(url.searchParams.has('deco')).toBe(false)
+    expect(screen.queryByPlaceholderText('의견을 입력해주세요')).not.toBeInTheDocument()
+    // 남기기 버튼이 다시 선다
+    expect(screen.getByRole('button', { name: '남기기' })).toBeInTheDocument()
   })
 
   it('기록 남기기는 대목을 물지 않고 새 대목으로 보낸다 — 의견 남기기와 갈리는 지점이다', async () => {
@@ -768,26 +860,26 @@ describe('ReaderHighlightsPage', () => {
     ).toBe(true)
   })
 
-  it('딥링크로 지목된 의견은 상세 오버레이로 열리고 X로 닫힌다', async () => {
+  it('딥링크로 지목된 의견은 댓글 시트로 열리고 X로 닫힌다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 2 })
 
-    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
-    expect(within(dialog).getByText('밤의독서가')).toBeInTheDocument()
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
+    expect(within(sheet).getByText('밤의독서가')).toBeInTheDocument()
 
-    fireEvent.click(within(dialog).getByLabelText('닫기'))
-    // 슬라이드 아웃 전환(MOTION_DURATION.slow) 동안은 내용을 유지한 채 남아 있다가 사라진다
+    fireEvent.click(within(sheet).getByLabelText('닫기'))
+    // 닫으면 지목도 함께 풀린다 — 남아 있으면 시트가 곧바로 다시 올라온다
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
   })
 
-  it('딥링크가 첫 묶음 밖의 의견을 가리키면 그 의견이 나올 때까지 목록을 이어 받아 상세로 연다', async () => {
+  it('딥링크가 첫 묶음 밖의 의견을 가리키면 그 의견이 나올 때까지 목록을 이어 받아 시트로 연다', async () => {
     // 흔적은 20개씩 온다 — 21번째(opinionId 120)는 첫 묶음에 없다
     await renderPage([15], undefined, { pageNumber: 15, passageId: 151, opinionId: 120 })
 
-    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
 
-    expect(within(dialog).getByText('많은 흔적 21')).toBeInTheDocument()
+    expect(within(sheet).getByText('많은 흔적 21')).toBeInTheDocument()
   })
 
   it('딥링크가 가리킨 의견이 끝까지 없으면 조용히 넘어가지 않고 알린다', async () => {
@@ -796,94 +888,71 @@ describe('ReaderHighlightsPage', () => {
     expect(
       await screen.findByText('그 흔적을 찾지 못했어요. 지워졌을 수 있어요.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('dialog', { name: '의견 상세' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('상세 오버레이에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록 스크롤로만 한다', async () => {
+  it('댓글 시트에는 이전/다음 의견 탐색이 없다 — 의견 전환은 목록으로 돌아가서 한다', async () => {
     await renderPage(undefined, undefined, { pageNumber: 7, passageId: 71, opinionId: 1 })
 
-    const dialog = await screen.findByRole('dialog', { name: '의견 상세' })
+    const sheet = await screen.findByRole('dialog', { name: /^댓글 \(/ })
 
-    expect(within(dialog).queryByLabelText('이전 의견')).not.toBeInTheDocument()
-    expect(within(dialog).queryByLabelText('다음 의견')).not.toBeInTheDocument()
+    expect(within(sheet).queryByLabelText('이전 의견')).not.toBeInTheDocument()
+    expect(within(sheet).queryByLabelText('다음 의견')).not.toBeInTheDocument()
   })
 
-  it('아래로 스크롤 제스처 한 번에 접힘 전환이 완료된다', async () => {
-    const scroller = await renderPage()
-
-    fireEvent.wheel(scroller, { deltaY: 120 })
-    await waitForCollapseAnimation()
-
-    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
-  })
-
-  it('접힌 상태에서도 좌우 스와이프로 대목을 넘긴다 — 흔적 목록이 함께 갱신된다', async () => {
-    const scroller = await renderPage()
+  it('좌우 스와이프로 대목을 넘긴다 — 흔적 목록이 함께 갱신된다', async () => {
+    await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
-
-    fireEvent.wheel(scroller, { deltaY: 120 })
-    await waitForCollapseAnimation()
 
     swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
 
     expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
     expect(await screen.findByText('두 번째 대목의 흔적')).toBeInTheDocument()
-    // 접힘 상태는 유지된다 — 대목만 바뀐다
-    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
   })
 
-  it('접힌 상태에서 페이지를 넘기면 헤더 쪽 선택기도 그 쪽으로 맞춰진다', async () => {
-    const scroller = await renderPage()
+  it('페이저 화살표는 스와이프와 똑같이 쪽 경계를 넘는다', async () => {
+    await renderPage()
     await screen.findByText('첫 번째 대목 인용문')
 
-    fireEvent.wheel(scroller, { deltaY: 120 })
-    await waitForCollapseAnimation()
+    // 7쪽 첫 대목 = 불러온 범위의 맨 앞이라 갈 곳이 없다
+    expect(screen.getByLabelText('이전 대목')).toBeDisabled()
+
+    // 그 쪽의 마지막 대목을 지나 다음 쪽(9p)까지 화살표로만 이동한다
+    fireEvent.click(screen.getByLabelText('다음 대목'))
+    expect(screen.getByText('두 번째 대목 인용문')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('다음 대목'))
+    expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
+    // 쪽이 바뀌면 헤더의 쪽 선택기도 그 쪽으로 따라간다
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
+
+    // 9쪽은 대목이 하나뿐인데도 양쪽 화살표가 살아 있다 — 대목은 쪽을 가로질러 한 줄로 이어진다.
+    // 세는 것은 쪽이므로 7p에서 한 칸 올라간 자리다(02 / 07)
+    expect(screen.getByLabelText('대목이 있는 전체 7쪽 중 2번째 쪽')).toBeInTheDocument()
+    expect(screen.getByLabelText('다음 대목')).toBeEnabled()
+
+    // 되돌아가면 스와이프와 같은 자리 — 앞 쪽의 마지막 대목에 내려앉는다
+    expect(screen.getByLabelText('이전 대목')).toBeEnabled()
+    fireEvent.click(screen.getByLabelText('이전 대목'))
+    expect(await screen.findByText('두 번째 대목 인용문')).toBeInTheDocument()
+    expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('7p')
+  })
+
+  it('쪽이 하나뿐이고 대목도 하나면 양쪽 화살표가 모두 죽는다', async () => {
+    await renderPage([8])
+    await screen.findByText('꾸며진 대목 인용문')
+
+    expect(screen.getByLabelText('이전 대목')).toBeDisabled()
+    expect(screen.getByLabelText('다음 대목')).toBeDisabled()
+  })
+
+  it('페이지를 넘기면 헤더 쪽 선택기도 그 쪽으로 맞춰진다', async () => {
+    await renderPage()
+    await screen.findByText('첫 번째 대목 인용문')
 
     swipeCard(screen.getByText('첫 번째 대목 인용문'), 'next')
     swipeCard(screen.getByText('두 번째 대목 인용문'), 'next')
     expect(await screen.findByText('스포일러가 포함되어있어요!')).toBeInTheDocument()
 
-    fireEvent.wheel(scroller, { deltaY: -120 })
-    await waitForCollapseAnimation()
-
     expect(screen.getByLabelText('쪽 선택')).toHaveTextContent('9p')
-  })
-
-  it('목록 최상단에서 위로 스크롤하면 펼침으로 돌아온다', async () => {
-    const scroller = await renderPage()
-    fireEvent.wheel(scroller, { deltaY: 120 })
-    await waitForCollapseAnimation()
-
-    fireEvent.wheel(scroller, { deltaY: -120 })
-    await waitForCollapseAnimation()
-
-    expect(scroller.style.getPropertyValue('--collapse')).toBe('0')
-  })
-
-  it('목록 중간에서는 위로 스크롤해도 펼침으로 돌아가지 않는다', async () => {
-    const scroller = await renderPage()
-    fireEvent.wheel(scroller, { deltaY: 120 })
-    await waitForCollapseAnimation()
-
-    scroller.scrollTop = 100
-    fireEvent.wheel(scroller, { deltaY: -120 })
-    await waitForCollapseAnimation()
-
-    expect(scroller.style.getPropertyValue('--collapse')).toBe('1')
-  })
-
-  it('상세 오버레이 안의 스크롤은 접힘 전환을 일으키지 않는다', async () => {
-    const scroller = await renderPage(undefined, undefined, {
-      pageNumber: 7,
-      passageId: 71,
-      opinionId: 1,
-    })
-
-    // 오버레이는 fixed지만 스크롤러의 자손이라 wheel이 스크롤러까지 버블링된다
-    fireEvent.wheel(await screen.findByRole('dialog', { name: '의견 상세' }), { deltaY: 120 })
-    await waitForCollapseAnimation()
-
-    // 전환이 아예 일어나지 않아야 한다 — --collapse는 전환이 시작돼야 세팅된다
-    expect(scroller.style.getPropertyValue('--collapse')).not.toBe('1')
   })
 })

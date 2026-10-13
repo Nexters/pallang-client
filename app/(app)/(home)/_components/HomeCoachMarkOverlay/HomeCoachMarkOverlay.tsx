@@ -44,7 +44,9 @@ const COACH_MARK_STEPS: [CoachMarkStep, CoachMarkStep, CoachMarkStep] = [
 ]
 
 const LAST_COACH_MARK_STEP = COACH_MARK_STEPS[2]
-/** 꼬리 끝과 대상 사이 간격 */
+/** 구멍이 대상 테두리에 딱 붙지 않도록 사방에 두는 여유 */
+const CUTOUT_PADDING = 8
+/** 꼬리 끝과 구멍 사이 간격 */
 const TARGET_BUBBLE_GAP = 24
 /** 말풍선이 화면 가장자리에 붙을 때 남기는 여백 */
 const BUBBLE_EDGE_MARGIN = 16
@@ -100,6 +102,8 @@ export function HomeCoachMarkOverlay({ onFinish }: HomeCoachMarkOverlayProps) {
       const top = Math.min(...targetRects.map((rect) => rect.top)) - overlayRect.top
       const right = Math.max(...targetRects.map((rect) => rect.right)) - overlayRect.left
       const bottom = Math.max(...targetRects.map((rect) => rect.bottom)) - overlayRect.top
+      // 구멍은 대상보다 사방 CUTOUT_PADDING만큼 넓다
+      const cutoutTop = top - CUTOUT_PADDING
 
       // 비활성 탭은 opacity-60이라 구멍만 뚫으면 흐린 채로 남는다 — 비추는 동안 원래 밝기로 되돌린다
       if (activeTarget !== firstTarget) {
@@ -121,9 +125,14 @@ export function HomeCoachMarkOverlay({ onFinish }: HomeCoachMarkOverlayProps) {
       )
 
       setPlacement({
-        // 말풍선 높이에 꼬리가 포함돼 있어 이 top이면 꼬리 끝이 대상 위 24px에 선다
-        bubbleStyle: { left: bubbleLeft, top: top - bubbleRect.height - TARGET_BUBBLE_GAP },
-        cutoutStyle: { height: bottom - top, left, top, width: right - left },
+        // 말풍선 높이에 꼬리가 포함돼 있어 이 top이면 꼬리 끝이 구멍 위 24px에 선다
+        bubbleStyle: { left: bubbleLeft, top: cutoutTop - bubbleRect.height - TARGET_BUBBLE_GAP },
+        cutoutStyle: {
+          height: bottom - top + CUTOUT_PADDING * 2,
+          left: left - CUTOUT_PADDING,
+          top: cutoutTop,
+          width: right - left + CUTOUT_PADDING * 2,
+        },
         tailLeft: targetCenterX - bubbleLeft - BUBBLE_TAIL_WIDTH / 2,
       })
     }
@@ -163,7 +172,7 @@ export function HomeCoachMarkOverlay({ onFinish }: HomeCoachMarkOverlayProps) {
         <div
           aria-hidden="true"
           className={cn(
-            'absolute shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]',
+            'absolute shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] transition-[left,top,width,height] duration-normal ease-standard',
             step.cutoutRadiusClassName,
           )}
           style={placement.cutoutStyle}
@@ -172,10 +181,7 @@ export function HomeCoachMarkOverlay({ onFinish }: HomeCoachMarkOverlayProps) {
       {/* 말풍선은 높이를 재야 위치가 나오므로 항상 렌더하고, 자리를 잡기 전까지만 감춘다 */}
       <HomeCoachMarkBubble
         actionLabel={step.actionLabel}
-        className={cn(
-          'absolute transition-opacity duration-fast ease-enter',
-          !placement && 'opacity-0',
-        )}
+        className={cn('absolute', !placement && 'opacity-0')}
         currentStep={stepIndex + 1}
         rootRef={bubbleRef}
         style={placement?.bubbleStyle}

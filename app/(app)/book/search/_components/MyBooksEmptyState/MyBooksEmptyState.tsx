@@ -2,7 +2,7 @@ import Image from 'next/image'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 
-const MASCOT_SRC = '/images/mascot-pair.png'
+const MASCOT_SRC = '/images/mascot-pair.webp'
 
 type MyBooksEmptyStateProps = {
   onCreateTrace: () => void

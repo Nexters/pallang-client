@@ -251,7 +251,7 @@ export function HomeOpinionList({ showSampleLabel }: { showSampleLabel: boolean 
             <HomeOpinionCard
               className={getHomeOpinionCardLayout(index, opinions.length).className}
               opinion={opinion}
-              showSampleLabel={showSampleLabel && index === 0}
+              showSampleLabel={showSampleLabel && index < 2}
               tone={getHomeOpinionCardTone(index)}
             />
           </li>

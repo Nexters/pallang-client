@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+// 서명 키와 비밀번호는 저장소에 넣지 않는다(android/.gitignore) — 로컬 파일에서만 읽는다.
+// 파일이 없으면 서명 설정을 만들지 않고, release는 서명되지 않은 채로 빌드된다.
+// 키 없이도 컴파일 검증은 되어야 하기 때문이다(CI·새 개발자 환경). 대신 Play에는 올릴 수 없다.
+// 셋업은 docs/capacitor.md의 "Android 릴리스 번들(AAB)" 참고.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = null
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties = new Properties()
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "kr.co.pallang.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +18,8 @@ android {
         applicationId "kr.co.pallang.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +27,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (keystoreProperties != null) {
+            release {
+                // storeFile은 android/ 기준 상대경로로 적는다 — 머신마다 절대경로가 다르다.
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystoreProperties != null) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

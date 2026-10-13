@@ -88,16 +88,16 @@ function TabBarSkeleton() {
   return (
     <>
       <div className="flex w-12 shrink-0 flex-col items-center gap-0.5">
-        <div className="size-6.5 rounded-full bg-white/50" />
+        <div className="size-7 rounded-full bg-white/50" />
         <div className="h-2 w-8 rounded-[1px] bg-white/50" />
       </div>
-      <div className="h-10 w-[118px] rounded-full bg-white/50" />
+      <div className="h-13 w-20 rounded-full bg-white/50" />
       <div className="flex w-12 shrink-0 flex-col items-center gap-0.5">
-        <div className="size-6.5 rounded-full bg-white/10" />
+        <div className="size-7 rounded-full bg-white/10" />
         <div className="h-2 w-8 rounded-[1px] bg-white/10" />
       </div>
       <div className="flex w-12 shrink-0 flex-col items-center gap-0.5">
-        <div className="size-6.5 rounded-full bg-white/10" />
+        <div className="size-7 rounded-full bg-white/10" />
         <div className="h-2 w-8 rounded-[1px] bg-white/10" />
       </div>
     </>
@@ -124,7 +124,7 @@ export function TabBar({
       className={cn(
         // 하단 인셋만큼 바닥을 늘려 제스처 바/내비게이션 바가 메뉴를 덮지 않게 한다.
         // 높이를 min-h로 두는 이유: 인셋이 없는 기기(브라우저·구형 안드로이드)에서는 기존 높이 그대로 유지된다.
-        'relative flex min-h-30.5 w-full items-start justify-center overflow-hidden bg-nav-bg px-4 pt-12.5 pb-(--safe-bottom) text-text-inverse',
+        'relative flex min-h-29 w-full items-start justify-center overflow-hidden bg-nav-bg px-4 pt-12 pb-(--safe-bottom) text-text-inverse',
         className,
       )}
       {...props}

@@ -16,12 +16,13 @@ export function NoticeListView() {
   const listQuery = useQuery(noticeQueries.list())
   const notices = listQuery.data?.data?.notices ?? []
   // 시안은 한 번에 한 건만 펼친다 — 펼친 공지 하나만 들고 있으면 된다
-  const [openId, setOpenId] = useState<null | number>(null)
+  const [openId, setOpenId] = useState<number | null>(null)
 
   /** 분기가 넷이라 삼항을 겹치지 않고 guard로 가른다 */
   function renderList() {
     if (listQuery.isPending) return <NoticeListSkeleton />
-    if (listQuery.isError) {
+    // 백그라운드 refetch가 실패해도 status는 error가 된다 — 받아둔 목록이 있으면 그대로 보여준다
+    if (listQuery.isError && notices.length === 0) {
       return (
         <RetryMessage
           message="공지사항을 불러오지 못했어요."
@@ -51,7 +52,8 @@ export function NoticeListView() {
               <button
                 type="button"
                 aria-expanded={isOpen}
-                aria-controls={panelId}
+                // 본문은 펼쳤을 때만 DOM에 있다 — 접힌 채로 가리키면 없는 id를 가리키게 된다
+                aria-controls={isOpen ? panelId : undefined}
                 onClick={() => {
                   setOpenId(isOpen ? null : notice.noticeId)
                 }}
@@ -98,14 +100,17 @@ export function NoticeListView() {
   )
 }
 
-/** 목록과 같은 좌표(제목 + 날짜 두 줄, 행 py-6)로 자리를 지킨다 */
+/**
+ * 목록과 같은 좌표(제목 + 날짜 두 줄, 행 py-6 + 구분선)로 자리를 지킨다.
+ * 두 줄의 높이는 실제 행이 쓰는 타입 토큰에서 그대로 뽑는다 — 토큰이 바뀌어도 자리가 어긋나지 않는다.
+ */
 function NoticeListSkeleton() {
   return (
     <div aria-busy="true" className="flex flex-col">
       {Array.from({ length: 5 }, (_, index) => (
-        <div key={index} className="flex flex-col gap-2 py-6">
-          <Skeleton className="h-6 w-52" />
-          <Skeleton className="h-5 w-28" />
+        <div key={index} className="flex flex-col gap-2 border-b border-border-default py-6">
+          <Skeleton className="h-[calc(var(--text-title-18md)*var(--text-title-18md--line-height))] w-52" />
+          <Skeleton className="h-[calc(var(--text-body-18rg)*var(--text-body-18rg--line-height))] w-28" />
         </div>
       ))}
     </div>

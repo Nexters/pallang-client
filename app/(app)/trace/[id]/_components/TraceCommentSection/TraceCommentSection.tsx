@@ -2,11 +2,15 @@ import PlusIcon from '@/app/_global/_components/Icon/assets/plus.svg'
 import { Spinner } from '@/app/_global/_components/Spinner/Spinner'
 import { cn } from '@/app/_global/_services/cn.service'
 
-import { useTraceComments } from '../../_hooks/useTraceComments'
+import type { useTraceComments } from '../../_hooks/useTraceComments'
 import { CommentThread } from '../CommentThread/CommentThread'
 
 type TraceCommentSectionProps = {
-  opinionId: number
+  /** 댓글 흐름의 데이터·행동 한 벌 — 시트 셸(TraceCommentSheet)이 훅을 소유한다(#373).
+      답글 뷰의 제목(개수)이 같은 목록에서 나와야 해서 훅이 이 컴포넌트보다 위에 산다 */
+  commentsState: ReturnType<typeof useTraceComments>
+  /** 답글 줄을 누르면 시트 본문이 답글 뷰로 갈아끼워진다(#373) */
+  onOpenReplies: (commentId: number) => void
 }
 
 /**
@@ -19,7 +23,7 @@ const PLACEHOLDER_BOX = 'flex h-32 flex-col items-center justify-center bg-bg-ov
  * 흔적 아이템 바로 아래에 인라인으로 펼쳐지는 댓글 묶음.
  * 댓글은 5개까지 보이고 더보기를 누를 때마다 5개씩 이어 붙는다(디자인 주석).
  */
-export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
+export function TraceCommentSection({ commentsState, onOpenReplies }: TraceCommentSectionProps) {
   const {
     comments,
     myUserId,
@@ -33,7 +37,7 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
     loadMore,
     update,
     remove,
-  } = useTraceComments(opinionId)
+  } = commentsState
 
   if (view === 'pending') {
     return (
@@ -98,6 +102,7 @@ export function TraceCommentSection({ opinionId }: TraceCommentSectionProps) {
           myUserId={myUserId}
           onUpdate={update}
           onRemove={remove}
+          onOpenReplies={onOpenReplies}
         />
       ))}
       {/* 데이터가 있는 상태의 실패는 목록을 지우지 않고 더보기 자리에서만 알린다 */}

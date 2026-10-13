@@ -4,6 +4,17 @@ export type BookFormValues = Record<BookFormField, string>
 
 export type BookFormErrors = Partial<Record<BookFormField, string>>
 
+type ExternalBookFormSource = {
+  author: string
+  coverImageUrl: null | string
+  isbn: string
+  pageCount?: number
+  publisher: string
+  title: string
+}
+
+export type ExternalBookFormState = { coverImageUrl: null | string; values: BookFormValues }
+
 type CreateBookInput = {
   author: string
   isbn?: string
@@ -51,6 +62,19 @@ export function normalizeExternalAuthor(raw: string): string {
   )
 
   return (writers ?? parsed).map((item) => item.name).join(', ')
+}
+
+export function toExternalBookFormState(book: ExternalBookFormSource): ExternalBookFormState {
+  return {
+    coverImageUrl: book.coverImageUrl,
+    values: {
+      author: normalizeExternalAuthor(book.author),
+      isbn: book.isbn,
+      pageCount: book.pageCount === undefined ? '' : String(book.pageCount),
+      publisher: book.publisher,
+      title: book.title,
+    },
+  }
 }
 
 export function validateBookForm(values: BookFormValues): BookFormErrors {

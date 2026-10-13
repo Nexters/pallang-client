@@ -9,9 +9,8 @@ import {
 import type { SwipeDirection } from '../_types/readerHighlights.type'
 
 /** 인용문 카드의 좌우 스와이프.
-    카드는 접힘 제스처(useQuoteCollapse)를 듣는 스크롤러의 자손이라 같은 터치가 양쪽에 들어간다.
-    그래서 첫 이동에서 축을 잠그고, 가로로 잠긴 동안에는 카드에 data-swiping을 걸어
-    접힘 쪽이 이 제스처를 건너뛰게 한다(오버레이를 role=dialog로 걸러내는 것과 같은 방식). */
+    첫 이동에서 축을 잠가 대각선 드래그가 대목 이동으로 새지 않게 한다 —
+    카드는 스크롤하지 않는 무대 위에 있어 세로로 잠긴 제스처는 아무 일도 하지 않는다. */
 export function useQuoteSwipe(
   cardRef: RefObject<HTMLElement | null>,
   onSwipe: (direction: SwipeDirection) => void,
@@ -35,7 +34,6 @@ export function useQuoteSwipe(
     const endGesture = () => {
       startRef.current = null
       axisRef.current = undefined
-      delete card.dataset['swiping']
     }
 
     const handleTouchStart = (event: TouchEvent) => {
@@ -63,9 +61,6 @@ export function useQuoteSwipe(
       const deltaY = touch.clientY - start.y
       axisRef.current ??= resolveGestureAxis(deltaX, deltaY)
       if (axisRef.current !== 'horizontal') return
-
-      // 세로 축으로 확정되기 전에는 걸지 않는다 — 접힘 제스처를 잘못 막지 않도록
-      card.dataset['swiping'] = 'true'
 
       const direction = resolveSwipeDirection(deltaX)
       if (!direction) return

@@ -67,18 +67,23 @@ function renderView() {
 }
 
 async function fillForm() {
+  // 달력은 이번 달을 연다 — 2026년 8월로 고정해야 달 이동 횟수가 안 바뀐다
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(2026, 7, 21))
   fireEvent.change(screen.getByLabelText(/모임명/), { target: { value: '고전 뽀개기' } })
   fireEvent.click(screen.getByRole('button', { name: /모임에서 읽을 책을 선택해주세요./ }))
   fireEvent.change(await screen.findByRole('searchbox'), { target: { value: '프랑켄' } })
   fireEvent.click(await screen.findByRole('button', { name: /프랑켄슈타인/ }))
   fireEvent.click(screen.getByRole('button', { name: '등록하기' }))
   fireEvent.click(screen.getByRole('button', { name: /시작일과 종료일을 선택해주세요./ }))
-  fireEvent.change(await screen.findByLabelText('시작일'), { target: { value: '2026-08-20' } })
-  fireEvent.change(screen.getByLabelText('종료일'), { target: { value: '2026-09-20' } })
+  fireEvent.click(await screen.findByRole('button', { name: '2026.08.20' }))
+  fireEvent.click(screen.getByRole('button', { name: '다음 달' }))
+  fireEvent.click(screen.getByRole('button', { name: '2026.09.20' }))
   fireEvent.click(screen.getByRole('button', { name: '확인' }))
 }
 
 afterEach(() => {
+  vi.useRealTimers()
   createGroup.mockReset()
   routerMock.replace.mockReset()
   window.sessionStorage.clear()

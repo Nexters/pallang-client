@@ -5,9 +5,8 @@ import { useMemo, useRef } from 'react'
 
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type MyPassage, userQueries } from '@/app/_global/_queries/user.queries'
+import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 import { SpoilerPassageCard } from '@/app/_shared/user/_components/SpoilerPassageCard/SpoilerPassageCard'
-
-import { RecordPanel } from '../RecordPanel/RecordPanel'
 
 type SpoilerPanelProps = {
   bookId: number
@@ -26,7 +25,9 @@ export function SpoilerPanel({ bookId, onRelease }: SpoilerPanelProps) {
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
-    enabled: listQuery.hasNextPage && !listQuery.isError && !listQuery.isFetchingNextPage,
+    // 다음 페이지 실패로만 끈다. 첫 페이지 실패는 RecordPanel의 오류 분기가 받는다
+    enabled:
+      listQuery.hasNextPage && !listQuery.isFetchNextPageError && !listQuery.isFetchingNextPage,
     onLoadMore: () => {
       void listQuery.fetchNextPage()
     },
@@ -39,8 +40,15 @@ export function SpoilerPanel({ bookId, onRelease }: SpoilerPanelProps) {
       isPending={listQuery.isPending}
       isError={listQuery.isError}
       isEmpty={passages.length === 0}
+      isFetching={listQuery.isFetching}
+      hasNextPage={listQuery.hasNextPage}
+      isFetchNextPageError={listQuery.isFetchNextPageError}
+      isFetchingNextPage={listQuery.isFetchingNextPage}
       onRetry={() => {
         void listQuery.refetch()
+      }}
+      onRetryNextPage={() => {
+        void listQuery.fetchNextPage()
       }}
       loadMoreRef={loadMoreRef}
     >

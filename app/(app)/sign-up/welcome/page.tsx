@@ -37,7 +37,7 @@ export default function SignUpWelcomePage() {
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <Image
-          src="/images/happy-friends.png"
+          src="/images/happy-friends.webp"
           alt=""
           width={304}
           height={215}
@@ -46,7 +46,7 @@ export default function SignUpWelcomePage() {
         />
       </div>
 
-      <div className="flex h-22 shrink-0 items-center justify-center p-4">
+      <div className="flex min-h-22 shrink-0 items-center justify-center px-4 pt-4 pb-safe">
         <Button onClick={handleStartClick} className="h-14 w-full">
           시작하기
         </Button>

@@ -15,8 +15,9 @@ import {
 } from '../../_services/pageOption.service'
 import type { PageNav } from '../../_types/readerHighlights.type'
 
-/** 트리거와 열린 목록이 하나의 알약으로 이어져 보여야 해서 유리 질감은 두 곳이 똑같이 쓴다 */
-const GLASS_SURFACE = 'bg-black/10 backdrop-blur-[9px]'
+/** 트리거와 열린 목록이 하나의 알약으로 이어져 보여야 해서 유리 질감은 두 곳이 똑같이 쓴다.
+    검정 8%·흐림 9px은 시안(229:24122의 Tab_Menu_Item) 값 그대로다 */
+const GLASS_SURFACE = 'bg-black/8 backdrop-blur-[9px]'
 
 /** 항목을 가르는 점선 — SVG 대신 CSS 테두리라 목록 너비가 바뀌어도 따라 늘어난다 */
 const DASHED_RULE = 'border-t border-dashed border-black/10'

@@ -11,15 +11,13 @@ export function ProfileSettingsSkeleton() {
       <div className="flex justify-center py-6">
         <Skeleton className="size-[90px] rounded-3xl" />
       </div>
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-[21px] w-12" />
-          <Skeleton className="h-14 w-full rounded-2xl" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-[21px] w-16" />
-          <Skeleton className="h-14 w-full rounded-2xl" />
-        </div>
+      {/*
+        가입 아이디 블록은 그리지 않는다 — SNS 이메일 미동의면 실제 폼에 없어서,
+        늘 그리면 도착할 때 없는 자리가 접힌다. 항상 있는 닉네임 필드만 세운다.
+      */}
+      <div className="flex flex-col gap-1">
+        <Skeleton className="h-[21px] w-12" />
+        <Skeleton className="h-14 w-full rounded-2xl" />
       </div>
     </div>
   )

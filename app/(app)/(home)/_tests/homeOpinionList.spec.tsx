@@ -127,13 +127,13 @@ describe('홈 내 의견 목록', () => {
     expect(link).toHaveAttribute('href', '/trace/11?page=12&passageId=101&opinionId=1')
   })
 
-  it('비로그인 샘플 의견 목록은 첫 카드에만 SAMPLE 배지를 보여준다', async () => {
+  it('비로그인 샘플 의견 목록은 앞의 두 카드에 SAMPLE 배지를 보여준다', async () => {
     stubApi()
     renderList(true)
 
     await screen.findByText('첫 번째 의견입니다.')
 
-    expect(screen.getAllByText('SAMPLE')).toHaveLength(1)
+    expect(screen.getAllByText('SAMPLE')).toHaveLength(2)
   })
 
   it('로그인 사용자의 의견 목록에는 SAMPLE 배지를 보여주지 않는다', async () => {

@@ -9,6 +9,7 @@ import { HomeCoachMarkOverlay } from '../_components/HomeCoachMarkOverlay/HomeCo
 const OVERLAY_WIDTH = 375
 const BUBBLE_WIDTH = 250
 const BUBBLE_HEIGHT = 92
+const CUTOUT_PADDING = 8
 // 시안(375px)에서 실측한 대상 좌표
 const TRACE_BUTTON_RECT = { height: 52, left: 148, top: 744, width: 80 }
 const BOOK_TAB_RECT = { height: 46, left: 84, top: 747, width: 48 }
@@ -99,19 +100,19 @@ describe('홈 코치마크 오버레이', () => {
 
   // 예전에는 1단계 구멍과 강조가 bottom-4로 박혀 있어, 탭바가 pb-(--safe-bottom)만큼
   // 늘어나는 기기에서 진짜 + 버튼을 벗어났다.
-  it('구멍은 하드코딩 좌표가 아니라 실제 + 버튼 rect에서 나온다', () => {
+  it('구멍은 하드코딩 좌표가 아니라 실제 + 버튼 rect에 사방 8px 여유를 더해 나온다', () => {
     restoreLayout = stubLayout({ 'trace-button': TRACE_BUTTON_RECT })
 
     renderOverlay(['trace-button'])
 
     const { cutout } = getOverlayParts()
-    expect(cutout?.style.left).toBe('148px')
-    expect(cutout?.style.top).toBe('744px')
-    expect(cutout?.style.width).toBe('80px')
-    expect(cutout?.style.height).toBe('52px')
+    expect(cutout?.style.left).toBe(`${String(TRACE_BUTTON_RECT.left - CUTOUT_PADDING)}px`)
+    expect(cutout?.style.top).toBe(`${String(TRACE_BUTTON_RECT.top - CUTOUT_PADDING)}px`)
+    expect(cutout?.style.width).toBe(`${String(TRACE_BUTTON_RECT.width + CUTOUT_PADDING * 2)}px`)
+    expect(cutout?.style.height).toBe(`${String(TRACE_BUTTON_RECT.height + CUTOUT_PADDING * 2)}px`)
   })
 
-  it('말풍선은 대상 중심에 맞춰 서고 꼬리 끝이 대상 위 24px에 선다', () => {
+  it('말풍선은 대상 중심에 맞춰 서고 꼬리 끝이 구멍 위 24px에 선다', () => {
     restoreLayout = stubLayout({ 'trace-button': TRACE_BUTTON_RECT })
 
     renderOverlay(['trace-button'])
@@ -119,7 +120,9 @@ describe('홈 코치마크 오버레이', () => {
     const { bubble } = getOverlayParts()
     const targetCenterX = TRACE_BUTTON_RECT.left + TRACE_BUTTON_RECT.width / 2
     expect(bubble?.style.left).toBe(`${String(targetCenterX - BUBBLE_WIDTH / 2)}px`)
-    expect(bubble?.style.top).toBe(`${String(TRACE_BUTTON_RECT.top - BUBBLE_HEIGHT - 24)}px`)
+    expect(bubble?.style.top).toBe(
+      `${String(TRACE_BUTTON_RECT.top - CUTOUT_PADDING - BUBBLE_HEIGHT - 24)}px`,
+    )
   })
 
   // 탐색 탭은 화면 왼쪽에 있어 중심에 맞추면 말풍선이 화면 밖으로 나간다

@@ -57,12 +57,21 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
    */
   const canReturn = () => isReturnableRef.current && window.history.length > 1
 
-  const leaveFlow = () => {
+  const markLeaving = () => {
     setIsConfirmOpen(false)
     // 초안을 비우기 전에 알린다. 순서가 뒤바뀌면 가드가 빈 초안을 보고 첫 화면(`/trace/new`)으로
     // 되밀어, 방금 건 이탈 이동을 덮어쓴다.
     setExitingFrom(pathname)
     dispatch({ type: 'reset' })
+  }
+
+  const leaveTo = (path: string) => {
+    markLeaving()
+    router.replace(path)
+  }
+
+  const leaveFlow = () => {
+    markLeaving()
     // 저장까지 마친 뒤라면 들어온 자리는 방금 남긴 흔적을 아직 모르는 목록이다 — 홈으로 보낸다.
     if (step !== 'done' && canReturn()) {
       router.back()
@@ -105,6 +114,7 @@ export function TraceNavProvider({ children }: { children: ReactNode }) {
       router.replace(stepPath(next))
     },
     isLeaving: exitingFrom === pathname,
+    leaveTo,
     markReturnable,
     requestExit,
     step,

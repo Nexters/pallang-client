@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 
 import { MOTION_DURATION } from '@/app/_global/_data/motion.constant'
 import { useExitTransition } from '@/app/_global/_hooks/useExitTransition'
@@ -9,23 +9,13 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import Logo from '@/public/images/logo.svg'
 
-const MIN_SPLASH_MS = 1000
-
 export function SplashProvider({ children }: { children: ReactNode }) {
   const { status } = useAuth()
-  const [hasMinTimeElapsed, setHasMinTimeElapsed] = useState(false)
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setHasMinTimeElapsed(true)
-    }, MIN_SPLASH_MS)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [])
-
-  const shouldShowSplash = status === 'loading' || !hasMinTimeElapsed
+  // 인증 판정이 끝나면 즉시 해제한다 — 인위적 최소 노출(구 MIN_SPLASH_MS)은 두지 않는다(#321).
+  // 판정이 영영 안 끝나는 실패(JS 미실행 포함)의 상한은 네이티브가 맡는다
+  // (capacitor.config.ts SplashScreen.launchShowDuration).
+  const shouldShowSplash = status === 'loading'
   // 스플래시는 첫 프레임부터 떠 있어야 하므로 entering에는 스타일을 주지 않는다 — 퇴장만 전환한다
   const splash = useExitTransition(shouldShowSplash, MOTION_DURATION.normal)
 

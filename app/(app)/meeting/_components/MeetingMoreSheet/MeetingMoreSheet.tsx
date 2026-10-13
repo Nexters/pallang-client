@@ -8,7 +8,7 @@ import SettingIcon from '@/app/_global/_components/Icon/assets/setting.svg'
 import type { GroupSummary } from '@/app/_global/_queries/group.queries'
 
 /** 최적화 URL을 거치면 미리 받아 둔 것과 주소가 어긋난다 — 9KB 원본이라 그대로 쓴다 */
-const KAKAO_ICON_SRC = '/images/kakaotalk-app-icon.png'
+const KAKAO_ICON_SRC = '/images/kakaotalk-app-icon.webp'
 
 type MeetingMoreSheetProps = {
   /** 열린 대상. null이면 닫힘 */

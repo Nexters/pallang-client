@@ -37,8 +37,8 @@ export function TraceCreateFab({ onAddOpinion, onAddRecord }: TraceCreateFabProp
     /* 뷰포트가 아니라 앱 셸(layout의 relative main, max-w-132.5)에 붙는다 —
        fixed로 두면 넓은 화면에서 창 오른쪽 끝으로 떨어져 나가 앱 화면 밖에 뜬다.
        main이 h-dvh라 세로 위치는 fixed일 때와 같고, 스크롤은 안쪽 컨테이너가 맡아 함께 밀리지 않는다.
-       하단은 기본 24px, 인셋이 그보다 크면 인셋만큼 올라간다 */
-    <div className="absolute right-6 bottom-[max(24px,var(--safe-bottom))] z-40 flex w-[137px] flex-col items-end gap-2">
+       하단은 24px 여백에 인셋을 더해 홈 인디케이터 위로 띄운다 */
+    <div className="absolute right-6 bottom-safe-6 z-40 flex w-[137px] flex-col items-end gap-2">
       {branches.shouldRender && (
         <div
           data-state={branches.state}

@@ -6,7 +6,7 @@ import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 
-import { TraceCollapseView } from '../_components/TraceCollapseView/TraceCollapseView'
+import { TraceScreen } from '../_components/TraceScreen/TraceScreen'
 
 const { authState } = vi.hoisted(() => ({ authState: { isAuthenticated: true } }))
 
@@ -153,7 +153,13 @@ function stubApi() {
         })
       }
 
-      return json({ data: { pageNumbers: [7] } })
+      // 페이저가 전체 쪽 수를 pageInfo에서 읽는다 — 서버 응답 모양 그대로 실어 준다
+      return json({
+        data: {
+          pageNumbers: [7],
+          pageInfo: { page: 0, size: 100, totalElements: 1, totalPages: 1, hasNext: false },
+        },
+      })
     }),
   )
 
@@ -170,7 +176,7 @@ async function renderView() {
     <QueryClientProvider client={client}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <TraceCollapseView bookId={BOOK_ID} />
+          <TraceScreen bookId={BOOK_ID} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,

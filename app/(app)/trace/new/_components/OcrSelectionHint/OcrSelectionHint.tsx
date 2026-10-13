@@ -10,7 +10,7 @@ export function OcrSelectionHint() {
   return (
     <p
       role="status"
-      className="pointer-events-none absolute inset-x-0 bottom-6 mx-auto w-fit rounded-full bg-bg-overlay/80 px-4 py-2 text-body-14md text-text-inverse transition-opacity duration-fast ease-enter"
+      className="pointer-events-none absolute inset-x-0 bottom-safe-6 mx-auto w-fit rounded-full bg-bg-overlay/80 px-4 py-2 text-body-14md text-text-inverse transition-opacity duration-fast ease-enter"
     >
       담고 싶은 문장을 손가락으로 훑어보세요.
     </p>

@@ -16,9 +16,11 @@ export function MyPageSkeleton() {
     <div className="flex flex-col gap-8 py-4">
       <section className="flex items-center gap-3 px-4">
         <Skeleton className="size-18 shrink-0 rounded-3xl" />
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <Skeleton className="h-[22px] w-28" />
-          <Skeleton className="h-[18px] w-44" />
+        {/* 실제 프로필 줄과 같은 gap-1, 줄 높이도 타이포 토큰 계산값 그대로 둔다
+            (닉네임 title-18sb = 18×1.3 → 23px, 안내문 body-14md = 14×1.5 → 21px) */}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Skeleton className="h-[23px] w-28" />
+          <Skeleton className="h-[21px] w-44" />
         </div>
       </section>
 
@@ -30,12 +32,13 @@ export function MyPageSkeleton() {
 
 function SectionSkeleton({ rows }: { rows: readonly number[] }) {
   return (
+    // 제목 body-16bd = 16×1.4 → 22px, 항목 body-14md = 14×1.5 → 21px
     <section className="flex flex-col gap-6 px-4">
-      <Skeleton className="h-6 w-14" />
+      <Skeleton className="h-[22px] w-14" />
       <ul className="flex w-full flex-col gap-4">
         {rows.map((row) => (
           <li key={row}>
-            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-[21px] w-32" />
           </li>
         ))}
       </ul>

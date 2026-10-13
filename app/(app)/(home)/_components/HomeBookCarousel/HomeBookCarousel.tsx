@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { RefObject, UIEvent } from 'react'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -12,6 +13,7 @@ import {
 import PencilIcon from '@/app/_global/_components/Icon/assets/pencil.svg'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { getSessionStorageItem, setSessionStorageItem } from '@/app/_global/_utils/sessionStorage'
+import { toLargeCoverUrl } from '@/app/_shared/book/_services/coverVariant.service'
 
 import { HomeBookCarouselSkeleton } from './HomeBookCarouselSkeleton'
 
@@ -182,15 +184,25 @@ function BookCarouselTrack({
                   onClick={() => {
                     onTraceClick(book.bookId)
                   }}
-                  style={{
-                    scale: getBookScale(index),
-                    ...(book.coverImageUrl && {
-                      backgroundImage: `url(${book.coverImageUrl})`,
-                      backgroundPosition: 'center',
-                      backgroundSize: 'cover',
-                    }),
-                  }}
+                  style={{ scale: getBookScale(index) }}
                 >
+                  {book.coverImageUrl && (
+                    // 인라인 background-image는 프리로드 힌트를 못 받고 원본 해상도를 그대로 받는다.
+                    // next/image로 표시 크기(220px) 리사이즈 + WebP/AVIF 변환을 태운다.
+                    // 전량 eager인 이유(#336): 이 캐러셀은 사용자가 좌우로 다 훑는 지면이라
+                    // lazy로 아끼는 바이트가 작고, 스와이프로 드러나는 순간에야 요청이 시작되면
+                    // placeholder가 보였다가 표지가 늦게 뜨는 깜빡임이 된다(실측 310~560ms).
+                    // next/image 기본값이 lazy라 명시해야 한다. 우선순위는 중앙 표지에만 준다.
+                    <Image
+                      src={book.coverImageUrl}
+                      alt=""
+                      fill
+                      sizes="220px"
+                      loading="eager"
+                      fetchPriority={index === selectedBookIndex ? 'high' : undefined}
+                      className="rounded-sm object-cover"
+                    />
+                  )}
                   <SampleBookLabel show={showSampleLabel} />
                   <span className="sr-only">{book.title} 표지</span>
                 </Link>
@@ -263,7 +275,9 @@ export function HomeBookCarousel({ showSampleLabel }: { showSampleLabel: boolean
             page.data?.books.map((book) => ({
               author: book.author,
               bookId: book.bookId,
-              coverImageUrl: book.coverImageUrl ?? null,
+              // 220px 슬롯은 DPR 2에서 440px 원본이 필요한데 저장된 알라딘 cover200은 폭 200px이라
+              // 2배 이상 업스케일된다. 큰 슬롯용 cover500으로 치환해 원본 해상도를 확보한다.
+              coverImageUrl: book.coverImageUrl ? toLargeCoverUrl(book.coverImageUrl) : null,
               opinionCount: book.opinionCount,
               passageCount: book.passageCount,
               title: book.title,

@@ -46,7 +46,6 @@ describe('마이페이지 항목 구성', () => {
 
     expect(itemsOf('설정')).toEqual([
       '공지사항',
-      '배경색 관리',
       '스포일러 관리',
       '좋아요 관리',
       '알림 설정',
@@ -62,12 +61,17 @@ describe('마이페이지 항목 구성', () => {
     expect(screen.getByRole('link', { name: '차단 관리' })).toHaveAttribute('href', '/my/blocks')
   })
 
-  // 화면이 없는 항목은 링크가 아니라 버튼이라 눌러도 이동하지 않는다
-  it('화면이 없는 항목은 링크로 만들지 않는다', () => {
+  // 갈 곳이 없는 항목을 목록에 두면 눌러도 아무 일이 없어 앱이 고장 난 것으로 읽힌다.
+  // 비활성으로 잠가 두는 대신 아예 세우지 않는다 — 화면이 생기면 그때 항목을 추가한다.
+  it('설정 항목은 모두 갈 곳이 있는 링크다', () => {
     renderLoggedIn()
 
-    expect(screen.queryByRole('link', { name: '배경색 관리' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '배경색 관리' })).toBeInTheDocument()
+    for (const label of itemsOf('설정')) {
+      const item = screen.getByRole('link', { name: label })
+      expect(item).toHaveAttribute('href')
+      // chevron은 이동을 뜻한다 — 링크에는 언제나 붙는다
+      expect(item.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    }
   })
 
   it('알림 설정은 알림 설정 화면으로 이동한다', () => {

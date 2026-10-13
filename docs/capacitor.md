@@ -206,19 +206,74 @@ iOS만큼 함정은 없다(Gradle 프로젝트라 pbxproj 손상 같은 문제 �
 - **카메라 권한 불필요**: `@capacitor/camera`가 매니페스트(`queries` IMAGE_CAPTURE 등)를 자동 병합. `CAMERA` 권한 선언 불필요.
 - **하이드레이션 정상**: Android WebView는 Chromium이라 iOS의 WKWebView 문제가 없다. 그래도 배포 아키텍처 일관성을 위해 iOS와 동일하게 **prod 빌드 권장**.
 
-### 최초 1회 셋업 (SDK/에뮬레이터)
+### 최초 1회 셋업 (SDK)
+
+**Android 빌드에는 JDK 21과 Android SDK가 **둘 다** 있어야 한다.** JDK만 깔고 `./gradlew`를 돌리면
+`SDK location not found. Define a valid SDK location with an ANDROID_HOME environment variable...`로 멈춘다.
+
+**빌드만 확인할 거면 에뮬레이터 패키지는 받지 않는다** — system-image가 수 GB인데 컴파일 검증에는 쓰이지 않는다.
 
 ```bash
-export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools   # commandlinetools 설치 경로
-# SDK 구성요소
-sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "emulator" \
-  "system-images;android-36;google_apis;arm64-v8a"
-# AVD 생성
+# 1. JDK 21 + 커맨드라인 툴
+brew install openjdk@21                        # keg-only — 아래 JAVA_HOME 주의 참고
+brew install --cask android-commandlinetools   # sudo 불필요
+
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+
+# 2. 라이선스 수락 — 건너뛰면 다음 단계에서 패키지 설치가 거부된다
+yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses
+
+# 3. 빌드에 필요한 최소 구성요소 (버전은 android/variables.gradle의 compileSdkVersion을 따른다)
+sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+# 4. Gradle이 SDK를 찾도록 (git-ignored)
+echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+```
+
+- **`--sdk_root`를 빼지 말 것** — cask가 깐 `cmdline-tools/latest` 옆이 아니라 엉뚱한 경로에 설치된다.
+- **`JAVA_HOME`에 `$(/usr/libexec/java_home -v 21)`을 쓰려면 심볼릭 링크가 먼저 있어야 한다.** Homebrew의 `openjdk@21`은 keg-only라 시스템 Java 래퍼가 못 찾는다. 링크를 만들려면 **sudo가 필요하다**:
+
+  ```bash
+  sudo ln -sfn /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-21.jdk
+  ```
+
+  sudo를 쓰고 싶지 않으면 위 셋업처럼 keg 경로(`/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`)를 `JAVA_HOME`에 직접 넣는다. 아래 명령들이 `$(/usr/libexec/java_home -v 21)`을 쓰는 건 링크가 있는 환경 기준이다 — 없으면 keg 경로로 바꿔 쓴다.
+
+- `local.properties`를 만들어 두면 이후 빌드에는 `JAVA_HOME`만 있으면 된다(`ANDROID_HOME` 불필요).
+
+에뮬레이터까지 필요하면 추가로 받는다(디스크 여유 확인 — 아래 주의 참고).
+
+```bash
+sdkmanager --sdk_root="$ANDROID_HOME" "emulator" "system-images;android-36;google_apis;arm64-v8a"
 avdmanager create avd -n pallang_test -k "system-images;android-36;google_apis;arm64-v8a" -d pixel_7
 ```
 
-- **JDK 21**은 `~/jdk21`(Temurin)에 로컬 설치돼 있음. Homebrew cask는 sudo가 필요해서, tarball을 풀어 씀.
-- Gradle이 SDK를 찾도록 `android/local.properties`에 `sdk.dir=$ANDROID_HOME` (git-ignored).
+### 네이티브 코드만 검증할 때 (에뮬레이터 없이)
+
+Android 네이티브를 건드렸는데 기기·에뮬레이터가 없으면, **컴파일과 APK 반영 여부까지는 확인할 수 있다.**
+
+```bash
+cd android
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:assembleDebug
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:compileReleaseJavaWithJavac  # release 변형도 컴파일되는지
+```
+
+앱 모듈에 직접 둔 Capacitor 플러그인(`AppSettingsPlugin` 등)은 소스에 있어도 **등록되지 않으면 웹에서 부를 수 없다.**
+dex를 열어 클래스와 등록 호출을 함께 확인한다.
+
+```bash
+APK=android/app/build/outputs/apk/debug/app-debug.apk
+apkanalyzer dex packages "$APK" | grep AppSettingsPlugin          # 클래스·메서드가 들어갔는지
+apkanalyzer dex code --class kr.co.pallang.app.MainActivity "$APK" | grep -iE "registerPlugin|AppSettingsPlugin"
+#   const-class    v0, Lkr/co/pallang/app/AppSettingsPlugin;
+#   invoke-virtual {p0, v0}, MainActivity;->registerPlugin(Ljava/lang/Class;)V
+```
+
+`release`는 `minifyEnabled false`(`android/app/build.gradle`)라 R8이 플러그인 클래스를 걷어낼 걱정은 없다.
+이걸 켜게 되면 `registerPlugin`으로만 참조되는 클래스가 살아남는지 다시 확인할 것.
+
+**이 방법으로 확인되지 않는 것**: 런타임 동작. 인텐트가 실제로 설정 화면을 여는지, 권한 흐름이 도는지는 기기·에뮬레이터가 필요하다.
 
 ### APK 빌드 → 에뮬레이터 실행 → 카메라 확인 (검증된 절차)
 
@@ -231,7 +286,7 @@ CAP_SERVER_URL=http://10.0.2.2:3000 npx cap sync android
 
 # 3. APK 빌드 (JDK 21 필수)
 cd android
-JAVA_HOME=~/jdk21/jdk-21*/Contents/Home ANDROID_HOME=$ANDROID_HOME ./gradlew assembleDebug
+JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew assembleDebug
 # 산출물: android/app/build/outputs/apk/debug/app-debug.apk
 
 # 4. 에뮬레이터 실행 (직접 볼 땐 -no-window 빼기. -camera-back webcam0 = 맥 웹캠)
@@ -292,6 +347,85 @@ API 서버는 앱이 고르지 않는다. 앱은 웹을 로드할 뿐이고, 그
    pnpm ios:archive       # 운영(www.pallang.co.kr) 빌드 — 심사 제출용
    ```
    `build-ios/export/`에 .ipa가 생성된다. 서명은 자동(팀 DQ3Q4Z82DZ, `ExportOptions.plist`).
+   아카이브가 끝나면 스크립트가 `pbxproj`를 **스스로 커밋하고 태그를 단다** — `ios-v1.3.2-b18`(운영) / `ios-v1.3.2-b17-dev`(dev). 푸시는 하지 않으니 `git push origin HEAD --follow-tags`로 올린다.
 3. **업로드**: Transporter 앱(App Store에서 설치)에 .ipa를 드래그해 업로드.
 4. App Store Connect → TestFlight 탭에서 처리 완료(수 분) 후 내부 테스터 추가. 수출 규정 질문은 `ITSAppUsesNonExemptEncryption=false`로 생략된다.
 5. 버전은 `MARKETING_VERSION`, 빌드 번호는 `CURRENT_PROJECT_VERSION`(pbxproj) — 같은 버전을 다시 올릴 땐 빌드 번호를 올려야 한다.
+
+**올리기 전에 레포의 카운터가 App Store Connect보다 뒤처지지 않았는지 본다.** 아카이브 커밋을 푸시하지 않은 채 업로드하면 다음 아카이브가 이미 올라간 빌드보다 낮은 번호를 달고 나온다 — 업로드는 통과해도 TestFlight에서 최신으로 잡히지 않아 테스터가 옛 빌드를 계속 본다. 실제로 `1.3.1 (15)`가 올라가 있는데 레포는 `1.3.0` / 빌드 12에 머물러 있던 적이 있다. `git tag -l 'ios-*' | tail -1`이 ASC의 최신 빌드와 맞는지 확인하면 된다.
+
+## Google Play 배포 (릴리스 번들 · AAB)
+
+TestFlight 절의 Android 대응이다. **개념은 같다** — 네이티브는 한 종류이고 로드하는 웹 주소만 다르다.
+
+|             | `pnpm android:bundle:dev`          | `pnpm android:bundle`              |
+| ----------- | ---------------------------------- | ---------------------------------- |
+| 로드하는 웹 | `dev.pallang.co.kr` (develop 배포) | `www.pallang.co.kr` (release 배포) |
+| 용도        | 내부 테스트 트랙                   | **심사 제출·프로덕션 전용**        |
+
+iOS와 마찬가지로 **웹 코드 변경은 앱을 다시 올릴 필요가 없다.** 재빌드가 필요한 건 네이티브가 바뀔 때뿐이다.
+
+### 업로드 키 만들기 (최초 1회)
+
+Play는 서명되지 않은 번들을 받지 않는다. **키와 비밀번호는 저장소에 넣지 않는다** — `android/.gitignore`가 `*.jks`와 `keystore.properties`를 막는다.
+
+```bash
+PW=$(openssl rand -base64 24)      # 비밀번호는 만든 뒤 비밀번호 관리자에 옮길 것
+keytool -genkeypair -v \
+  -keystore android/pallang-upload.jks \
+  -alias pallang-upload \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storepass "$PW" -keypass "$PW" \
+  -dname "CN=pallang, OU=Nexters, O=Nexters, L=Seoul, C=KR"
+
+cat > android/keystore.properties <<EOF
+storeFile=pallang-upload.jks
+storePassword=$PW
+keyAlias=pallang-upload
+keyPassword=$PW
+EOF
+chmod 600 android/keystore.properties android/pallang-upload.jks
+```
+
+- **`validity`는 넉넉하게** — Play는 2033년 이후까지 유효한 키를 요구한다. 10000일이면 충분하다.
+- **Play App Signing을 켤 것.** 그러면 이 키는 *업로드 키*일 뿐이고 실제 앱 서명 키는 구글이 보관한다. 업로드 키를 잃어버리거나 유출해도 Play Console에서 재설정할 수 있다. 끄면 이 키가 곧 앱 서명 키라 분실 시 앱을 영영 업데이트할 수 없다.
+- `android/app/build.gradle`은 `keystore.properties`가 **있을 때만** 서명 설정을 만든다. 없으면 release가 서명되지 않은 채로 빌드된다 — 키 없는 환경(CI·새 개발자)에서도 컴파일 검증은 되게 하기 위해서다. 대신 Play에는 올릴 수 없다.
+
+### 번들 만들기
+
+```bash
+pnpm android:bundle        # 운영(www) — 심사 제출용
+pnpm android:bundle:dev    # dev 서버를 보는 내부 테스트 빌드
+```
+
+`scripts/android-bundle.sh`가 iOS 스크립트와 같은 일을 한다.
+
+| 값            | 출처                                           | 비고                                                      |
+| ------------- | ---------------------------------------------- | --------------------------------------------------------- |
+| `versionName` | `package.json` 버전에서 prerelease 접미사 제거 | 사용자에게 보이는 버전. iOS `MARKETING_VERSION`과 같은 값 |
+| `versionCode` | 빌드마다 +1                                    | Play는 같은 값을 두 번 받지 않는다                        |
+
+산출물은 `android/app/build/outputs/bundle/release/app-release.aab`.
+
+**빌드가 `build.gradle`을 고치고 스스로 커밋·태그한다**(`aos-v1.3.2-vc5`, dev는 `-dev` 접미사). 커밋을 빠뜨리면 다음 빌드가 같은 `versionCode`에서 다시 시작해 Play가 거부하므로 사람 손에 맡기지 않는다. 푸시는 하지 않는다 — `git push origin HEAD --follow-tags`.
+
+### 올리기 전 확인
+
+```bash
+AAB=android/app/build/outputs/bundle/release/app-release.aab
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+
+jarsigner -verify "$AAB"                      # "jar verified." 가 나와야 한다
+keytool -printcert -jarfile "$AAB"            # SHA256 지문이 업로드 키와 같은지
+unzip -p "$AAB" base/assets/capacitor.config.json | grep url   # 의도한 서버를 보는지
+```
+
+- `jarsigner`가 내는 **"self-signed" · "certificate chain is invalid" 경고는 정상이다.** 업로드 키는 자체 서명이고 CA 체인이 없다.
+- **로드 URL 확인을 빠뜨리지 말 것** — dev 번들을 심사에 올리면 심사관이 dev 서버를 보게 된다.
+
+### Play Console (최초 1회)
+
+1. 앱 만들기 → 패키지명 `kr.co.pallang.app`
+2. **Play App Signing 활성화** (위 참고)
+3. 첫 업로드는 내부 테스트 트랙을 권한다 — 프로덕션은 되돌리기 어렵다
+4. 스토어 등록정보·콘텐츠 등급·데이터 보안 양식은 별도 작업이다. **이 앱은 카메라와 사진 접근을 쓰므로 데이터 보안 양식에 그 용도를 정확히 적어야 한다**(iOS의 `NSCameraUsageDescription` 문구와 어긋나지 않게).

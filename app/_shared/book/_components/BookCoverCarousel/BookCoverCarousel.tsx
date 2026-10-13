@@ -1,6 +1,8 @@
 'use client'
 
-import { cn } from '@/app/_global/_services/cn.service'
+import Image from 'next/image'
+
+import { BookSelectRibbon } from '@/app/_shared/book/_components/BookSelectRibbon/BookSelectRibbon'
 import type { SelectedBook } from '@/app/_shared/book/_data/selectedBook.model'
 
 type BookCoverCarouselProps = {
@@ -24,8 +26,9 @@ export function BookCoverCarousel({
   return (
     <section className="flex flex-col gap-3.5" aria-label={title}>
       <h2 className="text-body-16bd text-text-primary">{title}</h2>
-      {/* 표지 줄만 화면 끝까지 스크롤되도록 좌우 패딩을 상쇄한다 */}
-      <ul className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4 [&::-webkit-scrollbar]:hidden">
+      {/* 표지 줄만 화면 끝까지 스크롤되도록 좌우 패딩을 상쇄한다. 선택 표시는 검색 결과
+          리스트와 같은 '선택' 리본(#343) — 표지 안쪽에 얹히므로 ul 클리핑과 무관하다. */}
+      <ul className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto overflow-y-hidden px-4 [&::-webkit-scrollbar]:hidden">
         {isPending
           ? SKELETON_KEYS.map((key) => (
               <li
@@ -35,7 +38,7 @@ export function BookCoverCarousel({
               />
             ))
           : books.map((book) => (
-              <li key={book.bookId} className="shrink-0">
+              <li key={book.bookId} className="relative shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -43,16 +46,14 @@ export function BookCoverCarousel({
                   }}
                   aria-label={`${book.title} 선택`}
                   aria-pressed={selectedBookId === book.bookId}
-                  className={cn(
-                    'block h-[108px] w-[72px] cursor-pointer overflow-hidden rounded-[2px] bg-bg-surface',
-                    selectedBookId === book.bookId && 'ring-2 ring-interactive-accent',
-                  )}
+                  className="block h-[108px] w-[72px] cursor-pointer overflow-hidden rounded-[2px] bg-bg-surface"
                 >
                   {book.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- 외부 커버 도메인이 next.config에 등록되어 있지 않다
-                    <img
+                    <Image
                       src={book.coverImageUrl}
                       alt=""
+                      width={72}
+                      height={108}
                       className="size-full object-cover"
                       loading="lazy"
                     />
@@ -62,6 +63,7 @@ export function BookCoverCarousel({
                     </span>
                   )}
                 </button>
+                {selectedBookId === book.bookId && <BookSelectRibbon />}
               </li>
             ))}
       </ul>

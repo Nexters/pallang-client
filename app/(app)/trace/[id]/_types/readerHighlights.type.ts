@@ -42,11 +42,19 @@ export type QuoteStageProps = {
   pageNav?: PageNav
   highlight: Highlight
   quoteIndex: number
+  /** 페이저가 적는 자리 — 대목이 아니라 '대목이 있는 쪽' 중 몇 번째 쪽인지다(0부터 센다) */
+  pagePosition: { index: number; total: number }
   isRevealed: boolean
-  isCollapsed: boolean
+  /** 대목 조회가 깨졌으면 카드 안이 재시도 화면으로 바뀐다(시안 229:24303) */
+  stageError?: { isError: boolean; retry: () => void }
+  /** 모임에 남긴 대목이 아직 없으면 카드 안이 남기기 안내로 바뀐다(시안 3556:29129).
+      에러보다 뒤 순위다 — 조회가 깨졌을 때는 비어 보여도 재시도 화면이 우선이다 */
+  emptyState?: { onCreate: () => void }
   onBack: () => void
   onClickQuote: () => void
-  /** 카드 위 좌우 스와이프와 카드 안 화살표로 대목·페이지를 옮긴다 */
+  /** 그 방향에 갈 곳이 있는지 — 페이저 화살표의 활성 여부이자 스와이프가 실제로 움직이는 조건이다 */
+  canSwipe: { prev: boolean; next: boolean }
+  /** 좌우 스와이프와 페이저 화살표가 함께 부른다. 둘 다 쪽 경계를 넘는다 */
   onSwipeQuote: (direction: SwipeDirection) => void
 }
 

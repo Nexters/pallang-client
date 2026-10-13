@@ -60,7 +60,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **셸은 로딩 분기 바깥에 둔다** — 레이아웃·탭바·헤더는 데이터를 기다릴 이유가 없다. `if (isPending) return null`로 화면 전체를 지우지 말고, 셸은 그대로 두고 데이터가 필요한 안쪽만 골격으로 채운다. 셸을 분기 안쪽에 두면 탭바까지 사라진다(`myPageShell.spec.tsx`가 이 회귀를 잠근다).
 - **골격 조각은 `_components/Skeleton`을 쓴다** — 크기·모양은 `className`으로 정하고, 어두운 면에 얹을 때만 `tone="dark"`를 준다. 색을 직접 고르면 같은 배경에서 세기가 갈린다.
 - **`<Suspense>`에 fallback을 반드시 준다** — 비워두면 PPR 셸이 빈 채로 나가, 직접 진입에서는 빈 화면이 뜨고 링크 이동에서는 이전 화면이 멈춘 것처럼 보인다(`tracePageFallback.spec.tsx`).
-- 골격은 실제 화면과 **같은 좌표**를 쓴다. 수치가 상수로 있으면 그 상수를 가져다 쓴다(`TracePageSkeleton`이 `quoteCollapse.service`의 값을 그대로 쓰는 식) — 도착했을 때 자리가 튀지 않는다.
+- 골격은 실제 화면과 **같은 좌표**를 쓴다. 수치가 상수로 있으면 그 상수를 가져다 쓴다(`TracePageSkeleton`이 `quoteStage.constant`의 값을 그대로 쓰는 식) — 도착했을 때 자리가 튀지 않는다.
 - 골격은 움직이지 않는다. 반복 애니메이션이 필요하면 모션 섹션의 `animate-pulse`만 쓴다.
 
 ## 이슈 / 브랜치 / PR 컨벤션
@@ -98,7 +98,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - 상단 인셋 토큰은 `globals.css`의 `:root { --safe-top: env(safe-area-inset-top, 0px) }` 하나뿐이다. 화면 코드에서 `env(safe-area-inset-top)`을 직접 쓰지 않는다 — 셸 패딩과 겹쳐 두 번 내려간다.
 - 레이아웃 셸(`app/layout.tsx`의 `main`)이 `pt-(--safe-top)`으로 일괄 소비한다 — **새 페이지는 노치 처리를 하지 않는다.**
-- 노치 뒤까지 배경을 깔아야 하는 풀블리드 화면만 `-mt-(--safe-top)`(CSS는 `margin-top: calc(-1 * var(--safe-top))`)으로 셸 패딩을 되돌린 뒤 내부에서 직접 오프셋한다. 예: 탭 화면(`TabScreenLayout` — 시트가 되돌리고 `pt-(--safe-top)`으로 다시 더한다), 흔적 페이지(`TraceCollapseView`/`QuoteStage`).
+- 노치 뒤까지 배경을 깔아야 하는 풀블리드 화면만 `-mt-(--safe-top)`(CSS는 `margin-top: calc(-1 * var(--safe-top))`)으로 셸 패딩을 되돌린 뒤 내부에서 직접 오프셋한다. 예: 탭 화면(`TabScreenLayout` — 시트가 되돌리고 `pt-(--safe-top)`으로 다시 더한다), 흔적 페이지(`TraceScreen`/`QuoteStage`).
 - `fixed` 오버레이는 셸 패딩을 받지 않는다 — 상단에 콘텐츠가 붙는 오버레이만 `var(--safe-top)`만큼 패딩한다. 예: `TraceDetailOverlay`. 중앙 정렬 모달·바텀시트는 처리 불필요.
 - 하단 인셋 토큰은 `--safe-bottom`이다. 상단과 달리 **셸이 소비하지 않는다** — 하단에 붙는 요소(탭바·고정 CTA·바텀시트)가 각자 `max(<기본값>, var(--safe-bottom))`으로 더한다. `env(safe-area-inset-bottom)`을 직접 쓰지 않는다.
 - **두 토큰 모두 값을 env()에서만 받지 않는다.** Android는 시스템 바 인셋을 `env(safe-area-inset-*)`로 주지 않는 웹뷰(Chromium < 140)가 있어 `MainActivity`가 실제 인셋을 두 토큰에 덮어쓴다(API 35+에서만 — 그 아래는 창이 시스템 바를 침범하지 않아 넣으면 두 번 밀린다). 그래서 인셋은 언제나 토큰을 거쳐 읽는다.
@@ -125,6 +125,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Tailwind v4에서 `scale-*` / `translate-*`는 `transform`이 아니라 `scale` / `translate` 속성으로 컴파일된다.** `transition-[opacity,transform]`으로는 크기·이동이 전혀 전환되지 않는다. `transition-[opacity,scale]`처럼 실제 속성 이름을 쓰거나 `transition-transform`(네 속성을 모두 포함)을 쓴다.
 - JS에서 duration이 필요하면 `app/_global/_data/motion.constant.ts`의 `MOTION_DURATION`을 쓴다. CSS와 값이 어긋나면 `motionToken.spec.ts`가 잡는다.
 - **모달·바텀시트는 새로 만들지 않는다.** `_components/Dialog`(중앙 모달)와 `_components/BottomSheet`(하단 시트)를 쓴다. 둘 다 base-ui 위에 있어 포커스 트랩·스크롤 락·Esc·바깥 탭 닫힘이 딸려 온다. `fixed inset-0`으로 직접 오버레이를 만들지 말 것.
+- **시트를 끄는 제스처는 `_hooks/useSheetDrag`(@use-gesture) 하나를 거치고, 손잡이(`SheetHandle`)가 있는 시트만 끌린다** — `BottomSheet`는 `showHandle`로 켠다. 반환 props를 시트 요소에 스프레드한다(ref는 포털 팝업에 안 붙는다). 맨 위 목록의 아래 드래그·더 올라갈 수 있을 때의 위 드래그만 시트가 가져가고 나머지는 스크롤에 양보하며, 안쪽 버튼 탭은 건드리지 않는다.
 - base-ui를 쓰지 않는 오버레이(전체화면 상세, 팝오버, 스플래시)의 등장/퇴장은 `useExitTransition(open, MOTION_DURATION.x)`으로 수명을 관리하고 `data-state`로 스타일을 건다. 닫히는 동안 내용이 비지 않아야 하면 `useLastPresent`를 같이 쓴다. 퇴장 중에도 오버레이는 화면에 남으므로 `data-[state=exiting]:pointer-events-none`으로 클릭을 흘려보낸다.
 - 탭 가능한 요소에는 `press` 유틸을 붙여 누르는 피드백을 통일한다. `transition-colors`와 같이 쓰면 `transition-property`가 서로를 덮으니 한쪽으로 합친다.
 - 파일을 읽어 검사하는 spec은 첫 줄에 `// @vitest-environment node`를 단다. 기본 `happy-dom` 환경에서는 vite가 `import.meta.url`을 재작성해 `fileURLToPath`가 깨진다.
@@ -135,7 +136,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - **`next dev`는 WKWebView에서 하이드레이션이 안 된다**(브라우저·Android는 정상). 웹뷰/기기 테스트는 `pnpm build && pnpm start`(프로덕션)로 한다.
 - **(iOS)** Xcode GUI로 프로젝트를 열면 pbxproj가 손상되어 `Undefined symbol: _main`이 난다. `ios/`를 재생성하고 `xcodebuild`/`cap` CLI로 빌드한다.
-- **(Android)** APK 빌드에 **JDK 21** 필요(카메라 플러그인 요구). dev(http) 로드는 debug 매니페스트의 `usesCleartextTraffic`로 허용.
+- **(Android)** APK 빌드에 **JDK 21**과 **Android SDK**가 둘 다 필요하다. JDK만 있으면 `SDK location not found`로 멈춘다 — 셋업은 [docs/capacitor.md](docs/capacitor.md)의 "최초 1회 셋업 (SDK)"을 따른다. dev(http) 로드는 debug 매니페스트의 `usesCleartextTraffic`로 허용.
 - **네이티브가 준 파일 경로(`capacitor://localhost/...`)를 `fetch`로 읽을 수 없다.** 원격 URL을 로드하므로 교차 오리진이다. 카메라·파일 플러그인은 경로 대신 데이터(`DataUrl` 등)로 받는다. 이미지 표시는 되고 바이트 읽기만 막혀서 놓치기 쉽다.
 
 기기에서 dev 서버를 띄울 때 LAN IP는 네트워크마다 바뀐다. IP를 앱에 하드코딩하지 말고 스크립트로 현재 IP를 자동 감지해 실행한다:

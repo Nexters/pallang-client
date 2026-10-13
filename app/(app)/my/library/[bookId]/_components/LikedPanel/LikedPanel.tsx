@@ -6,8 +6,7 @@ import { useMemo, useRef } from 'react'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { type LikedOpinion, userQueries } from '@/app/_global/_queries/user.queries'
 import { LikedOpinionCard } from '@/app/_shared/user/_components/LikedOpinionCard/LikedOpinionCard'
-
-import { RecordPanel } from '../RecordPanel/RecordPanel'
+import { RecordPanel } from '@/app/_shared/user/_components/RecordPanel/RecordPanel'
 
 type LikedPanelProps = {
   bookId: number
@@ -15,11 +14,13 @@ type LikedPanelProps = {
    * 하트를 꺼서 좋아요가 풀렸을 때. 안내 스낵바는 화면 바깥(고정 위치)에 서야 해서
    * 여기서 띄우지 않고 상위로 올린다 — 스크롤 컨테이너 안에 두면 목록과 함께 밀린다.
    */
-  onUnlike: (unliked: { nickname: string; undo: () => void }) => void
+  onUnlike: (unliked: { opinionId: number; nickname: string; undo: () => void }) => void
+  /** 하트를 직접 다시 켰을 때 — 되돌릴 것이 없어졌으니 상위가 안내를 걷는다 */
+  onRelike: (opinionId: number) => void
 }
 
 /** 이 책에서 내가 좋아요를 누른 흔적 목록. */
-export function LikedPanel({ bookId, onUnlike }: LikedPanelProps) {
+export function LikedPanel({ bookId, onUnlike, onRelike }: LikedPanelProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listQuery = useInfiniteQuery(userQueries.likedOpinionList(bookId))
   const opinions = useMemo<LikedOpinion[]>(
@@ -29,7 +30,9 @@ export function LikedPanel({ bookId, onUnlike }: LikedPanelProps) {
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
-    enabled: listQuery.hasNextPage && !listQuery.isError && !listQuery.isFetchingNextPage,
+    // 다음 페이지 실패로만 끈다. 첫 페이지 실패는 RecordPanel의 오류 분기가 받는다
+    enabled:
+      listQuery.hasNextPage && !listQuery.isFetchNextPageError && !listQuery.isFetchingNextPage,
     onLoadMore: () => {
       void listQuery.fetchNextPage()
     },
@@ -42,14 +45,21 @@ export function LikedPanel({ bookId, onUnlike }: LikedPanelProps) {
       isPending={listQuery.isPending}
       isError={listQuery.isError}
       isEmpty={opinions.length === 0}
+      isFetching={listQuery.isFetching}
+      hasNextPage={listQuery.hasNextPage}
+      isFetchNextPageError={listQuery.isFetchNextPageError}
+      isFetchingNextPage={listQuery.isFetchingNextPage}
       onRetry={() => {
         void listQuery.refetch()
+      }}
+      onRetryNextPage={() => {
+        void listQuery.fetchNextPage()
       }}
       loadMoreRef={loadMoreRef}
     >
       {opinions.map((opinion) => (
         <li key={opinion.opinionId}>
-          <LikedOpinionCard opinion={opinion} onUnlike={onUnlike} />
+          <LikedOpinionCard opinion={opinion} onUnlike={onUnlike} onRelike={onRelike} />
         </li>
       ))}
     </RecordPanel>

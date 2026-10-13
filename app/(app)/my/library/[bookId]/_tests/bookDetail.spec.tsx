@@ -313,7 +313,8 @@ describe('내 서재 책 상세', () => {
     renderView({ liked: [LIKED_OPINION] })
     await userEvent.click(await screen.findByRole('tab', { name: '좋아요' }))
 
-    await userEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    // 하트 이름은 행마다 다르다 — 스크린리더에서 어느 카드의 하트인지 갈리도록 닉네임을 물고 있다
+    await userEvent.click(await screen.findByRole('button', { name: '밤샘낭독가님의 흔적 좋아요' }))
 
     expect(await screen.findByText('밤샘낭독가님의 좋아요를 해제했어요')).toBeInTheDocument()
 
