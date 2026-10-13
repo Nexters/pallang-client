@@ -1,4 +1,4 @@
-export const NOTIFICATION_FALLBACK_HREF = '/my/notifications'
+export const NOTIFICATION_FALLBACK_HREF = '/notifications'
 
 type NotificationNavigationTarget = {
   type?: string | null

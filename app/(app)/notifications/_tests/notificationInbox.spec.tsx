@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { NotificationResponse } from '@/app/_global/_queries/notification.queries'
 import { notificationQueries } from '@/app/_global/_queries/notification.queries'
 
-import { NotificationSettingsView } from '../_components/NotificationSettingsView/NotificationSettingsView'
+import { NotificationInboxView } from '../_components/NotificationInboxView/NotificationInboxView'
 
 const { routerMock } = vi.hoisted(() => ({
   routerMock: {
@@ -57,12 +57,12 @@ function renderView(notifications: NotificationResponse[] = [NOTIFICATION]) {
 
   render(
     <QueryClientProvider client={client}>
-      <NotificationSettingsView />
+      <NotificationInboxView />
     </QueryClientProvider>,
   )
 }
 
-describe('알림 설정 임시 화면', () => {
+describe('알림함', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.clearAllMocks()
@@ -71,7 +71,7 @@ describe('알림 설정 임시 화면', () => {
   it('알림 목록을 보여준다', () => {
     renderView()
 
-    expect(screen.getByRole('heading', { name: '알림 설정' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '알림함' })).toBeInTheDocument()
     expect(screen.getByText('새 댓글이 달렸어요')).toBeInTheDocument()
     expect(screen.getByText('내 의견에 댓글이 달렸어요.')).toBeInTheDocument()
     expect(screen.getByText('2026-08-20 12:30')).toBeInTheDocument()

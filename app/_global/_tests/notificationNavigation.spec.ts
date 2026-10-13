@@ -37,8 +37,8 @@ describe('notificationNavigation.service', () => {
   })
 
   it('이동에 필요한 id가 없으면 알림함으로 보낸다', () => {
-    expect(buildNotificationHref({ type: 'OPINION_LIKED', opinionId: 7 })).toBe('/my/notifications')
-    expect(buildNotificationHref({ type: 'BOOK_NEW_OPINIONS' })).toBe('/my/notifications')
-    expect(buildPushNotificationHref(null)).toBe('/my/notifications')
+    expect(buildNotificationHref({ type: 'OPINION_LIKED', opinionId: 7 })).toBe('/notifications')
+    expect(buildNotificationHref({ type: 'BOOK_NEW_OPINIONS' })).toBe('/notifications')
+    expect(buildPushNotificationHref(null)).toBe('/notifications')
   })
 })

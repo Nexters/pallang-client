@@ -17,7 +17,7 @@ function formatNotificationDate(createdAt: string): string {
   return createdAt.slice(0, 16).replace('T', ' ')
 }
 
-export function NotificationSettingsView() {
+export function NotificationInboxView() {
   const queryClient = useQueryClient()
   const router = useRouter()
   const listQuery = useInfiniteQuery(notificationQueries.list())
@@ -41,7 +41,7 @@ export function NotificationSettingsView() {
 
   return (
     <ScreenLayout
-      title="알림 설정"
+      title="알림함"
       bodyClassName="gap-4 px-4 py-4"
       action={
         <button
