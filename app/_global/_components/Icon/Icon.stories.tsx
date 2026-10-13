@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import AppleIcon from './assets/apple.svg'
 import BackIcon from './assets/back.svg'
+import BellIcon from './assets/bell.svg'
 import BookAddIcon from './assets/book-add.svg'
 import CameraIcon from './assets/camera.svg'
 import CautionIcon from './assets/caution.svg'
@@ -56,6 +57,7 @@ const ICONS: { name: string; Component: FC<SVGProps<SVGSVGElement>> }[] = [
   { name: 'ChatIcon', Component: ChatIcon },
   { name: 'MyIcon', Component: MyIcon },
   { name: 'SearchIcon', Component: SearchIcon },
+  { name: 'BellIcon', Component: BellIcon },
   { name: 'BookAddIcon', Component: BookAddIcon },
   { name: 'SettingIcon', Component: SettingIcon },
   { name: 'KakaoIcon', Component: KakaoIcon },
