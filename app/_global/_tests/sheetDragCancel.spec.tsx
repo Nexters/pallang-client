@@ -108,3 +108,114 @@ describe('useSheetDrag 취소 복구', () => {
     expect(onEnd).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('useSheetDrag 안쪽 탭·스크롤 양보', () => {
+  it('움직임 없는 첫 이벤트는 시트를 선점하지 않는다 — 안쪽 버튼 클릭이 살아 있다', () => {
+    const onMove = vi.fn()
+    const onEnd = vi.fn()
+    renderHook(() => useSheetDrag({ canExpand: true, onMove, onEnd }))
+    if (capturedHandler === null) throw new Error('useDrag 핸들러를 잡지 못했다')
+
+    const sheet = document.createElement('div')
+    const button = document.createElement('button')
+    sheet.append(button)
+    const preventDefault = vi.fn()
+
+    capturedHandler(
+      gestureState({
+        first: true,
+        movement: [0, 0],
+        currentTarget: sheet,
+        target: button,
+        event: { cancelable: true, preventDefault },
+      }),
+    )
+
+    expect(onMove).not.toHaveBeenCalled()
+    expect(preventDefault).not.toHaveBeenCalled()
+  })
+
+  it('탭으로 끝나면 onEnd를 부르지 않는다 — 클릭과 높이 스냅이 겹치지 않는다', () => {
+    const onMove = vi.fn()
+    const onEnd = vi.fn()
+    renderHook(() => useSheetDrag({ canExpand: true, onMove, onEnd }))
+    if (capturedHandler === null) throw new Error('useDrag 핸들러를 잡지 못했다')
+
+    const sheet = document.createElement('div')
+    const button = document.createElement('button')
+    sheet.append(button)
+
+    capturedHandler(
+      gestureState({ first: true, movement: [0, 0], currentTarget: sheet, target: button }),
+    )
+    capturedHandler(
+      gestureState({
+        last: true,
+        tap: true,
+        movement: [0, 0],
+        currentTarget: sheet,
+        target: button,
+      }),
+    )
+
+    expect(onMove).not.toHaveBeenCalled()
+    expect(onEnd).not.toHaveBeenCalled()
+  })
+
+  it('접힌 시트에서 위로 밀면 그때 시트가 가져간다', () => {
+    const onMove = vi.fn()
+    const onEnd = vi.fn()
+    renderHook(() => useSheetDrag({ canExpand: true, onMove, onEnd }))
+    if (capturedHandler === null) throw new Error('useDrag 핸들러를 잡지 못했다')
+
+    const sheet = document.createElement('div')
+    const button = document.createElement('button')
+    sheet.append(button)
+    const preventDefault = vi.fn()
+
+    capturedHandler(
+      gestureState({ first: true, movement: [0, 0], currentTarget: sheet, target: button }),
+    )
+    capturedHandler(
+      gestureState({
+        movement: [0, -20],
+        currentTarget: sheet,
+        target: button,
+        event: { cancelable: true, preventDefault },
+      }),
+    )
+
+    expect(onMove).toHaveBeenCalledWith(-20, sheet)
+    expect(preventDefault).toHaveBeenCalled()
+  })
+
+  it('펼친 시트에서 위로 밀면 시트를 양보한다 — 목록 스크롤이 가져간다', () => {
+    const onMove = vi.fn()
+    const onEnd = vi.fn()
+    renderHook(() => useSheetDrag({ canExpand: false, onMove, onEnd }))
+    if (capturedHandler === null) throw new Error('useDrag 핸들러를 잡지 못했다')
+
+    const sheet = document.createElement('div')
+    const item = document.createElement('div')
+    sheet.append(item)
+    const cancel = vi.fn()
+    const preventDefault = vi.fn()
+
+    capturedHandler(
+      gestureState({ first: true, movement: [0, 0], currentTarget: sheet, target: item }),
+    )
+    capturedHandler(
+      gestureState({
+        movement: [0, -20],
+        currentTarget: sheet,
+        target: item,
+        cancel,
+        event: { cancelable: true, preventDefault },
+      }),
+    )
+
+    expect(cancel).toHaveBeenCalled()
+    expect(onMove).not.toHaveBeenCalled()
+    expect(preventDefault).not.toHaveBeenCalled()
+  })
+})
