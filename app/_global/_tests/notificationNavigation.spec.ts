@@ -36,6 +36,13 @@ describe('notificationNavigation.service', () => {
     ).toBe('/trace/11')
   })
 
+  it.each(['GROUP_JOINED', 'GROUP_MEMBER_JOINED', 'GROUP_SCHEDULE_CHANGED', 'GROUP_ENDING_SOON'])(
+    '모임 알림 %s은 모임 탭으로 보낸다',
+    (type) => {
+      expect(buildNotificationHref({ type })).toBe('/meeting')
+    },
+  )
+
   it('이동에 필요한 id가 없으면 알림함으로 보낸다', () => {
     expect(buildNotificationHref({ type: 'OPINION_LIKED', opinionId: 7 })).toBe('/notifications')
     expect(buildNotificationHref({ type: 'BOOK_NEW_OPINIONS' })).toBe('/notifications')

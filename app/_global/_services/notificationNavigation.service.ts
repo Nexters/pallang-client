@@ -46,6 +46,11 @@ export function buildNotificationHref(target: NotificationNavigationTarget): str
     case 'BOOK_NEW_OPINIONS':
       if (bookId === null) return NOTIFICATION_FALLBACK_HREF
       return `/trace/${String(bookId)}`
+    case 'GROUP_JOINED':
+    case 'GROUP_MEMBER_JOINED':
+    case 'GROUP_SCHEDULE_CHANGED':
+    case 'GROUP_ENDING_SOON':
+      return '/meeting'
     default:
       return NOTIFICATION_FALLBACK_HREF
   }

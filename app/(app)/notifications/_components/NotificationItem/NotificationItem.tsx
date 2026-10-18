@@ -12,9 +12,9 @@ const TYPE_META: Record<NotificationResponse['type'], { label: string; Icon: typ
   // 시안이 아직 없다 — 나오기 전까지 벨 아이콘으로 둔다
   BOOK_NEW_OPINIONS: { label: '새 의견', Icon: BellIcon },
   GROUP_JOINED: { label: '모임 가입', Icon: BellIcon },
-  GROUP_MEMBER_JOINED: { label: '새 모임원', Icon: BellIcon },
-  GROUP_SCHEDULE_CHANGED: { label: '모임 일정', Icon: BellIcon },
-  GROUP_ENDING_SOON: { label: '모임 종료', Icon: BellIcon },
+  GROUP_MEMBER_JOINED: { label: '모임원 가입', Icon: BellIcon },
+  GROUP_SCHEDULE_CHANGED: { label: '모임 일정 변경', Icon: BellIcon },
+  GROUP_ENDING_SOON: { label: '모임 종료 임박', Icon: BellIcon },
 }
 
 type NotificationItemProps = {
