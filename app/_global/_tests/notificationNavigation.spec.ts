@@ -27,6 +27,17 @@ describe('notificationNavigation.service', () => {
     ).toBe('/trace/11?opinionId=7')
   })
 
+  it('모임 의견 알림은 groupId를 함께 넘긴다', () => {
+    expect(
+      buildNotificationHref({
+        type: 'OPINION_LIKED',
+        bookId: 11,
+        opinionId: 7,
+        groupId: 3,
+      }),
+    ).toBe('/trace/11?opinionId=7&groupId=3')
+  })
+
   it('책 신규 의견 알림은 책 화면으로 보낸다', () => {
     expect(
       buildNotificationHref({
@@ -34,6 +45,16 @@ describe('notificationNavigation.service', () => {
         bookId: 11,
       }),
     ).toBe('/trace/11')
+  })
+
+  it('모임의 새 의견 알림은 groupId를 함께 넘긴다', () => {
+    expect(
+      buildNotificationHref({
+        type: 'BOOK_NEW_OPINIONS',
+        bookId: 11,
+        groupId: 3,
+      }),
+    ).toBe('/trace/11?groupId=3')
   })
 
   it.each(['GROUP_JOINED', 'GROUP_MEMBER_JOINED', 'GROUP_SCHEDULE_CHANGED', 'GROUP_ENDING_SOON'])(
