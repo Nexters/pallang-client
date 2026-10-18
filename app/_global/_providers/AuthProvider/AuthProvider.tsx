@@ -13,12 +13,15 @@ import {
 
 import { LOGIN_PATH } from '@/app/_global/_data/auth.constant'
 import { initAuthSession, signOut as signOutSession } from '@/app/_global/_queries/auth.queries'
+import { notificationQueries } from '@/app/_global/_queries/notification.queries'
 import { hasTokens, subscribeAuthTokens } from '@/app/_global/_services/authToken.service'
 import {
   registerPushDeviceToken,
   registerPushNotificationActionHandler,
+  registerPushNotificationReceivedHandler,
   unregisterPushDeviceToken,
 } from '@/app/_global/_services/pushNotification.service'
+import { getQueryClient } from '@/app/_global/_services/queryClient.service'
 import { hideSplashScreen } from '@/app/_global/_services/splashScreen.service'
 import { hasPendingWithdrawalNotice } from '@/app/_global/_services/withdrawal.service'
 
@@ -86,6 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push(href)
     }).catch((error: unknown) => {
       console.warn('푸시 알림 이동 리스너 등록 실패', error)
+    })
+    void registerPushNotificationReceivedHandler(() => {
+      void getQueryClient().invalidateQueries({ queryKey: notificationQueries.all() })
+    }).catch((error: unknown) => {
+      console.warn('푸시 알림 수신 리스너 등록 실패', error)
     })
     void registerPushDeviceToken().catch((error: unknown) => {
       console.warn('푸시 토큰 등록 실패', error)

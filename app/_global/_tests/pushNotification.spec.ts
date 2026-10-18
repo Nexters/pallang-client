@@ -142,6 +142,25 @@ describe('pushNotification.service', () => {
     expect(navigate).toHaveBeenCalledWith('/trace/11?opinionId=7')
   })
 
+  it('포그라운드에서 푸시를 수신하면 수신 처리기를 호출한다', async () => {
+    capacitorState.isNative = true
+    capacitorState.platform = 'ios'
+    let receivedListener: (() => void) | undefined
+    firebaseMessagingMock.addListener.mockImplementation(
+      (eventName: string, listener: () => void) => {
+        if (eventName === 'notificationReceived') receivedListener = listener
+        return Promise.resolve({ remove: vi.fn() })
+      },
+    )
+    const onReceived = vi.fn()
+    const { registerPushNotificationReceivedHandler } = await importService()
+
+    await registerPushNotificationReceivedHandler(onReceived)
+    receivedListener?.()
+
+    expect(onReceived).toHaveBeenCalledOnce()
+  })
+
   it('로그아웃 시 저장된 토큰을 서버와 로컬에서 삭제한다', async () => {
     capacitorState.isNative = true
     capacitorState.platform = 'ios'

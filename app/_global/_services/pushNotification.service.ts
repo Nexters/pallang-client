@@ -14,8 +14,10 @@ const PUSH_DEVICE_TOKEN_KEY = 'pallang:push-device-token'
 
 let tokenListenerPromise: Promise<PluginListenerHandle> | null = null
 let actionListenerPromise: Promise<PluginListenerHandle> | null = null
+let receivedListenerPromise: Promise<PluginListenerHandle> | null = null
 let registrationPromise: Promise<void> | null = null
 let notificationActionNavigate: ((href: string) => void) | null = null
+let notificationReceivedHandler: (() => void) | null = null
 
 export function getPushDevicePlatform(): DeviceTokenPlatform | null {
   const platform = Capacitor.getPlatform()
@@ -70,6 +72,22 @@ export async function registerPushNotificationActionHandler(
     },
   )
   await actionListenerPromise
+}
+
+/**
+ * 앱이 열린 상태에서 수신한 알림을 앱 상태에 반영한다. 표시 자체는 네이티브 Firebase
+ * 플러그인이 처리하고, 이 리스너는 열린 알림함 캐시를 새 데이터로 갱신하는 용도다.
+ */
+export async function registerPushNotificationReceivedHandler(
+  onReceived: () => void,
+): Promise<void> {
+  if (!canUseNativePush()) return
+
+  notificationReceivedHandler = onReceived
+  receivedListenerPromise ??= FirebaseMessaging.addListener('notificationReceived', () => {
+    notificationReceivedHandler?.()
+  })
+  await receivedListenerPromise
 }
 
 export async function registerPushDeviceToken(): Promise<void> {
