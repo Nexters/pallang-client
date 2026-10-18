@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
@@ -5,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { notificationQueries } from '@/app/_global/_queries/notification.queries'
 import {
   markHomeCoachMarkPending,
   shouldShowHomeCoachMark,
@@ -44,13 +46,22 @@ vi.mock('../_components/HomeSection/HomeSection', () => {
 })
 
 // 코치마크가 하드웨어 back을 가져가므로 레지스트리가 있어야 한다
-function renderHome() {
+function renderHome(hasUnread = false) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+  })
+  queryClient.setQueryData(notificationQueries.hasUnread().queryKey, {
+    data: { hasUnread },
+  })
+
   return render(
-    <HardwareBackProvider>
-      <LoginGateProvider>
-        <HomePageView />
-      </LoginGateProvider>
-    </HardwareBackProvider>,
+    <QueryClientProvider client={queryClient}>
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <HomePageView />
+        </LoginGateProvider>
+      </HardwareBackProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -99,6 +110,21 @@ describe('홈 검색 게이트', () => {
     await userEvent.click(await screen.findByRole('button', { name: '알림함' }))
 
     expect(pushMock).toHaveBeenCalledWith('/notifications')
+  })
+
+  it('읽지 않은 알림이 있으면 홈 벨에 새 알림 점을 보여준다', async () => {
+    authState.isAuthenticated = true
+    renderHome(true)
+
+    expect(await screen.findByLabelText('새 알림')).toBeVisible()
+  })
+
+  it('읽지 않은 알림이 없으면 홈 벨에 새 알림 점을 숨긴다', async () => {
+    authState.isAuthenticated = true
+    renderHome()
+
+    await screen.findByRole('button', { name: '알림함' })
+    expect(screen.queryByLabelText('새 알림')).not.toBeInTheDocument()
   })
 
   it('온보딩 직후 홈 코치마크를 3단계로 보여주고 완료하면 닫는다', async () => {

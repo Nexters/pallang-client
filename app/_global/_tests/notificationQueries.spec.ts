@@ -14,6 +14,12 @@ describe('notificationQueries', () => {
     expect(options.queryKey).toEqual(['notification', 'list'])
     expect(NOTIFICATION_PAGE_SIZE).toBe(20)
   })
+
+  it('홈 벨의 읽지 않은 알림 여부를 별도 키로 조회한다', () => {
+    const options = notificationQueries.hasUnread()
+
+    expect(options.queryKey).toEqual(['notification', 'has-unread'])
+  })
 })
 
 describe('notificationMutations', () => {

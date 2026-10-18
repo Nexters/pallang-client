@@ -51,6 +51,7 @@ function renderView(notifications: NotificationResponse[] = [NOTIFICATION]) {
       {
         data: {
           notifications,
+          unreadCount: notifications.filter((notification) => !notification.isRead).length,
           pageInfo: {
             page: 0,
             size: 20,
@@ -96,7 +97,7 @@ describe('알림함', () => {
     vi.clearAllMocks()
   })
 
-  it('알림 목록과 전체 개수를 보여준다', () => {
+  it('알림 목록과 안 읽은 알림 개수를 보여준다', () => {
     renderView([NOTIFICATION, READ_NOTIFICATION])
 
     expect(screen.getByRole('heading', { name: '알림' })).toBeInTheDocument()
@@ -106,7 +107,7 @@ describe('알림함', () => {
     expect(screen.getByText('좋아요')).toBeInTheDocument()
     expect(
       screen.getByText(
-        (_, element) => element?.tagName === 'P' && element.textContent === '2개의 알림',
+        (_, element) => element?.tagName === 'P' && element.textContent === '1개의 알림',
       ),
     ).toBeVisible()
   })

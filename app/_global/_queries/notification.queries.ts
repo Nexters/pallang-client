@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, mutationOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/react-query'
 
 import {
   registerDeviceToken,
@@ -8,6 +8,7 @@ import type { NotificationResponse as GeneratedNotificationResponse } from '../_
 import type { RegisterDeviceTokenRequest } from '../_apis/_generated/models/registerDeviceTokenRequest'
 import { RegisterDeviceTokenRequestPlatform as GeneratedRegisterDeviceTokenRequestPlatform } from '../_apis/_generated/models/registerDeviceTokenRequestPlatform'
 import {
+  getHasUnread,
   getNotifications,
   readAllNotifications,
   readNotification,
@@ -30,6 +31,11 @@ export function removeNotificationDeviceToken(token: string) {
 
 export const notificationQueries = {
   all: () => ['notification'] as const,
+  hasUnread: () =>
+    queryOptions({
+      queryKey: [...notificationQueries.all(), 'has-unread'],
+      queryFn: getHasUnread,
+    }),
   listAll: () => [...notificationQueries.all(), 'list'] as const,
   list: () =>
     infiniteQueryOptions({

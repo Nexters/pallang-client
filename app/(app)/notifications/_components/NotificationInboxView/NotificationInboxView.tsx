@@ -36,7 +36,7 @@ export function NotificationInboxView() {
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const invalidateList = () => {
-    void queryClient.invalidateQueries({ queryKey: notificationQueries.listAll() })
+    void queryClient.invalidateQueries({ queryKey: notificationQueries.all() })
   }
   const readMutation = useMutation({ ...notificationMutations.read(), onSuccess: invalidateList })
   const readAllMutation = useMutation({
@@ -48,8 +48,7 @@ export function NotificationInboxView() {
     () => listQuery.data?.pages.flatMap((page) => page.data?.notifications ?? []) ?? [],
     [listQuery.data],
   )
-  // 안 읽은 알림 수 API가 없어 전체 개수로 대신한다
-  const totalCount = listQuery.data?.pages[0]?.data?.pageInfo.totalElements
+  const unreadCount = listQuery.data?.pages[0]?.data?.unreadCount
 
   useLoadMoreOnVisible({
     targetRef: loadMoreRef,
@@ -87,17 +86,17 @@ export function NotificationInboxView() {
       ) : (
         <>
           <div className="flex shrink-0 items-center justify-between border-b border-border-default p-4 text-body-14rg font-medium">
-            {totalCount === undefined ? (
+            {unreadCount === undefined ? (
               <Skeleton className="h-4.5 w-16" />
             ) : (
               <p className="text-text-secondary">
                 <span
                   className={cn(
                     'font-bold',
-                    totalCount > 0 ? 'text-text-accent' : 'text-icon-muted',
+                    unreadCount > 0 ? 'text-text-accent' : 'text-icon-muted',
                   )}
                 >
-                  {totalCount}
+                  {unreadCount}
                 </span>
                 개의 알림
               </p>
