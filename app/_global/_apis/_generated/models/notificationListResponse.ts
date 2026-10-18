@@ -7,4 +7,6 @@ import type { PageInfo } from './pageInfo'
 export interface NotificationListResponse {
   notifications: NotificationResponse[]
   pageInfo: PageInfo
+  /** 조회한 scope 기준 안 읽은 알림 개수 */
+  unreadCount: number
 }

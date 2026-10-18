@@ -15,4 +15,14 @@ export interface MyOpinionResponse {
   content: string
   likeCount: number
   createdAt: string
+  /**
+   * 모임 전용 대목이면 그 모임 ID, 전역 공개 대목이면 null
+   * @nullable
+   */
+  groupId?: number | null
+  /**
+   * 모임 전용 대목이면 그 모임 이름, 전역 공개 대목이면 null
+   * @nullable
+   */
+  groupName?: string | null
 }
