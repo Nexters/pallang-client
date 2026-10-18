@@ -11,8 +11,17 @@ describe('notificationQueries', () => {
   it('알림 목록을 고정 페이지 크기로 조회한다', () => {
     const options = notificationQueries.list()
 
-    expect(options.queryKey).toEqual(['notification', 'list'])
+    expect(options.queryKey).toEqual(['notification', 'list', 'ALL'])
     expect(NOTIFICATION_PAGE_SIZE).toBe(20)
+  })
+
+  it('알림 범위별로 목록 캐시를 나눈다', () => {
+    expect(notificationQueries.list('ACTIVITY').queryKey).toEqual([
+      'notification',
+      'list',
+      'ACTIVITY',
+    ])
+    expect(notificationQueries.list('GROUP').queryKey).toEqual(['notification', 'list', 'GROUP'])
   })
 
   it('홈 벨의 읽지 않은 알림 여부를 별도 키로 조회한다', () => {

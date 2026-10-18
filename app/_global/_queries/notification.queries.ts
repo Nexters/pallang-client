@@ -4,6 +4,7 @@ import {
   registerDeviceToken,
   removeDeviceToken,
 } from '../_apis/_generated/device-token/device-token'
+import type { GetNotificationsScope } from '../_apis/_generated/models/getNotificationsScope'
 import type { NotificationResponse as GeneratedNotificationResponse } from '../_apis/_generated/models/notificationResponse'
 import type { RegisterDeviceTokenRequest } from '../_apis/_generated/models/registerDeviceTokenRequest'
 import { RegisterDeviceTokenRequestPlatform as GeneratedRegisterDeviceTokenRequestPlatform } from '../_apis/_generated/models/registerDeviceTokenRequestPlatform'
@@ -16,6 +17,7 @@ import {
 
 /** feature 코드는 _apis를 직접 import할 수 없어 알림 응답 타입을 여기서 재노출한다 */
 export type NotificationResponse = GeneratedNotificationResponse
+export type NotificationScope = GetNotificationsScope
 export type RegisterDeviceTokenRequestPlatform = GeneratedRegisterDeviceTokenRequestPlatform
 export const RegisterDeviceTokenRequestPlatform = GeneratedRegisterDeviceTokenRequestPlatform
 
@@ -37,11 +39,11 @@ export const notificationQueries = {
       queryFn: getHasUnread,
     }),
   listAll: () => [...notificationQueries.all(), 'list'] as const,
-  list: () =>
+  list: (scope: NotificationScope = 'ALL') =>
     infiniteQueryOptions({
-      queryKey: notificationQueries.listAll(),
+      queryKey: [...notificationQueries.listAll(), scope],
       queryFn: ({ pageParam }) =>
-        getNotifications({ page: pageParam, size: NOTIFICATION_PAGE_SIZE }),
+        getNotifications({ scope, page: pageParam, size: NOTIFICATION_PAGE_SIZE }),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo

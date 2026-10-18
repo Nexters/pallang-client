@@ -19,8 +19,9 @@ import { cn } from '@/app/_global/_services/cn.service'
 import { buildNotificationHref } from '@/app/_global/_services/notificationNavigation.service'
 
 import {
+  NOTIFICATION_SCOPE_BY_TAB,
+  NOTIFICATION_TABS,
   type NotificationTabValue,
-  VISIBLE_NOTIFICATION_TABS,
 } from '../../_data/notificationTab.constant'
 import { NotificationEmptyState } from '../NotificationEmptyState/NotificationEmptyState'
 import { NotificationItem } from '../NotificationItem/NotificationItem'
@@ -30,9 +31,8 @@ import { NotificationTabs } from '../NotificationTabs/NotificationTabs'
 export function NotificationInboxView() {
   const queryClient = useQueryClient()
   const router = useRouter()
-  // 분류 필터 API가 없어 지금은 '전체'만 노출된다 — 탭 값은 필터가 생기면 쿼리에 넘긴다
   const [tab, setTab] = useState<NotificationTabValue>('all')
-  const listQuery = useInfiniteQuery(notificationQueries.list())
+  const listQuery = useInfiniteQuery(notificationQueries.list(NOTIFICATION_SCOPE_BY_TAB[tab]))
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   const invalidateList = () => {
@@ -75,7 +75,7 @@ export function NotificationInboxView() {
         </TopBar.LinkAction>
       }
     >
-      <NotificationTabs tabs={VISIBLE_NOTIFICATION_TABS} value={tab} onChange={setTab} />
+      <NotificationTabs tabs={NOTIFICATION_TABS} value={tab} onChange={setTab} />
 
       {showError ? (
         <ApiErrorFeedbackState
