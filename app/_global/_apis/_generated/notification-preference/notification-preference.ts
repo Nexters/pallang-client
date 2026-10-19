@@ -14,7 +14,7 @@ export const getGetSettingsUrl = () => {
 }
 
 /**
- * 활동/모임 알림 수신 여부를 조회합니다. 설정을 한 번도 변경하지 않은 사용자는 둘 다 true로 반환됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 푸시 알림 마스터 스위치와 활동/모임 세부 카테고리별 알림 수신 여부를 조회합니다. 설정을 한 번도 변경하지 않은 사용자는 전부 true로 반환됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 알림 설정 조회
  */
 export const getSettings = async (
@@ -31,7 +31,7 @@ export const getUpdateSettingsUrl = () => {
 }
 
 /**
- * 활동/모임 알림 수신 여부를 변경합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 푸시 알림 마스터 스위치와 활동/모임 세부 카테고리별 알림 수신 여부를 변경합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 알림 설정 변경
  */
 export const updateSettings = async (
