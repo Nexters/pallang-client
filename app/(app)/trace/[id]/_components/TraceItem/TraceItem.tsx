@@ -20,6 +20,8 @@ type TraceItemProps = {
 
 /** 좋아요·댓글·더보기는 시안에서 모두 같은 알약이다 — 한 벌로 묶어 세 곳이 어긋나지 않게 한다 */
 const PILL = 'rounded-lg bg-bg-overlay'
+/** 아이콘과 개수를 담는 알약(좋아요·댓글)의 여백 — 높이 32px(아이콘 20 + 위아래 6)로 손가락이 닿을 자리를 넉넉히 둔다 */
+const COUNT_PILL = `${PILL} px-2 py-1.5`
 
 export function TraceItem({
   trace,
@@ -80,7 +82,7 @@ export function TraceItem({
             opinionId={trace.opinionId}
             likeCount={trace.likeCount}
             liked={trace.liked}
-            className={cn(PILL, 'px-1.5 py-1')}
+            className={COUNT_PILL}
           />
           {onOpenComments ? (
             <button
@@ -88,8 +90,8 @@ export function TraceItem({
               onClick={onOpenComments}
               aria-label="댓글 보기"
               className={cn(
-                PILL,
-                'press flex items-center gap-0.5 px-1.5 py-1 text-body-14rg text-text-inverse',
+                COUNT_PILL,
+                'press flex items-center gap-0.5 text-body-14rg text-text-inverse',
               )}
             >
               {commentCount}
@@ -97,8 +99,8 @@ export function TraceItem({
           ) : (
             <span
               className={cn(
-                PILL,
-                'flex items-center gap-0.5 px-1.5 py-1 text-body-14rg text-text-inverse',
+                COUNT_PILL,
+                'flex items-center gap-0.5 text-body-14rg text-text-inverse',
               )}
             >
               {commentCount}
