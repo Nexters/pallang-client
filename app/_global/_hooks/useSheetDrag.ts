@@ -29,41 +29,41 @@ export function useSheetDrag({
   onMove,
   onEnd,
 }: SheetDragOptions): SheetDragBind {
-  // onMove가 시트에 인라인 스타일을 남긴 채 끝났는지. 브라우저가 제스처를 가져가면
-  // (스크롤 개입·touchcancel) last 대신 canceled로 끝나 onEnd가 건너뛰어지는데, 그러면
-  // onMove가 남긴 인라인(transition 등)이 복구되지 않는다. 그 잔재는 이후 닫힘 전환을
-  // 통째로 죽여 base-ui가 시트를 언마운트하지 못하게 만든다(#406) — 취소로 끝나도
-  // onEnd를 불러 복구를 보장한다.
+  // onMove가 시트에 인라인 스타일을 남겼는지. 남긴 채 끝나면 그 잔재(transition 등)가
+  // 이후 닫힘 전환을 통째로 죽여 base-ui가 시트를 언마운트하지 못한다(#406) —
+  // 드래그로 끝나든 탭으로 끝나든 onEnd로 되돌린다.
   const isMovedRef = useRef(false)
+  // 이번 제스처를 안쪽 스크롤에 넘겼는지. use-gesture의 cancel()로 끊지 않는 이유: 끊으면
+  // 손 뗌 처리를 건너뛰어 tap이 false로 남고, filterTaps의 클릭 가드가 그 탭의 클릭을 삼킨다
+  const isYieldedRef = useRef(false)
   return useDrag(
     ({
       first,
       last,
       tap,
-      canceled,
       movement: [, dy],
       velocity: [, speed],
       direction: [, dir],
       event,
       target: origin,
       currentTarget,
-      cancel,
     }) => {
       if (!(currentTarget instanceof HTMLElement)) return
-      if (canceled) {
+      // 탭은 시트 제스처가 아니다. use-gesture는 세로로 움직이지 않은 탭도 손 뗄 때 한 번 부르는데,
+      // 그때 first/last는 직전 제스처 값이 그대로 남아 있어 믿을 수 없다. 여기서 touchend를
+      // preventDefault하면 브라우저가 클릭을 만들지 않으므로 기본 동작은 건드리지 않는다
+      if (tap) {
         if (isMovedRef.current) {
           isMovedRef.current = false
           onEnd({ dy: 0, velocity: 0 }, currentTarget)
         }
         return
       }
-      if (first && !claimsSheet(currentTarget, origin, dy > 0, canExpand)) {
-        cancel()
-        return
-      }
+      if (first) isYieldedRef.current = !claimsSheet(currentTarget, origin, dy > 0, canExpand)
+      if (isYieldedRef.current) return
       if (last) {
         isMovedRef.current = false
-        onEnd(tap ? { dy: 0, velocity: 0 } : { dy, velocity: speed * dir }, currentTarget)
+        onEnd({ dy, velocity: speed * dir }, currentTarget)
         return
       }
       if (event.cancelable) event.preventDefault()
