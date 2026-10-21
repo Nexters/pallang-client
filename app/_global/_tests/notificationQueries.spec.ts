@@ -29,6 +29,10 @@ describe('notificationQueries', () => {
 
     expect(options.queryKey).toEqual(['notification', 'has-unread'])
   })
+
+  it('알림 설정을 별도 키로 조회한다', () => {
+    expect(notificationQueries.settings().queryKey).toEqual(['notification', 'settings'])
+  })
 })
 
 describe('notificationMutations', () => {
@@ -47,6 +51,14 @@ describe('notificationMutations', () => {
       'notification',
       'device-token',
       'remove',
+    ])
+  })
+
+  it('알림 설정 변경 mutation을 설정 캐시 아래에 둔다', () => {
+    expect(notificationMutations.updateSettings().mutationKey).toEqual([
+      'notification',
+      'settings',
+      'update',
     ])
   })
 })

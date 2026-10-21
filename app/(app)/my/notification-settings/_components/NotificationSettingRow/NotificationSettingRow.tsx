@@ -11,6 +11,7 @@ type NotificationSettingRowProps = {
   item: NotificationSettingItem
   checked: boolean
   onCheckedChange: (checked: boolean) => void
+  disabled?: boolean
   /** 같은 이름의 항목이 묶음마다 있어 묶음 제목까지 붙여 스위치 이름을 가른다 */
   sectionTitleId?: string
   /** 묶음 밖 최상단 항목(푸시 알림)은 제목·설명 간격이 조금 넓다 */
@@ -21,6 +22,7 @@ export function NotificationSettingRow({
   item,
   checked,
   onCheckedChange,
+  disabled,
   sectionTitleId,
   className,
 }: NotificationSettingRowProps) {
@@ -40,6 +42,7 @@ export function NotificationSettingRow({
       <NotificationSwitch
         checked={checked}
         onCheckedChange={onCheckedChange}
+        disabled={disabled}
         aria-labelledby={sectionTitleId ? `${sectionTitleId} ${labelId}` : labelId}
         aria-describedby={descriptionId}
       />

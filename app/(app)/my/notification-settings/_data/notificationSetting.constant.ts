@@ -55,7 +55,7 @@ export const NOTIFICATION_SETTING_SECTIONS: readonly NotificationSettingSection[
   },
 ]
 
-// 설정 조회·저장 API가 아직 없어 모두 켜진 상태에서 시작하고 저장하지 않는다
+// API가 설정을 만들기 전이거나 일부 필드가 비어 있으면 백엔드 기본값과 같이 모두 켠다.
 export const DEFAULT_NOTIFICATION_SETTINGS: Record<NotificationSettingKey, boolean> = {
   push: true,
   activityOpinion: true,
