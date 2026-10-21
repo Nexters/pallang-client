@@ -9,7 +9,10 @@ import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useDebouncedValue } from '@/app/_global/_hooks/useDebouncedValue'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
+import { BookEntryOverlay } from '@/app/_shared/book/_components/BookEntryOverlay/BookEntryOverlay'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
+import { readHasPublicPassage } from '@/app/_shared/book/_data/bookEntry.model'
+import { useBookEntry } from '@/app/_shared/book/_hooks/useBookEntry'
 
 import { BookSearchResultList } from '../BookSearchResultList/BookSearchResultList'
 import { MyBooksEmptyState } from '../MyBooksEmptyState/MyBooksEmptyState'
@@ -29,7 +32,14 @@ export function MyBooksSearchPageView() {
     placeholderData: keepPreviousData,
   })
 
-  const books = searched.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
+  // 내가 모임에서만 남긴 책도 섞여 온다. 이 응답엔 공개 대목 수가 없어 누를 때 대목을 조회해 갈 곳을 가린다
+  const books =
+    searched.data?.pages.flatMap((page) =>
+      (page.data?.books ?? []).map((book) => ({
+        ...book,
+        hasPublicPassage: readHasPublicPassage(book),
+      })),
+    ) ?? []
   const searchStatus = (() => {
     if (searched.isPending || isTypingAhead) return 'pending'
     if (searched.isError && books.length === 0) return 'error'
@@ -50,6 +60,8 @@ export function MyBooksSearchPageView() {
   const resetKeyword = () => {
     setKeyword('')
   }
+
+  const entry = useBookEntry({ onLeave: resetKeyword })
 
   return (
     <main className="-mt-(--safe-top) flex h-[calc(100%_+_var(--safe-top))] min-h-0 flex-col bg-bg-default pt-(--safe-top)">
@@ -96,6 +108,7 @@ export function MyBooksSearchPageView() {
               resetKeyword()
               router.push('/book/new')
             }}
+            onEnter={entry.enter}
             onLeave={resetKeyword}
             onRetry={() => {
               void searched.refetch()
@@ -104,6 +117,11 @@ export function MyBooksSearchPageView() {
         )}
         <div ref={loadMoreRef} className="h-6 w-full shrink-0" aria-hidden="true" />
       </div>
+      <BookEntryOverlay
+        overlay={entry.overlay}
+        onClose={entry.closeOverlay}
+        onLeave={resetKeyword}
+      />
     </main>
   )
 }

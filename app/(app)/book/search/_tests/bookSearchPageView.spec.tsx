@@ -2,6 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+
 import { BookSearchPageView } from '../_components/BookSearchPageView/BookSearchPageView'
 
 const routerMock = vi.hoisted(() => ({
@@ -38,6 +41,10 @@ const { searchBooksMock, searchInternalBooksMock } = vi.hoisted(() => ({
 }))
 
 vi.mock('next/navigation', () => ({ useRouter: () => routerMock }))
+// 책을 눌렀을 때 내 모임을 찾는 흐름(useBookEntry)이 로그인 상태를 본다 — 이 스펙은 비로그인으로 둔다
+vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
+  useAuth: () => ({ status: 'unauthenticated', isAuthenticated: false, signOut: vi.fn() }),
+}))
 vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
   getPopularBooks: () => Promise.resolve({ data: { books: [] } }),
   getRecentBooks: () => Promise.resolve({ data: { books: [] } }),
@@ -53,7 +60,11 @@ function renderView() {
 
   render(
     <QueryClientProvider client={queryClient}>
-      <BookSearchPageView />
+      <HardwareBackProvider>
+        <LoginGateProvider>
+          <BookSearchPageView />
+        </LoginGateProvider>
+      </HardwareBackProvider>
     </QueryClientProvider>,
   )
 }

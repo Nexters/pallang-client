@@ -26,6 +26,8 @@ export type GroupCreateInput = CreateGroupRequest
 export type GroupUpdateInput = UpdateGroupRequest
 
 const GROUP_PAGE_SIZE = 20
+/** 서버가 허용하는 한 페이지 최대치 — 전부 받아야 하는 조회는 요청 수를 줄이려 이 크기로 이어 받는다 */
+const GROUP_PAGE_SIZE_MAX = 100
 
 export const groupQueries = {
   all: () => ['group'] as const,
@@ -38,6 +40,24 @@ export const groupQueries = {
       getNextPageParam: (lastPage) => {
         const pageInfo = lastPage.data?.pageInfo
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+      },
+      retry: false,
+    }),
+  /**
+   * 내 모임 전부 — 책마다 내 모임이 있는지 가려야 하는 화면(탐색 목록·검색)용. 페이지를 끝까지 이어 받아 편다.
+   * key를 list 아래에 둬서 모임을 만들거나 참여하며 list를 지우거나 갱신할 때 함께 걷힌다.
+   */
+  listAll: () =>
+    queryOptions({
+      queryKey: [...groupQueries.all(), 'list', 'all'],
+      queryFn: async () => {
+        const groups: GroupSummary[] = []
+        // 다음 페이지 번호가 앞 응답의 hasNext로 정해져 순서대로 받을 수밖에 없다
+        for (let page = 0; ; page += 1) {
+          const response = await getMyGroups({ page, size: GROUP_PAGE_SIZE_MAX })
+          groups.push(...(response.data?.groups ?? []))
+          if (!response.data?.pageInfo.hasNext) return groups
+        }
       },
       retry: false,
     }),

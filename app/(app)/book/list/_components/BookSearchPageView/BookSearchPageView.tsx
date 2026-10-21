@@ -16,6 +16,7 @@ import { Select } from '@/app/_global/_components/Select/Select'
 import { TopBar } from '@/app/_global/_components/TopBar/TopBar'
 import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { BOOK_SEARCH_SORT, bookQueries } from '@/app/_global/_queries/book.queries'
+import { readHasPublicPassage } from '@/app/_shared/book/_data/bookEntry.model'
 import { BOOK_SEARCH_SORT_OPTIONS } from '@/app/_shared/book/_data/bookSearchSort.constant'
 
 import { BookItemList } from '../BookItemList/BookItemList'
@@ -35,11 +36,14 @@ export function BookSearchPageView() {
 
   // 통합 검색이 생기면서 응답의 bookId가 선택 항목이 됐다(미등록 도서는 비어 있다).
   // 이 목록은 내부 검색이라 모두 등록된 도서지만, 타입이 그걸 모르므로 bookId 없는 항목은 걸러 낸다.
+  // 목록은 모임 전용 대목까지 세서 책을 띄우므로, 공개 대목이 있는지를 함께 읽어 갈 곳을 가른다
   const books =
     booksQuery.data?.pages.flatMap((page) =>
-      (page.data?.books ?? []).flatMap((book) =>
-        book.bookId == null ? [] : [{ ...book, bookId: book.bookId }],
-      ),
+      (page.data?.books ?? []).flatMap((book) => {
+        if (book.bookId == null) return []
+        const registered = { ...book, bookId: book.bookId }
+        return [{ ...registered, hasPublicPassage: readHasPublicPassage(registered) }]
+      }),
     ) ?? []
   const totalCount = booksQuery.data?.pages[0]?.data?.pageInfo.totalElements ?? 0
   const { fetchNextPage, hasNextPage, isError, isFetching, isFetchingNextPage } = booksQuery
