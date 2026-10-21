@@ -14,6 +14,16 @@ export interface NotificationResponse {
   bookId?: number | null
   /** @nullable */
   commentId?: number | null
+  /**
+   * 모임 전용 알림이면 그 모임 ID, 전역 알림이면 null
+   * @nullable
+   */
+  groupId?: number | null
+  /**
+   * 모임 전용 알림이면 그 모임 이름, 전역 알림이면 null
+   * @nullable
+   */
+  groupName?: string | null
   isRead: boolean
   createdAt: string
 }

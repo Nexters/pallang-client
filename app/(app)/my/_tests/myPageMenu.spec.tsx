@@ -48,6 +48,7 @@ describe('마이페이지 항목 구성', () => {
       '공지사항',
       '스포일러 관리',
       '좋아요 관리',
+      '알림 설정',
       '차단 관리',
       '고객지원',
     ])
@@ -71,5 +72,14 @@ describe('마이페이지 항목 구성', () => {
       // chevron은 이동을 뜻한다 — 링크에는 언제나 붙는다
       expect(item.querySelector('[aria-hidden="true"]')).not.toBeNull()
     }
+  })
+
+  it('알림 설정은 알림 설정 화면으로 이동한다', () => {
+    renderLoggedIn()
+
+    expect(screen.getByRole('link', { name: '알림 설정' })).toHaveAttribute(
+      'href',
+      '/my/notification-settings',
+    )
   })
 })

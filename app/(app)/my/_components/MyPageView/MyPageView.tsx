@@ -21,6 +21,7 @@ const loggedInSettings: SettingItem[] = [
   { label: '공지사항', path: '/my/notices' },
   { label: '스포일러 관리', path: '/my/spoilers' },
   { label: '좋아요 관리', path: '/my/likes' },
+  { label: '알림 설정', path: '/my/notification-settings' },
   // 시안에는 없지만 남긴다 — 차단 유저 관리 화면이 확정 디자인으로 살아 있어
   // 여기서 빼면 /my/blocks에 접근할 통로가 사라진다. 고객지원도 같은 이유다.
   { label: '차단 관리', path: '/my/blocks' },
