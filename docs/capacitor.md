@@ -49,11 +49,15 @@ native-plugins/kakao-login/
   그러면 웹뷰에서 하이드레이션 정상 → `native: true / platform: ios` → 카메라 동작.
 - 참고: 이건 원래 의도한 배포 아키텍처(실서비스는 배포된 프로덕션을 로드)와 일치한다. **화면/로직 개발은 브라우저(`pnpm dev`)로, 네이티브 기능 확인은 prod 빌드(또는 배포 URL)를 앱으로** 여는 워크플로를 쓴다.
 
-## ⚠️ 함정 2 — Xcode(26) GUI로 프로젝트를 열면 pbxproj가 손상됨 → `Undefined symbol: _main`
+## ⚠️ 함정 2 — Xcode GUI가 프로젝트를 새 포맷으로 저장하면 pbxproj가 손상됨 → `Undefined symbol: _main`
 
 - 증상: device 빌드가 `Undefined symbol: _main` / `Linker command failed`로 실패(시뮬레이터는 되는데 device만 실패하기도 함).
 - 원인: Capacitor iOS 템플릿의 `App.xcodeproj`는 아주 오래된 포맷(`CreatedOnToolsVersion 9.2`, `objectVersion 60`). 이걸 **Xcode 26 GUI로 열면 마이그레이션하다 App 소스 그룹/Sources 빌드 페이즈를 날려서** `AppDelegate.swift`가 어느 타겟에서도 컴파일되지 않게 됨 → `@UIApplicationMain`의 `main` 심볼이 안 생김.
-- **해결: iOS 프로젝트를 재생성**하고, 이후 **Xcode GUI로 열지 말고 CLI로 빌드/설치**한다.
+- **Xcode 27.1 재확인(2026-10-21)**: GUI로 열기 → 2분 대기 → GUI 빌드(성공) → 종료까지 해도 pbxproj는 한 바이트도 안 바뀌었다. 그래서 **열기·빌드·Simulator 사용은 괜찮다.** 손상은 Xcode가 프로젝트를 새 포맷으로 **저장할 때** 생기므로, 아래는 여전히 하지 않는다(27.1에서 직접 확인은 안 함):
+  - Xcode가 띄우는 **"Update to Recommended Settings"** 수락
+  - GUI에서 빌드 설정·서명·파일 추가 등 **프로젝트를 바꿔 저장**하는 일 — pbxproj 변경은 손으로 하거나 `cap` CLI로 한다
+  - GUI를 쓴 뒤에는 `git status ios/`로 pbxproj가 바뀌지 않았는지 본다.
+- **해결(이미 손상됐을 때): iOS 프로젝트를 재생성**하고, 빌드·아카이브는 CLI(`xcodebuild`/`cap`)로 한다.
   ```bash
   rm -rf ios && npx cap add ios
   # 그리고 아래 "ios/ 재생성 후 재적용 목록"을 전부 다시 넣는다
