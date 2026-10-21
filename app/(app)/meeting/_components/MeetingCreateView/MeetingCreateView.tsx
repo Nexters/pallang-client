@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -11,16 +11,18 @@ import { ApiError } from '@/app/_global/_data/api.model'
 import { LOGIN_GATE_MESSAGE } from '@/app/_global/_data/loginGate.constant'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
+import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { groupMutations, groupQueries } from '@/app/_global/_queries/group.queries'
 
 import {
-  emptyMeetingForm,
   isValidMeetingForm,
+  seedMeetingForm,
   toGroupCreateInput,
 } from '../../_services/meetingForm.service'
 import { markMeetingNotice } from '../../_services/meetingNotice.service'
 import type { MeetingFormValues } from '../../_types/meetingForm.type'
 import { MeetingForm } from '../MeetingForm/MeetingForm'
+import { MeetingFormSkeleton } from '../MeetingFormSkeleton/MeetingFormSkeleton'
 
 const FORM_ID = 'meeting-create-form'
 
@@ -33,12 +35,26 @@ function createErrorMessage(error: unknown): string {
   return '모임을 만들지 못했어요. 잠시 후 다시 시도해주세요.'
 }
 
-export function MeetingCreateView() {
+type MeetingCreateViewProps = {
+  /** 책 목록의 안내 모달('새 모임 개설하기')에서 왔으면 보던 책 — 책 칸을 그 책으로 채운 채 연다 */
+  seedBookId?: number | null
+}
+
+export function MeetingCreateView({ seedBookId = null }: MeetingCreateViewProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const runWithLogin = useLoginGate()
   const { status } = useAuth()
-  const [values, setValues] = useState<MeetingFormValues>(emptyMeetingForm)
+  const seedBook = useQuery({
+    ...bookQueries.detail(seedBookId ?? 0),
+    enabled: seedBookId !== null,
+  })
+  // 사용자가 고친 값. null이면 아직 손대지 않은 것 — 받아 온 책을 채운 폼을 그대로 보여준다(effect로 복사하지 않는다)
+  const [edited, setEdited] = useState<MeetingFormValues | null>(null)
+  const values = edited ?? seedMeetingForm(seedBook.data?.data)
+  // 책을 받기 전에 폼을 열면 그사이 입력한 값이 책 없는 폼으로 굳는다 — 받을 때까지 골격으로 둔다.
+  // 받지 못하면(지운 책 등) 빈 폼으로 열어 직접 고르게 한다
+  const isSeedPending = seedBookId !== null && seedBook.isPending
   const [message, setMessage] = useState('')
   const create = useMutation(groupMutations.create())
 
@@ -87,7 +103,11 @@ export function MeetingCreateView() {
           </Button>
         }
       >
-        <MeetingForm formId={FORM_ID} values={values} onChange={setValues} onSubmit={submit} />
+        {isSeedPending ? (
+          <MeetingFormSkeleton />
+        ) : (
+          <MeetingForm formId={FORM_ID} values={values} onChange={setEdited} onSubmit={submit} />
+        )}
       </ScreenLayout>
       <Snackbar
         tone="light"

@@ -18,7 +18,9 @@ vi.mock('next/navigation', () => ({ useRouter: () => routerMock }))
 vi.mock('@/app/_global/_providers/AuthProvider/AuthProvider', () => ({
   useAuth: () => ({ status: 'authenticated', isAuthenticated: true, signOut: vi.fn() }),
 }))
+const getBookDetail = vi.hoisted(() => vi.fn())
 vi.mock('@/app/_global/_apis/_generated/book/book', () => ({
+  getBookDetail,
   getPopularBooks: () => Promise.resolve({ data: { books: [] } }),
   getRecentBooks: () => Promise.resolve({ data: { books: [] } }),
   searchBooks: () => Promise.resolve({ data: { books: [] } }),
@@ -52,13 +54,13 @@ const createGroup = vi.hoisted(() =>
 )
 vi.mock('@/app/_global/_apis/_generated/group/group', () => ({ createGroup }))
 
-function renderView() {
+function renderView(seedBookId: number | null = null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   render(
     <QueryClientProvider client={queryClient}>
       <HardwareBackProvider>
         <LoginGateProvider>
-          <MeetingCreateView />
+          <MeetingCreateView seedBookId={seedBookId} />
         </LoginGateProvider>
       </HardwareBackProvider>
     </QueryClientProvider>,
@@ -85,6 +87,7 @@ async function fillForm() {
 afterEach(() => {
   vi.useRealTimers()
   createGroup.mockReset()
+  getBookDetail.mockReset()
   routerMock.replace.mockReset()
   window.sessionStorage.clear()
 })
@@ -132,5 +135,35 @@ describe('모임 만들기', () => {
     fireEvent.click(screen.getByRole('button', { name: '모임 만들기' }))
     expect(await screen.findByText('입력한 정보를 다시 확인해주세요.')).toBeInTheDocument()
     expect(routerMock.replace).not.toHaveBeenCalled()
+  })
+
+  it('책 목록의 안내 모달에서 왔으면 보던 책을 책 칸에 채운 채 연다', async () => {
+    getBookDetail.mockResolvedValue({
+      data: {
+        bookId: 44,
+        title: '마션',
+        author: '앤디 위어',
+        publisher: 'RHK',
+        pageCount: 600,
+        coverImageUrl: null,
+        passageCount: 2,
+        opinionCount: 2,
+      },
+    })
+    renderView(44)
+
+    expect(await screen.findByText('마션')).toBeInTheDocument()
+    expect(getBookDetail).toHaveBeenCalledWith(44)
+    expect(
+      screen.queryByRole('button', { name: /모임에서 읽을 책을 선택해주세요./ }),
+    ).not.toBeInTheDocument()
+  })
+  it('넘겨받은 책을 불러오지 못하면 빈 폼으로 열어 직접 고르게 한다', async () => {
+    getBookDetail.mockRejectedValue(new Error('not found'))
+    renderView(44)
+
+    expect(
+      await screen.findByRole('button', { name: /모임에서 읽을 책을 선택해주세요./ }),
+    ).toBeInTheDocument()
   })
 })

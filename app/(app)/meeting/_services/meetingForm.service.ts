@@ -1,3 +1,4 @@
+import type { BookDetail } from '@/app/_global/_queries/book.queries'
 import type {
   GroupCreateInput,
   GroupDetail,
@@ -20,6 +21,21 @@ export const emptyMeetingForm: MeetingFormValues = {
   book: null,
   startDate: '',
   endDate: '',
+}
+
+/** 책 목록의 안내 모달에서 '새 모임 개설하기'로 왔을 때 — 보던 책을 책 칸에 채운 빈 폼. 책을 못 받았으면 그냥 빈 폼 */
+export function seedMeetingForm(book: BookDetail | undefined): MeetingFormValues {
+  if (!book) return emptyMeetingForm
+  return {
+    ...emptyMeetingForm,
+    book: {
+      bookId: book.bookId,
+      title: book.title,
+      author: book.author,
+      coverImageUrl: book.coverImageUrl ?? null,
+      pageCount: book.pageCount,
+    },
+  }
 }
 
 export function isValidMeetingName(name: string): boolean {
