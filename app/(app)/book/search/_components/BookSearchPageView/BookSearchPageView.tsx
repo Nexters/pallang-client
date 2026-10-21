@@ -11,11 +11,14 @@ import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { bookQueries } from '@/app/_global/_queries/book.queries'
 import { userQueries } from '@/app/_global/_queries/user.queries'
 import { cn } from '@/app/_global/_services/cn.service'
+import { BookEntryOverlay } from '@/app/_shared/book/_components/BookEntryOverlay/BookEntryOverlay'
 import { BookSearchBar } from '@/app/_shared/book/_components/BookSearchBar/BookSearchBar'
 import {
   type ExternalBook,
   ExternalBookList,
 } from '@/app/_shared/book/_components/ExternalBookList/ExternalBookList'
+import { type BookEntryBook, readHasPublicPassage } from '@/app/_shared/book/_data/bookEntry.model'
+import { useBookEntry } from '@/app/_shared/book/_hooks/useBookEntry'
 import {
   type ExternalBookFormState,
   toExternalBookFormState,
@@ -38,6 +41,14 @@ export function BookSearchPageView() {
   const isSearching = debouncedKeyword.length > 0
   const isTypingAhead = keyword.trim() !== debouncedKeyword
 
+  const resetKeyword = () => {
+    setKeyword('')
+  }
+
+  // 검색 결과와 캐러셀이 시트·모달 한 벌을 나눠 쓴다. 검색어는 흔적 화면으로 떠날 때만 비운다 —
+  // 시트나 모달만 뜨고 머무를 때 비우면 그 뒤의 검색 결과가 사라진다
+  const entry = useBookEntry({ onLeave: resetKeyword })
+
   const me = useQuery(userQueries.me())
   const recent = useQuery(bookQueries.recent({ size: PAGE_SIZE }))
   const popular = useQuery(bookQueries.popular({ size: PAGE_SIZE }))
@@ -51,10 +62,21 @@ export function BookSearchPageView() {
   // 여기는 내부 검색이라 모두 등록된 도서지만, 타입이 그걸 모르므로 bookId 없는 항목은 걸러 낸다.
   const searchedBooks =
     searched.data?.pages.flatMap((page) =>
-      (page.data?.books ?? []).flatMap((book) =>
-        book.bookId == null ? [] : [{ ...book, bookId: book.bookId }],
-      ),
+      (page.data?.books ?? []).flatMap((book) => {
+        if (book.bookId == null) return []
+        const registered = { ...book, bookId: book.bookId }
+        return [{ ...registered, hasPublicPassage: readHasPublicPassage(registered) }]
+      }),
     ) ?? []
+  // 최근 남긴 책 응답에는 공개 대목 수가 없다 — 누를 때 대목을 조회해 가린다(readHasPublicPassage가 undefined)
+  const recentBooks: BookEntryBook[] = (recent.data?.data?.books ?? []).map((book) => ({
+    ...book,
+    hasPublicPassage: readHasPublicPassage(book),
+  }))
+  const popularBooks: BookEntryBook[] = (popular.data?.data?.books ?? []).map((book) => ({
+    ...book,
+    hasPublicPassage: readHasPublicPassage(book),
+  }))
   const shouldSearchExternal = shouldSearchExternalBooks({
     internalResultCount: searchedBooks.length,
     isInternalError: searched.isError,
@@ -96,15 +118,6 @@ export function BookSearchPageView() {
       void searched.fetchNextPage()
     },
   })
-
-  const resetKeyword = () => {
-    setKeyword('')
-  }
-
-  const handleBookSelect = (bookId: number) => {
-    resetKeyword()
-    router.push(`/trace/${String(bookId)}`)
-  }
 
   const openExternalForm = (book: ExternalBook) => {
     setForm(toExternalBookFormState(book))
@@ -175,6 +188,7 @@ export function BookSearchPageView() {
                   resetKeyword()
                   router.push('/book/new')
                 }}
+                onEnter={entry.enter}
                 onLeave={resetKeyword}
                 onRetry={() => {
                   void searched.refetch()
@@ -188,17 +202,17 @@ export function BookSearchPageView() {
             {showRecent && (
               <BookCoverCarousel
                 title={`${me.data?.data?.nickname ?? '나'}님이 최근에 남긴 흔적`}
-                books={recent.data?.data?.books ?? []}
+                books={recentBooks}
                 isPending={recent.isPending}
-                onSelect={handleBookSelect}
+                onSelect={entry.enter}
               />
             )}
             {showPopular && (
               <BookCoverCarousel
                 title="제일 많이 등록된 흔적"
-                books={popular.data?.data?.books ?? []}
+                books={popularBooks}
                 isPending={popular.isPending}
-                onSelect={handleBookSelect}
+                onSelect={entry.enter}
               />
             )}
           </div>
@@ -210,6 +224,7 @@ export function BookSearchPageView() {
               resetKeyword()
               router.push('/book/new')
             }}
+            onEnter={entry.enter}
             onLeave={resetKeyword}
             onRetry={() => undefined}
           />
@@ -230,6 +245,11 @@ export function BookSearchPageView() {
           </button>
         </div>
       )}
+      <BookEntryOverlay
+        overlay={entry.overlay}
+        onClose={entry.closeOverlay}
+        onLeave={resetKeyword}
+      />
     </main>
   )
 }

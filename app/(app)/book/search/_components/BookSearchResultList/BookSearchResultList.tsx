@@ -1,22 +1,22 @@
-import Link from 'next/link'
-
 import {
   ApiErrorFeedbackState,
   FeedbackState,
 } from '@/app/_global/_components/FeedbackState/FeedbackState'
+import { BookEntryLabel } from '@/app/_shared/book/_components/BookEntryLabel/BookEntryLabel'
+import { BookEntryTrigger } from '@/app/_shared/book/_components/BookEntryTrigger/BookEntryTrigger'
 import { BookItem } from '@/app/_shared/book/_components/BookItem/BookItem'
+import type { BookEntryBook } from '@/app/_shared/book/_data/bookEntry.model'
 
-type BookSearchResultItem = {
+type BookSearchResultItem = BookEntryBook & {
   author: string
-  bookId: number
-  coverImageUrl?: null | string
   publisher?: string
-  title: string
 }
 
 type BookSearchResultListProps = {
   books: BookSearchResultItem[]
   onAddBook: () => void
+  /** 공개 대목이 없거나 모르는 책 — 화면의 useBookEntry가 갈 곳을 정한다 */
+  onEnter: (book: BookEntryBook) => void
   onLeave?: () => void
   onRetry: () => void
   status: 'error' | 'pending' | 'ready'
@@ -27,6 +27,7 @@ const SKELETON_KEYS = ['a', 'b', 'c']
 export function BookSearchResultList({
   books,
   onAddBook,
+  onEnter,
   onLeave,
   onRetry,
   status,
@@ -80,18 +81,22 @@ export function BookSearchResultList({
     <ul aria-label="도서 검색 결과" className="flex flex-col gap-3 px-4 py-6">
       {books.map((book, index) => (
         <li key={book.bookId} className="flex flex-col gap-3">
-          <Link
-            href={`/trace/${String(book.bookId)}`}
+          <BookEntryTrigger
+            book={book}
+            onEnter={onEnter}
+            onLeave={onLeave}
             aria-label={`${book.title} 흔적 보기`}
-            onClick={onLeave}
           >
             <BookItem
               author={book.author}
               coverImageUrl={book.coverImageUrl}
               publisher={book.publisher}
+              scopeLabel={
+                <BookEntryLabel bookId={book.bookId} hasPublicPassage={book.hasPublicPassage} />
+              }
               title={book.title}
             />
-          </Link>
+          </BookEntryTrigger>
           {index < books.length - 1 && <div className="h-px w-full bg-border-default" />}
         </li>
       ))}

@@ -2,16 +2,13 @@
 
 import Image from 'next/image'
 
-type BookCoverCarouselItem = {
-  bookId: number
-  coverImageUrl?: null | string
-  title: string
-}
+import type { BookEntryBook } from '@/app/_shared/book/_data/bookEntry.model'
 
 type BookCoverCarouselProps = {
-  books: BookCoverCarouselItem[]
+  books: BookEntryBook[]
   isPending: boolean
-  onSelect: (bookId: number) => void
+  /** 표지를 누르면 화면의 useBookEntry가 갈 곳(흔적·내 모임·안내)을 정한다 */
+  onSelect: (book: BookEntryBook) => void
   title: string
 }
 
@@ -37,7 +34,7 @@ export function BookCoverCarousel({ books, isPending, onSelect, title }: BookCov
                   aria-label={`${book.title} 흔적 보기`}
                   className="block h-[108px] w-[72px] cursor-pointer overflow-hidden rounded-[2px] bg-bg-surface"
                   onClick={() => {
-                    onSelect(book.bookId)
+                    onSelect(book)
                   }}
                 >
                   {book.coverImageUrl ? (
