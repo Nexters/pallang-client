@@ -30,6 +30,7 @@
     "cap:dev:sync": "bash scripts/cap-dev.sh sync-only",
     "ios:archive": "bash scripts/ios-archive.sh",
     "ios:archive:dev": "CAP_SERVER_URL=https://dev.pallang.co.kr bash scripts/ios-archive.sh",
+    "ios:upload": "bash scripts/ios-upload.sh",
     "android:bundle": "bash scripts/android-bundle.sh",
     "android:bundle:dev": "CAP_SERVER_URL=https://dev.pallang.co.kr bash scripts/android-bundle.sh"
   },
