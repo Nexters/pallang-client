@@ -190,8 +190,10 @@ HEAD가 `develop`이 아니면 어디로 밀지 사용자에게 확인받는다.
 
 ## 4. 업로드
 
-- **iOS**: Transporter 앱에 `build-ios/export/App.ipa`를 드래그. 이건 GUI라 사용자가 한다 —
-  경로와 올릴 버전·빌드 번호를 알려준다. App Store Connect → TestFlight에서 처리(수 분) 후 내부 테스터에 노출.
+- **iOS**: `pnpm ios:upload` — 이 스킬이 직접 올린다. 방금 만든 `build-ios/App.xcarchive`를
+  Xcode에 로그인된 Apple 계정으로 올리므로 API 키가 필요 없다. 계정 인증 오류가 나면
+  Xcode → Settings → Accounts에서 다시 로그인하도록 사용자에게 안내한다(Transporter 드래그는 그때의 대안).
+  App Store Connect → TestFlight에서 처리(수 분) 후 내부 테스터에 노출.
 - **Android**: Play Console → 앱 번들 탐색기 / 트랙에 `app-release.aab` 업로드.
 
 ## 5. 보고
