@@ -25,4 +25,6 @@ export interface BookSearchResponse {
   source?: BookSearchResponseSource
   passageCount: number
   opinionCount: number
+  /** 전역 공개 대목(모임 전용이 아닌 대목) 수. passageCount는 모임 전용 대목까지 함께 센다. 0이면 모임에서만 읽는 책이라 groupId 없이 대목을 조회하면 빈 목록이다. 미등록 도서는 0이다. */
+  publicPassageCount: number
 }
