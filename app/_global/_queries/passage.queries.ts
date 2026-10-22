@@ -2,6 +2,7 @@ import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/r
 
 import type { CreateOcrResultBody } from '../_apis/_generated/models/createOcrResultBody'
 import type { SimilarCheck } from '../_apis/_generated/models/similarCheck'
+import { TextBlockBreakType as GeneratedTextBlockBreakType } from '../_apis/_generated/models/textBlockBreakType'
 import {
   checkSimilarPassages,
   createOcrResult,
@@ -11,6 +12,10 @@ import {
 } from '../_apis/_generated/passage/passage'
 
 const PAGE_NUMBER_PAGE_SIZE = 100
+
+/** feature 코드는 _apis를 직접 import할 수 없어 OCR 끊김 종류를 여기서 재노출한다 */
+export type TextBlockBreakType = GeneratedTextBlockBreakType
+export const TextBlockBreakType = GeneratedTextBlockBreakType
 
 /**
  * 서버 프리페치에서 요청 스코프 인증 헤더를 넣기 위한 fetch 옵션(브라우저에서는 생략).

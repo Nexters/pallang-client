@@ -30,13 +30,13 @@ export function MergeDialog({
         <div className="flex w-full flex-col gap-4">
           <section className="flex flex-col gap-2">
             <h3 className="text-body-14md text-text-secondary">내가 발췌한 문장</h3>
-            <p className="rounded-lg bg-bg-surface p-4 text-body-14rg text-text-secondary">
+            <p className="whitespace-pre-wrap rounded-lg bg-bg-surface p-4 text-body-14rg text-text-secondary">
               {myQuote}
             </p>
           </section>
           <section className="flex flex-col gap-2">
             <h3 className="text-body-14md text-text-secondary">비슷한 문장</h3>
-            <p className="rounded-lg bg-bg-surface p-4 text-body-14rg text-text-secondary">
+            <p className="whitespace-pre-wrap rounded-lg bg-bg-surface p-4 text-body-14rg text-text-secondary">
               {candidateQuote}
             </p>
           </section>

@@ -1,17 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  countWithinLimit,
-  joinBlockTexts,
-  type OcrBlock,
-  type OcrBreakType,
-} from '../_services/ocrText.service'
+import { countWithinLimit, joinBlockTexts, type OcrBlock } from '../_services/ocrText.service'
 
-const b = (text: string, breakType: OcrBreakType = 'NONE', indented = false): OcrBlock => ({
-  text,
-  breakType,
-  indented,
-})
+const b = (
+  text: string,
+  breakType: OcrBlock['breakType'] = 'NONE',
+  { indented = false } = {},
+): OcrBlock => ({ text, breakType, indented })
 
 describe('joinBlockTexts', () => {
   it('빈 배열은 빈 문자열이다', () => {
@@ -30,22 +25,16 @@ describe('joinBlockTexts', () => {
 
   it('시: 행(LINE)은 줄바꿈, 연(BLANK_LINE)은 빈 줄로 옮긴다', () => {
     expect(
-      joinBlockTexts([
-        b('내', 'NONE'),
-        b('옆에서', 'LINE'),
-        b('내', 'NONE'),
-        b('뒤에서', 'BLANK_LINE'),
-        b('끝'),
-      ]),
+      joinBlockTexts([b('내'), b('옆에서', 'LINE'), b('내'), b('뒤에서', 'BLANK_LINE'), b('끝')]),
     ).toBe('내 옆에서\n내 뒤에서\n\n끝')
   })
 
   it('산문: 문단 끝(PARAGRAPH)은 줄바꿈, 들여쓴 첫 어절 앞에는 전각 공백을 붙인다', () => {
     expect(
       joinBlockTexts([
-        b('디드로의', 'NONE', true),
+        b('디드로의', 'NONE', { indented: true }),
         b('행동이다.', 'PARAGRAPH'),
-        b('이런', 'NONE', true),
+        b('이런', 'NONE', { indented: true }),
         b('광경은'),
       ]),
     ).toBe('　디드로의 행동이다.\n　이런 광경은')
@@ -73,8 +62,12 @@ describe('countWithinLimit', () => {
 
   it('빈 줄 구분자와 들여쓰기도 길이에 센다', () => {
     // 'AB' + '\n\n' + '　' + 'CD' = 7자
-    expect(countWithinLimit([b('AB', 'BLANK_LINE'), b('CD', 'NONE', true)], 7)).toBe(2)
-    expect(countWithinLimit([b('AB', 'BLANK_LINE'), b('CD', 'NONE', true)], 6)).toBe(1)
+    expect(countWithinLimit([b('AB', 'BLANK_LINE'), b('CD', 'NONE', { indented: true })], 7)).toBe(
+      2,
+    )
+    expect(countWithinLimit([b('AB', 'BLANK_LINE'), b('CD', 'NONE', { indented: true })], 6)).toBe(
+      1,
+    )
   })
 
   it('상한을 넘기는 블록 앞에서 끊는다 — 어절 중간을 자르지 않는다', () => {

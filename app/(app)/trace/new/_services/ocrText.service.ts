@@ -1,12 +1,11 @@
-// 서버 TextBlock.breakType와 같은 값. feature 코드는 _apis를 직접 참조하지 않아 여기서 다시 적는다.
-export type OcrBreakType = 'NONE' | 'WRAP' | 'LINE' | 'PARAGRAPH' | 'BLANK_LINE'
+import type { TextBlockBreakType } from '@/app/_global/_queries/passage.queries'
 
-export type OcrBlock = { text: string; breakType: OcrBreakType; indented: boolean }
+export type OcrBlock = { text: string; breakType: TextBlockBreakType; indented: boolean }
 
 const INDENT = '　'
 
 /** 이 블록 뒤에 붙는 구분자. 서버(pallang-server#180)가 정한 조립 규칙이다. */
-const SEPARATOR: Record<OcrBreakType, string> = {
+const SEPARATOR: Record<TextBlockBreakType, string> = {
   NONE: ' ',
   WRAP: ' ',
   LINE: '\n',
@@ -18,17 +17,13 @@ const SEPARATOR: Record<OcrBreakType, string> = {
  * 블록 하나를 발췌문 조각으로 — 앞 블록 뒤 구분자 + 들여쓰기 + 본문.
  * joinBlockTexts와 countWithinLimit가 같은 계산을 쓰도록 여기 한 곳에만 둔다.
  */
-function pieces(blocks: OcrBlock[]): { index: number; piece: string }[] {
-  const result: { index: number; piece: string }[] = []
-  let previous: OcrBlock | null = null
+function* pieces(blocks: OcrBlock[]): Generator<[index: number, piece: string]> {
+  let separator = ''
   for (const [index, block] of blocks.entries()) {
     if (block.text.length === 0) continue
-    const separator = previous ? SEPARATOR[previous.breakType] : ''
-    const indent = block.indented ? INDENT : ''
-    result.push({ index, piece: separator + indent + block.text })
-    previous = block
+    yield [index, separator + (block.indented ? INDENT : '') + block.text]
+    separator = SEPARATOR[block.breakType]
   }
-  return result
 }
 
 /**
@@ -42,9 +37,7 @@ function pieces(blocks: OcrBlock[]): { index: number; piece: string }[] {
  * 좌표만으로는 가릴 수 없어 인식 결과는 시트에서 바로 고치게 둔다.
  */
 export function joinBlockTexts(blocks: OcrBlock[]): string {
-  return pieces(blocks)
-    .map(({ piece }) => piece)
-    .join('')
+  return Array.from(pieces(blocks), ([, piece]) => piece).join('')
 }
 
 /**
@@ -55,7 +48,7 @@ export function joinBlockTexts(blocks: OcrBlock[]): string {
  */
 export function countWithinLimit(blocks: OcrBlock[], max: number): number {
   let length = 0
-  for (const { index, piece } of pieces(blocks)) {
+  for (const [index, piece] of pieces(blocks)) {
     length += piece.length
     if (length > max) return index
   }

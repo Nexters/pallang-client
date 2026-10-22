@@ -47,7 +47,10 @@ export function DecoratedQuote({
   const segments = splitByDecorations(quotedText, decorations)
 
   return (
-    <p {...handlers} className={cn(className, selectable && 'touch-none select-none')}>
+    <p
+      {...handlers} // 발췌문은 시의 행·연과 문단 줄바꿈을 담는다. 장식 오프셋이 '\n'을 글자로 세므로 표시도 여기서 보장한다.
+      className={cn('whitespace-pre-wrap', className, selectable && 'touch-none select-none')}
+    >
       {segments.map((segment, segmentIndex) => (
         <span
           key={segmentIndex}
