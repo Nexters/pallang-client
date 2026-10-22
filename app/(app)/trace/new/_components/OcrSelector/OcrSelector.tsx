@@ -124,7 +124,6 @@ export function OcrSelector() {
             const ys = block.boundingBox.vertices.map((point) => point.y)
             const left = Math.min(...xs)
             const top = Math.min(...ys)
-            // lineBreak(인쇄된 줄 끝)는 쓰지 않고 서버가 판별한 breakType·indented만 옮긴다(ocrText.service 참고)
             return {
               breakType: block.breakType,
               height: Math.max(...ys) - top,

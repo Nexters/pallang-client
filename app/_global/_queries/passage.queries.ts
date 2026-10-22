@@ -13,7 +13,6 @@ import {
 
 const PAGE_NUMBER_PAGE_SIZE = 100
 
-/** feature 코드는 _apis를 직접 import할 수 없어 OCR 끊김 종류를 여기서 재노출한다 */
 export type TextBlockBreakType = GeneratedTextBlockBreakType
 export const TextBlockBreakType = GeneratedTextBlockBreakType
 
