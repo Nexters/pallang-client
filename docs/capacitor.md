@@ -316,7 +316,12 @@ adb shell am start -n kr.co.pallang.app/.MainActivity
 
 - `capacitor.config.ts`의 `appId`(`kr.co.pallang.app`)와 `PROD_SERVER_URL`(`https://www.pallang.co.kr` — apex가 아니라 리다이렉트 이후의 최종 호스트, 함정 4 참고)은 실제 값으로 교체 완료. Android 패키지명도 `kr.co.pallang.app`으로 통일 완료.
 - **iOS**: 시뮬레이터 + 실기기(iPhone 12 Pro) 카메라 검증 완료. **Android**: 에뮬레이터(Android 16) 카메라 검증 완료. 둘 다 실기 스토어 제출(서명·심사)은 미수행.
-- **UIScene 생명주기(향후 필수화)**: 현재 Capacitor iOS 템플릿은 옛 AppDelegate 생명주기를 써서 실행 시 `UIScene lifecycle will soon be required...` 경고가 뜬다. **지금 배포엔 문제없음**(앱스토어 심사 반려 아님, 앱 정상 동작). 다만 미래 iOS에서 Scene 채택이 필수가 되면 미채택 앱은 실행 시 크래시(assert)한다. → **Capacitor 업데이트에 Scene 대응이 들어오는지 주기적으로 확인**하고, 들어오면 반영할 것. 미리 대응하려면 `SceneDelegate`를 수동 채택(Capacitor 커뮤니티에 방법 있음). 지금 당장은 조치 불필요.
+- **UIScene 생명주기 (#435에서 채택)**: iOS 27 SDK(Xcode 27)로 빌드한 앱은 Scene을 쓰지 않으면 iOS 27 기기에서 **실행 직후 종료**된다(`_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`, EXC_BREAKPOINT). 조건은 기기 OS가 아니라 **빌드에 쓴 SDK**다 — 같은 앱도 Xcode 26으로 빌드하면 iOS 27에서 뜬다. 실제로 1.7.0(24)이 이렇게 죽어서 1.7.1(28)을 Xcode 26.6으로 다시 빌드해 올렸다.
+  - Capacitor 8.5부터 공식 지원(`CAPSceneDelegateProxy`). `npx cap migrate`가 SceneDelegate·Info.plist·AppDelegate를 고쳐 주지만 **그대로 쓰지 않았다** — Info.plist 주석을 전부 지우고 관계없는 의존성까지 올린다. 손으로 정리한 결과가 지금 파일이다.
+  - 창은 `Main.storyboard`(`UISceneStoryboardFile`)가 만든다. 템플릿 SceneDelegate처럼 코드로 또 만들면 창이 둘이 된다.
+  - Scene을 쓰면 AppDelegate의 `open url` / `continue userActivity` / `applicationDidBecomeActive`는 **호출되지 않는다.** URL은 `SceneDelegate`가 프록시로 넘기고, 프록시가 옛 `.capacitorOpenURL` 노티를 그대로 보내므로 `KakaoLoginPlugin`은 손대지 않았다. 앞/뒤 전환 때 하던 일(엣지 스와이프 활성화)은 `sceneDidBecomeActive`로 옮겼다.
+  - 콜드 스타트 URL은 프록시가 `capacitorViewDidAppear` 뒤로 미뤄 전달한다(플러그인 로드 전이라 놓치기 때문).
+  - **운영 아카이브 전 `xcodebuild -version` 확인.** Scene 채택 뒤로는 Xcode 27로 빌드해도 되지만, Scene 관련 파일을 되돌리는 변경이 섞이면 Xcode 27 빌드가 다시 iOS 27에서 죽는다.
 
 ## TestFlight 배포
 
