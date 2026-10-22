@@ -52,7 +52,7 @@ export function TraceNote({
           selectable={selectable}
           // 동그라미 효과는 글자 사방으로 삐져나오는데 가로 스크롤 경계에 잘린다.
           // 음수 마진과 같은 크기의 패딩(-mx-4 px-4)으로 글자 위치는 그대로 두고 그리는 경계만 넓힌다.
-          className="text-body-20md -mx-4 w-full whitespace-pre-wrap px-4 text-text-secondary"
+          className="text-body-20md -mx-4 w-full px-4 text-text-secondary"
         />
       </div>
     </div>

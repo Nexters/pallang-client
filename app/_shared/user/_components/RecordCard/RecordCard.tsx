@@ -69,7 +69,10 @@ export function RecordCard({
         <p
           ref={contentRef}
           // 접힌 본문은 세 줄까지만 보인다
-          className={cn('w-full text-body-16md text-text-secondary', !expanded && 'line-clamp-3')}
+          className={cn(
+            'w-full whitespace-pre-wrap text-body-16md text-text-secondary',
+            !expanded && 'line-clamp-3',
+          )}
         >
           {body}
         </p>

@@ -47,7 +47,10 @@ export function DecoratedQuote({
   const segments = splitByDecorations(quotedText, decorations)
 
   return (
-    <p {...handlers} className={cn(className, selectable && 'touch-none select-none')}>
+    <p
+      {...handlers}
+      className={cn('whitespace-pre-wrap', className, selectable && 'touch-none select-none')}
+    >
       {segments.map((segment, segmentIndex) => (
         <span
           key={segmentIndex}
