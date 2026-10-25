@@ -63,7 +63,7 @@ export const getGetNotificationsUrl = (params?: GetNotificationsParams) => {
 }
 
 /**
- * 내가 받은 알림을 최신순으로 페이지네이션 조회합니다. scope로 [전체 | 활동 | 모임] 탭을 분류합니다. 응답의 unreadCount는 조회한 scope와 동일한 범위로 집계됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 내가 받은 알림을 최신순으로 페이지네이션 조회합니다. scope로 [전체 | 활동 | 모임 | 운영] 탭을 분류합니다. 운영 안내(CONTENT_REMOVED)는 전체·운영 탭에만 나오며 removalNotice에 삭제 안내 정보가 담깁니다. 응답의 unreadCount는 조회한 scope와 동일한 범위로 집계됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 알림 목록 조회
  */
 export const getNotifications = async (

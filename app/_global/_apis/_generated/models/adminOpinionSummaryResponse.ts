@@ -6,10 +6,20 @@ export interface AdminOpinionSummaryResponse {
   opinionId: number
   passageId: number
   passageQuotedText: string
+  bookTitle: string
+  /**
+   * 모임 전용 대목에 달린 의견이면 그 모임 id, 전역 공개면 null
+   * @nullable
+   */
+  groupId?: number | null
+  /** @nullable */
+  groupName?: string | null
   userId: number
   userNickname: string
   content: string
   likeCount: number
+  /** 이 의견에 접수된 신고 수 */
+  reportCount: number
   deleted: boolean
   createdAt: string
 }
