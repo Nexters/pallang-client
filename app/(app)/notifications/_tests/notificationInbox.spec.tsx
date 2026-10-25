@@ -46,7 +46,7 @@ function renderView(notifications: NotificationResponse[] = [NOTIFICATION]) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   })
-  for (const scope of ['ALL', 'ACTIVITY', 'GROUP'] as const) {
+  for (const scope of ['ALL', 'ACTIVITY', 'GROUP', 'OPERATION'] as const) {
     client.setQueryData(notificationQueries.list(scope).queryKey, {
       pages: [
         {
@@ -67,7 +67,7 @@ function renderView(notifications: NotificationResponse[] = [NOTIFICATION]) {
     })
   }
 
-  render(
+  return render(
     <QueryClientProvider client={client}>
       <NotificationInboxView />
     </QueryClientProvider>,
@@ -129,15 +129,27 @@ describe('알림함', () => {
     )
   })
 
-  it('전체·활동·모임 탭을 모두 노출한다', () => {
+  it('전체·활동·모임·운영 탭을 모두 노출한다', () => {
     renderView()
 
     const tabs = screen.getAllByRole('tab')
-    expect(tabs).toHaveLength(3)
+    expect(tabs).toHaveLength(4)
     expect(tabs[0]).toHaveTextContent('전체')
     expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
     expect(tabs[1]).toHaveTextContent('활동')
     expect(tabs[2]).toHaveTextContent('모임')
+    expect(tabs[3]).toHaveTextContent('운영')
+  })
+
+  it('알림 목록 영역만 스크롤한다', () => {
+    const { container } = renderView()
+
+    expect(container.querySelector('[data-slot="notification-list"]')).toHaveClass(
+      'overflow-y-auto',
+    )
+    expect(container.querySelector('[data-slot="notification-list"]')?.parentElement).toHaveClass(
+      'overflow-hidden',
+    )
   })
 
   it('선택한 분류 탭을 활성화한다', async () => {
@@ -196,5 +208,9 @@ describe('알림함', () => {
       ),
     ).toBeVisible()
     expect(screen.queryByRole('button', { name: '모두 읽음' })).not.toBeInTheDocument()
+    expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
+      'src',
+      expect.stringContaining('mascot-pair.webp'),
+    )
   })
 })

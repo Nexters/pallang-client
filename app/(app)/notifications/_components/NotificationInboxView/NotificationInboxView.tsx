@@ -69,6 +69,7 @@ export function NotificationInboxView() {
   return (
     <ScreenLayout
       title="알림"
+      bodyClassName="overflow-hidden"
       action={
         <TopBar.LinkAction href="/my/notification-settings" aria-label="알림 설정">
           <SettingIcon />
@@ -77,66 +78,65 @@ export function NotificationInboxView() {
     >
       <NotificationTabs tabs={NOTIFICATION_TABS} value={tab} onChange={setTab} />
 
-      {showError ? (
-        <ApiErrorFeedbackState
-          onRetry={() => {
-            void listQuery.refetch()
-          }}
-        />
-      ) : (
-        <>
-          <div className="flex shrink-0 items-center justify-between border-b border-border-default p-4 text-body-14rg font-medium">
-            {unreadCount === undefined ? (
-              <Skeleton className="h-4.5 w-16" />
-            ) : (
-              <p className="text-text-secondary">
-                <span
-                  className={cn(
-                    'font-bold',
-                    unreadCount > 0 ? 'text-text-accent' : 'text-icon-muted',
-                  )}
-                >
-                  {unreadCount}
-                </span>
-                개의 알림
-              </p>
-            )}
-            {notifications.length > 0 && (
-              <button
-                type="button"
-                disabled={readAllMutation.isPending}
-                onClick={() => {
-                  readAllMutation.mutate()
-                }}
-                className="press text-text-placeholder-a50 disabled:opacity-40"
-              >
-                모두 읽음
-              </button>
-            )}
-          </div>
+      <div className="flex shrink-0 items-center justify-between border-b border-border-default p-4 text-body-14rg font-medium">
+        {unreadCount === undefined ? (
+          <Skeleton className="h-4.5 w-16" />
+        ) : (
+          <p className="text-text-secondary">
+            <span
+              className={cn('font-bold', unreadCount > 0 ? 'text-text-accent' : 'text-icon-muted')}
+            >
+              {unreadCount}
+            </span>
+            개의 알림
+          </p>
+        )}
+        {notifications.length > 0 && (
+          <button
+            type="button"
+            disabled={readAllMutation.isPending}
+            onClick={() => {
+              readAllMutation.mutate()
+            }}
+            className="press text-text-placeholder-a50 disabled:opacity-40"
+          >
+            모두 읽음
+          </button>
+        )}
+      </div>
 
-          {listQuery.isPending ? (
-            <NotificationListSkeleton />
-          ) : notifications.length === 0 ? (
-            <NotificationEmptyState />
-          ) : (
-            <>
-              <ul className="flex flex-col">
-                {notifications.map((notification) => (
-                  <NotificationItem
-                    key={notification.notificationId}
-                    notification={notification}
-                    onOpen={() => {
-                      openNotification(notification)
-                    }}
-                  />
-                ))}
-              </ul>
-              <div ref={loadMoreRef} aria-hidden="true" />
-            </>
-          )}
-        </>
-      )}
+      <div data-slot="notification-list" className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        {showError ? (
+          <ApiErrorFeedbackState
+            onRetry={() => {
+              void listQuery.refetch()
+            }}
+          />
+        ) : (
+          <>
+            {listQuery.isPending ? (
+              <NotificationListSkeleton />
+            ) : notifications.length === 0 ? (
+              <NotificationEmptyState />
+            ) : (
+              <>
+                <ul className="flex flex-col">
+                  {notifications.map((notification) => (
+                    <NotificationItem
+                      key={notification.notificationId}
+                      notification={notification}
+                      onOpen={() => {
+                        openNotification(notification)
+                      }}
+                    />
+                  ))}
+                </ul>
+                <div ref={loadMoreRef} aria-hidden="true" />
+              </>
+            )}
+          </>
+        )}
+      </div>
     </ScreenLayout>
   )
 }
