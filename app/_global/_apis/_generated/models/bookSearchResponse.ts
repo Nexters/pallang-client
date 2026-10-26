@@ -5,7 +5,7 @@ import type { BookSearchResponseSource } from './bookSearchResponseSource'
 
 export interface BookSearchResponse {
   /**
-   * 서비스 DB에 등록된 도서일 때만 채워진다. GET /api/books/search에서 알라딘에만 있고 아직 등록되지 않은 도서는 null이다.
+   * 서비스 DB에 등록된 도서일 때만 채워진다. GET /api/books/search에서 카카오에만 있고 아직 등록되지 않은 도서는 null이다.
    * @nullable
    */
   bookId?: number | null

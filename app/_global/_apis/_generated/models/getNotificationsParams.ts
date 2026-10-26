@@ -5,7 +5,7 @@ import type { GetNotificationsScope } from './getNotificationsScope'
 
 export type GetNotificationsParams = {
   /**
-   * 알림 분류 탭 (ALL: 전체, ACTIVITY: 활동, GROUP: 모임, 기본값 ALL)
+   * 알림 분류 탭 (ALL: 전체, ACTIVITY: 활동, GROUP: 모임, OPERATION: 운영, 기본값 ALL)
    */
   scope?: GetNotificationsScope
   /**

@@ -15,6 +15,7 @@ const TYPE_META: Record<NotificationResponse['type'], { label: string; Icon: typ
   GROUP_MEMBER_JOINED: { label: '모임원 가입', Icon: BellIcon },
   GROUP_SCHEDULE_CHANGED: { label: '모임 일정 변경', Icon: BellIcon },
   GROUP_ENDING_SOON: { label: '모임 종료 임박', Icon: BellIcon },
+  CONTENT_REMOVED: { label: '운영 안내', Icon: BellIcon },
 }
 
 type NotificationItemProps = {

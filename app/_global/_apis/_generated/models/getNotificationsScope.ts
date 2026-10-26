@@ -9,4 +9,5 @@ export const GetNotificationsScope = {
   ALL: 'ALL',
   ACTIVITY: 'ACTIVITY',
   GROUP: 'GROUP',
+  OPERATION: 'OPERATION',
 } as const

@@ -3,6 +3,8 @@
  */
 import type { AdminLoginRequest } from '../models/adminLoginRequest'
 
+import type { AdminRemoveOpinionRequest } from '../models/adminRemoveOpinionRequest'
+
 import type { AdminUpdateBookRequest } from '../models/adminUpdateBookRequest'
 
 import type { AdminUpdateCommentRequest } from '../models/adminUpdateCommentRequest'
@@ -35,9 +37,15 @@ import type { DataResponseAdminPassageListResponse } from '../models/dataRespons
 
 import type { DataResponseAdminPassageSummaryResponse } from '../models/dataResponseAdminPassageSummaryResponse'
 
+import type { DataResponseAdminReportListResponse } from '../models/dataResponseAdminReportListResponse'
+
 import type { DataResponseAdminUserListResponse } from '../models/dataResponseAdminUserListResponse'
 
+import type { DataResponseListAdminRemovalReasonResponse } from '../models/dataResponseListAdminRemovalReasonResponse'
+
 import type { DataResponseVoid } from '../models/dataResponseVoid'
+
+import type { GetReportedTargetsParams } from '../models/getReportedTargetsParams'
 
 import type { SearchBooks1Params } from '../models/searchBooks1Params'
 
@@ -52,6 +60,27 @@ import type { SearchPassagesParams } from '../models/searchPassagesParams'
 import type { SearchUsersParams } from '../models/searchUsersParams'
 
 import { customFetch } from '../../customFetch.api'
+
+export const getRemoveOpinionWithReasonUrl = (opinionId: number) => {
+  return `/api/admin/opinions/${opinionId}/removal`
+}
+
+/**
+ * 운영 정책에 따라 사유를 골라 의견을 삭제하고 작성자에게 운영 안내 알림(CONTENT_REMOVED)을 보냅니다. 삭제 범위는 일반 삭제와 같습니다(의견 + 다른 의견이 없으면 대목). 모임 게시물은 신고가 1건 이상 접수된 경우에만 삭제할 수 있습니다. 되돌릴 수 없습니다.
+ * @summary 관리자 사유 선택 삭제
+ */
+export const removeOpinionWithReason = async (
+  opinionId: number,
+  adminRemoveOpinionRequest: AdminRemoveOpinionRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseVoid> => {
+  return customFetch<DataResponseVoid>(getRemoveOpinionWithReasonUrl(opinionId), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(adminRemoveOpinionRequest),
+  })
+}
 
 export const getLoginUrl = () => {
   return `/api/admin/auth/login`
@@ -296,6 +325,53 @@ export const searchUsers = async (
   })
 }
 
+export const getGetReportedTargetsUrl = (params?: GetReportedTargetsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/reports?${stringifiedParams}`
+    : `/api/admin/reports`
+}
+
+/**
+ * 신고를 대상(의견/댓글) 단위로 묶어 가장 최근에 신고된 대상부터 보여줍니다. 대상이 이미 삭제됐으면 targetAlive=false입니다.
+ * @summary 관리자 신고 목록
+ */
+export const getReportedTargets = async (
+  params?: GetReportedTargetsParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseAdminReportListResponse> => {
+  return customFetch<DataResponseAdminReportListResponse>(getGetReportedTargetsUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetRemovalReasonsUrl = () => {
+  return `/api/admin/removal-reasons`
+}
+
+/**
+ * 사유 선택 모달에 보여줄 사유와 작성자에게 발송될 안내 문구입니다.
+ * @summary 관리자 삭제 사유 목록
+ */
+export const getRemovalReasons = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseListAdminRemovalReasonResponse> => {
+  return customFetch<DataResponseListAdminRemovalReasonResponse>(getGetRemovalReasonsUrl(), {
+    ...options,
+    method: 'GET',
+  })
+}
+
 export const getSearchPassagesUrl = (params: SearchPassagesParams) => {
   const normalizedParams = new URLSearchParams()
 
@@ -326,7 +402,7 @@ export const searchPassages = async (
   })
 }
 
-export const getSearchOpinionsUrl = (params: SearchOpinionsParams) => {
+export const getSearchOpinionsUrl = (params?: SearchOpinionsParams) => {
   const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -343,11 +419,11 @@ export const getSearchOpinionsUrl = (params: SearchOpinionsParams) => {
 }
 
 /**
- * 내용에 키워드가 포함된 의견을 검색합니다. 소프트 삭제된 의견도 함께 조회됩니다.
+ * 내용에 키워드가 포함된 의견을 검색합니다. passageId를 주면 키워드 검색 대신 그 대목에 달린 의견 전부를 작성 순서(오래된 순)로 반환합니다 — 관리자 페이지에서 대목 행을 펼쳐볼 때 사용합니다. 소프트 삭제된 의견도 함께 조회됩니다.
  * @summary 관리자 의견 검색
  */
 export const searchOpinions = async (
-  params: SearchOpinionsParams,
+  params?: SearchOpinionsParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<DataResponseAdminOpinionListResponse> => {
   return customFetch<DataResponseAdminOpinionListResponse>(getSearchOpinionsUrl(params), {

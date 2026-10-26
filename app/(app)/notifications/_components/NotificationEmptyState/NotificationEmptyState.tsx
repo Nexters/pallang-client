@@ -1,6 +1,6 @@
 import Image from 'next/image'
 
-const MASCOT_SRC = '/images/mascot-pair.png'
+const MASCOT_SRC = '/images/mascot-pair.webp'
 
 /** 시안(3912:20143) — 회색 마스코트 한 쌍과 안내 문구 */
 export function NotificationEmptyState() {
