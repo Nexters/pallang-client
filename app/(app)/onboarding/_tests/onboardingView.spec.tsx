@@ -61,13 +61,13 @@ describe('온보딩 뷰', () => {
     expect(screen.queryByRole('heading', { name: /안녕하세요/ })).toBeNull()
   })
 
-  it('건너뛰기를 누르면 본 것으로 기록하고 홈으로 돌아간다', async () => {
+  it('건너뛰기를 누르면 코치마크도 본 것으로 기록하고 홈으로 돌아간다', async () => {
     renderView()
 
     await userEvent.click(screen.getByRole('button', { name: '건너뛰기' }))
 
     expect(hasSeenOnboarding()).toBe(true)
-    expect(shouldShowHomeCoachMark()).toBe(true)
+    expect(shouldShowHomeCoachMark()).toBe(false)
     expect(replace).toHaveBeenCalledWith('/')
   })
 
