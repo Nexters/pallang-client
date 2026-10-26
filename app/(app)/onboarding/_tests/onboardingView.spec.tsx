@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { consumeAppInstallPrompt } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import { shouldShowHomeCoachMark } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { hasSeenOnboarding } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
@@ -68,6 +69,7 @@ describe('온보딩 뷰', () => {
 
     expect(hasSeenOnboarding()).toBe(true)
     expect(shouldShowHomeCoachMark()).toBe(false)
+    expect(consumeAppInstallPrompt()).toBe(true)
     expect(replace).toHaveBeenCalledWith('/')
   })
 

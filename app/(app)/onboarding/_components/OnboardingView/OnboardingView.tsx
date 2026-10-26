@@ -8,6 +8,7 @@ import { Fragment, useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
 import { cn } from '@/app/_global/_services/cn.service'
+import { markAppInstallPromptPending } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import {
   markHomeCoachMarkPending,
   markHomeCoachMarkSeen,
@@ -25,7 +26,10 @@ export function OnboardingView() {
   const finishOnboarding = (shouldShowCoachMark: boolean) => {
     markOnboardingSeen()
     if (shouldShowCoachMark) markHomeCoachMarkPending()
-    else markHomeCoachMarkSeen()
+    else {
+      markHomeCoachMarkSeen()
+      markAppInstallPromptPending()
+    }
     router.replace('/')
   }
 

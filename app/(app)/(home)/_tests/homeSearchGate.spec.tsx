@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { notificationQueries } from '@/app/_global/_queries/notification.queries'
+import { markAppInstallPromptPending } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import {
   markHomeCoachMarkPending,
   shouldShowHomeCoachMark,
@@ -127,7 +128,7 @@ describe('홈 검색 게이트', () => {
     expect(screen.queryByLabelText('새 알림')).not.toBeInTheDocument()
   })
 
-  it('온보딩 직후 홈 코치마크를 3단계로 보여주고 완료하면 닫는다', async () => {
+  it('온보딩 직후 홈 코치마크를 3단계로 보여주고 완료하면 앱 설치 안내를 띄운다', async () => {
     markHomeCoachMarkPending()
     renderHome()
 
@@ -146,5 +147,23 @@ describe('홈 검색 게이트', () => {
 
     expect(screen.queryByRole('dialog', { name: '홈 사용 안내' })).not.toBeInTheDocument()
     expect(shouldShowHomeCoachMark()).toBe(false)
+
+    const appInstallDialog = await screen.findByRole('dialog', {
+      name: '팔랑 앱에서 함께 읽어보세요',
+    })
+    expect(appInstallDialog).toHaveAccessibleDescription(
+      '앱에서 다른 독자들의 생각을 읽고,\n나의 생각도 남겨보세요.',
+    )
+    expect(screen.getByRole('button', { name: '웹에서 계속보기' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '앱으로 열기' })).toBeInTheDocument()
+  })
+
+  it('온보딩을 건너뛰면 홈에서 앱 설치 안내를 띄운다', async () => {
+    markAppInstallPromptPending()
+    renderHome()
+
+    expect(
+      await screen.findByRole('dialog', { name: '팔랑 앱에서 함께 읽어보세요' }),
+    ).toBeInTheDocument()
   })
 })

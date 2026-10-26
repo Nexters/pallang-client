@@ -11,10 +11,12 @@ import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { notificationQueries } from '@/app/_global/_queries/notification.queries'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
+import { consumeAppInstallPrompt } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import { shouldShowHomeCoachMark } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import Logo from '@/public/images/logo.svg'
 
 import { useOnboardingGate } from '../../_hooks/useOnboardingGate'
+import { AppInstallDialog } from '../AppInstallDialog/AppInstallDialog'
 import { HomeCoachMarkOverlay } from '../HomeCoachMarkOverlay/HomeCoachMarkOverlay'
 import { HomeSection } from '../HomeSection/HomeSection'
 
@@ -34,6 +36,7 @@ export function HomePageView() {
     enabled: isAuthenticated,
   })
   const [showCoachMark, setShowCoachMark] = useState(false)
+  const [showAppInstallDialog, setShowAppInstallDialog] = useState(false)
 
   useEffect(() => {
     router.prefetch(BOOK_SEARCH_PATH)
@@ -42,7 +45,9 @@ export function HomePageView() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setShowCoachMark(shouldShowHomeCoachMark())
+      const shouldShowCoachMark = shouldShowHomeCoachMark()
+      setShowCoachMark(shouldShowCoachMark)
+      if (!shouldShowCoachMark && consumeAppInstallPrompt()) setShowAppInstallDialog(true)
     })
 
     return () => {
@@ -108,9 +113,16 @@ export function HomePageView() {
         <HomeCoachMarkOverlay
           onFinish={() => {
             setShowCoachMark(false)
+            setShowAppInstallDialog(true)
           }}
         />
       )}
+      <AppInstallDialog
+        open={showAppInstallDialog}
+        onClose={() => {
+          setShowAppInstallDialog(false)
+        }}
+      />
     </>
   )
 }
