@@ -10,10 +10,21 @@ describe('isAllowedCoverUrl', () => {
     expect(isAllowedCoverUrl('https://aladin.co.kr/cover.jpg')).toBe(true)
   })
 
+  it('카카오 책 검색 썸네일 CDN의 https URL을 허용한다', () => {
+    expect(
+      isAllowedCoverUrl(
+        'https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F7070210',
+      ),
+    ).toBe(true)
+  })
+
   it('다른 도메인은 거부한다 — 접미사 흉내도 막는다', () => {
     expect(isAllowedCoverUrl('https://evil.com/cover.jpg')).toBe(false)
     expect(isAllowedCoverUrl('https://aladin.co.kr.evil.com/cover.jpg')).toBe(false)
     expect(isAllowedCoverUrl('https://notaladin.co.kr/cover.jpg')).toBe(false)
+    expect(isAllowedCoverUrl('https://search1.kakaocdn.net.evil.com/cover.jpg')).toBe(false)
+    expect(isAllowedCoverUrl('https://evil.search1.kakaocdn.net/cover.jpg')).toBe(false)
+    expect(isAllowedCoverUrl('https://kakaocdn.net/cover.jpg')).toBe(false)
   })
 
   it('https가 아니면 거부한다', () => {

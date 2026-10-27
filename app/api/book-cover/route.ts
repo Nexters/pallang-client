@@ -2,9 +2,9 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { isAllowedCoverUrl } from './coverHost.service'
 
-// GET /api/book-cover?url=<알라딘 표지 URL>
+// GET /api/book-cover?url=<외부 검색 표지 URL(카카오·알라딘)>
 // 도서 직접 등록이 multipart(coverImage 파일)로 바뀌면서 표지 URL을 서버에 넘길 수 없게 됐다.
-// 브라우저에서 알라딘 이미지를 직접 fetch하면 CORS로 막히므로, 서버가 대신 받아 바이트를 돌려준다.
+// 브라우저에서 표지 이미지를 직접 fetch하면 CORS로 막히므로, 서버가 대신 받아 바이트를 돌려준다.
 // 허용 호스트는 coverHost.service가 잠근다(SSRF 방지).
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const url = request.nextUrl.searchParams.get('url')
