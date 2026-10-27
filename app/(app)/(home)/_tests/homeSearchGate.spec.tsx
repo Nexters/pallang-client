@@ -7,7 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { notificationQueries } from '@/app/_global/_queries/notification.queries'
-import { markAppInstallPromptPending } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
+import {
+  consumeAppInstallPrompt,
+  markAppInstallPromptPending,
+} from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import {
   markHomeCoachMarkPending,
   shouldShowHomeCoachMark,
@@ -15,10 +18,15 @@ import {
 
 import { HomePageView } from '../_components/HomePageView/HomePageView'
 
-const { authState, prefetchMock, pushMock } = vi.hoisted(() => ({
+const { authState, isNativePlatformMock, prefetchMock, pushMock } = vi.hoisted(() => ({
   authState: { isAuthenticated: false },
+  isNativePlatformMock: vi.fn(),
   prefetchMock: vi.fn(),
   pushMock: vi.fn(),
+}))
+
+vi.mock('@capacitor/core', () => ({
+  Capacitor: { isNativePlatform: isNativePlatformMock },
 }))
 
 vi.mock('next/navigation', () => ({
@@ -70,6 +78,7 @@ describe('홈 검색 게이트', () => {
   beforeEach(() => {
     window.localStorage.clear()
     authState.isAuthenticated = false
+    isNativePlatformMock.mockReturnValue(false)
     prefetchMock.mockClear()
     pushMock.mockClear()
   })
@@ -165,5 +174,17 @@ describe('홈 검색 게이트', () => {
     expect(
       await screen.findByRole('dialog', { name: '팔랑 앱에서 함께 읽어보세요' }),
     ).toBeInTheDocument()
+  })
+
+  it('앱에서 온보딩을 건너뛰면 설치 안내를 띄우지 않는다', async () => {
+    isNativePlatformMock.mockReturnValue(true)
+    markAppInstallPromptPending()
+    renderHome()
+
+    await waitFor(() => {
+      expect(consumeAppInstallPrompt()).toBe(false)
+    })
+
+    expect(screen.queryByRole('dialog', { name: '팔랑 앱에서 함께 읽어보세요' })).toBeNull()
   })
 })

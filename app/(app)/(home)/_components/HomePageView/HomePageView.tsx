@@ -1,5 +1,6 @@
 'use client'
 
+import { Capacitor } from '@capacitor/core'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -47,7 +48,9 @@ export function HomePageView() {
     const frame = window.requestAnimationFrame(() => {
       const shouldShowCoachMark = shouldShowHomeCoachMark()
       setShowCoachMark(shouldShowCoachMark)
-      if (!shouldShowCoachMark && consumeAppInstallPrompt()) setShowAppInstallDialog(true)
+      if (!shouldShowCoachMark && consumeAppInstallPrompt() && !Capacitor.isNativePlatform()) {
+        setShowAppInstallDialog(true)
+      }
     })
 
     return () => {
@@ -113,7 +116,7 @@ export function HomePageView() {
         <HomeCoachMarkOverlay
           onFinish={() => {
             setShowCoachMark(false)
-            setShowAppInstallDialog(true)
+            if (!Capacitor.isNativePlatform()) setShowAppInstallDialog(true)
           }}
         />
       )}
