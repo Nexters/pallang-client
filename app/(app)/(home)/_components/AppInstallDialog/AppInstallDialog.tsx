@@ -2,14 +2,25 @@
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { Dialog } from '@/app/_global/_components/Dialog/Dialog'
+import {
+  getAppStoreUrl,
+  type MobileWebPlatform,
+} from '@/app/_global/_services/mobileWebPlatform.service'
 
 type AppInstallDialogProps = {
   open: boolean
   onClose: () => void
+  platform: MobileWebPlatform | null
 }
 
 /** 코치마크를 마친 뒤 앱에서 이어 읽기를 권하는 안내다. */
-export function AppInstallDialog({ open, onClose }: AppInstallDialogProps) {
+export function AppInstallDialog({ open, onClose, platform }: AppInstallDialogProps) {
+  const handleOpenAppClick = () => {
+    if (!platform) return
+
+    window.location.assign(getAppStoreUrl(platform))
+  }
+
   return (
     <Dialog.Root
       open={open}
@@ -28,10 +39,10 @@ export function AppInstallDialog({ open, onClose }: AppInstallDialogProps) {
               </Dialog.Description>
             </Dialog.Header>
             <Dialog.Footer>
-              <Button variant="back" className="h-[54px]">
+              <Button variant="back" className="h-[54px]" onClick={onClose}>
                 웹에서 계속보기
               </Button>
-              <Button variant="activated" className="h-[54px]">
+              <Button variant="activated" className="h-[54px]" onClick={handleOpenAppClick}>
                 앱으로 열기
               </Button>
             </Dialog.Footer>

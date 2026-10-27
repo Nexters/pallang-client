@@ -1,6 +1,5 @@
 'use client'
 
-import { Capacitor } from '@capacitor/core'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -11,6 +10,10 @@ import { TabScreenLayout } from '@/app/_global/_components/TabScreenLayout/TabSc
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { notificationQueries } from '@/app/_global/_queries/notification.queries'
+import {
+  getMobileWebPlatform,
+  type MobileWebPlatform,
+} from '@/app/_global/_services/mobileWebPlatform.service'
 import { GRID_BACKGROUND_CLASS_NAME } from '@/app/_global/_styles/background.constant'
 import { consumeAppInstallPrompt } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import { shouldShowHomeCoachMark } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
@@ -38,6 +41,7 @@ export function HomePageView() {
   })
   const [showCoachMark, setShowCoachMark] = useState(false)
   const [showAppInstallDialog, setShowAppInstallDialog] = useState(false)
+  const [appInstallPlatform, setAppInstallPlatform] = useState<MobileWebPlatform | null>(null)
 
   useEffect(() => {
     router.prefetch(BOOK_SEARCH_PATH)
@@ -48,7 +52,9 @@ export function HomePageView() {
     const frame = window.requestAnimationFrame(() => {
       const shouldShowCoachMark = shouldShowHomeCoachMark()
       setShowCoachMark(shouldShowCoachMark)
-      if (!shouldShowCoachMark && consumeAppInstallPrompt() && !Capacitor.isNativePlatform()) {
+      const platform = getMobileWebPlatform()
+      if (!shouldShowCoachMark && consumeAppInstallPrompt() && platform) {
+        setAppInstallPlatform(platform)
         setShowAppInstallDialog(true)
       }
     })
@@ -116,12 +122,17 @@ export function HomePageView() {
         <HomeCoachMarkOverlay
           onFinish={() => {
             setShowCoachMark(false)
-            if (!Capacitor.isNativePlatform()) setShowAppInstallDialog(true)
+            const platform = getMobileWebPlatform()
+            if (platform) {
+              setAppInstallPlatform(platform)
+              setShowAppInstallDialog(true)
+            }
           }}
         />
       )}
       <AppInstallDialog
         open={showAppInstallDialog}
+        platform={appInstallPlatform}
         onClose={() => {
           setShowAppInstallDialog(false)
         }}

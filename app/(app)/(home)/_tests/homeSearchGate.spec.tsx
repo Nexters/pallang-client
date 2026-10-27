@@ -18,15 +18,15 @@ import {
 
 import { HomePageView } from '../_components/HomePageView/HomePageView'
 
-const { authState, isNativePlatformMock, prefetchMock, pushMock } = vi.hoisted(() => ({
+const { authState, getMobileWebPlatformMock, prefetchMock, pushMock } = vi.hoisted(() => ({
   authState: { isAuthenticated: false },
-  isNativePlatformMock: vi.fn(),
+  getMobileWebPlatformMock: vi.fn(),
   prefetchMock: vi.fn(),
   pushMock: vi.fn(),
 }))
 
-vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: isNativePlatformMock },
+vi.mock('@/app/_global/_services/mobileWebPlatform.service', () => ({
+  getMobileWebPlatform: getMobileWebPlatformMock,
 }))
 
 vi.mock('next/navigation', () => ({
@@ -78,7 +78,7 @@ describe('홈 검색 게이트', () => {
   beforeEach(() => {
     window.localStorage.clear()
     authState.isAuthenticated = false
-    isNativePlatformMock.mockReturnValue(false)
+    getMobileWebPlatformMock.mockReturnValue('ios')
     prefetchMock.mockClear()
     pushMock.mockClear()
   })
@@ -177,7 +177,7 @@ describe('홈 검색 게이트', () => {
   })
 
   it('앱에서 온보딩을 건너뛰면 설치 안내를 띄우지 않는다', async () => {
-    isNativePlatformMock.mockReturnValue(true)
+    getMobileWebPlatformMock.mockReturnValue(null)
     markAppInstallPromptPending()
     renderHome()
 
