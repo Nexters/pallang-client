@@ -8,7 +8,11 @@ import { Fragment, useState } from 'react'
 import { Button } from '@/app/_global/_components/Button/Button'
 import { useHardwareBack } from '@/app/_global/_hooks/useHardwareBack'
 import { cn } from '@/app/_global/_services/cn.service'
-import { markHomeCoachMarkPending } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
+import { markAppInstallPromptPending } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
+import {
+  markHomeCoachMarkPending,
+  markHomeCoachMarkSeen,
+} from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { markOnboardingSeen } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
 import { ONBOARDING_STEPS } from '../../_data/onboarding.constant'
@@ -19,15 +23,19 @@ export function OnboardingView() {
 
   const isLastStep = stepIndex === ONBOARDING_STEPS.length - 1
 
-  const finishOnboarding = () => {
+  const finishOnboarding = (shouldShowCoachMark: boolean) => {
     markOnboardingSeen()
-    markHomeCoachMarkPending()
+    if (shouldShowCoachMark) markHomeCoachMarkPending()
+    else {
+      markHomeCoachMarkSeen()
+      markAppInstallPromptPending()
+    }
     router.replace('/')
   }
 
   const handleNextClick = () => {
     if (isLastStep) {
-      finishOnboarding()
+      finishOnboarding(true)
       return
     }
     setStepIndex((index) => index + 1)
@@ -109,7 +117,9 @@ export function OnboardingView() {
         >
           <button
             type="button"
-            onClick={finishOnboarding}
+            onClick={() => {
+              finishOnboarding(false)
+            }}
             tabIndex={isLastStep ? -1 : undefined}
             className="press text-body-16md text-text-primary/80"
           >

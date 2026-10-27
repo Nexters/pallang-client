@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
+import { consumeAppInstallPrompt } from '@/app/_shared/onboarding/_services/appInstallPrompt.service'
 import { shouldShowHomeCoachMark } from '@/app/_shared/onboarding/_services/homeCoachMark.service'
 import { hasSeenOnboarding } from '@/app/_shared/onboarding/_services/onboardingSeen.service'
 
@@ -61,13 +62,14 @@ describe('온보딩 뷰', () => {
     expect(screen.queryByRole('heading', { name: /안녕하세요/ })).toBeNull()
   })
 
-  it('건너뛰기를 누르면 본 것으로 기록하고 홈으로 돌아간다', async () => {
+  it('건너뛰기를 누르면 코치마크도 본 것으로 기록하고 홈으로 돌아간다', async () => {
     renderView()
 
     await userEvent.click(screen.getByRole('button', { name: '건너뛰기' }))
 
     expect(hasSeenOnboarding()).toBe(true)
-    expect(shouldShowHomeCoachMark()).toBe(true)
+    expect(shouldShowHomeCoachMark()).toBe(false)
+    expect(consumeAppInstallPrompt()).toBe(true)
     expect(replace).toHaveBeenCalledWith('/')
   })
 
