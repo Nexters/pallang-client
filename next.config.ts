@@ -28,7 +28,9 @@ const nextConfig: NextConfig = {
     // 프로필 이미지는 도메인이 유동적이라(카카오 CDN 등) next/image 대상에서 제외한다 — raw <img> 유지.
     remotePatterns: [
       { protocol: 'https', hostname: 'image.aladin.co.kr', pathname: '/product/**' },
-      // 카카오 책 검색 응답은 search1 CDN의 썸네일 프록시 URL을 표지로 돌려준다.
+      // 카카오 책 검색 표지: 서버는 썸네일(search1 CDN, 120x174) 대신 원본(Daum CDN)을 내려준다.
+      // 썸네일은 원본으로 바꾸기 전에 저장·캐싱된 URL을 위해 남겨둔다.
+      { protocol: 'https', hostname: 't1.daumcdn.net', pathname: '/lbook/**' },
       { protocol: 'https', hostname: 'search1.kakaocdn.net', pathname: '/thumb/**' },
       { protocol: 'https', hostname: 'api.pallang.co.kr', pathname: '/images/**' },
       { protocol: 'https', hostname: 'api-dev.pallang.co.kr', pathname: '/images/**' },
