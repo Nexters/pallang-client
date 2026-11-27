@@ -10,6 +10,7 @@ description: 웹 운영 배포(develop→release, Vercel Production)와 앱 배�
 **`release` 브랜치로 나가는 모든 배포는 예외 없이 이 문서의 절차를 따른다.**
 급해 보이거나 커밋이 하나뿐이어도 단계를 건너뛰지 않는다. 특히:
 
+- 0번(develop이 초록인지 확인) 없이 `release`에 push하지 않는다. 깨진 develop을 밀면 Production 빌드가 실패해 배포가 아예 안 나간다.
 - 1번(fast-forward 확인) 없이 `release`에 push하지 않는다.
 - 3번(사용자 확인) 없이 `release`에 push하지 않는다. 운영 배포는 되돌리기 어렵다.
 - 버전 태그 없이 배포하지 않는다. 배포 시점과 태그가 1:1로 맞아야 롤백할 지점을 찾을 수 있다.
@@ -17,6 +18,26 @@ description: 웹 운영 배포(develop→release, Vercel Production)와 앱 배�
 핫픽스처럼 이 절차로 안 되는 상황이면 **임의로 진행하지 말고 사용자에게 판단을 넘긴다.**
 
 앱 빌드(TestFlight·Play)는 아래 **「앱 배포」** 절이 따로 있다. 웹 배포와 절차가 다르므로 그쪽을 따른다.
+
+## 0. develop이 초록인지 확인
+
+`release` push는 그대로 Production 빌드로 들어간다. **깨진 develop을 밀면 배포가 실패하고
+운영은 직전 배포에 머문다** — 태그와 릴리스만 남고 실제로는 아무것도 안 나간 상태가 된다(v1.4.1 사례).
+
+```bash
+gh run list --branch develop --limit 3   # 최신 커밋의 CI 결과
+```
+
+최신 커밋의 CI가 초록이 아니거나 결과가 없으면 **로컬에서 직접 확인한다.**
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
+```
+
+`pnpm build`까지 반드시 돌린다 — lint·typecheck·test가 다 통과해도 프리렌더 단계에서만
+깨지는 종류가 있다(cacheComponents가 클라이언트 컴포넌트의 현재 시각·랜덤 사용을 빌드에서 막는다).
+
+빨간 상태면 **중단하고 사용자에게 알린다.** 고치기 전에는 배포하지 않는다.
 
 ## 1. fast-forward 가능한지 확인
 
