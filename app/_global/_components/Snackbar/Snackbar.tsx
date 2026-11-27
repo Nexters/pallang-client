@@ -107,7 +107,7 @@ export function Snackbar({
         'data-[state=exiting]:pointer-events-none',
       )}
     >
-      <p className="text-body-14md">
+      <p className="whitespace-pre-line text-body-14md">
         {head && <span className="text-title-14bd text-text-accent">{head}</span>}
         {tail}
       </p>

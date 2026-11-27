@@ -69,6 +69,7 @@ export function MeetingPageView() {
   // 여기서는 흘려보내고, 누를 때 문구로 알린다(inviteLink는 retry:false).
   useEffect(() => {
     if (moreGroupId === null) return
+    queryClient.removeQueries({ queryKey: groupQueries.inviteLink(moreGroupId).queryKey })
     void queryClient.prefetchQuery(groupQueries.inviteLink(moreGroupId))
   }, [moreGroupId, queryClient])
 

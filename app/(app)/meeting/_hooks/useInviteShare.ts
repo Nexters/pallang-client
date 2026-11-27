@@ -32,6 +32,12 @@ export function useInviteShare() {
     setIsSharing(true)
     try {
       const response = await queryClient.fetchQuery(groupQueries.inviteLink(group.groupId))
+      if (response.data?.full) {
+        setMessage(
+          '모임 인원이 꽉 차서 초대를 할 수 없어요!\n모임 설정 변경을 통해 인원을 늘려주세요.',
+        )
+        return
+      }
       const inviteCode = response.data?.inviteCode
       if (!inviteCode) {
         setMessage(OUTCOME_MESSAGE.failed)

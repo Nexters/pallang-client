@@ -48,12 +48,12 @@ const group = {
   extraMemberCount: 2,
 }
 
-type StubOptions = { listStatus?: number; inviteLinkStatus?: number }
+type StubOptions = { listStatus?: number; inviteLinkStatus?: number; full?: boolean }
 
 /** 목록·멤버·초대 링크 API를 URL로 분기해 돌려준다. IntersectionObserver는 happy-dom에 없어 함께 끼운다(useLoadMoreOnVisible). */
 function stubFetch(
   groups: (typeof group)[],
-  { listStatus = 200, inviteLinkStatus = 200 }: StubOptions = {},
+  { listStatus = 200, inviteLinkStatus = 200, full = false }: StubOptions = {},
 ) {
   const json = (body: unknown, status = 200) =>
     Promise.resolve(new Response(JSON.stringify(body), { status }))
@@ -80,7 +80,7 @@ function stubFetch(
           { title: 'GROUP_403_1', status: inviteLinkStatus, detail: '모임장만' },
           inviteLinkStatus,
         )
-      return json({ data: { groupId: 1, inviteCode: 'abc' } })
+      return json({ data: { groupId: 1, inviteCode: 'abc', full } })
     }
     return json({}, 404)
   })
@@ -222,6 +222,26 @@ function defineNavigator(patch: Partial<Navigator>) {
 }
 
 describe('더보기 시트', () => {
+  it('정원이 가득 차면 시트를 닫고 안내하며 공유하지 않는다', async () => {
+    const share = vi.fn<(data?: ShareData) => Promise<void>>().mockResolvedValue(undefined)
+    const restore = defineNavigator({ share })
+    stubFetch([group], { full: true })
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
+    fireEvent.click(await screen.findByRole('button', { name: '초대 링크 보내기' }))
+    const notice = await screen.findByText(
+      (_, element) =>
+        element?.tagName === 'P' &&
+        element.textContent ===
+          '모임 인원이 꽉 차서 초대를 할 수 없어요!\n모임 설정 변경을 통해 인원을 늘려주세요.',
+    )
+    expect(notice).toHaveClass('whitespace-pre-line')
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: '더보기' })).not.toBeInTheDocument()
+    })
+    expect(share).not.toHaveBeenCalled()
+    restore()
+  })
   it('···를 누르면 두 타일이 보인다', async () => {
     stubFetch([group])
     renderPage()
