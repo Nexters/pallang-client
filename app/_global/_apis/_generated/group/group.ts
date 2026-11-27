@@ -11,11 +11,7 @@ import type { DataResponseGroupInviteLinkResponse } from '../models/dataResponse
 
 import type { DataResponseGroupListResponse } from '../models/dataResponseGroupListResponse'
 
-import type { DataResponseGroupMemberListResponse } from '../models/dataResponseGroupMemberListResponse'
-
 import type { DataResponseVoid } from '../models/dataResponseVoid'
-
-import type { GetGroupMembersParams } from '../models/getGroupMembersParams'
 
 import type { GetMyGroupsParams } from '../models/getMyGroupsParams'
 
@@ -38,7 +34,7 @@ export const getGetMyGroupsUrl = (params?: GetMyGroupsParams) => {
 }
 
 /**
- * 현재 로그인한 사용자가 속한 모임을 최근 생성 순으로 조회합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 현재 가입 중인 모임을 최근 생성 순으로 조회합니다(합쳐진 모임, 나간 모임 제외). 카드에는 readingBookCount("총 N권 읽는 중"), latestReadingEndDate와 readingScheduleStatus(날짜 칸), memberPreviews/extraMemberCount(아바타, "+N")를 쓰세요. bookId/bookTitle/startDate/endDate/ended는 배포된 앱 호환용으로 대표 책(가장 먼저 등록된 책) 기준입니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 내 모임 목록
  */
 export const getMyGroups = async (
@@ -56,7 +52,7 @@ export const getCreateGroupUrl = () => {
 }
 
 /**
- * 책 1권을 고정해 모임을 만듭니다. 생성한 사용자는 모임장(HOST)으로 자동 가입됩니다. 책은 생성 이후 변경할 수 없습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 책 1권과 함께 모임을 만듭니다. 생성한 사용자는 모임장(HOST)으로 자동 가입됩니다. 독서 기간은 선택이며, 넣는다면 시작일·종료일을 함께 넣고 둘 다 오늘(한국 시간) 이후여야 합니다. Idempotency-Key 헤더를 보내면 같은 키로 다시 요청해도 모임을 새로 만들지 않고 처음 만든 모임을 돌려줍니다 (응답 유실·이중 탭 대비). Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 모임 생성
  */
 export const createGroup = async (
@@ -76,7 +72,7 @@ export const getRegenerateInviteLinkUrl = (groupId: number) => {
 }
 
 /**
- * 모임장만 재발급할 수 있습니다. 재발급하면 기존 초대 코드는 즉시 무효화됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 모임장만 재발급할 수 있습니다. 재발급하면 기존 초대 코드는 즉시 무효화됩니다. 내보낸 멤버는 내보낸 이후에 발급된 초대로만 다시 참여할 수 있으므로, 다시 들이려면 재발급한 링크를 보내야 합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 초대 링크 재발급
  */
 export const regenerateInviteLink = async (
@@ -94,7 +90,7 @@ export const getJoinGroupUrl = (inviteCode: string) => {
 }
 
 /**
- * 정원이 가득 찼거나 이미 가입한 모임이면 가입할 수 없습니다. 모임 기간이 지났어도 가입할 수 있습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 정원이 가득 찼거나 이미 가입한 모임이면 가입할 수 없습니다. 모임 기간이 지났어도 가입할 수 있습니다. 이 모임에서 내보내진 계정은 내보낸 이후에 새로 발급된 초대 링크로만 다시 참여할 수 있습니다(GROUP_403_3). Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 초대 링크로 모임 가입
  */
 export const joinGroup = async (
@@ -148,7 +144,7 @@ export const getUpdateGroupUrl = (groupId: number) => {
 }
 
 /**
- * 모임장만 이름/인원/기간을 수정할 수 있습니다. 책은 대상이 아닙니다. 인원은 현재 참여 인원보다 적게 줄일 수 없습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 모임장만 이름/인원을 수정할 수 있습니다. 책은 대상이 아닙니다(책 추가/책 설정 API 사용). 인원은 현재 참여 인원보다 적게 줄일 수 없습니다. 설정 화면을 열 때 받은 모임 상세의 version을 함께 보내면, 그사이 다른 곳에서 설정이 바뀐 경우 저장하지 않고 409(GROUP_409_5)를 돌려줍니다 — 최신 값을 다시 조회해 사용자 입력과 비교한 뒤 다시 저장하세요. 기간(startDate/endDate)은 기존 앱 호환용으로, 둘 다 보내면 대표 책(가장 먼저 등록된 책)의 기간을 바꾸고 둘 다 비우면 기간은 그대로 둡니다. 바꾸지 않은 기존 과거 날짜는 그대로 저장할 수 있지만 새로 바꾼 날짜는 오늘(한국 시간) 이후여야 합니다. 한 필드라도 잘못되면 아무것도 저장되지 않습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 방 설정 변경
  */
 export const updateGroup = async (
@@ -164,43 +160,12 @@ export const updateGroup = async (
   })
 }
 
-export const getGetGroupMembersUrl = (groupId: number, params?: GetGroupMembersParams) => {
-  const normalizedParams = new URLSearchParams()
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  })
-
-  const stringifiedParams = normalizedParams.toString()
-
-  return stringifiedParams.length > 0
-    ? `/api/groups/${groupId}/members?${stringifiedParams}`
-    : `/api/groups/${groupId}/members`
-}
-
-/**
- * 모임원만 조회할 수 있습니다. 모임장이 먼저, 그다음 가입 순으로 정렬됩니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
- * @summary 모임 멤버 목록
- */
-export const getGroupMembers = async (
-  groupId: number,
-  params?: GetGroupMembersParams,
-  options?: Parameters<typeof customFetch>[1],
-): Promise<DataResponseGroupMemberListResponse> => {
-  return customFetch<DataResponseGroupMemberListResponse>(getGetGroupMembersUrl(groupId, params), {
-    ...options,
-    method: 'GET',
-  })
-}
-
 export const getGetInviteLinkUrl = (groupId: number) => {
   return `/api/groups/${groupId}/invite-link`
 }
 
 /**
- * 모임장만 조회할 수 있습니다. 초대 코드는 별도 만료 시각이 없고 모임 기간과도 무관하게 계속 유효합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * 모임장만 조회할 수 있습니다. 명단의 '초대 링크 보내기'와 목록 더보기의 초대가 같은 API를 씁니다. 초대 코드는 별도 만료 시각이 없고 모임 기간과도 무관하게 계속 유효합니다. full이 true면(정원 가득) 공유 전에 정원 안내를 보여주세요 — 링크를 받은 사람도 가입 시점에 정원을 다시 확인합니다. 공유만으로는 가입되지 않으며, 받은 사람이 로그인 후 직접 참여해야 합니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
  * @summary 초대 링크 조회
  */
 export const getInviteLink = async (

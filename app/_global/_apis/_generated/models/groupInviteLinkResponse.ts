@@ -6,4 +6,10 @@ export interface GroupInviteLinkResponse {
   groupId: number
   /** 초대 코드. 클라이언트가 이 값으로 딥링크를 구성해 카카오톡 등으로 공유한다. */
   inviteCode: string
+  /** 현재 멤버 수 */
+  memberCount: number
+  /** 모임 정원 */
+  capacity: number
+  /** 정원이 가득 찼는지 여부. true면 공유 전에 정원 안내를 보여주고, 정원 늘리기는 방 설정 변경을 쓴다(링크를 받아도 가입 시점에 다시 정원을 확인한다). */
+  full: boolean
 }

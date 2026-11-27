@@ -11,7 +11,15 @@ export interface AdminGroupSummaryResponse {
   hostNickname: string
   capacity: number
   memberCount: number
-  startDate: string
-  endDate: string
+  /**
+   * 대표 책(가장 먼저 등록된 책)의 시작일. 기간이 없으면 null.
+   * @nullable
+   */
+  startDate?: string | null
+  /**
+   * 대표 책(가장 먼저 등록된 책)의 종료일. 기간이 없으면 null.
+   * @nullable
+   */
+  endDate?: string | null
   createdAt: string
 }

@@ -3,6 +3,8 @@
  */
 import type { CreateOcrResultBody } from '../models/createOcrResultBody'
 
+import type { DataResponseImageCard } from '../models/dataResponseImageCard'
+
 import type { DataResponseOcrRecognize } from '../models/dataResponseOcrRecognize'
 
 import type { DataResponsePageNumbers } from '../models/dataResponsePageNumbers'
@@ -95,6 +97,24 @@ export const updateSpoiler = async (
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(updateSpoiler),
+  })
+}
+
+export const getGetImageCardUrl = (passageId: number) => {
+  return `/api/passages/${passageId}/image-card`
+}
+
+/**
+ * 이미지 저장(꾸미기) 화면의 프레임에 표기할 발췌 문장·책 제목·작가명·발췌 페이지를 반환합니다. 의견·댓글은 포함하지 않습니다. 작가명은 역할 표기를 떼고 옮긴이 등 저자가 아닌 이름은 뺀 값입니다. 공개 대목은 등록자와 무관하게 로그인한 누구나 조회할 수 있고, 모임 전용 대목은 그 모임원만 조회할 수 있습니다. 이미지 합성·저장·공유는 클라이언트에서 처리하며 서버에는 이미지를 저장하지 않습니다. Authorization: Bearer {accessToken} 헤더로 인증합니다.
+ * @summary 이미지 저장용 대목 정보 조회
+ */
+export const getImageCard = async (
+  passageId: number,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DataResponseImageCard> => {
+  return customFetch<DataResponseImageCard>(getGetImageCardUrl(passageId), {
+    ...options,
+    method: 'GET',
   })
 }
 

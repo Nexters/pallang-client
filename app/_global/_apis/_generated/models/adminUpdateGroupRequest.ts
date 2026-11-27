@@ -4,8 +4,8 @@
 
 export interface AdminUpdateGroupRequest {
   /**
-   * @minLength 0
-   * @maxLength 15
+   * 앞뒤 공백 제거 후 1~15자(이모지 등은 보이는 글자 1개를 1자로 셈)
+   * @minLength 1
    */
   name: string
   /**
@@ -13,6 +13,14 @@ export interface AdminUpdateGroupRequest {
    * @maximum 10
    */
   capacity?: number
-  startDate: string
-  endDate: string
+  /**
+   * 대표 책의 시작일. 종료일과 함께 비우면 기간 없음.
+   * @nullable
+   */
+  startDate?: string | null
+  /**
+   * 대표 책의 종료일. 시작일과 함께 비우면 기간 없음.
+   * @nullable
+   */
+  endDate?: string | null
 }

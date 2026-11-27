@@ -7,4 +7,8 @@ import type { PageInfo } from './pageInfo'
 export interface GroupMemberListResponse {
   members: GroupMemberResponse[]
   pageInfo: PageInfo
+  /** 현재 멤버 수(명단 제목의 "5 / 10명"). 페이지 크기와 무관한 전체 기준 */
+  memberCount: number
+  /** 모임 정원 */
+  capacity: number
 }

@@ -4,8 +4,8 @@
 
 export interface UpdateGroupRequest {
   /**
-   * @minLength 0
-   * @maxLength 15
+   * 앞뒤 공백 제거 후 1~15자(이모지 등은 보이는 글자 1개를 1자로 셈)
+   * @minLength 1
    */
   name: string
   /**
@@ -13,6 +13,21 @@ export interface UpdateGroupRequest {
    * @maximum 10
    */
   capacity?: number
-  startDate: string
-  endDate: string
+  /**
+   * [호환용] 대표 책의 시작일. 비우면 기간을 바꾸지 않는다. 새 앱은 책 설정 API를 쓴다.
+   * @deprecated
+   * @nullable
+   */
+  startDate?: string | null
+  /**
+   * [호환용] 대표 책의 종료일. 비우면 기간을 바꾸지 않는다. 새 앱은 책 설정 API를 쓴다.
+   * @deprecated
+   * @nullable
+   */
+  endDate?: string | null
+  /**
+   * 설정 화면을 열 때 받은 모임 상세의 version. 보내면 그사이 설정이 바뀐 경우 409(GROUP_409_5)로 거절한다. 비우면 검사하지 않는다(배포된 앱 호환).
+   * @nullable
+   */
+  version?: number | null
 }

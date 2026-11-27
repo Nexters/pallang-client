@@ -10,4 +10,8 @@ export interface GroupMemberResponse {
   profileImageUrl?: string | null
   role: GroupMemberResponseRole
   joinedAt: string
+  /** 모임장 여부(계정 ID로 판별). 본인이 모임장이면 isMe와 함께 true */
+  isHost: boolean
+  /** 조회한 본인 여부(계정 ID로 판별) */
+  isMe: boolean
 }

@@ -4,8 +4,8 @@
 
 export interface CreateGroupRequest {
   /**
-   * @minLength 0
-   * @maxLength 15
+   * 앞뒤 공백 제거 후 1~15자(이모지 등은 보이는 글자 1개를 1자로 셈)
+   * @minLength 1
    */
   name: string
   bookId: number
@@ -14,6 +14,14 @@ export interface CreateGroupRequest {
    * @maximum 10
    */
   capacity?: number
-  startDate: string
-  endDate: string
+  /**
+   * 독서 시작일. 종료일과 함께 넣거나 함께 비운다.
+   * @nullable
+   */
+  startDate?: string | null
+  /**
+   * 독서 종료일. 시작일과 함께 넣거나 함께 비운다.
+   * @nullable
+   */
+  endDate?: string | null
 }

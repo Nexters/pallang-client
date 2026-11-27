@@ -5,6 +5,7 @@
 export interface GroupDetailResponse {
   groupId: number
   name: string
+  /** 대표 책(가장 먼저 등록된 책) ID */
   bookId: number
   bookTitle: string
   bookAuthor: string
@@ -14,10 +15,20 @@ export interface GroupDetailResponse {
   hostNickname: string
   capacity: number
   memberCount: number
-  startDate: string
-  endDate: string
-  /** 종료일이 지났는지 여부. 안내용 배지 표시에만 쓰이며, 이 값이 true여도 모임 목록 노출/흔적·의견 작성 등은 계속 가능합니다. */
+  /**
+   * 대표 책(가장 먼저 등록된 책)의 시작일. 기간이 없으면 null.
+   * @nullable
+   */
+  startDate?: string | null
+  /**
+   * 대표 책(가장 먼저 등록된 책)의 종료일. 기간이 없으면 null.
+   * @nullable
+   */
+  endDate?: string | null
+  /** 대표 책이 완독 상태인지 여부(종료일 다음 날부터 true, 기간이 없으면 false). 안내용 배지 표시에만 쓰이며, 이 값이 true여도 모임 목록 노출/흔적·의견 작성 등은 계속 가능합니다. */
   ended: boolean
   /** 현재 로그인한 유저가 이 모임의 모임장인지 여부. 방 설정 변경 등 모임장 전용 화면 노출 여부를 프론트에서 판단하는 데 사용합니다. */
   isHost: boolean
+  /** 모임 설정 버전. 방 설정 변경 시 받은 값을 그대로 version으로 보내면, 그사이 다른 곳에서 설정이 바뀐 경우 저장하지 않고 409(GROUP_409_5)를 돌려준다. */
+  version: number
 }
