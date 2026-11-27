@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
@@ -13,6 +14,7 @@ import { MeetingBookItem } from '../MeetingBookItem/MeetingBookItem'
 
 export function MeetingBookManagement({ groupId }: { groupId: number }) {
   const books = useInfiniteQuery(groupQueries.books(groupId))
+  const router = useRouter()
   const [selectedBook, setSelectedBook] = useState<GroupBook | null>(null)
   const { register } = useHardwareBackRegistry()
   useEffect(() => {
@@ -84,7 +86,10 @@ export function MeetingBookManagement({ groupId }: { groupId: number }) {
       >
         <Button
           type="button"
-          aria-disabled="true"
+          onClick={() => {
+            if (selectedBook)
+              router.push(`/meeting/${String(groupId)}/books/${String(selectedBook.entryId)}/edit`)
+          }}
           className="w-full bg-bg-surface font-pretendard text-title-18bd leading-[1.4] text-text-primary"
         >
           책 설정 변경하기

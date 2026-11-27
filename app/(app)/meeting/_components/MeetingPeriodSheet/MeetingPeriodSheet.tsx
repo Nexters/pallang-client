@@ -28,6 +28,7 @@ type MeetingPeriodSheetProps = {
   onClose: () => void
   onConfirm: (period: MeetingPeriod) => void
   disablePastDates?: boolean
+  originalDates?: { startDate: string; endDate: string }
 }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -49,6 +50,7 @@ export function MeetingPeriodSheet({
   onClose,
   onConfirm,
   disablePastDates = false,
+  originalDates,
 }: MeetingPeriodSheetProps) {
   const [draft, setDraft] = useState<MeetingPeriod>({ startDate, endDate })
   // 열 때 정한다 — 첫 렌더(프리렌더)에는 현재 시각이 없어 '이번 달'을 만들 수 없다
@@ -153,13 +155,15 @@ export function MeetingPeriodSheet({
           const isStart = date === draft.startDate
           const isEnd = date === draft.endDate
           const isEdge = isStart || isEnd
+          const selectingStart = !draft.startDate || !!draft.endDate || date < draft.startDate
+          const originalDate = selectingStart ? originalDates?.startDate : originalDates?.endDate
           return (
             <button
               key={date}
               type="button"
               aria-label={formatDateDots(date)}
               aria-pressed={isEdge}
-              disabled={minimumDate !== undefined && date < minimumDate}
+              disabled={minimumDate !== undefined && date < minimumDate && date !== originalDate}
               className={cn(
                 'press my-0.5 flex h-10 justify-center text-body-16md text-text-primary disabled:opacity-30',
                 // 시작~종료 사이는 띠로 잇고, 양끝은 원 중심부터 안쪽 절반만 칠해 띠가 원 밖으로 안 나간다

@@ -93,6 +93,13 @@ describe('방 설정 변경', () => {
       expect(screen.queryByRole('heading', { name: '더보기' })).not.toBeInTheDocument()
     })
   })
+  it('책 설정 변경하기는 선택한 책 설정 화면으로 이동한다', async () => {
+    getGroupDetail.mockResolvedValue({ data: detail })
+    renderView()
+    fireEvent.click(await screen.findByRole('button', { name: '모순 편집' }))
+    fireEvent.click(await screen.findByRole('button', { name: '책 설정 변경하기' }))
+    expect(routerMock.push).toHaveBeenCalledWith('/meeting/1/books/1/edit')
+  })
   it('불러오는 동안 제목은 남고 폼 자리만 골격이다', () => {
     getGroupDetail.mockReturnValue(new Promise(() => undefined))
     renderView() // <MeetingEditView groupId={1} />

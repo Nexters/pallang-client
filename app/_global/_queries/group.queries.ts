@@ -80,6 +80,22 @@ export const groupQueries = {
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
       },
     }),
+  book: (groupId: number, entryId: number) =>
+    queryOptions({
+      queryKey: [...groupQueries.all(), 'book', groupId, entryId],
+      queryFn: async () => {
+        for (let page = 0; ; page += 1) {
+          const response = await getGroupBooks(groupId, {
+            status: 'ALL',
+            page,
+            size: GROUP_PAGE_SIZE_MAX,
+          })
+          const book = response.data?.books.find((item) => item.entryId === entryId)
+          if (book) return book
+          if (!response.data?.pageInfo.hasNext) return null
+        }
+      },
+    }),
   /** 카드 아바타용 첫 페이지만 — 요약 응답에 멤버 프로필이 없어 카드마다 한 번 받는다 */
   members: (groupId: number, size: number) =>
     queryOptions({

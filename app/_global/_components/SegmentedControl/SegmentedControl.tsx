@@ -9,16 +9,28 @@ type SegmentedControlProps = {
   options: readonly SegmentedControlOption[]
   value: string
   onChange: (value: string) => void
+  variant?: 'default' | 'light'
 }
 
-export function SegmentedControl({ label, options, value, onChange }: SegmentedControlProps) {
+export function SegmentedControl({
+  label,
+  options,
+  value,
+  onChange,
+  variant = 'default',
+}: SegmentedControlProps) {
   return (
     // 시안(3079:36162)의 Toggle — 트랙 48px에 안쪽 여백 3px. 고른 쪽만 굵고 크게 읽히는데,
     // 글자 크기가 상태마다 갈리므로 트랙 높이를 h-12로 못 박아 고를 때 줄이 흔들리지 않게 한다.
     <div
       role="radiogroup"
       aria-label={label}
-      className="flex h-12 gap-[3px] rounded-full bg-bg-tertiary p-[3px]"
+      className={cn(
+        'flex rounded-full',
+        variant === 'light'
+          ? 'h-14 w-fit gap-1 bg-bg-surface p-1'
+          : 'h-12 gap-[3px] bg-bg-tertiary p-[3px]',
+      )}
     >
       {options.map((option) => {
         const isSelected = option.value === value
@@ -35,9 +47,14 @@ export function SegmentedControl({ label, options, value, onChange }: SegmentedC
               // press와 transition-colors를 함께 두면 transition-property가 서로를 덮는다.
               // 색과 눌림을 한 목록으로 합쳐 둘 다 살린다.
               'press flex flex-1 items-center justify-center rounded-full text-center transition-[color,background-color,scale] duration-instant ease-standard',
-              isSelected
-                ? 'bg-bg-default text-body-16bd text-text-secondary'
-                : 'text-body-14md text-text-inverse opacity-50',
+              variant === 'light'
+                ? cn(
+                    'min-w-[94px] px-6 py-2.5 text-body-14md text-text-primary',
+                    isSelected && 'bg-bg-default',
+                  )
+                : isSelected
+                  ? 'bg-bg-default text-body-16bd text-text-secondary'
+                  : 'text-body-14md text-text-inverse opacity-50',
             )}
           >
             {option.label}
