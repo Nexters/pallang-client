@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { Activity } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
@@ -93,6 +94,35 @@ afterEach(() => {
 })
 
 describe('모임 만들기', () => {
+  it('화면을 나갔다 돌아오면 입력한 이름과 기간을 초기화한다', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 7, 21))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const view = (mode: 'visible' | 'hidden') => (
+      <QueryClientProvider client={queryClient}>
+        <HardwareBackProvider>
+          <LoginGateProvider>
+            <Activity mode={mode}>
+              <MeetingCreateView />
+            </Activity>
+          </LoginGateProvider>
+        </HardwareBackProvider>
+      </QueryClientProvider>
+    )
+    const { rerender } = render(view('visible'))
+    fireEvent.change(screen.getByLabelText(/모임명/), { target: { value: '새 모임' } })
+    fireEvent.click(screen.getByRole('button', { name: /시작일과 종료일을 선택해주세요/ }))
+    fireEvent.click(await screen.findByRole('button', { name: '2026.08.21' }))
+    fireEvent.click(screen.getByRole('button', { name: '2026.08.22' }))
+    fireEvent.click(screen.getByRole('button', { name: '확인' }))
+    expect(screen.getByRole('button', { name: /2026.08.21 ~ 2026.08.22/ })).toBeInTheDocument()
+    rerender(view('hidden'))
+    rerender(view('visible'))
+    expect(screen.getByLabelText(/모임명/)).toHaveValue('')
+    expect(
+      screen.getByRole('button', { name: /시작일과 종료일을 선택해주세요/ }),
+    ).toBeInTheDocument()
+  })
   it('제목·CTA가 있고 다 채우기 전까지 CTA가 꺼져 있다', () => {
     renderView()
     expect(screen.getByRole('heading', { name: '모임 만들기' })).toBeInTheDocument()

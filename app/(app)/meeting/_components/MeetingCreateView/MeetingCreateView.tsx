@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 
 import { Button } from '@/app/_global/_components/Button/Button'
 import { ScreenLayout } from '@/app/_global/_components/ScreenLayout/ScreenLayout'
@@ -51,6 +51,11 @@ export function MeetingCreateView({ seedBookId = null }: MeetingCreateViewProps)
   })
   // 사용자가 고친 값. null이면 아직 손대지 않은 것 — 받아 온 책을 채운 폼을 그대로 보여준다(effect로 복사하지 않는다)
   const [edited, setEdited] = useState<MeetingFormValues | null>(null)
+  useLayoutEffect(() => {
+    return () => {
+      setEdited(null)
+    }
+  }, [])
   const values = edited ?? seedMeetingForm(seedBook.data?.data)
   // 책을 받기 전에 폼을 열면 그사이 입력한 값이 책 없는 폼으로 굳는다 — 받을 때까지 골격으로 둔다.
   // 받지 못하면(지운 책 등) 빈 폼으로 열어 직접 고르게 한다
