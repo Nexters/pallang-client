@@ -16,6 +16,7 @@ import {
   isValidMeetingPeriod,
   pickRangeDate,
   toIsoDate,
+  toKstIsoDate,
 } from '../../_services/meetingDate.service'
 
 export type MeetingPeriod = { startDate: string; endDate: string }
@@ -26,6 +27,7 @@ type MeetingPeriodSheetProps = {
   endDate: string
   onClose: () => void
   onConfirm: (period: MeetingPeriod) => void
+  disablePastDates?: boolean
 }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -46,6 +48,7 @@ export function MeetingPeriodSheet({
   endDate,
   onClose,
   onConfirm,
+  disablePastDates = false,
 }: MeetingPeriodSheetProps) {
   const [draft, setDraft] = useState<MeetingPeriod>({ startDate, endDate })
   // 열 때 정한다 — 첫 렌더(프리렌더)에는 현재 시각이 없어 '이번 달'을 만들 수 없다
@@ -82,6 +85,7 @@ export function MeetingPeriodSheet({
   if (!isHydrated) return null
 
   const today = toIsoDate(new Date())
+  const minimumDate = disablePastDates ? toKstIsoDate(new Date()) : undefined
   const shownMonth = month ?? initialMonth(startDate)
   const cells = buildMonthGrid(shownMonth.getFullYear(), shownMonth.getMonth())
   const complete = isValidMeetingPeriod(draft.startDate, draft.endDate)
@@ -155,8 +159,9 @@ export function MeetingPeriodSheet({
               type="button"
               aria-label={formatDateDots(date)}
               aria-pressed={isEdge}
+              disabled={minimumDate !== undefined && date < minimumDate}
               className={cn(
-                'press my-0.5 flex h-10 justify-center text-body-16md text-text-primary',
+                'press my-0.5 flex h-10 justify-center text-body-16md text-text-primary disabled:opacity-30',
                 // 시작~종료 사이는 띠로 잇고, 양끝은 원 중심부터 안쪽 절반만 칠해 띠가 원 밖으로 안 나간다
                 complete && date > draft.startDate && date < draft.endDate && 'bg-orange-50',
                 complete &&

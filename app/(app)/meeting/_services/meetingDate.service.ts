@@ -33,6 +33,18 @@ export function toIsoDate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+/** 모임 생성 날짜 기준은 기기 시간대가 아닌 한국 날짜다. */
+export function toKstIsoDate(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? ''
+  return `${get('year')}-${get('month')}-${get('day')}`
+}
+
 /** 달력 한 달 — 일요일 시작, 앞쪽 빈칸은 null. 6행 고정이라 달을 넘겨도 시트 높이가 튀지 않는다 */
 export function buildMonthGrid(year: number, monthIndex: number): (string | null)[] {
   const first = new Date(year, monthIndex, 1)

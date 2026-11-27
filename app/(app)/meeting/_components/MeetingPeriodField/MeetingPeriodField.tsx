@@ -64,6 +64,7 @@ export function MeetingPeriodField({
       )}
       <MeetingPeriodSheet
         open={open}
+        disablePastDates={optional}
         startDate={startDate}
         endDate={endDate}
         onClose={() => {
