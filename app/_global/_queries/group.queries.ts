@@ -9,7 +9,7 @@ import {
   previewInvitation,
   updateGroup,
 } from '../_apis/_generated/group/group'
-import { getGroupBooks } from '../_apis/_generated/group-book/group-book'
+import { getGroupBooks, updateGroupBook } from '../_apis/_generated/group-book/group-book'
 import { getGroupMembers } from '../_apis/_generated/group-member/group-member'
 import type { CreateGroupRequest } from '../_apis/_generated/models/createGroupRequest'
 import type { GroupBookResponse } from '../_apis/_generated/models/groupBookResponse'
@@ -17,6 +17,7 @@ import type { GroupDetailResponse } from '../_apis/_generated/models/groupDetail
 import type { GroupInvitationPreviewResponse } from '../_apis/_generated/models/groupInvitationPreviewResponse'
 import type { GroupMemberResponse } from '../_apis/_generated/models/groupMemberResponse'
 import type { GroupSummaryResponse } from '../_apis/_generated/models/groupSummaryResponse'
+import type { UpdateGroupBookRequest } from '../_apis/_generated/models/updateGroupBookRequest'
 import type { UpdateGroupRequest } from '../_apis/_generated/models/updateGroupRequest'
 
 /** feature 코드는 _apis를 직접 import할 수 없어 응답/요청 타입을 여기서 재노출한다 */
@@ -132,6 +133,11 @@ export const groupMutations = {
     mutationOptions({
       mutationKey: [...groupQueries.all(), 'update', groupId],
       mutationFn: (data: GroupUpdateInput) => updateGroup(groupId, data),
+    }),
+  updateBook: (groupId: number, entryId: number) =>
+    mutationOptions({
+      mutationKey: [...groupQueries.all(), 'update-book', groupId, entryId],
+      mutationFn: (data: UpdateGroupBookRequest) => updateGroupBook(groupId, entryId, data),
     }),
   /** 초대 코드로 가입 — 모임 id가 아니라 코드로 부른다(랜딩은 코드만 알고 있다) */
   join: () =>
