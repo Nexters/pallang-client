@@ -110,7 +110,7 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
   return (
     <>
       <ScreenLayout
-        title="방 설정 변경"
+        title="모임 설정 변경"
         bodyClassName="px-4 pt-4 pb-6"
         footer={
           <Button

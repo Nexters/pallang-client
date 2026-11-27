@@ -229,17 +229,17 @@ describe('더보기 시트', () => {
     expect(await screen.findByRole('heading', { name: '더보기' })).toBeInTheDocument()
     const inviteTile = screen.getByRole('button', { name: '초대 링크 보내기' })
     expect(inviteTile).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '방 설정 변경하기' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '모임 설정 변경하기' })).toBeInTheDocument()
     // 시트 기본 본문(flex-col)이 병합에서 살아남으면 타일이 세로로 쌓인다 — 시안은 좌우다(#309)
     const body = inviteTile.closest('[data-slot="bottom-sheet-body"]')
     expect(body?.className).toContain('flex-row')
     expect(body?.className).not.toContain('flex-col')
   })
-  it('방 설정 변경하기는 수정 화면으로 간다', async () => {
+  it('모임 설정 변경하기는 수정 화면으로 간다', async () => {
     stubFetch([group])
     renderPage()
     fireEvent.click(await screen.findByRole('button', { name: /더보기/ }))
-    fireEvent.click(await screen.findByRole('button', { name: '방 설정 변경하기' }))
+    fireEvent.click(await screen.findByRole('button', { name: '모임 설정 변경하기' }))
     expect(routerMock.push).toHaveBeenCalledWith('/meeting/1/edit')
   })
   it('시트를 열 때 초대 링크를 미리 받아 둔다', async () => {

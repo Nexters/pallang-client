@@ -74,7 +74,7 @@ describe('방 설정 변경', () => {
   it('불러오는 동안 제목은 남고 폼 자리만 골격이다', () => {
     getGroupDetail.mockReturnValue(new Promise(() => undefined))
     renderView() // <MeetingEditView groupId={1} />
-    expect(screen.getByRole('heading', { name: '방 설정 변경' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '모임 설정 변경' })).toBeInTheDocument()
     expect(screen.getByRole('status', { name: '모임 정보를 불러오는 중' })).toBeInTheDocument()
   })
   it('상세로 폼을 채우고 책은 잠근 채 수정하기를 보낸다', async () => {

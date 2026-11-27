@@ -76,7 +76,7 @@ export function MeetingMoreSheet({
         <span className="flex size-14 items-center justify-center rounded-2xl bg-bg-surface">
           <SettingIcon className="size-8 text-icon-primary" />
         </span>
-        방 설정 변경하기
+        모임 설정 변경하기
       </button>
     </BottomSheet>
   )
