@@ -40,16 +40,12 @@ const group = {
   readingBookCount: 3,
   readingScheduleStatus: 'HAS_END_DATE',
   latestReadingEndDate: '2026-09-01',
-}
-const members = {
-  members: [1, 2, 3, 4, 5].map((userId) => ({
+  memberPreviews: [1, 2, 3, 4, 5].map((userId) => ({
     userId,
     nickname: `m${String(userId)}`,
     profileImageUrl: null,
-    role: 'MEMBER',
-    joinedAt: '2026-08-19T12:00:00',
   })),
-  pageInfo: { page: 0, size: 5, totalElements: 7, totalPages: 2, hasNext: true },
+  extraMemberCount: 2,
 }
 
 type StubOptions = { listStatus?: number; inviteLinkStatus?: number }
@@ -78,7 +74,6 @@ function stubFetch(
         },
       })
     }
-    if (url.includes('/members')) return json({ data: members })
     if (url.includes('/invite-link')) {
       if (inviteLinkStatus !== 200)
         return json(
@@ -167,7 +162,7 @@ describe('모임 탭', () => {
       fetchMock.mock.calls.some(([url]: string[]) =>
         (url ?? '').includes('/api/groups/1/members?page=0&size=5'),
       ),
-    ).toBe(true)
+    ).toBe(false)
   })
   it('기간이 없으면 날짜를 비우고 모든 책을 완독하면 안내한다', async () => {
     stubFetch([

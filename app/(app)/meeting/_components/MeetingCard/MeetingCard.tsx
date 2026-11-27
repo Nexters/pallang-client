@@ -45,7 +45,7 @@ export function MeetingCard({ group, onMore, onView }: MeetingCardProps) {
             <span className="min-w-0 flex-1 truncate font-pretendard text-caption-12rg leading-[1.2] tracking-[-0.02em] text-text-tertiary">
               {scheduleLabel}
             </span>
-            <MeetingMemberAvatars groupId={group.groupId} memberCount={group.memberCount} />
+            <MeetingMemberAvatars group={group} />
           </div>
         </div>
       </div>
