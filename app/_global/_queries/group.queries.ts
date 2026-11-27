@@ -9,8 +9,10 @@ import {
   previewInvitation,
   updateGroup,
 } from '../_apis/_generated/group/group'
+import { getGroupBooks } from '../_apis/_generated/group-book/group-book'
 import { getGroupMembers } from '../_apis/_generated/group-member/group-member'
 import type { CreateGroupRequest } from '../_apis/_generated/models/createGroupRequest'
+import type { GroupBookResponse } from '../_apis/_generated/models/groupBookResponse'
 import type { GroupDetailResponse } from '../_apis/_generated/models/groupDetailResponse'
 import type { GroupInvitationPreviewResponse } from '../_apis/_generated/models/groupInvitationPreviewResponse'
 import type { GroupMemberResponse } from '../_apis/_generated/models/groupMemberResponse'
@@ -20,6 +22,7 @@ import type { UpdateGroupRequest } from '../_apis/_generated/models/updateGroupR
 /** feature 코드는 _apis를 직접 import할 수 없어 응답/요청 타입을 여기서 재노출한다 */
 export type GroupSummary = GroupSummaryResponse
 export type GroupDetail = GroupDetailResponse
+export type GroupBook = GroupBookResponse
 export type GroupMember = GroupMemberResponse
 export type GroupInvitationPreview = GroupInvitationPreviewResponse
 export type GroupCreateInput = CreateGroupRequest
@@ -65,6 +68,17 @@ export const groupQueries = {
     queryOptions({
       queryKey: [...groupQueries.all(), 'detail', groupId],
       queryFn: () => getGroupDetail(groupId),
+    }),
+  books: (groupId: number) =>
+    infiniteQueryOptions({
+      queryKey: [...groupQueries.all(), 'books', groupId, 'all'],
+      queryFn: ({ pageParam }) =>
+        getGroupBooks(groupId, { status: 'ALL', page: pageParam, size: 20 }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const pageInfo = lastPage.data?.pageInfo
+        return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
+      },
     }),
   /** 카드 아바타용 첫 페이지만 — 요약 응답에 멤버 프로필이 없어 카드마다 한 번 받는다 */
   members: (groupId: number, size: number) =>

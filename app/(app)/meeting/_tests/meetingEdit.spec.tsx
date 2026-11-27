@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HardwareBackProvider } from '@/app/_global/_providers/HardwareBackProvider/HardwareBackProvider'
 import { LoginGateProvider } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
@@ -31,7 +31,9 @@ vi.mock('@/app/_global/_apis/_generated/user/user', () => ({
 
 const getGroupDetail = vi.hoisted(() => vi.fn())
 const updateGroup = vi.hoisted(() => vi.fn())
+const getGroupBooks = vi.hoisted(() => vi.fn())
 vi.mock('@/app/_global/_apis/_generated/group/group', () => ({ getGroupDetail, updateGroup }))
+vi.mock('@/app/_global/_apis/_generated/group-book/group-book', () => ({ getGroupBooks }))
 
 function renderView() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -70,6 +72,15 @@ const detail = {
   ended: false,
 }
 
+beforeEach(() => {
+  getGroupBooks.mockResolvedValue({
+    data: {
+      books: [{ entryId: 1, title: '모순', author: '양귀자', passageCount: 2, opinionCount: 3 }],
+      pageInfo: { page: 0, hasNext: false },
+    },
+  })
+})
+
 describe('방 설정 변경', () => {
   it('불러오는 동안 제목은 남고 폼 자리만 골격이다', () => {
     getGroupDetail.mockReturnValue(new Promise(() => undefined))
@@ -84,17 +95,16 @@ describe('방 설정 변경', () => {
     // 옛 목록이 남으면 /meeting이 수정 전 값으로 먼저 그려진다
     queryClient.setQueryData(groupQueries.list().queryKey, { pageParams: [0], pages: [] })
     expect(await screen.findByDisplayValue('주말 독서 모임')).toBeInTheDocument()
-    expect(screen.getByText('모순')).toBeInTheDocument()
-    expect(screen.getByText('선택한 책은 변경할 수 없어요.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /2026.08.20 ~ 2026.08.22/ })).toBeInTheDocument()
+    expect(await screen.findByText('모순')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '책 관리' })).toBeInTheDocument()
+    expect(getGroupBooks).toHaveBeenCalledWith(1, { status: 'ALL', page: 0, size: 20 })
+    expect(screen.queryByText('기간')).not.toBeInTheDocument()
     fireEvent.change(screen.getByLabelText(/모임명/), { target: { value: '주말 독서' } })
     fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
     await waitFor(() => {
       expect(updateGroup).toHaveBeenCalledWith(1, {
         name: '주말 독서',
         capacity: 4,
-        startDate: '2026-08-20',
-        endDate: '2026-08-22',
       })
     })
     await waitFor(() => {

@@ -17,6 +17,7 @@ type ScreenLayoutProps = Omit<ComponentPropsWithoutRef<'main'>, 'title'> & {
   action?: ReactNode
   /** 하단에 고정되는 CTA 자리. 홈 인디케이터 인셋은 여기서 pb-safe로 소비한다 */
   footer?: ReactNode
+  footerClassName?: string
   /** 스크롤 body에 붙일 클래스 — 좌우·상하 패딩이 화면마다 다르다 */
   bodyClassName?: string
 }
@@ -31,6 +32,7 @@ export function ScreenLayout({
   onBack,
   action,
   footer,
+  footerClassName,
   bodyClassName,
   className,
   children,
@@ -68,7 +70,9 @@ export function ScreenLayout({
         {children}
       </div>
 
-      {footer && <div className="flex shrink-0 px-4 pt-4 pb-safe">{footer}</div>}
+      {footer && (
+        <div className={cn('flex shrink-0 px-4 pt-4 pb-safe', footerClassName)}>{footer}</div>
+      )}
     </main>
   )
 }

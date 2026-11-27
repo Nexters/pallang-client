@@ -1,6 +1,6 @@
 'use client'
 
-import { useId } from 'react'
+import { type ReactNode, useId } from 'react'
 
 import { MEETING_NAME_MAX_LENGTH } from '../../_data/meeting.constant'
 import type { MeetingFormValues } from '../../_types/meetingForm.type'
@@ -17,6 +17,7 @@ type MeetingFormProps = {
   onSubmit: () => void
   bookLocked?: boolean
   minCapacity?: number
+  bookManagement?: ReactNode
 }
 
 /** 시안 3319:25486 — 필드 4개 세로 24px 간격. 만들기·수정이 같은 폼이고 차이는 책 잠금·인원 하한뿐이다. */
@@ -27,6 +28,7 @@ export function MeetingForm({
   onSubmit,
   bookLocked = false,
   minCapacity,
+  bookManagement,
 }: MeetingFormProps) {
   const nameId = useId()
   const update = (patch: Partial<MeetingFormValues>) => {
@@ -36,7 +38,7 @@ export function MeetingForm({
   return (
     <form
       id={formId}
-      className="flex flex-col gap-6"
+      className={bookLocked ? 'flex min-h-0 flex-1 flex-col gap-6' : 'flex flex-col gap-6'}
       onSubmit={(event) => {
         event.preventDefault()
         onSubmit()
@@ -63,22 +65,27 @@ export function MeetingForm({
           update({ capacity })
         }}
       />
-      <MeetingBookField
-        value={values.book}
-        locked={bookLocked}
-        onChange={(book) => {
-          update({ book })
-        }}
-      />
-      <MeetingPeriodField
-        startDate={values.startDate}
-        endDate={values.endDate}
-        helperText={bookLocked ? undefined : '첫번째 책을 읽을 기간이에요.'}
-        optional={!bookLocked}
-        onChange={(period) => {
-          update(period)
-        }}
-      />
+      {bookLocked ? (
+        bookManagement
+      ) : (
+        <>
+          <MeetingBookField
+            value={values.book}
+            onChange={(book) => {
+              update({ book })
+            }}
+          />
+          <MeetingPeriodField
+            startDate={values.startDate}
+            endDate={values.endDate}
+            helperText="첫번째 책을 읽을 기간이에요."
+            optional
+            onChange={(period) => {
+              update(period)
+            }}
+          />
+        </>
+      )}
     </form>
   )
 }

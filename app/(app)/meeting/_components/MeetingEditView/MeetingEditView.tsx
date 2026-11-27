@@ -25,6 +25,7 @@ import {
 } from '../../_services/meetingForm.service'
 import { markMeetingNotice } from '../../_services/meetingNotice.service'
 import type { MeetingFormValues } from '../../_types/meetingForm.type'
+import { MeetingBookManagement } from '../MeetingBookManagement/MeetingBookManagement'
 import { MeetingForm } from '../MeetingForm/MeetingForm'
 import { MeetingFormSkeleton } from '../MeetingFormSkeleton/MeetingFormSkeleton'
 
@@ -59,7 +60,7 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
   const loaded: GroupDetail | undefined = detail.data?.data
   const values = edited ?? (loaded ? detailToMeetingForm(loaded) : null)
   const memberCount = loaded?.memberCount ?? 0
-  const canSubmit = values !== null && isValidMeetingForm(values, memberCount)
+  const canSubmit = values !== null && isValidMeetingForm(values, memberCount, true)
 
   const submit = () => {
     if (!values || !canSubmit) return
@@ -102,6 +103,7 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
         onChange={setEdited}
         onSubmit={submit}
         bookLocked
+        bookManagement={<MeetingBookManagement groupId={groupId} />}
         minCapacity={memberCount}
       />
     )
@@ -111,7 +113,9 @@ export function MeetingEditView({ groupId }: MeetingEditViewProps) {
     <>
       <ScreenLayout
         title="모임 설정 변경"
-        bodyClassName="px-4 pt-4 pb-6"
+        className="relative"
+        bodyClassName="overflow-hidden bg-bg-default px-4 pt-4"
+        footerClassName="absolute inset-x-0 bottom-0 bg-bg-default"
         footer={
           <Button
             type="submit"

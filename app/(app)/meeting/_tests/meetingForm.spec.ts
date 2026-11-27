@@ -64,8 +64,6 @@ describe('모임 폼 규칙', () => {
     expect(toGroupUpdateInput(filled)).toEqual({
       name: '고전 뽀개기',
       capacity: 4,
-      startDate: '2026-08-20',
-      endDate: '2026-09-20',
     })
   })
   it('상세 응답을 폼 값으로 편다', () => {

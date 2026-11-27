@@ -78,7 +78,7 @@ async function fillForm() {
   fireEvent.click(await screen.findByRole('button', { name: /프랑켄슈타인/ }))
   fireEvent.click(screen.getByRole('button', { name: '등록하기' }))
   fireEvent.click(screen.getByRole('button', { name: /시작일과 종료일을 선택해주세요./ }))
-  fireEvent.click(await screen.findByRole('button', { name: '2026.08.20' }))
+  fireEvent.click(await screen.findByRole('button', { name: '2026.08.21' }))
   fireEvent.click(screen.getByRole('button', { name: '다음 달' }))
   fireEvent.click(screen.getByRole('button', { name: '2026.09.20' }))
   fireEvent.click(screen.getByRole('button', { name: '확인' }))
@@ -114,7 +114,7 @@ describe('모임 만들기', () => {
         name: '고전 뽀개기',
         bookId: 7,
         capacity: 2,
-        startDate: '2026-08-20',
+        startDate: '2026-08-21',
         endDate: '2026-09-20',
       })
     })

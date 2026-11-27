@@ -99,7 +99,7 @@ describe('모임 폼', () => {
     fireEvent.click(screen.getByRole('button', { name: /모임에서 읽을 책을 선택해주세요./ }))
     expect(await screen.findByRole('heading', { name: '책 선택하기' })).toBeInTheDocument()
   })
-  it('잠긴 책은 편집 버튼 없이 안내만 보여준다', () => {
+  it('수정 폼에서는 기존 책 선택과 기간 필드를 표시하지 않는다', () => {
     renderForm({
       bookLocked: true,
       initial: {
@@ -107,9 +107,9 @@ describe('모임 폼', () => {
         book: { bookId: 7, title: '모순', author: '양귀자', coverImageUrl: null, pageCount: null },
       },
     })
-    expect(screen.getByText('모순')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '편집하기' })).not.toBeInTheDocument()
-    expect(screen.getByText('선택한 책은 변경할 수 없어요.')).toBeInTheDocument()
+    expect(screen.queryByText('선택한 책은 변경할 수 없어요.')).not.toBeInTheDocument()
+    expect(screen.queryByText('기간')).not.toBeInTheDocument()
   })
   it('기간 시트 달력에서 시작일·종료일을 탭하면 필드에 점 표기로 보인다', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })

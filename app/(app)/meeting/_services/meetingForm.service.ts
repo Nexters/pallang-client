@@ -87,8 +87,6 @@ export function toGroupUpdateInput(values: MeetingFormValues): GroupUpdateInput 
   return {
     name: values.name.trim(),
     capacity: values.capacity,
-    startDate: values.startDate,
-    endDate: values.endDate,
   }
 }
 
