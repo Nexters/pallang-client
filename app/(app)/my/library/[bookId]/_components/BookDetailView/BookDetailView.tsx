@@ -144,21 +144,12 @@ export function BookDetailView({ bookId, groupId }: BookDetailViewProps) {
           passageCount={book.passageCount}
           publisher={book.publisher}
           scopeLabel={groupId !== null && <BookGroupLabel groupId={groupId} />}
-          statusBadge={
-            <BookStatusChip
-              status={savedStatus}
-              onClick={() => {
-                setStatusDraft(savedStatus)
-                setIsStatusOpen(true)
-              }}
-            />
-          }
+          statusBadge={<BookStatusChip status={savedStatus} />}
           title={book.title}
         />
       )
     }
     // 4xx는 다시 보내지 않으므로(queryClient.service) 골격으로 두면 영원히 골격이다.
-    // 독서 상태 시트로 가는 유일한 손잡이도 이 자리에 있어, 다시 부를 길을 반드시 남긴다.
     if (bookQuery.isError) {
       return (
         <RetryMessage
@@ -202,7 +193,21 @@ export function BookDetailView({ bookId, groupId }: BookDetailViewProps) {
 
   return (
     <>
-      <ScreenLayout title="내 서재" action={<BookEditAction />}>
+      <ScreenLayout
+        title="내 서재"
+        action={
+          <BookEditAction
+            onClick={
+              book
+                ? () => {
+                    setStatusDraft(savedStatus)
+                    setIsStatusOpen(true)
+                  }
+                : undefined
+            }
+          />
+        }
+      >
         <Tabs.Root
           value={tab}
           onValueChange={(next) => {

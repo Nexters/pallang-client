@@ -308,10 +308,11 @@ describe('내 서재 책 상세', () => {
     expect(screen.getByRole('button', { name: '더보기' })).toBeInTheDocument()
   })
 
-  it('편집 버튼은 자리만 잡고 막혀 있다', async () => {
+  it('책 정보를 불러오면 편집 버튼을 사용할 수 있다', async () => {
     renderView({ opinions: [MY_OPINION] })
 
-    expect(await screen.findByRole('button', { name: '편집' })).toBeDisabled()
+    await screen.findByText('모순')
+    expect(screen.getByRole('button', { name: '편집' })).toBeEnabled()
   })
 
   it('스포일러를 해제하면 요청이 나가고 카드가 목록에서 빠진다', async () => {

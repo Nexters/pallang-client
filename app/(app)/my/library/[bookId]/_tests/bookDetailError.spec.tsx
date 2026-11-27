@@ -141,13 +141,13 @@ describe('책 상세 조회 실패', () => {
     expect(screen.getAllByRole('tab')).toHaveLength(3)
   })
 
-  it('다시 불러오기를 누르면 책 머리와 독서 상태 손잡이가 돌아온다', async () => {
+  it('다시 불러오기를 누르면 책 머리와 편집 버튼이 돌아온다', async () => {
     renderView({ detailStatuses: [500, 200] })
 
     await userEvent.click(await screen.findByRole('button', { name: '다시 불러오기' }))
 
     expect(await screen.findByText('모순')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '독서 상태' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '편집' })).toBeEnabled()
   })
 
   it('지워졌거나 볼 수 없는 책(404)은 not-found로 보낸다', async () => {
@@ -174,7 +174,7 @@ describe('책 상세 조회 실패', () => {
     expect(await screen.findByText('밤샘낭독가님의 좋아요를 해제했어요')).toBeInTheDocument()
 
     // 되돌릴 수 있는 3초 안에 독서 상태 저장이 실패한다 — 두 안내가 같은 자리를 노린다
-    await userEvent.click(screen.getByRole('button', { name: '독서 상태' }))
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
     // 시트의 선택지는 라디오가 아니라 눌림 토글이다. 책 머리 뱃지와 이름이 같아 시트 안으로 좁힌다
     const statusSheet = await screen.findByRole('dialog')
     await userEvent.click(within(statusSheet).getByRole('button', { name: '완독' }))

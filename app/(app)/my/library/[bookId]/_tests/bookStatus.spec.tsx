@@ -103,23 +103,25 @@ describe('책 상세 독서 상태', () => {
     vi.unstubAllGlobals()
   })
 
-  it('상태가 없으면 뱃지 대신 시트로 가는 자리만 남는다', async () => {
+  it('상태가 없으면 뱃지를 표시하지 않는다', async () => {
     renderView(null)
 
-    expect(await screen.findByRole('button', { name: '독서 상태' })).toBeInTheDocument()
+    expect(await screen.findByText('모순')).toBeInTheDocument()
+    expect(screen.queryByText('독서 상태')).not.toBeInTheDocument()
     expect(screen.queryByText('읽고 있는 책')).not.toBeInTheDocument()
   })
 
   it('READING이면 책 머리에 읽고 있는 책 뱃지가 뜬다', async () => {
     renderView('READING')
 
-    expect(await screen.findByRole('button', { name: '읽고 있는 책' })).toBeInTheDocument()
+    expect(await screen.findByText('읽고 있는 책')).toHaveClass('bg-orange-500')
   })
 
   it('시트는 현재 상태를 고른 채 열린다', async () => {
     renderView('READING')
 
-    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
 
     expect(await statusOption('읽고 있는 책')).toHaveAttribute('aria-pressed', 'true')
   })
@@ -127,7 +129,8 @@ describe('책 상세 독서 상태', () => {
   it('상태가 없으면 아무것도 고르지 않은 채 열리고 저장이 막혀 있다', async () => {
     renderView(null)
 
-    await userEvent.click(await screen.findByRole('button', { name: '독서 상태' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
 
     expect(await statusOption('읽고 있는 책')).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
@@ -136,17 +139,18 @@ describe('책 상세 독서 상태', () => {
   it('FINISHED면 책 머리에 완독 뱃지가 뜬다', async () => {
     renderView('FINISHED')
 
-    expect(await screen.findByRole('button', { name: '완독' })).toBeInTheDocument()
+    expect(await screen.findByText('완독')).toHaveClass('bg-bg-gray')
   })
 
   it('완독을 골라 저장하면 PUT이 나가고 뱃지가 완독으로 바뀐다', async () => {
     const requests = renderView(null)
 
-    await userEvent.click(await screen.findByRole('button', { name: '독서 상태' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
     await userEvent.click(await statusOption('완독'))
     await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
-    expect(await screen.findByRole('button', { name: '완독' })).toBeInTheDocument()
+    expect(await screen.findByText('완독')).toHaveClass('bg-bg-gray')
 
     const saved = requests.filter((request) => request.url.includes('/me/book-status'))
     expect(saved).toHaveLength(1)
@@ -162,12 +166,13 @@ describe('책 상세 독서 상태', () => {
   it('고른 것을 다시 눌러 풀고 저장하면 DELETE로 상태가 사라진다', async () => {
     const requests = renderView('READING')
 
-    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
     // 시트에 해제 버튼이 없다 — 고른 것을 다시 눌러 푼다
     await userEvent.click(await statusOption('읽고 있는 책'))
     await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
-    expect(await screen.findByRole('button', { name: '독서 상태' })).toBeInTheDocument()
+    expect(screen.queryByText('읽고 있는 책')).not.toBeInTheDocument()
 
     const saved = requests.filter((request) => request.url.includes('/me/book-status'))
     expect(saved).toHaveLength(1)
@@ -178,18 +183,20 @@ describe('책 상세 독서 상태', () => {
   it('해제에 실패하면 뱃지가 그대로인 채로 다시 시도하라고 알린다', async () => {
     renderView('READING', 500)
 
-    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
     await userEvent.click(await statusOption('읽고 있는 책'))
     await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
     expect(await screen.findByText(/독서 상태를 저장하지 못했어요/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '읽고 있는 책' })).toBeInTheDocument()
+    expect(screen.getByText('읽고 있는 책')).toBeInTheDocument()
   })
 
   it('고른 값이 이미 저장된 값이면 저장이 막혀 있다', async () => {
     renderView('READING')
 
-    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
 
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
   })
@@ -197,11 +204,12 @@ describe('책 상세 독서 상태', () => {
   it('읽고 있는 책을 저장하면 PUT이 나가고 뱃지가 갱신된다', async () => {
     const requests = renderView(null)
 
-    await userEvent.click(await screen.findByRole('button', { name: '독서 상태' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
     await userEvent.click(await statusOption('읽고 있는 책'))
     await userEvent.click(screen.getByRole('button', { name: '저장하기' }))
 
-    expect(await screen.findByRole('button', { name: '읽고 있는 책' })).toBeInTheDocument()
+    expect(await screen.findByText('읽고 있는 책')).toHaveClass('bg-orange-500')
 
     const saved = requests.filter((request) => request.url.includes('/me/book-status'))
     expect(saved).toHaveLength(1)
@@ -216,7 +224,8 @@ describe('책 상세 독서 상태', () => {
   it('선택지는 라디오가 아니라 눌림 토글로 읽힌다 — 고른 것을 되돌릴 수 있어서다', async () => {
     renderView('READING')
 
-    await userEvent.click(await screen.findByRole('button', { name: '읽고 있는 책' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
 
     const sheet = await screen.findByRole('dialog')
     expect(within(sheet).queryByRole('radio')).not.toBeInTheDocument()
@@ -231,7 +240,8 @@ describe('책 상세 독서 상태', () => {
   it('키보드만으로 두 선택지를 오가며 고르고 풀 수 있다', async () => {
     renderView(null)
 
-    await userEvent.click(await screen.findByRole('button', { name: '독서 상태' }))
+    await screen.findByText('모순')
+    await userEvent.click(screen.getByRole('button', { name: '편집' }))
 
     const finished = await statusOption('완독')
     const reading = await statusOption('읽고 있는 책')
