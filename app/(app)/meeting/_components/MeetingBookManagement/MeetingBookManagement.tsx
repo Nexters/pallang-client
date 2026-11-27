@@ -1,14 +1,26 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 
+import { BottomSheet } from '@/app/_global/_components/BottomSheet/BottomSheet'
+import { Button } from '@/app/_global/_components/Button/Button'
 import { Skeleton } from '@/app/_global/_components/Skeleton/Skeleton'
-import { groupQueries } from '@/app/_global/_queries/group.queries'
+import { useHardwareBackRegistry } from '@/app/_global/_hooks/useHardwareBackRegistry'
+import { type GroupBook, groupQueries } from '@/app/_global/_queries/group.queries'
 
 import { MeetingBookItem } from '../MeetingBookItem/MeetingBookItem'
 
 export function MeetingBookManagement({ groupId }: { groupId: number }) {
   const books = useInfiniteQuery(groupQueries.books(groupId))
+  const [selectedBook, setSelectedBook] = useState<GroupBook | null>(null)
+  const { register } = useHardwareBackRegistry()
+  useEffect(() => {
+    if (!selectedBook) return
+    return register(() => {
+      setSelectedBook(null)
+    })
+  }, [selectedBook, register])
   const items = books.data?.pages.flatMap((page) => page.data?.books ?? []) ?? []
 
   return (
@@ -27,7 +39,13 @@ export function MeetingBookManagement({ groupId }: { groupId: number }) {
           </div>
         )}
         {items.map((book) => (
-          <MeetingBookItem key={book.entryId} book={book} />
+          <MeetingBookItem
+            key={book.entryId}
+            book={book}
+            onMore={() => {
+              setSelectedBook(book)
+            }}
+          />
         ))}
         {books.isError && (
           <button
@@ -56,6 +74,22 @@ export function MeetingBookManagement({ groupId }: { groupId: number }) {
           </button>
         )}
       </div>
+      <BottomSheet
+        open={selectedBook !== null}
+        title="더보기"
+        onClose={() => {
+          setSelectedBook(null)
+        }}
+        contentClassName="p-4"
+      >
+        <Button
+          type="button"
+          aria-disabled="true"
+          className="w-full bg-bg-surface font-pretendard text-title-18bd leading-[1.4] text-text-primary"
+        >
+          책 설정 변경하기
+        </Button>
+      </BottomSheet>
     </section>
   )
 }

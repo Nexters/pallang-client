@@ -5,7 +5,7 @@ import type { GroupBook } from '@/app/_global/_queries/group.queries'
 
 import { formatMeetingDeadline } from '../../_services/meetingDate.service'
 
-export function MeetingBookItem({ book }: { book: GroupBook }) {
+export function MeetingBookItem({ book, onMore }: { book: GroupBook; onMore: () => void }) {
   const period = book.endDate ? formatMeetingDeadline(book.endDate) : null
 
   return (
@@ -24,8 +24,8 @@ export function MeetingBookItem({ book }: { book: GroupBook }) {
           <button
             type="button"
             aria-label={`${book.title} 편집`}
-            aria-disabled="true"
-            className="absolute top-0 right-0 flex size-8 items-center justify-center rounded-lg bg-bg-surface backdrop-blur-[1px]"
+            onClick={onMore}
+            className="press absolute top-0 right-0 flex size-8 items-center justify-center rounded-lg bg-bg-surface backdrop-blur-[1px]"
           >
             <MeatballsMenuIcon className="size-6 text-icon-primary" />
           </button>
