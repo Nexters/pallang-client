@@ -87,8 +87,10 @@ export function MeetingBookManagement({ groupId }: { groupId: number }) {
         <Button
           type="button"
           onClick={() => {
-            if (selectedBook)
-              router.push(`/meeting/${String(groupId)}/books/${String(selectedBook.entryId)}/edit`)
+            if (!selectedBook) return
+            const entryId = selectedBook.entryId
+            setSelectedBook(null)
+            router.push(`/meeting/${String(groupId)}/books/${String(entryId)}/edit`)
           }}
           className="w-full bg-bg-surface font-pretendard text-title-18bd leading-[1.4] text-text-primary"
         >

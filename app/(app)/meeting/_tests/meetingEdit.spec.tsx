@@ -99,6 +99,9 @@ describe('방 설정 변경', () => {
     fireEvent.click(await screen.findByRole('button', { name: '모순 편집' }))
     fireEvent.click(await screen.findByRole('button', { name: '책 설정 변경하기' }))
     expect(routerMock.push).toHaveBeenCalledWith('/meeting/1/books/1/edit')
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: '더보기' })).not.toBeInTheDocument()
+    })
   })
   it('불러오는 동안 제목은 남고 폼 자리만 골격이다', () => {
     getGroupDetail.mockReturnValue(new Promise(() => undefined))
