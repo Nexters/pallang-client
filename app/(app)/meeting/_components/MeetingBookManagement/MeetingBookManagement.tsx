@@ -33,9 +33,9 @@ export function MeetingBookManagement({ groupId }: { groupId: number }) {
           *
         </span>
       </h2>
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto bg-bg-surface p-4 pb-[calc(86px+max(16px,var(--safe-bottom)))]">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-3 overflow-y-auto bg-bg-surface p-4 pb-[calc(86px+max(16px,var(--safe-bottom)))]">
         {books.isPending && (
-          <div role="status" aria-label="책 목록을 불러오는 중" className="flex flex-col gap-2">
+          <div role="status" aria-label="책 목록을 불러오는 중" className="flex flex-col gap-3">
             <Skeleton className="h-[152px] w-full bg-bg-default" />
             <Skeleton className="h-[152px] w-full bg-bg-default" />
           </div>

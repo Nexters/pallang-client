@@ -185,11 +185,11 @@ describe('모임 탭', () => {
     expect(screen.queryByText('2026.08.22까지')).not.toBeInTheDocument()
     expect(screen.queryByText('기간 미설정')).not.toBeInTheDocument()
   })
-  it('보러가기는 모임 스코프 흔적 보기로 간다', async () => {
+  it('보러가기는 선택한 모임 화면으로 간다', async () => {
     stubFetch([group])
     renderPage()
     fireEvent.click(await screen.findByRole('button', { name: '보러가기' }))
-    expect(routerMock.push).toHaveBeenCalledWith('/trace/7?groupId=1')
+    expect(routerMock.push).toHaveBeenCalledWith('/meeting/1')
   })
   it('목록을 못 받으면 오류 상태와 다시 시도를 보여준다', async () => {
     stubFetch([], { listStatus: 500 })

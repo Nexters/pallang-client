@@ -38,7 +38,7 @@ function BookFields({ book, groupId }: { book: GroupBook; groupId: number }) {
         onSuccess: () => {
           setMessage('책 상태가 변경되었습니다.')
           void Promise.all([
-            queryClient.invalidateQueries({ queryKey: groupQueries.books(groupId).queryKey }),
+            queryClient.invalidateQueries({ queryKey: [...groupQueries.all(), 'books', groupId] }),
             queryClient.invalidateQueries({
               queryKey: groupQueries.book(groupId, book.entryId).queryKey,
             }),

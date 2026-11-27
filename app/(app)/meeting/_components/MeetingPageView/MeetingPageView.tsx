@@ -15,7 +15,6 @@ import { useLoadMoreOnVisible } from '@/app/_global/_hooks/useLoadMoreOnVisible'
 import { useAuth } from '@/app/_global/_providers/AuthProvider/AuthProvider'
 import { useLoginGate } from '@/app/_global/_providers/LoginGateProvider/LoginGateProvider'
 import { groupQueries, type GroupSummary } from '@/app/_global/_queries/group.queries'
-import { buildTraceHref } from '@/app/_shared/trace/_data/traceTarget.model'
 
 import { MEETING_NOTICE_MESSAGE } from '../../_data/meeting.constant'
 import { useInviteShare } from '../../_hooks/useInviteShare'
@@ -87,7 +86,7 @@ export function MeetingPageView() {
     }, LOGIN_GATE_MESSAGE.groupCreate)
   }
   const goView = (group: GroupSummary) => {
-    router.push(buildTraceHref(group.bookId, { groupId: group.groupId }))
+    router.push(`/meeting/${String(group.groupId)}`)
   }
   // 시트를 먼저 닫으면 공유 호출이 사용자 손짓 밖으로 밀려나 OS 공유 시트가 뜨지 않는다 —
   // 연 채로(타일은 isSharing으로 잠긴다) 부르고, 공유가 끝난 뒤에 닫는다.

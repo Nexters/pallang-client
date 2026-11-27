@@ -9,7 +9,7 @@ type MeetingCardProps = {
   group: GroupSummary
   /** 카드의 ··· — 더보기 시트를 연다 */
   onMore: (group: GroupSummary) => void
-  /** 보러가기 — 모임 스코프 흔적 보기로 */
+  /** 보러가기 — 모임 상세 화면으로 */
   onView: (group: GroupSummary) => void
 }
 

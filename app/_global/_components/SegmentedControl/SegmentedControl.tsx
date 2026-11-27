@@ -9,7 +9,7 @@ type SegmentedControlProps = {
   options: readonly SegmentedControlOption[]
   value: string
   onChange: (value: string) => void
-  variant?: 'default' | 'light'
+  variant?: 'default' | 'light' | 'book-tabs'
 }
 
 export function SegmentedControl({
@@ -27,9 +27,11 @@ export function SegmentedControl({
       aria-label={label}
       className={cn(
         'flex rounded-full',
-        variant === 'light'
-          ? 'h-14 w-fit gap-1 bg-bg-surface p-1'
-          : 'h-12 gap-[3px] bg-bg-tertiary p-[3px]',
+        variant === 'book-tabs'
+          ? 'w-fit self-center bg-black/[0.08] p-[3px] backdrop-blur-[2px]'
+          : variant === 'light'
+            ? 'h-14 w-fit gap-1 bg-bg-surface p-1'
+            : 'h-12 gap-[3px] bg-bg-tertiary p-[3px]',
       )}
     >
       {options.map((option) => {
@@ -47,14 +49,21 @@ export function SegmentedControl({
               // press와 transition-colors를 함께 두면 transition-property가 서로를 덮는다.
               // 색과 눌림을 한 목록으로 합쳐 둘 다 살린다.
               'press flex flex-1 items-center justify-center rounded-full text-center transition-[color,background-color,scale] duration-instant ease-standard',
-              variant === 'light'
+              variant === 'book-tabs'
                 ? cn(
-                    'min-w-[94px] px-6 py-2.5 text-body-14md text-text-primary',
-                    isSelected && 'bg-bg-default',
+                    'shrink-0 whitespace-nowrap px-3.5 py-2 font-pretendard text-[14px] leading-[1.3] tracking-[-0.04em]',
+                    isSelected
+                      ? 'bg-bg-default font-bold text-text-primary'
+                      : 'font-medium text-[#333]',
                   )
-                : isSelected
-                  ? 'bg-bg-default text-body-16bd text-text-secondary'
-                  : 'text-body-14md text-text-inverse opacity-50',
+                : variant === 'light'
+                  ? cn(
+                      'min-w-[94px] px-6 py-2.5 text-body-14md text-text-primary',
+                      isSelected && 'bg-bg-default',
+                    )
+                  : isSelected
+                    ? 'bg-bg-default text-body-16bd text-text-secondary'
+                    : 'text-body-14md text-text-inverse opacity-50',
             )}
           >
             {option.label}

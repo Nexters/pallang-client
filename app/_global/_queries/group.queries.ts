@@ -81,6 +81,17 @@ export const groupQueries = {
         return pageInfo?.hasNext ? pageInfo.page + 1 : undefined
       },
     }),
+  bookTabs: (groupId: number, status?: 'READING' | 'FINISHED') =>
+    infiniteQueryOptions({
+      queryKey: [...groupQueries.all(), 'books', groupId, 'tabs', status ?? 'default'],
+      queryFn: ({ pageParam }) =>
+        getGroupBooks(groupId, { ...(status ? { status } : {}), page: pageParam, size: 20 }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const info = lastPage.data?.pageInfo
+        return info?.hasNext ? info.page + 1 : undefined
+      },
+    }),
   book: (groupId: number, entryId: number) =>
     queryOptions({
       queryKey: [...groupQueries.all(), 'book', groupId, entryId],
