@@ -36,10 +36,17 @@ export function MeetingBookField({ value, onChange, locked = false }: MeetingBoo
     })
   }, [open, register])
 
-  const helperText = locked ? '선택한 책은 변경할 수 없어요.' : undefined
+  const helperText = locked
+    ? '선택한 책은 변경할 수 없어요.'
+    : '모임 생성 후 더 읽을 책을 추가할 수 있어요.'
 
   return (
-    <MeetingField label="책 선택" required labelId={labelId} helperText={helperText}>
+    <MeetingField
+      label={locked ? '책 선택' : '첫번째 책 선택'}
+      required
+      labelId={labelId}
+      helperText={helperText}
+    >
       {value ? (
         <SelectedBookCard
           book={value}

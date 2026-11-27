@@ -75,7 +75,10 @@ describe('모임 폼', () => {
     expect(
       screen.getByRole('button', { name: /시작일과 종료일을 선택해주세요./ }),
     ).toBeInTheDocument()
-    expect(screen.getAllByText('*')).toHaveLength(4) // 모임명·인원·책 선택·기간(FE 필수 결정)
+    expect(screen.getAllByText('*')).toHaveLength(3)
+    expect(screen.getByText('첫번째 책 선택')).toBeInTheDocument()
+    expect(screen.getByText('모임 생성 후 더 읽을 책을 추가할 수 있어요.')).toBeInTheDocument()
+    expect(screen.getByText('첫번째 책을 읽을 기간이에요.')).toBeInTheDocument()
   })
   it('모임명은 15자를 넘겨 입력할 수 없다', () => {
     renderForm()

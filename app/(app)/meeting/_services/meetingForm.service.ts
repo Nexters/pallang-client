@@ -58,12 +58,14 @@ function isValidCapacity(capacity: number, minCapacity: number): boolean {
 export function isValidMeetingForm(
   values: MeetingFormValues,
   minCapacity = MEETING_CAPACITY_MIN,
+  periodOptional = false,
 ): boolean {
   return (
     isValidMeetingName(values.name) &&
     values.book !== null &&
     isValidCapacity(values.capacity, minCapacity) &&
-    isValidMeetingPeriod(values.startDate, values.endDate)
+    ((periodOptional && !values.startDate && !values.endDate) ||
+      isValidMeetingPeriod(values.startDate, values.endDate))
   )
 }
 
@@ -74,8 +76,9 @@ export function toGroupCreateInput(
     name: values.name.trim(),
     bookId: values.book.bookId,
     capacity: values.capacity,
-    startDate: values.startDate,
-    endDate: values.endDate,
+    ...(values.startDate && values.endDate
+      ? { startDate: values.startDate, endDate: values.endDate }
+      : {}),
   }
 }
 
@@ -100,7 +103,7 @@ export function detailToMeetingForm(detail: GroupDetail): MeetingFormValues {
       coverImageUrl: detail.bookCoverImageUrl ?? null,
       pageCount: null,
     },
-    startDate: detail.startDate,
-    endDate: detail.endDate,
+    startDate: detail.startDate ?? '',
+    endDate: detail.endDate ?? '',
   }
 }

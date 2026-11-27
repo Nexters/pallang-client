@@ -64,7 +64,7 @@ export function MeetingCreateView({ seedBookId = null }: MeetingCreateViewProps)
   }, [status, router])
 
   const submit = () => {
-    if (!values.book || !isValidMeetingForm(values)) return
+    if (!values.book || !isValidMeetingForm(values, undefined, true)) return
     const input = toGroupCreateInput({ ...values, book: values.book })
     create.mutate(input, {
       onSuccess: () => {
@@ -96,7 +96,7 @@ export function MeetingCreateView({ seedBookId = null }: MeetingCreateViewProps)
             form={FORM_ID}
             variant="activated"
             className="h-[54px] flex-1 disabled:bg-interactive-accent disabled:opacity-40 aria-busy:opacity-100"
-            disabled={!isValidMeetingForm(values)}
+            disabled={!isValidMeetingForm(values, undefined, true)}
             loading={create.isPending}
           >
             모임 만들기

@@ -45,6 +45,12 @@ describe('모임 폼 규칙', () => {
     expect(isValidMeetingForm({ ...filled, capacity: 3 }, 4)).toBe(false)
     expect(isValidMeetingForm({ ...filled, capacity: 4 }, 4)).toBe(true)
   })
+  it('생성은 기간을 모두 비울 수 있고 한 날짜만 비울 수 없다', () => {
+    const noPeriod = { ...filled, startDate: '', endDate: '' }
+    expect(isValidMeetingForm(noPeriod, undefined, true)).toBe(true)
+    expect(isValidMeetingForm({ ...filled, endDate: '' }, undefined, true)).toBe(false)
+    expect(toGroupCreateInput(noPeriod)).toEqual({ name: filled.name, bookId: 7, capacity: 4 })
+  })
   it('생성 요청은 공백을 다듬고 bookId를 싣는다', () => {
     expect(toGroupCreateInput({ ...filled, name: ' 고전 뽀개기 ' })).toEqual({
       name: '고전 뽀개기',
@@ -78,6 +84,7 @@ describe('모임 폼 규칙', () => {
       endDate: '2026-08-22',
       ended: false,
       isHost: true,
+      version: 1,
     }
     expect(detailToMeetingForm(detail)).toEqual({
       name: '주말 독서 모임',

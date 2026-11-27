@@ -73,6 +73,8 @@ export function MeetingForm({
       <MeetingPeriodField
         startDate={values.startDate}
         endDate={values.endDate}
+        helperText={bookLocked ? undefined : '첫번째 책을 읽을 기간이에요.'}
+        optional={!bookLocked}
         onChange={(period) => {
           update(period)
         }}
