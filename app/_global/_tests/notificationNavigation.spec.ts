@@ -69,4 +69,9 @@ describe('notificationNavigation.service', () => {
     expect(buildNotificationHref({ type: 'BOOK_NEW_OPINIONS' })).toBe('/notifications')
     expect(buildPushNotificationHref(null)).toBe('/notifications')
   })
+  it('모임 참여 종료 알림은 모임으로 이동하지 않는다', () => {
+    expect(buildNotificationHref({ type: 'GROUP_MEMBER_REMOVED', groupId: 3 })).toBe(
+      '/notifications',
+    )
+  })
 })

@@ -120,6 +120,21 @@ describe('알림함', () => {
     expect(screen.getAllByText('읽지 않음')).toHaveLength(1)
   })
 
+  it('참여 종료 알림과 알 수 없는 알림 타입도 표시한다', () => {
+    renderView([
+      { ...NOTIFICATION, type: 'GROUP_MEMBER_REMOVED', title: '모임 참여 종료' },
+      {
+        ...NOTIFICATION,
+        notificationId: 44,
+        type: 'FUTURE_TYPE' as NotificationResponse['type'],
+        title: '새 알림',
+      },
+    ])
+    expect(screen.getAllByText('모임 참여 종료')).toHaveLength(2)
+    expect(screen.getByText('새 알림')).toBeInTheDocument()
+    expect(screen.getByText('알림', { selector: 'span' })).toBeInTheDocument()
+  })
+
   it('톱니 아이콘은 알림 설정 화면으로 이동한다', () => {
     renderView()
 

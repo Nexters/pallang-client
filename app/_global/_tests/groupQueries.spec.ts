@@ -22,6 +22,10 @@ function group(groupId: number): GroupSummary {
     endDate: '2026-11-01',
     ended: false,
     isHost: true,
+    readingBookCount: 1,
+    readingScheduleStatus: 'HAS_END_DATE',
+    memberPreviews: [],
+    extraMemberCount: 0,
   }
 }
 

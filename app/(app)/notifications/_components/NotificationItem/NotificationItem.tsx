@@ -6,7 +6,7 @@ import { cn } from '@/app/_global/_services/cn.service'
 
 import { formatNotificationTime } from '../../_services/notificationTime.service'
 
-const TYPE_META: Record<NotificationResponse['type'], { label: string; Icon: typeof BellIcon }> = {
+const TYPE_META: Record<string, { label: string; Icon: typeof BellIcon } | undefined> = {
   OPINION_COMMENTED: { label: '댓글', Icon: PencilIcon },
   OPINION_LIKED: { label: '좋아요', Icon: LikeIcon },
   // 시안이 아직 없다 — 나오기 전까지 벨 아이콘으로 둔다
@@ -15,8 +15,9 @@ const TYPE_META: Record<NotificationResponse['type'], { label: string; Icon: typ
   GROUP_MEMBER_JOINED: { label: '모임원 가입', Icon: BellIcon },
   GROUP_SCHEDULE_CHANGED: { label: '모임 일정 변경', Icon: BellIcon },
   GROUP_ENDING_SOON: { label: '모임 종료 임박', Icon: BellIcon },
+  GROUP_MEMBER_REMOVED: { label: '모임 참여 종료', Icon: BellIcon },
   CONTENT_REMOVED: { label: '운영 안내', Icon: BellIcon },
-}
+} satisfies Record<NotificationResponse['type'], { label: string; Icon: typeof BellIcon }>
 
 type NotificationItemProps = {
   notification: NotificationResponse
@@ -25,7 +26,7 @@ type NotificationItemProps = {
 
 /** 시안(3912:19810 / 읽음 3912:19811) — 읽은 알림은 글자를 반투명으로 낮추고 새 알림 점을 뗀다 */
 export function NotificationItem({ notification, onOpen }: NotificationItemProps) {
-  const { label, Icon } = TYPE_META[notification.type]
+  const { label, Icon } = TYPE_META[notification.type] ?? { label: '알림', Icon: BellIcon }
   const { isRead } = notification
 
   return (
