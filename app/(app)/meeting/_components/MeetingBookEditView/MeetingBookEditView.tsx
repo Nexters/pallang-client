@@ -88,7 +88,6 @@ function BookFields({ book, groupId }: { book: GroupBook; groupId: number }) {
             endDate={period.endDate}
             onChange={setPeriod}
             optional
-            showClear={false}
             originalDates={{ startDate: book.startDate ?? '', endDate: book.endDate ?? '' }}
           />
           <MeetingField label="독서 상태">

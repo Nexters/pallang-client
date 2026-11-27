@@ -15,7 +15,6 @@ type MeetingPeriodFieldProps = {
   helperText?: string
   optional?: boolean
   originalDates?: { startDate: string; endDate: string }
-  showClear?: boolean
 }
 
 /** 시안 3321:28135 — 343×56 surface r16 p16, 플레이스홀더 16md 50%, 우측 › Icon/Muted. 탭 → 기간 시트 */
@@ -26,7 +25,6 @@ export function MeetingPeriodField({
   helperText,
   optional = false,
   originalDates,
-  showClear = true,
 }: MeetingPeriodFieldProps) {
   const labelId = useId()
   const textId = useId()
@@ -55,17 +53,6 @@ export function MeetingPeriodField({
         </span>
         <NextIcon className="size-6 shrink-0 text-icon-muted" />
       </button>
-      {optional && showClear && hasPeriod && (
-        <button
-          type="button"
-          className="press self-start text-body-14md text-text-secondary"
-          onClick={() => {
-            onChange({ startDate: '', endDate: '' })
-          }}
-        >
-          기간 선택 지우기
-        </button>
-      )}
       <MeetingPeriodSheet
         open={open}
         disablePastDates={optional}
