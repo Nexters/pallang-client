@@ -3,13 +3,13 @@ import { infiniteQueryOptions, mutationOptions, queryOptions } from '@tanstack/r
 import {
   createGroup,
   getGroupDetail,
-  getGroupMembers,
   getInviteLink,
   getMyGroups,
   joinGroup,
   previewInvitation,
   updateGroup,
 } from '../_apis/_generated/group/group'
+import { getGroupMembers } from '../_apis/_generated/group-member/group-member'
 import type { CreateGroupRequest } from '../_apis/_generated/models/createGroupRequest'
 import type { GroupDetailResponse } from '../_apis/_generated/models/groupDetailResponse'
 import type { GroupInvitationPreviewResponse } from '../_apis/_generated/models/groupInvitationPreviewResponse'
