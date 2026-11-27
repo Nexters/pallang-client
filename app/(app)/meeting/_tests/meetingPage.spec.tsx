@@ -37,6 +37,9 @@ const group = {
   startDate: '2026-08-20',
   endDate: '2026-08-22',
   ended: false,
+  readingBookCount: 3,
+  readingScheduleStatus: 'HAS_END_DATE',
+  latestReadingEndDate: '2026-09-01',
 }
 const members = {
   members: [1, 2, 3, 4, 5].map((userId) => ({
@@ -148,8 +151,8 @@ describe('모임 탭', () => {
     const fetchMock = stubFetch([group])
     renderPage()
     expect(await screen.findByText('고전 뽀개기')).toBeInTheDocument()
-    expect(screen.getByText('프랑켄슈타인')).toBeInTheDocument()
-    expect(screen.getByText('2026.08.22까지')).toBeInTheDocument()
+    expect(screen.getByText('총 3권 읽는 중')).toBeInTheDocument()
+    expect(screen.getByText('2026.09.01까지')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '새 모임 만들기' })).toBeInTheDocument()
     await waitFor(() => {
       expect(screen.getByText('+2')).toBeInTheDocument()
@@ -165,6 +168,27 @@ describe('모임 탭', () => {
         (url ?? '').includes('/api/groups/1/members?page=0&size=5'),
       ),
     ).toBe(true)
+  })
+  it('기간이 없으면 날짜를 비우고 모든 책을 완독하면 안내한다', async () => {
+    stubFetch([
+      {
+        ...group,
+        name: '기간 없는 모임',
+        readingScheduleStatus: 'NO_PERIOD',
+        latestReadingEndDate: '',
+      },
+      {
+        ...group,
+        groupId: 2,
+        name: '완독 모임',
+        readingScheduleStatus: 'ALL_FINISHED',
+        latestReadingEndDate: '',
+      },
+    ])
+    renderPage()
+    expect(await screen.findByText('모든 책을 다 읽었어요')).toBeInTheDocument()
+    expect(screen.queryByText('2026.08.22까지')).not.toBeInTheDocument()
+    expect(screen.queryByText('기간 미설정')).not.toBeInTheDocument()
   })
   it('보러가기는 모임 스코프 흔적 보기로 간다', async () => {
     stubFetch([group])

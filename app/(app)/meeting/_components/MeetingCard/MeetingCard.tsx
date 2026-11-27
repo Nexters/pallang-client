@@ -15,6 +15,13 @@ type MeetingCardProps = {
 
 /** 시안 3315:25409 — 343×178 흰 카드, 표지 48×72 r6, 제목 20bd, 책·저자·종료일 12, ··· 48×48, 보러가기 48 */
 export function MeetingCard({ group, onMore, onView }: MeetingCardProps) {
+  const scheduleLabel =
+    group.readingScheduleStatus === 'ALL_FINISHED'
+      ? '모든 책을 다 읽었어요'
+      : group.readingScheduleStatus === 'HAS_END_DATE' && group.latestReadingEndDate
+        ? formatMeetingDeadline(group.latestReadingEndDate)
+        : ''
+
   return (
     <article aria-label={group.name} className="flex flex-col gap-6 rounded-2xl bg-bg-default p-4">
       <div className="flex items-center gap-3">
@@ -30,13 +37,13 @@ export function MeetingCard({ group, onMore, onView }: MeetingCardProps) {
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex flex-col gap-1">
             <h3 className="text-title-20bd text-text-primary">{group.name}</h3>
-            {/* 시안은 "모순 · 양귀자"처럼 저자를 함께 보여주지만 요약 응답(GroupSummaryResponse)에는
-                저자가 없어 책 제목만 보여준다 — 백엔드에 bookAuthor 추가를 요청해야 한다. */}
-            <p className="truncate text-caption-12rg text-text-tertiary">{group.bookTitle}</p>
+            <p className="truncate font-pretendard text-caption-12rg leading-[1.2] tracking-[-0.02em] text-text-tertiary">
+              총 {group.readingBookCount}권 읽는 중
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="min-w-0 flex-1 truncate text-caption-12rg text-text-tertiary">
-              {formatMeetingDeadline(group.endDate)}
+            <span className="min-w-0 flex-1 truncate font-pretendard text-caption-12rg leading-[1.2] tracking-[-0.02em] text-text-tertiary">
+              {scheduleLabel}
             </span>
             <MeetingMemberAvatars groupId={group.groupId} memberCount={group.memberCount} />
           </div>
